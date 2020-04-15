@@ -4,6 +4,9 @@ with AVTAS.LMCP.Factory;
 with UxAS.Common.Configuration_Manager;
 with UXAS.Messages.UxNative.KillService;
 
+with Ada.Text_IO;
+with Ada.Exceptions; use Ada.Exceptions;
+
 with Ada.Strings.Fixed;
 
 package body UxAS.Comms.LMCP_Net_Client is
@@ -352,15 +355,18 @@ package body UxAS.Comms.LMCP_Net_Client is
    ------------------------------
 
    task body Network_Client_Processor is
+      use Ada.Text_IO;
    begin
-      --  we'll need to wait for a signal to start unless dynamically allocated
-
       case Client.Processing_Type is
          when LMCP =>
-            Execute_Network_Client (Client.all);  --  loops
+            Execute_Network_Client (Client.all);  --  loops until shut down
          when Serialized_LMCP =>
-            Execute_Serialized_Network_Client (Client.all);  --  loops
+            Execute_Serialized_Network_Client (Client.all);  --  loops until shut down
       end case;
+   exception
+      when Error : others =>
+         Put_Line ("A Network_Client_Processor task has failed: ");
+         Put_Line (Exception_Information (Error));
    end Network_Client_Processor;
 
    ----------------------------
