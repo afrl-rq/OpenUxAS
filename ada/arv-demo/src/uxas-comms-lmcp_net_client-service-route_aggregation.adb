@@ -560,7 +560,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
       --  //  3. Send requests to proper planners
       --
       --  m_pendingAutoReq[reqId] = std::unordered_set<int64_t>();
-      Pending_Auto_Requests_Mapping.Insert (This.M_PendingAutoReq, ReqId, Int64_Sets.Empty_Set);
+      Pending_Auto_Requests_Mapping.Include (This.M_PendingAutoReq, ReqId, Int64_Sets.Empty_Set);
 
       --  std::vector< std::shared_ptr<uxas::messages::route::RoutePlanRequest> > sendAirPlanRequest;
       --  std::vector< std::shared_ptr<uxas::messages::route::RoutePlanRequest> > sendGroundPlanRequest;
@@ -726,7 +726,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
                         TOP := new AggregatorTaskOptionPair'(VehicleId, 0, 0, Option.GetTaskID, Option.GetOptionID);
 
                         --  m_routeTaskPairing[m_routeId] = std::shared_ptr<AggregatorTaskOptionPair>(top);
-                        RouteId_AggregatorPair_Mapping.Insert (This.M_RouteTaskPairing, This.M_RouteId, TOP);
+                        RouteId_AggregatorPair_Mapping.Include (This.M_RouteTaskPairing, This.M_RouteId, TOP);
 
                         --  uxas::messages::route::RouteConstraints* r = new uxas::messages::route::RouteConstraints;
                         R := new RouteConstraints;
@@ -776,7 +776,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
                               TOP := new AggregatorTaskOptionPair'(VehicleId, Option1.GetTaskID, Option1.GetOptionID, Option2.GetTaskID, Option2.GetOptionID);
 
                               --  m_routeTaskPairing[m_routeId] = std::shared_ptr<AggregatorTaskOptionPair>(top);
-                              RouteId_AggregatorPair_Mapping.Insert (This.M_RouteTaskPairing, This.M_RouteId, TOP);
+                              RouteId_AggregatorPair_Mapping.Include (This.M_RouteTaskPairing, This.M_RouteId, TOP);
 
                               --  uxas::messages::route::RouteConstraints* r = new uxas::messages::route::RouteConstraints;
                               R := new RouteConstraints;
