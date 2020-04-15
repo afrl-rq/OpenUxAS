@@ -356,7 +356,9 @@ package Route_Aggregator with SPARK_Mode is
 
      --  General invariants
 
-     Post => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
+     Post =>
+
+     All_Plans_Registered (State.M_RoutePlanResponses, State.M_RoutePlans)
      and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
      and Valid_Plan_Responses (State.m_pendingRoute, State.m_routePlanResponses)
      and No_Finished_Route_Request (State.m_pendingRoute, State.m_routePlanResponses)
