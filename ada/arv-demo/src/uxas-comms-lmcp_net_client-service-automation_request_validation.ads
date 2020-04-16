@@ -9,7 +9,7 @@ with Ada.Containers.Formal_Hashed_Maps;
 with Ada.Containers.Formal_Doubly_Linked_Lists;
 with UxAS.Messages.LmcpTask.UniqueAutomationRequest.SPARK_Boundary; use UxAS.Messages.LmcpTask.UniqueAutomationRequest.SPARK_Boundary;
 with AFRL.CMASI.OperatingRegion.SPARK_Boundary;                     use AFRL.CMASI.OperatingRegion.SPARK_Boundary;
-with AFRL.CMASI.LmcpTask.SPARK_Boundary;
+with AFRL.CMASI.LmcpTask.SPARK_Boundary;                            use AFRL.CMASI.LmcpTask.SPARK_Boundary;
 with Common_Formal_Containers;                                      use Common_Formal_Containers;
 
 package UxAS.Comms.LMCP_Net_Client.Service.Automation_Request_Validation is
@@ -76,8 +76,7 @@ private
    package Int64_CMASI_Task_Maps is new Ada.Containers.Formal_Hashed_Maps
      (Key_Type     => Int64,
       Element_Type => afrl.cmasi.lmcptask.spark_boundary.Task_Kind_And_Id,  --- TODO: maybe not classwide???
-      Hash         => Int64_Hash,
-      "="          => afrl.cmasi.lmcptask.spark_boundary."=");
+      Hash         => Int64_Hash);
 
    Int64_CMASI_Task_Maps_Max_Capacity : constant := 200; -- arbitrary
 
