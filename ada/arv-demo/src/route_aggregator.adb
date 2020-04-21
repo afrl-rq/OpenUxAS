@@ -301,13 +301,13 @@ package body Route_Aggregator with SPARK_Mode is
       State    : in out Route_Aggregator_State;
       Response : RoutePlanResponse)
    is
-      OldHistory : constant History_Type := History with Ghost;
+      --  OldHistory : constant History_Type := History with Ghost;
    begin
       pragma Assume (Length (History) < Count_Type'Last, "We still have room for a new event in History");
       History := Add (History, (Kind => Receive_PlanResponse, Id => Response.ResponseID));
 
       pragma Assume (Length (State.m_routePlanResponses) < State.m_routePlanResponses.Capacity, "We have some room for a new plan response");
-      Insert (State.m_routePlanResponses, Response.ResponseID, Response);
+      Include (State.m_routePlanResponses, Response.ResponseID, Response);
       pragma Assert (Valid_Plan_Responses (State.m_pendingRoute, State.m_routePlanResponses));
       pragma Assert
         (Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans));
@@ -335,8 +335,8 @@ package body Route_Aggregator with SPARK_Mode is
          pragma Loop_Invariant
            (Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans));
 
-         pragma Assume (Length (State.m_routePlans) < State.m_routePlans.Capacity, "We have enough room for all route plans");
-         Insert (State.m_routePlans, Get (Response.RouteResponses, p).RouteID,
+         pragma Assume (Length (State.M_RoutePlans) < State.M_RoutePlans.Capacity, "We have enough room for all route plans");
+         Include (State.m_routePlans, Get (Response.RouteResponses, p).RouteID,
                  IdPlanPair'(Id   => Response.ResponseID,
                              Plan => Get (Response.RouteResponses, p)));
          pragma Assert (Contains (Element (State.m_routePlanResponses, Response.ResponseID).RouteResponses, Get (Response.RouteResponses, p).RouteID));
@@ -366,14 +366,19 @@ package body Route_Aggregator with SPARK_Mode is
       use Int64_Sequences;
       Vehicle_Ids  : Int64_Seq := Request.VehicleID;
       PlanRequests : Int64_Formal_Set;
-      Old_routeRequestId : constant Int64 := State.m_routeRequestId with Ghost;
+      --  Old_routeRequestId : constant Int64 := State.m_routeRequestId with Ghost;
    begin
       pragma Assume (Length (History) < Count_Type'Last, "We still have room for a new event in History");
       History := Add (History, (Kind => Receive_RouteRequest, Id => Request.RequestID));
 
+---------------------------------------------------------------------------------------------------------------
+--  this doesn't match the C++ exactly, because it doesn't put the new vehicle
+--  ids into the message parameter (which is "by reference" via pointer in C++)
+--  but that seems to be OK because only EuclidianPlan would use it, apparently
       if Length (Vehicle_Ids) = 0 then
          Vehicle_Ids := Data.m_entityStates;
       end if;
+---------------------------------------------------------------------------------------------------------------
 
       --  We only have route plan responses with Ids smaller than State.m_routeRequestId
 
@@ -539,7 +544,7 @@ package body Route_Aggregator with SPARK_Mode is
       State   : in out Route_Aggregator_State)
    is
       i : Int64_Formal_Set_Maps.Cursor := First (State.m_pendingRoute);
-      Old_routePlanResponses : RR_Maps_M.Map := Model (State.m_routePlanResponses) with Ghost;
+      --  Old_routePlanResponses : RR_Maps_M.Map := Model (State.m_routePlanResponses) with Ghost;
       D : Count_Type := 0 with Ghost;
       --  Number of removed elements
    begin
@@ -784,9 +789,58 @@ package body Route_Aggregator with SPARK_Mode is
       routePlans         : in out Int64_IdPlanPair_Map;
       Request            : RoutePlanRequest)
    is
+      pragma Unreferenced (Data, routePlans, routePlanResponses, Request);
+      --  --  uxas::common::utilities::CUnitConversions flatEarth;
+      --  FlatEarth : Conversions.Unit_Converter;
+      --  --  int64_t regionId = request->getOperatingRegion();
+      --  RegionId  : Int64 := Request.OperatingRegion;
+      --  --  int64_t vehicleId = request->getVehicleID();
+      --  VehicleId : Int64 := Request.VehicleID;
+      --  --  int64_t taskId = request->getAssociatedTaskID();
+      --  TaskId    : Int64 := Request.AssociatedTaskID;
+      --  --  double speed = 1.0; // default if no speed available
+      --  Speed : Real64 := 1.0;
    begin
-      pragma Compile_Time_Warning (Standard.True, "Euclidean_Plan is unimplemented");
       raise Program_Error with "Euclidean_Plan is unimplemented";
+
+      --  if (m_entityConfigurations.find(vehicleId) != m_entityConfigurations.end())
+      --  {
+      --      double speed = m_entityConfigurations[vehicleId]->getNominalSpeed();
+      --      if (speed < 1e-2)
+      --      {
+      --          speed = 1.0; // default to 1 if too small for division
+      --      }
+      --  }
+
+      --  auto response = std::shared_ptr<uxas::messages::route::RoutePlanResponse>(new uxas::messages::route::RoutePlanResponse);
+      --  response->setAssociatedTaskID(taskId);
+      --  response->setOperatingRegion(regionId);
+      --  response->setVehicleID(vehicleId);
+      --  response->setResponseID(request->getRequestID());
+      --
+      --  for (size_t k = 0; k < request->getRouteRequests().size(); k++)
+      --  {
+      --      uxas::messages::route::RouteConstraints* routeRequest = request->getRouteRequests().at(k);
+      --      int64_t routeId = routeRequest->getRouteID();
+      --      VisiLibity::Point startPt, endPt;
+      --      double north, east;
+      --
+      --      uxas::messages::route::RoutePlan* plan = new uxas::messages::route::RoutePlan;
+      --      plan->setRouteID(routeId);
+      --
+      --      flatEarth.ConvertLatLong_degToNorthEast_m(routeRequest->getStartLocation()->getLatitude(), routeRequest->getStartLocation()->getLongitude(), north, east);
+      --      startPt.set_x(east);
+      --      startPt.set_y(north);
+      --
+      --      flatEarth.ConvertLatLong_degToNorthEast_m(routeRequest->getEndLocation()->getLatitude(), routeRequest->getEndLocation()->getLongitude(), north, east);
+      --      endPt.set_x(east);
+      --      endPt.set_y(north);
+      --
+      --      double linedist = VisiLibity::distance(startPt, endPt);
+      --      plan->setRouteCost(linedist / speed * 1000); // milliseconds to arrive
+      --      m_routePlans[routeId] = std::make_pair(request->getRequestID(), std::shared_ptr<uxas::messages::route::RoutePlan>(plan));
+      --  }
+      --  m_routePlanResponses[response->getResponseID()] = response;
    end Euclidean_Plan;
 
 end Route_Aggregator;
