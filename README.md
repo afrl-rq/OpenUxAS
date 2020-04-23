@@ -7,7 +7,7 @@ Agreement Verion 1.3. **NOTE the terms of the license include registering use of
 
 # Build Status
 
-[![Build Status](https://travis-ci.org/github/AdaCore/OpenUxAS.svg?branch=ada)](https://travis-ci.org/github/AdaCore/OpenUxAS)
+[![Build Status](https://travis-ci.org/AdaCore/OpenUxAS.svg?branch=ada)](https://travis-ci.org/github/AdaCore/OpenUxAS)
 
 # Introduction
 
