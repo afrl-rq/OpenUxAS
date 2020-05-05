@@ -20,7 +20,7 @@ pragma Unreferenced (UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation);
 with Ada.Strings.Unbounded;  use Ada.Strings.Unbounded;
 with UxAS.Common.String_Constant.Lmcp_Network_Socket_Address;
 
-procedure Demo is
+procedure UxAS_Ada is
    Successful  : Boolean;
    New_Service : Any_Service;
 
@@ -165,4 +165,4 @@ begin
 exception
    when Error : others =>
       Put_Line (Exception_Information (Error));
-end Demo;
+end UxAS_Ada;

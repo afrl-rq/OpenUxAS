@@ -11,7 +11,7 @@ project AFRL_Ada_Dev is
 
    for Exec_Dir use ".";
 
-   for Main use ("demo.adb");
+   for Main use ("uxas_ada.adb");
 
    type Modes is ("debug", "release", "gcov");
    App_Mode : Modes := external ("APP_MODE", "debug");
@@ -39,11 +39,13 @@ project AFRL_Ada_Dev is
    end Naming;
 
    package Builder is
+      for Executable ("uxas_ada.adb") use "uxas-ada";
+   
       case App_Mode is
          when "release"        =>
             for Default_Switches ("ada") use ("-j2");
-	 when "debug" | "gcov" =>
-	    for Default_Switches ("ada") use ("-g", "-j2");
+         when "debug" | "gcov" =>
+            for Default_Switches ("ada") use ("-g", "-j2");
       end case;
    end Builder;
 
@@ -51,8 +53,8 @@ project AFRL_Ada_Dev is
       case App_Mode is
          when "gcov"              =>
             for Default_Switches ("ada") use ("-Wl,--gc-sections", "-fprofile-arcs", "-ftest-coverage");
-	 when "debug" | "release" =>
-	    for Default_Switches ("ada") use ("-Wl,--gc-sections");
+    when "debug" | "release" =>
+       for Default_Switches ("ada") use ("-Wl,--gc-sections");
       end case;
    end Linker;
 
@@ -60,8 +62,8 @@ project AFRL_Ada_Dev is
       case App_Mode is
          when "debug"   =>
             for Default_Switches ("ada") use DEBUG_COMPILER_FLAGS & ("-gnata");
-	 when "gcov"    =>
-	    for Default_Switches ("ada") use DEBUG_COMPILER_FLAGS & ("-fprofile-arcs", "-ftest-coverage");
+         when "gcov"    =>
+            for Default_Switches ("ada") use DEBUG_COMPILER_FLAGS & ("-fprofile-arcs", "-ftest-coverage");
          when "release" =>
             for Default_Switches ("ada") use
               ("-O2",
