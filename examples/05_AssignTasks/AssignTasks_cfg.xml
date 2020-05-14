@@ -5,8 +5,9 @@
         <SubscribeToMessage MessageType="afrl.cmasi.LineSearchTask" />
         <SubscribeToMessage MessageType="afrl.cmasi.VehicleActionCommand" />
     </Bridge>
+    <Service Type="Test_SimulationTime"/>
     <Service Type="TaskManagerService"/>
-    <Service Type="AutomationRequestValidatorService"/>
+    <Service Type="AutomationRequestValidatorService" MaxResponseTime_ms="10000"/>
     <Service Type="SensorManagerService"/>
     <Service Type="RouteAggregatorService"/>
     <Service Type="RoutePlannerVisibilityService" MinimumWaypointSeparation_m="50.0"/>

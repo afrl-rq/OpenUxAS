@@ -6,7 +6,7 @@
     <!-- on Windows, type 'ipconfig' to find interface name (name is after adapter type)	
 	     Windows example name: Wireless Network Connection
 	-->
-    <Bridge Type="LmcpObjectNetworkZeroMqZyreBridge" NetworkDevice="en0">
+    <Bridge Type="LmcpObjectNetworkZeroMqZyreBridge" NetworkDevice="eth0">
         <SubscribeToExternalMessage MessageType="afrl.cmasi.AirVehicleState"/>
         <SubscribeToExternalMessage MessageType="uxas.messages.task.AssignmentCoordination"/>
     </Bridge>

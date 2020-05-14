@@ -1,0 +1,481 @@
+#! /usr/bin/env python
+
+"""
+Script to run OpenUxAS examples.
+"""
+
+import argparse
+import logging
+import os
+import pathlib
+import re
+import shutil
+import subprocess
+import sys
+import textwrap
+import time
+import yaml
+
+# Directory in which this script is executing.
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Allow the OpenAMASE source directory to be specified as an environment
+# variable, so that we can interface with anod.
+AMASE_SRC_DIR = os.environ.get('AMASE_SOURCE_DIR')
+
+# Allow the environment specify how long we should wait after starting an
+# instance of OpenAMASE; default to 0 seconds.
+AMASE_DELAY = os.environ.get('AMASE_DELAY', 0)
+
+DESCRIPTION = """
+Run OpenUxAS, OpenAMASE or both, using the configuration in the specified
+example.
+
+This script is a frontend for both OpenUxAS and OpenAMASE that simplifies
+running examples contained in the `examples` directory of the OpenUxAS
+repository. You run an example by providing the path to its directory, under
+`examples`. For example, run:
+
+  run-example 02_Example_WaterwaySearch
+
+to run the Waterways example from a single terminal session.
+
+To get a list of available examples, run:
+
+  run-example --list
+"""
+
+# Hard-code the expected name of the YAML file the defines an example, for now.
+CONFIG_FILE = 'config.yaml'
+
+# The key for specifying OpenAMASE configuration.
+AMASE_YAML_KEY = 'amase'
+
+# The key for specifying an OpenAMASE scenario file.
+SCENARIO_YAML_KEY = 'scenario'
+
+# The key for specying the delay after OpenAMASE opens.
+DELAY_YAML_KEY = 'delay'
+
+# The key for specifying a single OpenUxAS configuration.
+UXAS_YAML_KEY = 'uxas'
+
+# The key for specifying multiple OpenUxAS configurations.
+UXASES_YAML_KEY = 'uxases'
+
+# The key for specifying an OpenUxAS configuration file.
+CONFIG_YAML_KEY = 'config'
+
+# The key for specifying an OpenUxAS run directory.
+RUNDIR_YAML_KEY = 'rundir'
+
+# The key for specifying the name of the OpenUxAS binary.
+BIN_YAML_KEY = 'bin'
+
+# The default prefix for an OpenUxAS run directory.
+RUN_DIR = "RUNDIR"
+
+
+def print_wrap(s, file=sys.stdout):
+    """Dedent, wrap to 79 characters, and print the given string."""
+
+    print(textwrap.fill(textwrap.dedent(s), 79), file=file)
+
+
+def read_yaml(yaml_filename):
+    """Read and parse a YAML file, returning the content as a yaml object."""
+
+    with open(yaml_filename) as yaml_file:
+        loaded_yaml = yaml.safe_load(yaml_file.read())
+
+    return loaded_yaml
+
+
+def resolve_examples_dir(args):
+    """Resolve the absolute path to the examples directory."""
+
+    if args.examples_dir:
+        return args.examples_dir
+    else:
+        return os.path.join(args.uxas_dir, "examples")
+
+
+MISSING_AMASE = """\
+OpenAMASE source directory not specified and not defined in the environment.
+Either run with `--amase_dir` and specify the absolute path to OpenAMASE, or,
+if you are using anod to build OpenUxAS from the OpenUxAS-bootstrap repository,
+build OpenAMASE with:
+
+    anod-build amase
+
+and then set your environment with:
+
+    eval `anod-setenv amase`
+"""
+
+
+def resolve_amase_dir(args):
+    """
+    Resolve the absolute path to the OpenAMASE source directory. If the path is
+    not specified in either the script arguments or the environment, then print
+    a message and immediately exit.
+    """
+
+    if args.amase_dir:
+        return args.amase_dir
+    elif AMASE_SRC_DIR:
+        return AMASE_SRC_DIR
+    else:
+        print(MISSING_AMASE)
+        exit(1)
+
+
+MISSING_UXAS = """\
+The command `uxas` cannot be found on your path. Either run with `--uxas-bin`
+and specify the absolute path to the OpenUXAS binary, manually add the OpenUxAS
+binary to your path, or, if you are using anod to build OpenUxAS from the
+OpenUxAS-bootstrap repository, build OpenUxAS with:
+
+    anod-build uxas
+
+and then set your environment with:
+
+    eval `anod-setenv uxas`
+"""
+
+
+def resolve_uxas_bin(args):
+    """
+    Resolve the OpenUxAS binary by either using the absolute path given in the
+    program arguments or using `uxas`. In the latter case, check to make sure
+    that `uxas` is on the path. If not, print a message and immediately exit.
+    """
+
+    if args.uxas_bin:
+        return args.uxas_bin
+    elif shutil.which('uxas') is not None:
+        return 'uxas'
+    else:
+        print(MISSING_UXAS)
+        exit(1)
+
+
+def list_examples(examples_dir):
+    """List all of the examples that have a configuration file."""
+
+    full_paths = list()
+    for (dirpath, _, filenames) in os.walk(examples_dir):
+        if CONFIG_FILE in filenames:
+            full_paths += [dirpath]
+
+    short_paths = [os.path.relpath(path, examples_dir) for path in full_paths]
+    short_paths.sort()
+
+    for path in short_paths:
+        print(f"  {path}")
+
+
+def check_amase(loaded_yaml, example_dir, args):
+    """
+    Check the OpenAMASE configuration in the YAML and return the scenario file
+    found. If any errors are encountered, report them and immediately exit.
+    """
+
+    if AMASE_YAML_KEY not in loaded_yaml.keys():
+        return (None, 0)
+
+    if SCENARIO_YAML_KEY not in loaded_yaml[AMASE_YAML_KEY].keys():
+        print("Error: OpenAMASE configuration must specify a scenario file.")
+        exit(1)
+
+    scenario_file = loaded_yaml[AMASE_YAML_KEY][SCENARIO_YAML_KEY]
+    if not os.path.exists(os.path.join(example_dir, scenario_file)):
+        print_wrap(f"""\
+                   Specified scenario file '{scenario_file}' does not exist.
+                   """)
+        exit(1)
+
+    if args.amase_delay is not None:
+        amase_delay = args.amase_delay
+    elif DELAY_YAML_KEY in loaded_yaml[AMASE_YAML_KEY].keys():
+        amase_delay = int(loaded_yaml[AMASE_YAML_KEY][DELAY_YAML_KEY])
+    else:
+        amase_delay = AMASE_DELAY
+
+    return (scenario_file, amase_delay)
+
+
+def run_amase(scenario_file, example_dir, amase_dir):
+    """Run the OpenAMASE part of the example."""
+
+    amase_cmd = [
+        "java", "-Xmx2048m",
+        "-splash:%s" % os.path.join("data", "amase_splash.png"),
+        "-classpath", "%s:%s" % (os.path.join("dist", "*"),
+                                 os.path.join("lib", "*")),
+        "avtas.app.Application",
+        "--config", os.path.join("config", "amase"),
+        "--scenario", os.path.join(example_dir, scenario_file)]
+
+    print_wrap(f"""\
+               Running OpenAMASE with scenario '{scenario_file}'.
+               """)
+    print(" ")
+
+    return subprocess.Popen(amase_cmd,
+                            cwd=os.path.join(amase_dir, "OpenAMASE"))
+
+
+def check_uxas(loaded_yaml, args):
+    """
+    Check the OpenUxAS configuration in the YAML and return a list of
+    configurations. Calls `check_one_uxas` and thus may immediately exit.
+    """
+
+    uxas_configs = list()
+
+    if UXASES_YAML_KEY in loaded_yaml.keys():
+        for record in loaded_yaml[UXASES_YAML_KEY]:
+            uxas_configs += [check_one_uxas(record, args)]
+    elif UXAS_YAML_KEY in loaded_yaml.keys():
+        uxas_configs += [check_one_uxas(loaded_yaml[UXAS_YAML_KEY], args)]
+
+    return uxas_configs
+
+
+MISSING_BIN = """\
+The command `%s` cannot be found on your path. Either specify the absolute path
+to the desired OpenUXAS binary in the config file (*not recommended*), manually
+add the desired OpenUxAS binary to your path, or, if you are using anod to
+build OpenUxAS from the OpenUxAS-bootstrap repository, build the desired
+version of OpenUxAS with, e.g.:
+
+    anod-build uxas-ada
+
+and then set your environment with:
+
+    eval `anod-setenv uxas-ada`
+"""
+
+
+def check_one_uxas(record, args):
+    """
+    Check one OpenUxAS configuration from the YAML and return the
+    configuration. If any errors are found, print a message and immediately
+    exit.
+    """
+
+    if CONFIG_YAML_KEY not in record.keys():
+        print("Error: OpenUxAS configuration must specify a config file.")
+        exit(1)
+
+    config_file = record[CONFIG_YAML_KEY]
+    if not os.path.exists(os.path.join(example_dir, config_file)):
+        print_wrap(f"Specified config file '{config_file}' does not exist.")
+        exit(1)
+
+    run_dir_name = RUN_DIR
+    if RUNDIR_YAML_KEY in record.keys():
+        run_dir_name = record[RUNDIR_YAML_KEY]
+
+    if BIN_YAML_KEY in record.keys():
+        bin_name = record[BIN_YAML_KEY]
+        if shutil.which(bin_name) is not None:
+            uxas_binary = bin_name
+        else:
+            print_wrap(MISSING_BIN % bin_name)
+            exit(1)
+    else:
+        uxas_binary = resolve_uxas_bin(args)
+
+    return {
+        'config_file': config_file,
+        'run_dir_name': run_dir_name,
+        'bin': uxas_binary
+    }
+
+
+def run_uxas(uxas_configs, example_dir, popen):
+    """Run an OpenUxAS instance for each configuration."""
+
+    pids = list()
+    for config in uxas_configs:
+        pids += [run_one_uxas(config, example_dir, popen)]
+
+    if popen:
+        return pids
+    else:
+        return list()
+
+
+def run_one_uxas(uxas_config, example_dir, popen):
+    """Run one OpenUxAS instance."""
+
+    config_file = uxas_config['config_file']
+    run_dir = uxas_config['run_dir_name']
+    uxas_bin = uxas_config['bin']
+
+    uxas_cmd = [
+        uxas_bin,
+        "-cfgPath", os.path.join(example_dir, config_file)]
+
+    run_dir = os.path.join(example_dir, run_dir)
+    pathlib.Path(run_dir).mkdir(parents=True, exist_ok=True)
+
+    if popen:
+        print_wrap(f"""\
+                   Running OpenUxAS binary `{uxas_bin}` in a separate process
+                   with configuration '{config_file}'. Data and logfiles are
+                   in: '{run_dir}'
+                   """)
+        print(" ")
+        return subprocess.Popen(uxas_cmd, cwd=run_dir)
+    else:
+        print_wrap(f"""\
+                   Running OpenUxAS binary `{uxas_bin}` with configuration
+                   '{config_file}'. Data and logfiles are in: '{run_dir}'
+                   """)
+        print(" ")
+        subprocess.run(uxas_cmd, cwd=run_dir)
+        return None
+
+
+def killall_uxases(popen, pids):
+    """
+    Gracefully quit any instances of OpenUxAS that we started
+    """
+
+    # We only worry about killing off UxAS instances if we Popened them
+    if popen and len(pids) != 0:
+        print("Shutting down forked OpenUxAS processes.")
+        for pid in pids:
+            pid.terminate()
+
+            # Seems as though we may need to wait a moment before
+            # polling.
+            time.sleep(0.1)
+            if pid.poll() is None:
+                pid.kill()
+
+                # Here especially I've seen "Unable to kill ..." when
+                # the process was actually killed, so we wait a moment.
+                time.sleep(0.1)
+                if pid.poll() is None:
+                    print(f"  Unable to kill PID {pid.pid}.")
+
+
+# Script processing.
+if __name__ == '__main__':
+    ap = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=DESCRIPTION)
+
+    ap.add_argument("example", default=".",
+                    help="the example directory")
+
+    ap.add_argument("--list", dest="list_examples", default=False,
+                    action="store_true",
+                    help="list known examples")
+
+    ap.add_argument("--delay", dest="amase_delay", type=int,
+                    help="number of seconds to wait after starting OpenAMASE" +
+                         "before starting instances of OpenUxAS")
+
+    ap.add_argument("--amase-dir",
+                    help="absolute path to the OpenAMASE repository " +
+                         "containing build outputs")
+
+    ap.add_argument("--uxas-bin",
+                    help="absolute path to the OpenUxAS binary")
+
+    ap.add_argument("--uxas-dir", default=ROOT_DIR,
+                    help="absolute path to the OpenUxAS repository " +
+                         "containing build outputs")
+
+    ap.add_argument("--examples-dir",
+                    help="absolute path to the root of the examples")
+
+    args = ap.parse_args()
+
+    # For KeyboardInterrupt handling
+    popen = False
+    pids = list()
+
+    try:
+        if args.list_examples:
+            examples_dir = resolve_examples_dir(args)
+
+            print_wrap(f"""\
+                    In '{examples_dir}' the following examples are available:
+                    """)
+
+            list_examples(resolve_examples_dir(args))
+        else:
+            examples_dir = resolve_examples_dir(args)
+
+            # Allow the user to specify a complete absolute or relative path to
+            # the example, rather than relying on the example search path. The
+            # advantage to the user here is that they can leverage autocomplete
+            if os.path.isabs(args.example):
+                example_dir = args.example
+            else:
+                example_dir = os.path.join(ROOT_DIR, args.example)
+
+            if not os.path.exists(example_dir):
+                example_dir = os.path.join(examples_dir, args.example)
+
+                if not os.path.exists(example_dir):
+                    print_wrap(f"""\
+                            Example '{args.example}' does not exist in
+                            '{examples_dir}'. Use the `--list` option for a
+                            list of available examples.
+                            """)
+                    exit(1)
+
+            yaml_filename = os.path.join(example_dir, CONFIG_FILE)
+            if not os.path.exists(yaml_filename):
+                print_wrap(f"""\
+                        Example '{args.example}' is not properly configured:
+                        there is no '{CONFIG_FILE}' in the example directory.
+                        Use the `--list` option for a list of available
+                        examples.
+                        """)
+                exit(1)
+
+            loaded_yaml = read_yaml(yaml_filename)
+
+            amase_dir = resolve_amase_dir(args)
+            (scenario_file, amase_delay) = check_amase(loaded_yaml,
+                                                       example_dir,
+                                                       args)
+
+            uxas_configs = check_uxas(loaded_yaml, args)
+
+            if scenario_file:
+                amase_pid = run_amase(scenario_file, example_dir, amase_dir)
+
+                if amase_delay > 0:
+                    print_wrap(f"""\
+                            Waiting for {amase_delay} seconds while AMASE
+                            starts; press 'Play' as soon as it does.
+                            """)
+                    time.sleep(amase_delay)
+
+            popen = scenario_file is not None
+            pids = run_uxas(uxas_configs, example_dir, popen)
+
+            if scenario_file:
+                # Wait for the user to close AMASE
+                amase_pid.wait()
+
+            killall_uxases(popen, pids)
+
+    except KeyboardInterrupt:
+        print(" ")
+        killall_uxases(popen, pids)
+
+    except Exception as e:
+        print("Got an exception")
+        print(e, file=sys.stderr)
+        print(" ", file=sys.stderr)
+        ap.print_usage()

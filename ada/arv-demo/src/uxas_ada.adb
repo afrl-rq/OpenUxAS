@@ -4,6 +4,9 @@ with DOM.Core;       use DOM.Core;
 with DOM.Core.Nodes; use DOM.Core.Nodes;
 with DOM.Core.Elements;
 
+with GNAT.Command_Line; use GNAT.Command_Line;
+with GNAT.Strings;
+
 with Ctrl_C_Handler;
 
 with UxAS.Common.Configuration_Manager;   use UxAS.Common;
@@ -24,7 +27,7 @@ procedure UxAS_Ada is
    Successful  : Boolean;
    New_Service : Any_Service;
 
-   XML_Cfg_File_Name : constant String := "./cfg.xml";
+   XML_Cfg_File_Name : aliased GNAT.Strings.String_Access;
 
    All_Enabled_Services : DOM.Core.Element;
    All_Enabled_Bridges  : DOM.Core.Element;
@@ -122,9 +125,20 @@ procedure UxAS_Ada is
 begin
    Ctrl_C_Handler;
 
-   Configuration_Manager.Instance.Load_Base_XML_File (XML_Cfg_File_Name, Successful);
+   declare
+      Config : Command_Line_Configuration;
+   begin
+      Define_Switch (Config, XML_Cfg_File_Name'Access,
+                     "-cfgPath:",
+                     Help => "XML configuration file");
+
+      Getopt (Config);
+   end;
+
+
+   Configuration_Manager.Instance.Load_Base_XML_File (XML_Cfg_File_Name.all, Successful);
    if not Successful then
-      Put_Line ("Could not load base XML file '" & XML_Cfg_File_Name & "'");
+      Put_Line ("Could not load base XML file '" & XML_Cfg_File_Name.all & "'");
       return;
    end if;
 
