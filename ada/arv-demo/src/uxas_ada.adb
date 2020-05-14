@@ -47,7 +47,7 @@ procedure UxAS_Ada is
       Pub_Address  : out Unbounded_String;
       Pull_Address : out Unbounded_String);
    --  Find the LmcpObjectNetworkPublishPullBridge specification in the
-   --  configuration XML file and get the corresponding the TCP addresses to
+   --  configuration XML file and get the corresponding TCP addresses to
    --  use in package UxAS.Common.String_Constant.Lmcp_Network_Socket_Address.
 
    ---------------------
@@ -128,7 +128,8 @@ begin
    declare
       Config : Command_Line_Configuration;
    begin
-      Define_Switch (Config, XML_Cfg_File_Name'Access,
+      Define_Switch (Config, 
+                     XML_Cfg_File_Name'Access,
                      "-cfgPath:",
                      Help => "XML configuration file");
 
