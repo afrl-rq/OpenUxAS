@@ -2,11 +2,9 @@ with Ada.Text_IO;    use Ada.Text_IO;
 with Ada.Exceptions; use Ada.Exceptions;
 with DOM.Core;       use DOM.Core;
 with DOM.Core.Nodes; use DOM.Core.Nodes;
+with GNAT.Strings;   use GNAT.Strings;
 with DOM.Core.Elements;
-
-with GNAT.Command_Line; use GNAT.Command_Line;
-with GNAT.Strings;
-
+with GNAT.Command_Line;
 with Ctrl_C_Handler;
 
 with UxAS.Common.Configuration_Manager;   use UxAS.Common;
@@ -24,6 +22,7 @@ with Ada.Strings.Unbounded;  use Ada.Strings.Unbounded;
 with UxAS.Common.String_Constant.Lmcp_Network_Socket_Address;
 
 procedure UxAS_Ada is
+   
    Successful  : Boolean;
    New_Service : Any_Service;
 
@@ -49,6 +48,31 @@ procedure UxAS_Ada is
    --  Find the LmcpObjectNetworkPublishPullBridge specification in the
    --  configuration XML file and get the corresponding TCP addresses to
    --  use in package UxAS.Common.String_Constant.Lmcp_Network_Socket_Address.
+   
+   procedure Get_Config_File_Name with 
+     Global => XML_Cfg_File_Name;
+   --  Parse the command line for the name of the XML configuration file
+   --  specifying the names of the services to launch and the TCP addresses
+   --  to use when communicating with the rest of UxAS
+   
+   --------------------------
+   -- Get_Config_File_Name --
+   --------------------------
+
+   procedure Get_Config_File_Name is
+      use GNAT.Command_Line;
+      Config : Command_Line_Configuration;
+   begin
+      Define_Switch (Config, 
+                     XML_Cfg_File_Name'Access,
+                     "-cfgPath:",
+                     Help => "XML configuration file");
+      
+      Getopt (Config);
+      if XML_Cfg_File_Name.all = "" then
+         Display_Help (Config);
+      end if;
+   end Get_Config_File_Name;
 
    ---------------------
    -- Launch_Services --
@@ -125,17 +149,10 @@ procedure UxAS_Ada is
 begin
    Ctrl_C_Handler;
 
-   declare
-      Config : Command_Line_Configuration;
-   begin
-      Define_Switch (Config, 
-                     XML_Cfg_File_Name'Access,
-                     "-cfgPath:",
-                     Help => "XML configuration file");
-
-      Getopt (Config);
-   end;
-
+   Get_Config_File_Name;
+   if XML_Cfg_File_Name.all = "" then
+      return;  -- we already displayed the help info in the procedure
+   end if;   
 
    Configuration_Manager.Instance.Load_Base_XML_File (XML_Cfg_File_Name.all, Successful);
    if not Successful then
