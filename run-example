@@ -364,18 +364,40 @@ def killall_uxases(popen, pids):
                     print(f"  Unable to kill PID {pid.pid}.")
 
 
+# From
+# https://stackoverflow.com/questions/34352405/python-argparse-help-like-option
+class _ListAction(argparse.Action):
+    def __init__(self,
+                 option_strings,
+                 dest=argparse.SUPPRESS,
+                 default=argparse.SUPPRESS,
+                 help=None):
+        super(_ListAction, self).__init__(
+            option_strings=option_strings,
+            dest=dest,
+            default=default,
+            nargs=0,
+            help=help)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        # namespace contains arguments parsed thus far
+        examples_dir = resolve_examples_dir(namespace)
+
+        print_wrap(f"""\
+                   In '{examples_dir}' the following examples are available:
+                   """)
+
+        list_examples(resolve_examples_dir(namespace))
+
+        # Note that this terminates the program.
+        parser.exit()
+
+
 # Script processing.
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=DESCRIPTION)
-
-    ap.add_argument("example", default=".",
-                    help="the example directory")
-
-    ap.add_argument("--list", dest="list_examples", default=False,
-                    action="store_true",
-                    help="list known examples")
 
     ap.add_argument("--delay", dest="amase_delay", type=int,
                     help="number of seconds to wait after starting OpenAMASE" +
@@ -395,6 +417,21 @@ if __name__ == '__main__':
     ap.add_argument("--examples-dir",
                     help="absolute path to the root of the examples")
 
+    ap.add_argument(
+        '-l',
+        '--list',
+        dest='list_examples',
+        default=False,
+        action=_ListAction,
+        help='list known examples. Subsequent arguments are ignored, so put '
+             'after `--examples-dir` if it is used.',
+    )
+
+    ap.add_argument(
+        'example',
+        help='the example directory',
+    )
+
     args = ap.parse_args()
 
     # For KeyboardInterrupt handling
@@ -402,73 +439,64 @@ if __name__ == '__main__':
     pids = list()
 
     try:
-        if args.list_examples:
-            examples_dir = resolve_examples_dir(args)
+        examples_dir = resolve_examples_dir(args)
 
-            print_wrap(f"""\
-                    In '{examples_dir}' the following examples are available:
-                    """)
-
-            list_examples(resolve_examples_dir(args))
+        # Allow the user to specify a complete absolute or relative path to
+        # the example, rather than relying on the example search path. The
+        # advantage to the user here is that they can leverage autocomplete
+        if os.path.isabs(args.example):
+            example_dir = args.example
         else:
-            examples_dir = resolve_examples_dir(args)
+            example_dir = os.path.join(ROOT_DIR, args.example)
 
-            # Allow the user to specify a complete absolute or relative path to
-            # the example, rather than relying on the example search path. The
-            # advantage to the user here is that they can leverage autocomplete
-            if os.path.isabs(args.example):
-                example_dir = args.example
-            else:
-                example_dir = os.path.join(ROOT_DIR, args.example)
+        if not os.path.exists(example_dir):
+            example_dir = os.path.join(examples_dir, args.example)
 
             if not os.path.exists(example_dir):
-                example_dir = os.path.join(examples_dir, args.example)
-
-                if not os.path.exists(example_dir):
-                    print_wrap(f"""\
-                            Example '{args.example}' does not exist in
-                            '{examples_dir}'. Use the `--list` option for a
-                            list of available examples.
-                            """)
-                    exit(1)
-
-            yaml_filename = os.path.join(example_dir, CONFIG_FILE)
-            if not os.path.exists(yaml_filename):
                 print_wrap(f"""\
-                        Example '{args.example}' is not properly configured:
-                        there is no '{CONFIG_FILE}' in the example directory.
-                        Use the `--list` option for a list of available
-                        examples.
+                        Example '{args.example}' does not exist in
+                        '{examples_dir}'. Use the `--list` option for a
+                        list of available examples.
                         """)
                 exit(1)
 
-            loaded_yaml = read_yaml(yaml_filename)
+        yaml_filename = os.path.join(example_dir, CONFIG_FILE)
+        if not os.path.exists(yaml_filename):
+            print_wrap(f"""\
+                    Example '{args.example}' is not properly configured:
+                    there is no '{CONFIG_FILE}' in the example directory.
+                    Use the `--list` option for a list of available
+                    examples.
+                    """)
+            exit(1)
 
-            amase_dir = resolve_amase_dir(args)
-            (scenario_file, amase_delay) = check_amase(loaded_yaml,
-                                                       example_dir,
-                                                       args)
+        loaded_yaml = read_yaml(yaml_filename)
 
-            uxas_configs = check_uxas(loaded_yaml, args)
+        amase_dir = resolve_amase_dir(args)
+        (scenario_file, amase_delay) = check_amase(loaded_yaml,
+                                                   example_dir,
+                                                   args)
 
-            if scenario_file:
-                amase_pid = run_amase(scenario_file, example_dir, amase_dir)
+        uxas_configs = check_uxas(loaded_yaml, args)
 
-                if amase_delay > 0:
-                    print_wrap(f"""\
-                            Waiting for {amase_delay} seconds while AMASE
-                            starts; press 'Play' as soon as it does.
-                            """)
-                    time.sleep(amase_delay)
+        if scenario_file:
+            amase_pid = run_amase(scenario_file, example_dir, amase_dir)
 
-            popen = scenario_file is not None
-            pids = run_uxas(uxas_configs, example_dir, popen)
+            if amase_delay > 0:
+                print_wrap(f"""\
+                        Waiting for {amase_delay} seconds while AMASE
+                        starts; press 'Play' as soon as it does.
+                        """)
+                time.sleep(amase_delay)
 
-            if scenario_file:
-                # Wait for the user to close AMASE
-                amase_pid.wait()
+        popen = scenario_file is not None
+        pids = run_uxas(uxas_configs, example_dir, popen)
 
-            killall_uxases(popen, pids)
+        if scenario_file:
+            # Wait for the user to close AMASE
+            amase_pid.wait()
+
+        killall_uxases(popen, pids)
 
     except KeyboardInterrupt:
         print(" ")
