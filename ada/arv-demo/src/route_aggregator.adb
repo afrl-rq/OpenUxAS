@@ -1,3 +1,5 @@
+with Ada.Text_IO; use Ada.Text_IO;
+
 package body Route_Aggregator with SPARK_Mode is
    pragma Unevaluated_Use_Of_Old (Allow);
 
@@ -301,13 +303,13 @@ package body Route_Aggregator with SPARK_Mode is
       State    : in out Route_Aggregator_State;
       Response : RoutePlanResponse)
    is
-      --  OldHistory : constant History_Type := History with Ghost;
+      OldHistory : constant History_Type := History with Ghost;
    begin
       pragma Assume (Length (History) < Count_Type'Last, "We still have room for a new event in History");
       History := Add (History, (Kind => Receive_PlanResponse, Id => Response.ResponseID));
 
       pragma Assume (Length (State.m_routePlanResponses) < State.m_routePlanResponses.Capacity, "We have some room for a new plan response");
-      Include (State.m_routePlanResponses, Response.ResponseID, Response);
+      Insert (State.m_routePlanResponses, Response.ResponseID, Response);
       pragma Assert (Valid_Plan_Responses (State.m_pendingRoute, State.m_routePlanResponses));
       pragma Assert
         (Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans));
@@ -336,9 +338,10 @@ package body Route_Aggregator with SPARK_Mode is
            (Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans));
 
          pragma Assume (Length (State.M_RoutePlans) < State.M_RoutePlans.Capacity, "We have enough room for all route plans");
-         Include (State.m_routePlans, Get (Response.RouteResponses, p).RouteID,
+         Insert (State.m_routePlans, Get (Response.RouteResponses, p).RouteID,
                  IdPlanPair'(Id   => Response.ResponseID,
-                             Plan => Get (Response.RouteResponses, p)));
+                             Plan => Get (Response.RouteResponses, p),
+                             Cost => Get (Response.RouteResponses, p).RouteCost));
          pragma Assert (Contains (Element (State.m_routePlanResponses, Response.ResponseID).RouteResponses, Get (Response.RouteResponses, p).RouteID));
       end loop;
 
@@ -366,7 +369,7 @@ package body Route_Aggregator with SPARK_Mode is
       use Int64_Sequences;
       Vehicle_Ids  : Int64_Seq := Request.VehicleID;
       PlanRequests : Int64_Formal_Set;
-      --  Old_routeRequestId : constant Int64 := State.m_routeRequestId with Ghost;
+      Old_routeRequestId : constant Int64 := State.m_routeRequestId with Ghost;
    begin
       pragma Assume (Length (History) < Count_Type'Last, "We still have room for a new event in History");
       History := Add (History, (Kind => Receive_RouteRequest, Id => Request.RequestID));
@@ -535,6 +538,24 @@ package body Route_Aggregator with SPARK_Mode is
       end if;
    end Handle_Route_Request;
 
+   ------------------------------
+   -- Handle_Task_Plan_Options --
+   ------------------------------
+
+   procedure Handle_Task_Plan_Options
+     (Mailbox : in out Route_Aggregator_Mailbox;
+      Data  : Route_Aggregator_Configuration_Data;
+      State : in out Route_Aggregator_State;
+      Options : TaskPlanOptions)
+     with
+       SPARK_Mode => Off
+   is
+      Id : constant Int64 := Options.TaskID;
+   begin
+      Insert (State.m_taskOptions, Id, Options);
+      Check_All_Task_Options_Received (Mailbox, Data, State);
+   end Handle_Task_Plan_Options;
+
    ---------------------------
    -- Check_All_Route_Plans --
    ---------------------------
@@ -544,9 +565,10 @@ package body Route_Aggregator with SPARK_Mode is
       State   : in out Route_Aggregator_State)
    is
       i : Int64_Formal_Set_Maps.Cursor := First (State.m_pendingRoute);
-      --  Old_routePlanResponses : RR_Maps_M.Map := Model (State.m_routePlanResponses) with Ghost;
+      Old_routePlanResponses : RR_Maps_M.Map := Model (State.m_routePlanResponses) with Ghost;
       D : Count_Type := 0 with Ghost;
       --  Number of removed elements
+      k : Int64_Formal_Set_Maps.Cursor := First (State.m_pendingAutoReq);
    begin
       -- check pending route requests
       while Has_Element (State.m_pendingRoute, i) loop
@@ -618,6 +640,40 @@ package body Route_Aggregator with SPARK_Mode is
              Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)));
       Lift_From_Keys_To_Model (State.m_pendingRoute);
 
+      --  Check pending automation requests
+
+      while Has_Element (State.m_pendingAutoReq, K) loop
+         declare
+            isFulfilled : constant Boolean :=
+             (for all J of Element (State.m_pendingAutoReq, K) =>
+                   Contains (State.m_routePlans, J));
+         begin
+
+            if isFulfilled then
+               SendMatrix (Mailbox,
+                           State.m_uniqueAutomationRequests,
+                           State.m_pendingAutoReq,
+                           State.m_routePlans,
+                           State.m_routeTaskPairing,
+                           State.m_routePlanResponses,
+                           State.m_taskOptions,
+                           Key (State.m_pendingAutoReq, K));
+               Delete (State.m_uniqueAutomationRequests, Key (State.m_pendingAutoReq, K));
+
+               declare
+                  Dummy : Int64_Formal_Set_Maps.Cursor := K;
+               begin
+                  Next (State.m_pendingAutoReq, K);
+                  Delete (State.m_pendingAutoReq, Dummy);
+               end;
+
+            else
+               Next (State.m_pendingAutoReq, K);
+            end if;
+
+         end;
+      end loop;
+
 
       --  Remove for now, we only care about RouteRequest
       --
@@ -648,6 +704,299 @@ package body Route_Aggregator with SPARK_Mode is
       --          }
       --      }
    end Check_All_Route_Plans;
+
+   -------------------------------------
+   -- Check_All_Task_Options_Received --
+   -------------------------------------
+
+   procedure Check_All_Task_Options_Received
+     (Mailbox : in out Route_Aggregator_Mailbox;
+      Data  : Route_Aggregator_Configuration_Data;
+      State : in out Route_Aggregator_State)
+     with
+       SPARK_Mode => Off
+   is
+
+      C : UAR_Maps.Cursor :=
+        First (State.m_UniqueAutomationRequests);
+   begin
+      while Has_Element (State.m_UniqueAutomationRequests, C) loop
+
+         declare
+            Areq        : constant UniqueAutomationRequest :=
+              Element (State.m_UniqueAutomationRequests, C);
+            AllReceived : constant Boolean :=
+              (for all TaskId of Areq.TaskList =>
+                 Contains (State.m_TaskOptions, TaskId));
+         begin
+
+            if AllReceived then
+               Build_Matrix_Requests
+                 (Mailbox,
+                  Data,
+                  State,
+                  Key (State.m_UniqueAutomationRequests, C));
+            end if;
+
+         end;
+
+         Next (State.m_UniqueAutomationRequests, C);
+      end loop;
+   end Check_All_Task_Options_Received;
+
+   -------------------------
+   -- BuildMatrixRequests --
+   -------------------------
+
+   procedure Build_Matrix_Requests
+     (Mailbox : in out Route_Aggregator_Mailbox;
+      Data  : Route_Aggregator_Configuration_Data;
+      State : in out Route_Aggregator_State;
+      ReqId : Int64)
+     with
+       SPARK_Mode => Off
+   is
+      sendAirPlanRequest    : RPReq_Seq;
+      sendGroundPlanRequest : RPReq_Seq;
+      Empty_Formal_Set      : Int64_Formal_Set;
+   begin
+      Insert (State.m_pendingAutoReq, ReqId, Empty_Formal_Set);
+
+      if Length (Element (State.m_UniqueAutomationRequests, ReqId).EntityList) = 0 then
+         declare
+            AReq : UniqueAutomationRequest :=
+              Element (State.m_UniqueAutomationRequests, ReqId);
+         begin
+            AReq.EntityList := Data.m_entityStates;
+            Replace (State.m_UniqueAutomationRequests, ReqId, AReq);
+         end;
+      end if;
+
+      declare
+         AReq : constant UniqueAutomationRequest :=
+           Element (State.m_UniqueAutomationRequests, ReqId);
+      begin
+         For_Each_Vehicle : for VehicleId of AReq.EntityList loop
+            Make_Request : declare
+               StartHeading_Deg   : Real32 := 0.0;
+               StartLocation      : Location3D;
+               FoundPlanningState : Boolean := False;
+               Vehicle            : EntityState;
+            begin
+               for PlanningState of AReq.PlanningStates loop
+
+                  if PlanningState.EntityId = VehicleId then
+                     StartLocation := PlanningState.PlanningPosition;
+                     StartHeading_Deg := PlanningState.PlanningHeading;
+                     FoundPlanningstate := True;
+                     exit;
+                  end if;
+
+               end loop;
+
+               if FoundPlanningState
+                 or else (for some EntityId of Data.m_entityStates =>
+                            (EntityId = VehicleId))
+               then
+
+                  Build_Eligible_Task_Options : declare
+                     TaskOptionList : TaskOption_Seq;
+                     Found_Elig     : Boolean := False;
+                     PlanRequest    : RoutePlanRequest;
+                  begin
+                     for TaskId of AReq.TaskList loop
+
+                        if Contains (State.m_taskOptions, TaskId) then
+                           for Option of Element (State.m_TaskOptions, taskId).Options loop
+
+                              Found_Elig := False;
+                              for V of Option.EligibleEntities loop
+                                 if V = VehicleId then
+                                    Found_Elig := True;
+                                    exit;
+                                 end if;
+                              end loop;
+
+                              if Length (Option.EligibleEntities) = 0
+                                or else Found_Elig then
+                                 TaskOptionList := Add (TaskOptionList, Option);
+                              end if;
+
+                           end loop;
+                        end if;
+                     end loop;
+
+                     PlanRequest.AssociatedTaskID := 0;
+                     PlanRequest.IsCostOnlyRequest := False;
+                     PlanRequest.OperatingRegion := AReq.OperatingRegion;
+                     PlanRequest.VehicleID := VehicleId;
+                     State.m_routeRequestId := State.m_routeRequestId + 1;
+                     PlanRequest.RequestID := State.m_routeRequestId;
+
+                     if not FoundPlanningState then
+                        Vehicle := ES_Maps.Get (Data.m_entityStatesInfo, VehicleId);
+                        StartLocation := Vehicle.Location;
+                        StartHeading_Deg := Vehicle.Heading;
+                     end if;
+
+                     for Option of TaskOptionList loop
+                        declare
+                           TOP : constant TaskOptionPair :=
+                           (VehicleId, 0, 0, Option.TaskId, Option.OptionId);
+                           R : RouteConstraints;
+                           Set : Int64_Formal_Set := Element (State.m_pendingAutoReq, ReqId);
+                        begin
+                           Insert (State.m_routeTaskPairing, State.m_routeId + 1, TOP);
+                           R.StartLocation := StartLocation;
+                           R.StartHeading := StartHeading_Deg;
+                           R.EndLocation := Option.StartLocation;
+                           R.EndHeading := Option.StartHeading;
+                           R.RouteID := State.m_routeId + 1;
+                           PlanRequest.RouteRequests :=
+                             Add (PlanRequest.RouteRequests, R);
+                           Insert (Set, State.m_routeId + 1);
+                           State.m_routeId := State.m_routeId + 1;
+                           Replace (State.m_pendingAutoReq,
+                                    ReqId,
+                                    Set);
+                        end;
+                     end loop;
+
+                     for T1 in TaskOptionList loop
+                        for T2 in TaskOptionList loop
+
+                           if T1 /= T2 then
+                              declare
+                                 O1  : constant TaskOption :=
+                                   Get (TaskOptionList, T1);
+                                 O2  : constant TaskOption :=
+                                   Get (TaskOptionList, T2);
+                                 TOP : constant TaskOptionPair :=
+                                   (VehicleId,
+                                    O1.TaskID,
+                                    O1.OptionID,
+                                    O2.TaskID,
+                                    O2.OptionID);
+                                 R   : RouteConstraints;
+                                 Set : Int64_Formal_Set := Element (State.m_pendingAutoReq, ReqId);
+                              begin
+                                 Insert (State.m_routeTaskPairing, State.m_routeId + 1, TOP);
+                                 R.StartLocation := O1.EndLocation;
+                                 R.StartHeading := O1.EndHeading;
+                                 R.EndLocation := O2.StartLocation;
+                                 R.EndHeading := O2.StartHeading;
+                                 R.RouteID := State.m_routeId + 1;
+                                 PlanRequest.RouteRequests :=
+                                   Add (PlanRequest.RouteRequests, R);
+                                 Insert (Set, State.m_routeId + 1);
+                                 State.m_routeId := State.m_routeId + 1;
+                                 Replace (State.m_pendingAutoReq,
+                                          ReqId,
+                                          Set);
+                              end;
+                           end if;
+                        end loop;
+                     end loop;
+
+                     if Contains (Data.m_groundVehicles, VehicleId) then
+                        sendGroundPlanRequest :=
+                          Add (sendGroundPlanRequest, PlanRequest);
+                     else
+                        sendAirPlanRequest :=
+                          Add (sendAirPlanRequest, PlanRequest);
+                     end if;
+                  end Build_Eligible_Task_Options;
+               end if;
+            end Make_Request;
+         end loop For_Each_Vehicle;
+
+         for RPReq of sendAirPlanRequest loop
+            sendLimitedCastMessage (Mailbox,
+                                    AircraftPathPlanner,
+                                    RPReq);
+         end loop;
+
+         for RPReq of sendGroundPlanRequest loop
+            if Data.m_fastPlan then
+               Euclidean_Plan (Data,
+                               State.m_routePlanResponses,
+                               State.m_routePlans,
+                               RPReq);
+            else
+               sendLimitedCastMessage (Mailbox,
+                                       GroundPathPlanner,
+                                       RPReq);
+            end if;
+         end loop;
+
+         if Data.m_fastPlan then
+            Check_All_Route_Plans (Mailbox, State);
+         end if;
+      end;
+   end Build_Matrix_Requests;
+
+   ----------------
+   -- SendMatrix --
+   ----------------
+
+   procedure SendMatrix
+     (Mailbox                    : in out Route_Aggregator_Mailbox;
+      m_uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map;
+      m_pendingAutoReq           : Int64_Formal_Set_Map;
+      m_routePlans               : in out Int64_IdPlanPair_Map;
+      m_routeTaskPairing         : in out Int64_TaskOptionPair_Map;
+      m_routePlanResponses       : in out Int64_RouteResponse_Map;
+      m_taskOptions              : in out Int64_TaskPlanOptions_Map;
+      autoKey                    : Int64)
+     with
+       SPARK_Mode => Off
+   is
+      areq            : constant UniqueAutomationRequest :=
+        Element (m_uniqueAutomationRequests, autoKey);
+      matrix          : AssignmentCostMatrix;
+      pendingRequests : Int64_Formal_Set renames Element (m_pendingAutoReq, autoKey);
+   begin
+      matrix.CorrespondingAutomationRequestID := areq.RequestID;
+      matrix.OperatingRegion := areq.OperatingRegion;
+      matrix.TaskList := areq.TaskList;
+
+      for rId of pendingRequests loop
+
+         if Contains (m_routePlans, rId) then
+            if Contains (m_routeTaskPairing, rId) then
+
+               declare
+                  plan : constant IdPlanPair :=
+                    Element (m_routePlans, rId);
+                  taskpair : constant TaskOptionPair :=
+                    Element (m_routeTaskPairing, rId);
+                  toc : TaskOptionCost;
+               begin
+                  if plan.Cost < 0 then
+                     Put_Line ("Route not found: V[" & taskpair.vehicleId'Image & "](" & taskpair.prevTaskId'Image & "," & taskpair.prevTaskOption'Image &")-(" & taskpair.taskId'Image & ","&taskpair.taskOption'Image&")");
+                  end if;
+
+                  toc.DestinationTaskID := taskpair.taskId;
+                  toc.DestinationTaskOption := taskpair.taskOption;
+                  toc.InitialTaskID := taskpair.prevTaskId;
+                  toc.InitialTaskOption := taskpair.prevTaskOption;
+                  toc.TimeToGo := plan.Cost;
+                  toc.VehicleID := taskpair.vehicleId;
+                  matrix.CostMatrix := Add (matrix.CostMatrix, toc);
+               end;
+
+               Delete (m_routeTaskPairing, rId);
+            end if;
+
+            if Contains (m_routePlanResponses, Element (m_routePlans, rId).id) then
+               Delete (m_routePlanResponses, Element (m_routePlans, rId).Id);
+            end if;
+            Delete (m_routePlans, rId);
+         end if;
+      end loop;
+      sendBroadcastMessage(Mailbox, matrix);
+      Clear (m_taskOptions);
+   end SendMatrix;
 
    -----------------------
    -- SendRouteResponse --
@@ -842,5 +1191,168 @@ package body Route_Aggregator with SPARK_Mode is
       --  }
       --  m_routePlanResponses[response->getResponseID()] = response;
    end Euclidean_Plan;
+
+   --------------------------------------
+   -- Handle_Unique_Automation_Request --
+   --------------------------------------
+
+   procedure Handle_Unique_Automation_Request
+     (Data    : Route_Aggregator_Configuration_Data;
+      Mailbox : in out Route_Aggregator_Mailbox;
+      State   : in out Route_Aggregator_State;
+      Areq    : UniqueAutomationRequest)
+   is
+   begin
+      Insert (State.m_uniqueAutomationRequests,
+              State.m_autoRequestId + 1,
+              AReq);
+      State.m_autoRequestId := State.m_autoRequestId + 1;
+      Check_All_Task_Options_Received (Mailbox, Data, State);
+   end Handle_Unique_Automation_Request;
+
+   ------------------------
+   -- Insert_EntityState --
+   ------------------------
+
+   procedure Insert_EntityState
+     (m_entityStatesInfo : in out EntityState_Map;
+      Entity_State : EntityState)
+   is
+   begin
+      if ES_Maps.Has_Key (m_entityStatesInfo, Entity_State.Id) then
+         m_entityStatesInfo := ES_Maps.Set (m_entityStatesInfo, Entity_State.Id, Entity_State);
+      else
+         pragma Assume (Length (m_entityStatesInfo) < Count_Type'Last, "We still have room for a new entityState");
+         m_entityStatesInfo := ES_Maps.Add (m_entityStatesInfo, Entity_State.Id, Entity_State);
+      end if;
+   end Insert_EntityState;
+
+   -------------------------------
+   -- Handle_Air_Vehicle_Config --
+   -------------------------------
+
+   procedure Handle_Air_Vehicle_Config
+     (Data : in out Route_Aggregator_Configuration_Data;
+      Id   : Int64)
+   is
+   begin
+      if not Contains (Data.m_airVehicles, Id) then
+         pragma Assume (Length (Data.m_airVehicles) < Count_Type'Last, "We still have room for a new vehicle ID");
+         Data.m_airVehicles := Add (Data.m_airVehicles, Id);
+      end if;
+
+      if not Contains (Data.m_entityStates, Int64_Sequences.First, Last (Data.m_entityStates), Id) then
+         pragma Assume (Length (Data.m_entityStates) < Count_Type'Last, "We still have room for a new vehicle ID");
+         Data.m_entityStates := Add (Data.m_entityStates, Id);
+      end if;
+   end Handle_Air_Vehicle_Config;
+
+   ------------------------------
+   -- Handle_Air_Vehicle_State --
+   ------------------------------
+
+   procedure Handle_Air_Vehicle_State
+     (Data : in out Route_Aggregator_Configuration_Data;
+      Entity_State : EntityState)
+   is
+      Id : Int64 := Entity_State.Id;
+   begin
+      if not Contains (Data.m_airVehicles, Id) then
+         pragma Assume (Length (Data.m_airVehicles) < Count_Type'Last, "We still have room for a new vehicle ID");
+         Data.m_airVehicles := Add (Data.m_airVehicles, Id);
+      end if;
+
+      if not Contains (Data.m_entityStates, Int64_Sequences.First, Last (Data.m_entityStates), Id) then
+         pragma Assume (Length (Data.m_entityStates) < Count_Type'Last, "We still have room for a new vehicle ID");
+         Data.m_entityStates := Add (Data.m_entityStates, Id);
+      end if;
+
+      Insert_EntityState (Data.m_entityStatesInfo, Entity_State);
+   end Handle_Air_Vehicle_State;
+
+   ----------------------------------
+   -- Handle_Ground_Vehicle_Config --
+   ----------------------------------
+
+   procedure Handle_Ground_Vehicle_Config
+     (Data : in out Route_Aggregator_Configuration_Data;
+      Id   : Int64)
+   is
+   begin
+      if not Contains (Data.m_groundVehicles, Id) then
+         pragma Assume (Length (Data.m_groundVehicles) < Count_Type'Last, "We still have room for a new vehicle ID");
+         Data.m_groundVehicles := Add (Data.m_groundVehicles, Id);
+      end if;
+
+      if not Contains (Data.m_entityStates, Int64_Sequences.First, Last (Data.m_entityStates), Id) then
+         pragma Assume (Length (Data.m_entityStates) < Count_Type'Last, "We still have room for a new vehicle ID");
+         Data.m_entityStates := Add (Data.m_entityStates, Id);
+      end if;
+   end Handle_Ground_Vehicle_Config;
+
+   ---------------------------------
+   -- Handle_Ground_Vehicle_State --
+   ---------------------------------
+
+   procedure Handle_Ground_Vehicle_State
+     (Data : in out Route_Aggregator_Configuration_Data;
+      Entity_State : EntityState)
+   is
+      Id : Int64 := Entity_State.Id;
+   begin
+      if not Contains (Data.m_groundVehicles, Id) then
+         pragma Assume (Length (Data.m_groundVehicles) < Count_Type'Last, "We still have room for a new vehicle ID");
+         Data.m_groundVehicles := Add (Data.m_groundVehicles, Id);
+      end if;
+
+      if not Contains (Data.m_entityStates, Int64_Sequences.First, Last (Data.m_entityStates), Id) then
+         pragma Assume (Length (Data.m_entityStates) < Count_Type'Last, "We still have room for a new vehicle ID");
+         Data.m_entityStates := Add (Data.m_entityStates, Id);
+      end if;
+
+      Insert_EntityState (Data.m_entityStatesInfo, Entity_State);
+   end Handle_Ground_Vehicle_State;
+
+   -----------------------------------
+   -- Handle_Surface_Vehicle_Config --
+   -----------------------------------
+
+   procedure Handle_Surface_Vehicle_Config
+     (Data : in out Route_Aggregator_Configuration_Data;
+      Id   : Int64)
+   is
+   begin
+      if not Contains (Data.m_surfaceVehicles, Id) then
+         pragma Assume (Length (Data.m_surfaceVehicles) < Count_Type'Last, "We still have room for a new vehicle ID");
+         Data.m_surfaceVehicles := Add (Data.m_surfaceVehicles, Id);
+      end if;
+
+      if not Contains (Data.m_entityStates, Int64_Sequences.First, Last (Data.m_entityStates), Id) then
+         pragma Assume (Length (Data.m_entityStates) < Count_Type'Last, "We still have room for a new vehicle ID");
+         Data.m_entityStates := Add (Data.m_entityStates, Id);
+      end if;
+   end Handle_Surface_Vehicle_Config;
+
+   ----------------------------------
+   -- Handle_Surface_Vehicle_State --
+   ----------------------------------
+
+   procedure Handle_Surface_Vehicle_State
+     (Data : in out Route_Aggregator_Configuration_Data;
+      Entity_State : EntityState)
+   is
+      Id : Int64 := Entity_State.Id;
+   begin
+      if not Contains (Data.m_surfaceVehicles, Entity_State.Id) then
+         pragma Assume (Length (Data.m_surfaceVehicles) < Count_Type'Last, "We still have room for a new vehicle ID");
+         Data.m_surfaceVehicles := Add (Data.m_surfaceVehicles, Entity_State.Id);
+      end if;
+
+      if not Contains (Data.m_entityStates, Int64_Sequences.First, Last (Data.m_entityStates), Id) then
+         pragma Assume (Length (Data.m_entityStates) < Count_Type'Last, "We still have room for a new vehicle ID");
+         Data.m_entityStates := Add (Data.m_entityStates, Id);
+      end if;
+      Insert_EntityState (Data.m_entityStatesInfo, Entity_State);
+   end Handle_Surface_Vehicle_State;
 
 end Route_Aggregator;

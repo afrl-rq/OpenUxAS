@@ -20,18 +20,32 @@ package Route_Aggregator with SPARK_Mode is
    --  handled by the same primitives. We use functional containers, as it is
    --  not supposed to be modified often.
 
+   package ES_Maps is new Ada.Containers.Functional_Maps
+     (Key_Type => Int64,
+      Element_Type => EntityState);
+   use ES_Maps;
+   subtype EntityState_Map is ES_Maps.Map
+     with Predicate =>
+       (for all Id of EntityState_Map => (Id = Get (EntityState_Map, Id).Id));
+
    type Route_Aggregator_Configuration_Data is record
       m_entityStates     : Int64_Seq;
+      m_entityStatesInfo : EntityState_Map;
       --      std::unordered_map<int64_t, std::shared_ptr<afrl::cmasi::EntityConfiguration> > m_entityConfigurations;
-      m_airVehicles     : Int64_Set;
-      m_groundVehicles  : Int64_Set;
-      m_surfaceVehicles : Int64_Set;
-      m_fastPlan        : Boolean;
+      m_airVehicles      : Int64_Set;
+      m_groundVehicles   : Int64_Set;
+      m_surfaceVehicles  : Int64_Set;
+      m_fastPlan         : Boolean;
    end record
      with Predicate =>
-       (for all E of m_entityStates => Contains (m_airVehicles, E)
-        or else Contains (m_groundVehicles, E)
-        or else Contains (m_surfaceVehicles, E));
+       (for all Id of m_entityStates => Contains (m_airVehicles, Id)
+        or else Contains (m_groundVehicles, Id)
+        or else Contains (m_surfaceVehicles, Id))
+       and then
+       (for all Id of m_entityStates => (Has_Key (m_entityStatesInfo, Id)))
+       and then
+       (for all Id of m_entityStatesInfo =>
+          (Contains (m_entityStates, Int64_Sequences.First, Last (m_entityStates), Id)));
 
    package Int64_Formal_Sets is new Ada.Containers.Formal_Hashed_Sets
      (Element_Type => Int64,
@@ -101,6 +115,7 @@ package Route_Aggregator with SPARK_Mode is
    type IdPlanPair is record
       Id   : Int64;
       Plan : RoutePlan;
+      Cost : Int64 := -1;
    end record;
 
    package Int64_IdPlanPair_Maps is new Ada.Containers.Formal_Hashed_Maps
@@ -137,11 +152,55 @@ package Route_Aggregator with SPARK_Mode is
           (for all Id of Int_Set_Maps_M.Get (pendingRoute, R_Id) =>
                 Id <= routeRequestId));
 
+   package UAR_Maps is new Ada.Containers.Formal_Ordered_Maps
+     (Key_Type => Int64,
+      Element_Type => UniqueAutomationRequest);
+   use UAR_Maps;
+
+   subtype Int64_UniqueAutomationRequest_Map is UAR_Maps.Map (200);
+
+   type TaskOptionPair is record
+      vehicleId      : Int64 := 0;
+      prevTaskId     : Int64 := 0;
+      prevTaskOption : Int64 := 0;
+      taskId         : Int64 := 0;
+      taskOption     : Int64 := 0;
+   end record;
+
+   package Int64_TaskOptionPair_Maps is new Ada.Containers.Formal_Hashed_Maps
+     (Key_Type => Int64,
+      Element_Type => TaskOptionPair,
+      Hash => Int64_Hash);
+   use Int64_TaskOptionPair_Maps;
+
+   subtype Int64_TaskOptionPair_Map is Int64_TaskOptionPair_Maps.Map (200, Int64_TaskOptionPair_Maps.Default_Modulus (200));
+
+   package Int64_TaskPlanOptions_Maps is new Ada.Containers.Formal_Hashed_Maps
+     (Key_Type        => Int64,
+      Element_Type    => TaskPlanOptions,
+      Hash            => Int64_Hash);
+   use Int64_TaskPlanOptions_Maps;
+
+   subtype Int64_TaskPlanOptions_Map is Int64_TaskPlanOptions_Maps.Map
+     (200, Int64_TaskPlanOptions_Maps.Default_Modulus (200));
+
+   package RPReq_Sequences is new Ada.Containers.Functional_Vectors
+        (Index_Type   => Positive,
+         Element_Type => RoutePlanRequest);
+   type RPReq_Seq is new RPReq_Sequences.Sequence;
+
    type Route_Aggregator_State is record
-      m_routeRequestId     : Int64 := 1;
-      m_pendingRoute       : Int64_Formal_Set_Map;
-      m_routePlanResponses : Int64_RouteResponse_Map;
-      m_routePlans         : Int64_IdPlanPair_Map;
+      m_routeRequestId           : Int64 := 1;
+      m_routeId                  : Int64 := 1000000;
+      m_autoRequestId            : Int64 := 1;
+      m_pendingRoute             : Int64_Formal_Set_Map;
+      m_routePlanResponses       : Int64_RouteResponse_Map;
+      m_routePlans               : Int64_IdPlanPair_Map;
+
+      m_pendingAutoReq           : Int64_Formal_Set_Map;
+      m_uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map;
+      m_routeTaskPairing         : Int64_TaskOptionPair_Map;
+      m_taskOptions              : Int64_TaskPlanOptions_Map;
    end record
      with Predicate =>
 
@@ -376,6 +435,12 @@ package Route_Aggregator with SPARK_Mode is
      and No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses)
      and All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses);
 
+   procedure Handle_Task_Plan_Options
+     (Mailbox : in out Route_Aggregator_Mailbox;
+      Data  : Route_Aggregator_Configuration_Data;
+      State : in out Route_Aggregator_State;
+      Options : TaskPlanOptions);
+
    procedure Handle_Route_Request
      (Data    : Route_Aggregator_Configuration_Data;
       Mailbox : in out Route_Aggregator_Mailbox;
@@ -429,6 +494,16 @@ package Route_Aggregator with SPARK_Mode is
      and No_RouteRequest_Lost (State.m_pendingRoute)
      and No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses)
      and All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses);
+
+   procedure Handle_Unique_Automation_Request
+     (Data    : Route_Aggregator_Configuration_Data;
+      Mailbox : in out Route_Aggregator_Mailbox;
+      State   : in out Route_Aggregator_State;
+      Areq    : UniqueAutomationRequest)
+   with
+       Pre => State.m_autoRequestId < int64'Last
+       and then not Contains (State.m_uniqueAutomationRequests, State.m_autoRequestId + 1)
+       and then Length (State.m_uniqueAutomationRequests) < State.m_uniqueAutomationRequests.Capacity;
 
    procedure Check_All_Route_Plans
      (Mailbox : in out Route_Aggregator_Mailbox;
@@ -527,4 +602,49 @@ package Route_Aggregator with SPARK_Mode is
           (if Get (planToRoute (pendingRoute), Id) /= routeKey then
                  Contains (routePlanResponses, Id)
            or else PlanRequest_Sent (Id)));
+
+   procedure Check_All_Task_Options_Received
+     (Mailbox : in out Route_Aggregator_Mailbox;
+      Data  : Route_Aggregator_Configuration_Data;
+      State : in out Route_Aggregator_State);
+
+   procedure Build_Matrix_Requests
+     (Mailbox : in out Route_Aggregator_Mailbox;
+      Data  : Route_Aggregator_Configuration_Data;
+      State : in out Route_Aggregator_State;
+      ReqId : Int64);
+
+   procedure SendMatrix
+     (Mailbox                    : in out Route_Aggregator_Mailbox;
+      m_uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map;
+      m_pendingAutoReq           : Int64_Formal_Set_Map;
+      m_routePlans               : in out Int64_IdPlanPair_Map;
+      m_routeTaskPairing         : in out Int64_TaskOptionPair_Map;
+      m_routePlanResponses       : in out Int64_RouteResponse_Map;
+      m_taskOptions              : in out Int64_TaskPlanOptions_Map;
+      autoKey                    : Int64);
+
+   procedure Handle_Air_Vehicle_Config
+     (Data : in out Route_Aggregator_Configuration_Data;
+      Id   : Int64);
+
+   procedure Handle_Air_Vehicle_State
+     (Data : in out Route_Aggregator_Configuration_Data;
+      Entity_State : EntityState);
+
+   procedure Handle_Ground_Vehicle_Config
+     (Data : in out Route_Aggregator_Configuration_Data;
+      Id   : Int64);
+
+   procedure Handle_Ground_Vehicle_State
+     (Data : in out Route_Aggregator_Configuration_Data;
+      Entity_State : EntityState);
+
+   procedure Handle_Surface_Vehicle_Config
+     (Data : in out Route_Aggregator_Configuration_Data;
+      Id   : Int64);
+
+   procedure Handle_Surface_Vehicle_State
+     (Data : in out Route_Aggregator_Configuration_Data;
+      Entity_State : EntityState);
 end Route_Aggregator;

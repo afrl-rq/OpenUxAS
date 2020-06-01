@@ -8,14 +8,6 @@ package Route_Aggregator_Messages with SPARK_Mode is
 
    --  Messages only contain functional containers and SPARK compatible data
 
-   type UniqueAutomationRequest is new Message_Root with record
-      RequestID          : Int64;
-      EntityList         : Int64_Seq;
-      OperatingRegion    : Int64;
-      PlanningStates_Ids : Int64_Seq;
-      TaskList           : Int64_Seq;
-   end record;
-
    type AltitudeTypeEnum is (AGL, MSL);
    type SpeedTypeEnum is (Airspeed, Groundspeed);
    type TurnTypeEnum is (TurnShort, FlyOver);
@@ -29,6 +21,34 @@ package Route_Aggregator_Messages with SPARK_Mode is
       Altitude : Real32 := 0.0;
       -- Altitude type for specified altitude
       AltitudeType : AltitudeTypeEnum := MSL;
+   end record;
+
+   type EntityState is new Message_Root with record
+      Id : Int64 := 0;
+      Location : Location3D;
+      Heading : Real32 := 0.0;
+   end record;
+
+   type PlanningState is record
+      -- Identifier of the entitiy
+      EntityID : Int64 := 0;
+      -- Position of this entity for the plan. A valid PlanningState must define PlanningPosition (null not allowed).
+      PlanningPosition : Location3D;
+      -- Heading of this entity for the plan
+      PlanningHeading : Real32 := 0.0;
+   end record;
+
+   package PS_Sequences is new Ada.Containers.Functional_Vectors
+     (Index_Type   => Positive,
+      Element_Type => PlanningState);
+   type PlanningState_Seq is new PS_Sequences.Sequence;
+
+   type UniqueAutomationRequest is new Message_Root with record
+      RequestID          : Int64;
+      EntityList         : Int64_Seq;
+      OperatingRegion    : Int64;
+      PlanningStates     : PlanningState_Seq;
+      TaskList           : Int64_Seq;
    end record;
 
    type RouteConstraints is record
@@ -139,11 +159,11 @@ package Route_Aggregator_Messages with SPARK_Mode is
    end record;
 
    type RoutePlanRequest is new Message_Root with record
-      RequestID         : Int64;
-      AssociatedTaskID  : Int64;
-      VehicleID         : Int64;
-      OperatingRegion   : Int64;
-      IsCostOnlyRequest : Boolean;
+      RequestID         : Int64 := 0;
+      AssociatedTaskID  : Int64 := 0;
+      VehicleID         : Int64 := 0;
+      OperatingRegion   : Int64 := 0;
+      IsCostOnlyRequest : Boolean := False;
       RouteRequests     : RC_Seq;
    end record;
 
@@ -169,6 +189,74 @@ package Route_Aggregator_Messages with SPARK_Mode is
       ResponseID : Int64 := 0;
       -- Corresponding route responses for all requested vehicles
       Routes     : RPR_Seq;
+   end record;
+
+   type TaskOptionCost is new Message_Root with record
+      -- Corresponding Vehicle ID
+      VehicleID : Int64 := 0;
+      -- Initial task ID (if zero, corresponds to current vehicle location)
+      InitialTaskID : Int64 := 0;
+      -- Initial task option
+      InitialTaskOption : Int64 := 0;
+      -- Destination task ID
+      DestinationTaskID : Int64 := 0;
+      -- Destination task option
+      DestinationTaskOption : Int64 := 0;
+      -- Timing corresponding to travel between ('InitialTask' using 'InitialTaskOption') and ('DestinationTask' using 'DestinationTaskOption'). If time is less than zero, no feasible path exists between tasks.
+      TimeToGo : Int64 := 0;
+   end record;
+
+   package TOC_Sequences is new Ada.Containers.Functional_Vectors
+     (Index_Type   => Positive,
+      Element_Type => TaskOptionCost);
+   type TOC_Seq is new TOC_Sequences.Sequence;
+
+   type AssignmentCostMatrix is new Message_Root with record
+      -- ID that matches this cost matrix with the appropriate unique automation request
+      CorrespondingAutomationRequestID : Int64 := 0;
+      -- Over-arching task relationship description (directly from automation request). A process algebra string with only task IDs.
+      --  TaskLevelRelationship : Unbounded_String := To_Unbounded_String("");
+      -- List of all tasks that this cost matrix includes
+      TaskList : Int64_Seq;
+      -- Operating region that was used during matrix calculation
+      OperatingRegion : Int64 := 0;
+      -- Set of task-to-task timings for each requested vehicle. Assume 'T' max tasks [16], 'O' max options per task [8], 'V' max vehicles [16]: then max number of elements in matrix is 'V*T*O + (T*O)^2' [18432]
+      CostMatrix : TOC_Seq;
+   end record;
+
+   type TaskOption is record
+      -- Task ID
+      TaskID : Int64 := 0;
+      -- ID for this option
+      OptionID : Int64 := 0;
+      -- Eligible entities for completing this option with identical cost to complete. If list is empty, then all vehicles are assumed to be eligible.
+      EligibleEntities : Int64_Seq;
+      -- Cost to complete option in terms of time (given in milliseconds)
+      Cost : Int64 := 0;
+      -- Start location entering the option. A valid TaskOption must define StartLocation (null not allowed).
+      StartLocation : Location3D;
+      -- Start heading entering the option
+      StartHeading : Real32 := 0.0;
+      -- Ending location for this option. A valid TaskOption must define EndLocation (null not allowed).
+      EndLocation : Location3D;
+      -- Ending heading for thttps://www.youtube.com/watch?v=f7Yimxud4UIhis option
+      EndHeading : Real32 := 0.0;
+   end record;
+
+   package TO_Sequences is new Ada.Containers.Functional_Vectors
+     (Index_Type   => Positive,
+      Element_Type => TaskOption);
+   type TaskOption_Seq is new TO_Sequences.Sequence;
+
+   type TaskPlanOptions is new Message_Root with record
+      -- ID that matches this message with the appropriate unique automation request
+      CorrespondingAutomationRequestID : Int64 := 0;
+      -- Task ID
+      TaskID : Int64 := 0;
+      -- Process algebra string encoding all of the different options
+      Composition : Unbounded_String := To_Unbounded_String("");
+      -- List of options.
+      Options : TaskOption_Seq;
    end record;
 
 end Route_Aggregator_Messages;

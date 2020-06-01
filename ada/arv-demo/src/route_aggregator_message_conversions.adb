@@ -1,7 +1,10 @@
 with Route_Aggregator_Common;
 with AFRL.CMASI.Enumerations;
+with Afrl.Cmasi.AutomationRequest;
 with AVTAS.LMCP.Types;
 with UxAS.Messages.Route.RouteResponse;  use UxAS.Messages.Route.RouteResponse;
+with uxas.messages.lmcptask.AssignmentCostMatrix; use uxas.messages.lmcptask.AssignmentCostMatrix;
+with uxas.messages.lmcptask.TaskOptionCost; use uxas.messages.lmcptask.TaskOptionCost;
 
 package body Route_Aggregator_Message_Conversions is
 
@@ -231,15 +234,16 @@ package body Route_Aggregator_Message_Conversions is
       Result        : Route_Aggregator_Messages.RoutePlanResponse;
       New_RoutePlan : Route_Aggregator_Messages.RoutePlan;
       use Route_Aggregator_Messages;
+      use Route_Aggregator_Common;
    begin
-      Result.ResponseID       := Route_Aggregator_Common.Int64 (Msg.GetResponseID);
-      Result.AssociatedTaskID := Route_Aggregator_Common.Int64 (Msg.GetAssociatedTaskID);
-      Result.VehicleID        := Route_Aggregator_Common.Int64 (Msg.GetVehicleID);
-      Result.OperatingRegion  := Route_Aggregator_Common.Int64 (Msg.GetOperatingRegion);
+      Result.ResponseID       := Int64 (Msg.GetResponseID);
+      Result.AssociatedTaskID := Int64 (Msg.GetAssociatedTaskID);
+      Result.VehicleID        := Int64 (Msg.GetVehicleID);
+      Result.OperatingRegion  := Int64 (Msg.GetOperatingRegion);
 
       for Plan of Msg.getRouteResponses.all loop
-         New_RoutePlan.RouteID   := Route_Aggregator_Common.Int64 (Plan.GetRouteID);
-         New_RoutePlan.RouteCost := Route_Aggregator_Common.Int64 (Plan.GetRouteCost);
+         New_RoutePlan.RouteID   := Int64 (Plan.GetRouteID);
+         New_RoutePlan.RouteCost := Int64 (Plan.GetRouteCost);
 
          for WP of Plan.GetWaypoints.all loop
             New_RoutePlan.Waypoints := Add (New_RoutePlan.Waypoints, As_Waypoint_Message (WP));
@@ -426,6 +430,151 @@ package body Route_Aggregator_Message_Conversions is
       return Result;
    end As_RouteResponse_Acc;
 
+   ----------------------------------------
+   -- As_UniqueAutomationRequest_Message --
+   ----------------------------------------
+
+   function As_UniqueAutomationRequest_Message
+     (Msg : not null UniqueAutomationRequest_Any)
+      return Route_Aggregator_Messages.UniqueAutomationRequest is
+      Result : Route_Aggregator_Messages.UniqueAutomationRequest;
+      use Route_Aggregator_Common;
+      use all type Route_Aggregator_Messages.PlanningState_Seq;
+   begin
+      Result.RequestID := Int64 (Msg.all.getRequestID);
+
+      for EntityId of Msg.all.getOriginalRequest.getEntityList.all loop
+         Result.EntityList := Add (Result.EntityList, int64 (EntityId));
+      end loop;
+
+      Result.OperatingRegion := Int64 (Msg.all.getOriginalRequest.getOperatingRegion);
+
+      for MsgPlanningState of Msg.all.getPlanningStates.all loop
+         declare
+            PlanningState : Route_Aggregator_Messages.PlanningState;
+         begin
+            PlanningState.EntityId := Int64 (MsgPlanningState.all.getEntityId);
+            PlanningState.PlanningPosition := As_Location3D_Message (MsgPlanningState.all.getPlanningPosition);
+            PlanningState.PlanningHeading := Real32 (MsgPlanningState.all.getPlanningHeading);
+
+            Result.PlanningStates := Add (Result.PlanningStates, PlanningState);
+         end;
+      end loop;
+
+      for TaskId of Msg.all.getOriginalRequest.getTaskList.all loop
+         Result.TaskList := Add (Result.TaskList, Int64 (TaskId));
+      end loop;
+
+      return Result;
+
+   end As_UniqueAutomationRequest_Message;
+
+   -------------------------------
+   -- As_TaskPlanOption_Message --
+   -------------------------------
+
+   function As_TaskPlanOption_Message
+     (Msg : not null TaskPlanOptions_Any)
+      return Route_Aggregator_Messages.TaskPlanOptions
+   is
+      Result : Route_Aggregator_Messages.TaskPlanOptions;
+      use Route_Aggregator_Common;
+      use all type Int64_Seq;
+      use all type Route_Aggregator_Messages.TaskOption_Seq;
+   begin
+      Result.CorrespondingAutomationRequestID :=
+        Int64 (Msg.getCorrespondingAutomationRequestID);
+      Result.TaskID :=
+        Int64 (Msg.getTaskId);
+      Result.Composition := Msg.getComposition;
+
+      for MsgOption of Msg.getOptions.all loop
+         declare
+            Option : Route_Aggregator_Messages.TaskOption;
+         begin
+            Option.TaskID := Int64 (MsgOption.all.getTaskId);
+            Option.OptionID := Int64 (MsgOption.all.getOptionID);
+            Option.Cost := Int64 (MsgOption.all.getCost);
+            Option.StartLocation :=
+              As_Location3D_Message (MsgOption.all.getStartLocation);
+            Option.StartHeading := Real32 (MsgOption.all.getStartHeading);
+            Option.EndLocation :=
+              As_Location3D_Message (MsgOption.all.getEndLocation);
+            Option.EndHeading := Real32 (MsgOption.all.getEndHeading);
+
+            for Entity of MsgOption.all.getEligibleEntities.all loop
+               Option.EligibleEntities := Add (Option.EligibleEntities, Int64 (Entity));
+            end loop;
+
+            Result.Options := Add (Result.Options, Option);
+         end;
+      end loop;
+      return Result;
+   end As_TaskPlanOption_Message;
+
+   ---------------------------
+   -- As_TaskOptionCost_Acc --
+   ---------------------------
+
+   function As_TaskOptionCost_Acc
+     (Msg : Route_Aggregator_Messages.TaskOptionCost)
+      return TaskOptionCost_Acc
+   is
+      Result : constant TaskOptionCost_Acc := new TaskOptionCost;
+      use Avtas.lmcp.types;
+   begin
+      Result.all.setVehicleID (Int64 (Msg.VehicleID));
+      Result.all.setIntialTaskID (Int64 (Msg.InitialTaskID));
+      Result.all.setIntialTaskOption (Int64 (Msg.InitialTaskOption));
+      Result.all.setDestinationTaskID (Int64 (Msg.DestinationTaskID));
+      Result.all.setDestinationTaskOption (Int64 (Msg.DestinationTaskOption));
+      Result.all.setTimeToGo (Int64 (Msg.TimeToGo));
+      return Result;
+   end As_TaskOptionCost_Acc;
+
+   ---------------------------------
+   -- As_AssignmentCostMatrix_Acc --
+   ---------------------------------
+
+   function As_AssignmentCostMatrix_Acc (Msg : Route_Aggregator_Messages.AssignmentCostMatrix'Class)
+                                         return AssignmentCostMatrix_Acc
+   is
+      Result : constant AssignmentCostMatrix_Acc := new AssignmentCostMatrix;
+      use Avtas.lmcp.types;
+   begin
+      Result.all.setCorrespondingAutomationRequestID (Int64 (Msg.CorrespondingAutomationRequestID));
+
+      for TaskId of Msg.TaskList loop
+         Result.getTaskList.Append (Int64 (TaskId));
+      end loop;
+
+      Result.all.setOperatingRegion (Int64 (Msg.OperatingRegion));
+
+      for TOC of Msg.CostMatrix loop
+         Result.getCostMatrix.Append (As_TaskOptionCost_Acc (TOC));
+
+      end loop;
+
+      return Result;
+   end As_AssignmentCostMatrix_Acc;
+
+   ----------------------------
+   -- As_EntityState_Message --
+   ----------------------------
+
+   function As_EntityState_Message (Msg : not null EntityState_Any)
+                                    return Route_Aggregator_Messages.EntityState
+   is
+      Result : Route_Aggregator_Messages.EntityState;
+      use Route_Aggregator_Common;
+   begin
+      Result.Id := Int64 (Msg.getID);
+      Result.Location := As_Location3D_Message (Msg.getLocation);
+      Result.Heading := Real32 (Msg.getHeading);
+
+      return Result;
+   end As_EntityState_Message;
+
    -------------------
    -- As_Object_Any --
    -------------------
@@ -450,7 +599,8 @@ package body Route_Aggregator_Message_Conversions is
 
       elsif Msg in Route_Aggregator_Messages.RouteResponse'Class then
          Result := AVTAS.LMCP.Object.Object_Any (As_RouteResponse_Acc (Route_Aggregator_Messages.RouteResponse'Class (Msg)));
-
+      elsif Msg in Route_Aggregator_Messages.AssignmentCostMatrix'Class then
+         Result := AVTAS.LMCP.Object.Object_Any (As_AssignmentCostMatrix_Acc (Route_Aggregator_Messages.AssignmentCostMatrix'Class (Msg)));
       else
          raise Program_Error with "unexpected message kind in Route_Aggregator_Message_Conversions.As_Object_Any";
          --  UniqueAutomationRequest is in the class but not sent
