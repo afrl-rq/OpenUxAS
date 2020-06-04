@@ -4,8 +4,6 @@ set -x
 mkdir -p $TOOLS_DIR
 cd $TOOLS_DIR
 
-echo $TRAVIS_BUILD_DIR
-
 # Clone OpenUxAS-bootstrap repository, pull the last changes if it exists
 if ! [ -d OpenUxAS-bootstrap ]
 then
@@ -22,6 +20,7 @@ fi
 pip install wheel
 pip install zmq
 pip install git+https://github.com/AdaCore/e3-core.git
+pip install e3-testsuite
 
 # If not already present, download the GNAT Community installer and the helper
 # scripts to use it headless.
