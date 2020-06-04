@@ -14,7 +14,7 @@ project AFRL_Ada_Dev is
    for Main use ("uxas_ada.adb");
 
    type Modes is ("debug", "release", "gcov");
-   App_Mode : Modes := external ("APP_MODE", "debug");
+   App_Mode : Modes := external ("APP_MODE", "release");
 
    for Object_Dir use "objs/" & App_Mode;
 
@@ -40,7 +40,7 @@ project AFRL_Ada_Dev is
 
    package Builder is
       for Executable ("uxas_ada.adb") use "uxas-ada";
-   
+
       case App_Mode is
          when "release"        =>
             for Default_Switches ("ada") use ("-j2");
@@ -79,7 +79,8 @@ project AFRL_Ada_Dev is
    end Pretty_Printer;
 
    package Prove is
-      for Proof_Switches ("Ada") use ("--level=2");
+      for Proof_Switches ("Ada") use ("-j0", "--no-counterexample", "-u");
+      for Proof_Dir use "proof";
    end Prove;
 
 end AFRL_Ada_Dev;
