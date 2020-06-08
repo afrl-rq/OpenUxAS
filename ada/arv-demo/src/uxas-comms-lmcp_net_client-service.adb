@@ -164,7 +164,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service is
         Post => Slash_Appended'Result (Slash_Appended'Result'Last) = '/';
 
       function Slash_Appended (S : String) return String is
-         (if S (S'Last) = '/' then S else S & '/');
+         (if S (S'Last) = '/' then S else S & "/");
 
    begin
       if This.Work_Directory_Name /= "" then

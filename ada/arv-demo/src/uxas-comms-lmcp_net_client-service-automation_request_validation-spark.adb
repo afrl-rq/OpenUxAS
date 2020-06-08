@@ -555,8 +555,8 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Automation_Request_Validation.SP
                end loop;
                if not IsFoundAMatch then
                   Append (To   => ReasonForFailure,
-                          Tail => "- No EntityStates that match EntityConfigurations"
-                          & " are available.");
+                          Tail => "- No EntityStates that match EntityConfigurations are available.");
+
                   IsReady := False;
                end if;
             end;
@@ -804,54 +804,3 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Automation_Request_Validation.SP
    end Check_Automation_Request_Requirements;
 
 end UxAS.Comms.LMCP_Net_Client.Service.Automation_Request_Validation.SPARK;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

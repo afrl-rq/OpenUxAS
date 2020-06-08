@@ -6,10 +6,8 @@
 <prover id="1" name="altergo" version="1.30-gnatprove" timelimit="60" steplimit="0" memlimit="2000"/>
 <prover id="2" name="Z3" version="4.5.1-gnatprove" timelimit="0" steplimit="0" memlimit="0"/>
 <file format="gnat-json">
-<path name=".."/><path name=".."/><path name=".."/><path name=".."/><path name=".."/>
-<path name=".."/><path name=".."/><path name=".."/><path name=".."/><path name=".."/>
-<path name="tmp"/><path name="tmpikziir6y"/><path name="automation_request_validator"/>
-<path name="gnatprove"/><path name="dc373979a57514c7abe2-_service__automation_request_validation__spark__handle_automation_request.gnat-json"/>
+<path name=".."/><path name=".."/><path name=".."/><path name="objs"/>
+<path name="release"/><path name="gnatprove"/><path name="dc373979a57514c7abe2-_service__automation_request_validation__spark__handle_automation_request.gnat-json"/>
 <theory name="Ada___ada___ada___ada___ada___uxas__comms__lmcp_net_client__service__automation_request_validation__spark__handle_automation_request__subprogram_def">
  <goal name="def&#39;vc" expl="VC for def">
  <transf name="split_goal_wp_conj" >
@@ -237,12 +235,12 @@
   </transf>
   </goal>
   <goal name="def&#39;vc.58" expl="precondition">
-  <proof prover="0" timelimit="60" memlimit="2000"><result status="timeout" steps="1016607"/></proof>
+  <proof prover="0" timelimit="60" memlimit="2000"><result status="timeout"/></proof>
   <proof prover="1"><result status="timeout"/></proof>
   <proof prover="2" timelimit="60" memlimit="2000"><result status="unknown" steps="494282"/></proof>
   </goal>
   <goal name="def&#39;vc.59" expl="precondition">
-  <proof prover="0" timelimit="60" memlimit="2000"><result status="timeout" steps="1016570"/></proof>
+  <proof prover="0" timelimit="60" memlimit="2000"><result status="timeout"/></proof>
   <proof prover="1"><result status="timeout"/></proof>
   <proof prover="2" timelimit="60" memlimit="2000"><result status="unknown" steps="500572"/></proof>
   </goal>
