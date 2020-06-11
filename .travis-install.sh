@@ -16,10 +16,10 @@ else
 fi
 
 # Install the sandbox (we're not using the install_env script because
-# Travis python is already a virtual environment.
+# Travis python is already a virtual environment).
 pip install wheel
 pip install zmq
-pip install git+https://github.com/AdaCore/e3-core.git
+pip install e3-core
 pip install e3-testsuite
 
 # If not already present, download the GNAT Community installer and the helper
