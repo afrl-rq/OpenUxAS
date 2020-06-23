@@ -3,16 +3,14 @@
 "http://why3.lri.fr/why3session.dtd">
 <why3session shape_version="6">
 <prover id="0" name="CVC4" version="1.6-gnatprove" timelimit="0" steplimit="6" memlimit="0"/>
-<prover id="1" name="altergo" version="1.30-gnatprove" timelimit="120" steplimit="0" memlimit="2000"/>
-<prover id="2" name="Z3" version="4.5.1-gnatprove" timelimit="120" steplimit="0" memlimit="2000"/>
-<file format="gnat-json">
+<file format="gnat-json" proved="true">
 <path name=".."/><path name=".."/><path name=".."/><path name=".."/><path name=".."/>
 <path name=".."/><path name=".."/><path name=".."/><path name=".."/><path name=".."/>
-<path name="tmp"/><path name="tmp_ho4v5my"/><path name="route_aggregator"/>
+<path name="tmp"/><path name="tmpw5p2os77"/><path name="route_aggregator"/>
 <path name="gnatprove"/><path name="route_aggregator__handle_air_vehicle_config.gnat-json"/>
-<theory name="Route_aggregator__handle_air_vehicle_config__subprogram_def">
- <goal name="def&#39;vc" expl="VC for def">
- <transf name="split_goal_wp_conj" >
+<theory name="Route_aggregator__handle_air_vehicle_config__subprogram_def" proved="true">
+ <goal name="def&#39;vc" expl="VC for def" proved="true">
+ <transf name="split_goal_wp_conj" proved="true" >
   <goal name="def&#39;vc.0" expl="postcondition" proved="true">
   <transf name="trivial_true" proved="true" >
   </transf>
@@ -40,7 +38,7 @@
   <proof prover="0"><result status="valid" steps="5"/></proof>
   </goal>
   <goal name="def&#39;vc.7" expl="assertion" proved="true">
-  <proof prover="0" steplimit="6241"><result status="valid" steps="5673"/></proof>
+  <proof prover="0" steplimit="293"><result status="valid" steps="266"/></proof>
   </goal>
   <goal name="def&#39;vc.8" expl="precondition" proved="true">
   <transf name="trivial_true" proved="true" >
@@ -74,10 +72,8 @@
   <goal name="def&#39;vc.16" expl="precondition" proved="true">
   <proof prover="0"><result status="valid" steps="5"/></proof>
   </goal>
-  <goal name="def&#39;vc.17" expl="assertion">
-  <proof prover="0" timelimit="120" steplimit="0" memlimit="2000"><result status="unknown" steps="21759"/></proof>
-  <proof prover="1"><result status="timeout"/></proof>
-  <proof prover="2"><result status="timeout"/></proof>
+  <goal name="def&#39;vc.17" expl="assertion" proved="true">
+  <proof prover="0" steplimit="16523"><result status="valid" steps="15020"/></proof>
   </goal>
   <goal name="def&#39;vc.18" expl="postcondition" proved="true">
   <transf name="trivial_true" proved="true" >

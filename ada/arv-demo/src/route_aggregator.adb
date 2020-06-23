@@ -57,27 +57,33 @@ package body Route_Aggregator with SPARK_Mode is
 
    procedure Insert_PendingRoute
      (m_pendingRoute   : in out Int64_Formal_Set_Map;
+      otherPending     : Int64_Formal_Set_Map;
       m_routeRequestId : Int64;
       RequestID        : int64;
       PlanRequests     : Int64_Formal_Set)
-   with Pre => not Int_Set_Maps_M.Has_Key (Model (m_pendingRoute), RequestID)
+     with Pre => not Int_Set_Maps_M.Has_Key (Model (m_pendingRoute), RequestID)
        and Length (m_pendingRoute) < m_pendingRoute.Capacity
        and
          All_Pending_Routes_Seen (Model (m_pendingRoute), m_routeRequestId)
        and
          No_Overlaps (Model (m_pendingRoute))
        and
+         No_Overlaps (Model (m_pendingRoute), Model (otherPending))
+       and
          (for all Id of PlanRequests => Id <= m_routeRequestId)
        and
        (for all R_Id of Model (m_pendingRoute) =>
-          (for all E of Int_Set_Maps_M.Get (Model (m_pendingRoute), R_Id) => not Contains (PlanRequests, E))),
+          (for all E of Int_Set_Maps_M.Get (Model (m_pendingRoute), R_Id) => not Contains (PlanRequests, E)))
+       and
+       (for all R_Id of Model (otherPending) =>
+          (for all E of Int_Set_Maps_M.Get (Model (otherPending), R_Id) => not Contains (PlanRequests, E))),
      Post =>
 
      --  Predicate of State
 
        All_Pending_Routes_Seen (Model (m_pendingRoute), m_routeRequestId)
      and No_Overlaps (Model (m_pendingRoute))
-
+     and No_Overlaps (Model (m_pendingRoute), Model (otherPending))
      --  Part of the postcondition copied from Int64_Formal_Set_Maps.Insert
 
      and Model (m_pendingRoute)'Old <= Model (m_pendingRoute)
@@ -103,16 +109,15 @@ package body Route_Aggregator with SPARK_Mode is
         Int64_Formal_Set_Maps.Formal_Model.Model (m_pendingRoute) with Ghost;
    begin
       Insert (m_pendingRoute, RequestID, PlanRequests);
-
       --  Establish the effect on the redefined Model of maps of formal sets
 
       Model_Include
         (Old_pendingRoute_M, Int64_Formal_Set_Maps.Formal_Model.Model (m_pendingRoute),
          Old_pendingRoute, Model (m_pendingRoute));
-      pragma Assert (for all K of Model (m_pendingRoute) =>
-                       Int_Set_Maps_M.Has_Key (Old_pendingRoute, K)
-                     or K = RequestID);
+
       pragma Assert (No_Overlaps (Model (m_pendingRoute)));
+      pragma Assert (All_Pending_Routes_Seen (Model (m_pendingRoute), m_routeRequestId));
+
    end Insert_PendingRoute;
 
    -------------------------
@@ -121,11 +126,13 @@ package body Route_Aggregator with SPARK_Mode is
 
    procedure Delete_PendingRoute
      (m_pendingRoute   : in out Int64_Formal_Set_Map;
+      otherpending     : Int64_Formal_Set_Map;
       m_routeRequestId : Int64;
       Position         : in out Int64_Formal_Set_Maps.Cursor)
      with Pre => Has_Element (m_pendingRoute, Position)
      and All_Pending_Routes_Seen (Model (m_pendingRoute), m_routeRequestId)
-     and No_Overlaps (Model (m_pendingRoute)),
+     and No_Overlaps (Model (m_pendingRoute))
+     and No_Overlaps (Model (m_pendingRoute), Model (otherPending)),
 
        Post =>
 
@@ -133,6 +140,7 @@ package body Route_Aggregator with SPARK_Mode is
 
         All_Pending_Routes_Seen (Model (m_pendingRoute), m_routeRequestId)
      and No_Overlaps (Model (m_pendingRoute))
+     and No_Overlaps (Model (m_pendingRoute), Model (otherPending))
 
      --  Postcondition copied from Int64_Formal_Set_Maps.Delete
 
@@ -303,14 +311,14 @@ package body Route_Aggregator with SPARK_Mode is
       State    : in out Route_Aggregator_State;
       Response : RoutePlanResponse)
    is
-      OldHistory : constant History_Type := History with Ghost;
    begin
       pragma Assume (Length (History) < Count_Type'Last, "We still have room for a new event in History");
       History := Add (History, (Kind => Receive_PlanResponse, Id => Response.ResponseID));
+      pragma Assert (No_RouteRequest_Lost (State.m_pendingRoute));
 
       pragma Assume (Length (State.m_routePlanResponses) < State.m_routePlanResponses.Capacity, "We have some room for a new plan response");
       Insert (State.m_routePlanResponses, Response.ResponseID, Response);
-      pragma Assert (Valid_Plan_Responses (State.m_pendingRoute, State.m_routePlanResponses));
+      pragma Assert (Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses));
       pragma Assert
         (Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans));
 
@@ -338,10 +346,16 @@ package body Route_Aggregator with SPARK_Mode is
            (Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans));
 
          pragma Assume (Length (State.M_RoutePlans) < State.M_RoutePlans.Capacity, "We have enough room for all route plans");
-         Insert (State.m_routePlans, Get (Response.RouteResponses, p).RouteID,
-                 IdPlanPair'(Id   => Response.ResponseID,
-                             Plan => Get (Response.RouteResponses, p),
-                             Cost => Get (Response.RouteResponses, p).RouteCost));
+
+         declare
+            ID   : Int64 := Get (Response.RouteResponses, p).RouteID;
+            Plan : RoutePlan := Get (Response.RouteResponses, p);
+         begin
+            Insert (State.m_routePlans, ID,
+                    IdPlanPair'(Id   => Response.ResponseID,
+                                Plan => Plan,
+                                Cost => Get (Response.RouteResponses, p).RouteCost));
+         end;
          pragma Assert (Contains (Element (State.m_routePlanResponses, Response.ResponseID).RouteResponses, Get (Response.RouteResponses, p).RouteID));
       end loop;
 
@@ -367,12 +381,21 @@ package body Route_Aggregator with SPARK_Mode is
       Request : RouteRequest)
    is
       use Int64_Sequences;
+      use all type History_Type;
       Vehicle_Ids  : Int64_Seq := Request.VehicleID;
       PlanRequests : Int64_Formal_Set;
       Old_routeRequestId : constant Int64 := State.m_routeRequestId with Ghost;
+
    begin
+      pragma Assert (No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses));
       pragma Assume (Length (History) < Count_Type'Last, "We still have room for a new event in History");
       History := Add (History, (Kind => Receive_RouteRequest, Id => Request.RequestID));
+      pragma Assert
+        (for all Pos in Event_Sequences.First .. Last (History) - 1 =>
+           (if Get (History, Pos).Kind = Receive_PlanResponse
+            and Has_Key (planToRoute (State.m_pendingRoute), Get (History, Pos).Id)
+            then Contains (State.m_routePlanResponses, Get (History, Pos).Id)));
+      pragma Assert (No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses));
 
 ---------------------------------------------------------------------------------------------------------------
 --  this doesn't match the C++ exactly, because it doesn't put the new vehicle
@@ -384,10 +407,6 @@ package body Route_Aggregator with SPARK_Mode is
 ---------------------------------------------------------------------------------------------------------------
 
       --  We only have route plan responses with Ids smaller than State.m_routeRequestId
-
-      pragma Assert
-        (for all K of Model (State.m_routePlanResponses) =>
-                Contains (Int_Set_Maps_M.Get (Model (State.m_pendingRoute), Get (planToRoute (State.m_pendingRoute), K)), K));
       pragma Assert
         (for all K of Model (State.m_routePlanResponses) =>
              K <= State.m_routeRequestId);
@@ -426,7 +445,7 @@ package body Route_Aggregator with SPARK_Mode is
          pragma Loop_Invariant
            (Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans));
          pragma Loop_Invariant
-           (No_Finished_Route_Request (State.m_pendingRoute, State.m_routePlanResponses));
+           (No_Finished_Route_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses));
 
          --  Update of the history, it may contain new plan requests
 
@@ -497,21 +516,23 @@ package body Route_Aggregator with SPARK_Mode is
                pragma Assume (Length (History) < Count_Type'Last, "We still have room for a new event in History");
                History := Add (History, (Kind => Send_PlanRequest, Id => planRequest.RequestID));
                pragma Assert (PlanRequest_Sent (planRequest.RequestID));
+
             end if;
          end;
          pragma Assert
            (for all Id of Model (PlanRequests) =>
-              PlanRequest_Processed (State.m_routePlanResponses, Id));
+                PlanRequest_Processed (State.m_routePlanResponses, Id));
+         pragma Assert (All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses));
       end loop;
 
       --  Restate part of the loop invariants after the loop
-
-      pragma Assert
-        (No_Finished_Route_Request (State.m_pendingRoute, State.m_routePlanResponses));
-      pragma Assert (All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses));
       pragma Assert
         (for all E of History =>
            (if E.Kind = Receive_PlanResponse then not Contains (PlanRequests, E.Id)));
+      pragma Assert (All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses));
+      pragma Assert
+        (No_Finished_Route_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses));
+
       pragma Assert
         (for all R_Id of Model (State.m_pendingRoute) =>
              (for all E of Int_Set_Maps_M.Get (Model (State.m_pendingRoute), R_Id) =>
@@ -519,12 +540,12 @@ package body Route_Aggregator with SPARK_Mode is
 
       pragma Assume (Length (State.m_pendingRoute) < State.m_pendingRoute.Capacity, "We have enough room for a new pending route request");
       Insert_PendingRoute
-        (State.m_pendingRoute, State.m_routeRequestId, Request.RequestID, PlanRequests);
+        (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routeRequestId, Request.RequestID, PlanRequests);
 
       --  System invariants have been reestablished
 
       pragma Assert (All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses));
-      pragma Assert (Valid_Plan_Responses (State.m_pendingRoute, State.m_routePlanResponses));
+      pragma Assert (Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses));
       pragma Assert
         (No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses));
 
@@ -534,7 +555,7 @@ package body Route_Aggregator with SPARK_Mode is
          Check_All_Route_Plans (Mailbox, State);
       else
          pragma Assert (Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Request.RequestID));
-         pragma Assert (No_Finished_Route_Request (State.m_pendingRoute, State.m_routePlanResponses));
+         pragma Assert (No_Finished_Route_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses));
       end if;
    end Handle_Route_Request;
 
@@ -560,15 +581,43 @@ package body Route_Aggregator with SPARK_Mode is
    -- Check_All_Route_Plans --
    ---------------------------
 
-   procedure Check_All_Route_Plans
+   procedure Check_All_Route_Plans_PendingRoute
      (Mailbox : in out Route_Aggregator_Mailbox;
       State   : in out Route_Aggregator_State)
+     with
+       --  General invariants
+
+     Pre  => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
+     and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
+     and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
+
+     --  History invariants
+
+     and Valid_Events (State.m_routeRequestId)
+     and No_RouteRequest_Lost (State.m_pendingRoute)
+     and No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses)
+     and All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses),
+
+     --  General invariants
+
+     Post => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
+     and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
+     and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
+     --and No_Finished_Route_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
+     and (for all K in 1 .. Length (State.m_pendingRoute) =>
+            Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)))
+
+     --  History invariants
+
+     and History'Old <= History
+     and Valid_Events (State.m_routeRequestId)
+     and No_RouteRequest_Lost (State.m_pendingRoute)
+     and No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses)
+     and All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses)
    is
       i : Int64_Formal_Set_Maps.Cursor := First (State.m_pendingRoute);
-      Old_routePlanResponses : RR_Maps_M.Map := Model (State.m_routePlanResponses) with Ghost;
       D : Count_Type := 0 with Ghost;
       --  Number of removed elements
-      k : Int64_Formal_Set_Maps.Cursor := First (State.m_pendingAutoReq);
    begin
       -- check pending route requests
       while Has_Element (State.m_pendingRoute, i) loop
@@ -587,7 +636,7 @@ package body Route_Aggregator with SPARK_Mode is
               Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)));
          pragma Loop_Invariant
            (for all K in Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), I) .. Length (State.m_pendingRoute) =>
-              Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K) = Int_Set_Maps_K.Get (Keys (State.m_pendingRoute)'Loop_Entry, K + D));
+                Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K) = Int_Set_Maps_K.Get (Keys (State.m_pendingRoute)'Loop_Entry, K + D));
 
          --  General invariants
 
@@ -596,7 +645,7 @@ package body Route_Aggregator with SPARK_Mode is
          pragma Loop_Invariant
            (Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans));
          pragma Loop_Invariant
-           (Valid_Plan_Responses (State.m_pendingRoute, State.m_routePlanResponses));
+           (Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses));
 
          --  History invariants
 
@@ -612,14 +661,14 @@ package body Route_Aggregator with SPARK_Mode is
                    Contains (State.m_routePlanResponses, j));
          begin
             if isFulfilled then
-               SendRouteResponse (Mailbox, State.m_pendingRoute, State.m_routePlanResponses, State.m_routePlans, Key (State.m_pendingRoute, i));
+               SendRouteResponse (Mailbox, State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses, State.m_routePlans, Key (State.m_pendingRoute, i));
 
                declare
                   Dummy    : Int64_Formal_Set_Maps.Cursor := i;
                   Pos      : constant Count_Type := Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), I) with Ghost;
                begin
                   Next (State.m_pendingRoute, i);
-                  Delete_PendingRoute (State.m_pendingRoute, State.m_routeRequestId, Dummy);
+                  Delete_PendingRoute (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routeRequestId, Dummy);
                   D := D + 1;
                   pragma Assert
                     (for all K in 1 .. Pos - 1 =>
@@ -633,76 +682,147 @@ package body Route_Aggregator with SPARK_Mode is
          end;
       end loop;
 
+      pragma Assert
+        (for all K in 1 .. Length (State.m_pendingRoute) =>
+             Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)));
+   end Check_All_Route_Plans_PendingRoute;
+
+   procedure Check_All_Route_Plans_PendingAutoReq
+     (Mailbox : in out Route_Aggregator_Mailbox;
+      State   : in out Route_Aggregator_State)
+     with
+       --  General invariants
+
+     Pre  => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
+     and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
+     and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
+     and (for all K in 1 .. Length (State.m_pendingRoute) =>
+            Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)))
+
+     --  History invariants
+
+     and Valid_Events (State.m_routeRequestId)
+     and No_RouteRequest_Lost (State.m_pendingRoute)
+     and No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses)
+     and All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses),
+
+     --  General invariants
+
+     Post => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
+     and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
+     and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
+     and No_Finished_Route_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
+
+     --  History invariants
+
+     and History'Old <= History
+     and Valid_Events (State.m_routeRequestId)
+     and No_RouteRequest_Lost (State.m_pendingRoute)
+     and No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses)
+     and All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses)
+   is
+      i : Int64_Formal_Set_Maps.Cursor := First (State.m_pendingAutoReq);
+     -- Old_routePlanResponses : constant Int64_RouteResponse_Map := State.m_routePlanResponses with Ghost;
+      D : Count_Type := 0 with Ghost;
+      --  Number of removed elements
+   begin
+      --  Check pending automation requests
+
+      while Has_Element (State.m_pendingAutoReq, i) loop
+         pragma Loop_Invariant (Has_Element (State.m_pendingAutoReq, i));
+
+         pragma Loop_Invariant
+           (D = Length (State.m_pendingAutoReq)'Loop_Entry - Length (State.m_pendingAutoReq));
+         pragma Loop_Invariant
+           (Model (State.m_pendingAutoReq) <= Int_Set_Maps_M.Map'(Model (State.m_pendingAutoReq))'Loop_Entry);
+         pragma Loop_Invariant
+           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), I) - 1 =>
+              (for some L in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), I) - 1 + D =>
+                    Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K) = Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq)'Loop_Entry, L)));
+         pragma Loop_Invariant
+           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), I) - 1 =>
+              Is_Pending (Model (State.m_pendingAutoReq), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K)));
+         pragma Loop_Invariant
+           (for all K in Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), I) .. Length (State.m_pendingAutoReq) =>
+              Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K) = Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq)'Loop_Entry, K + D));
+
+         --  General invariants
+
+         pragma Loop_Invariant
+           (All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans));
+         pragma Loop_Invariant
+           (Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans));
+         pragma Loop_Invariant
+           (Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses));
+         pragma Loop_Invariant
+           (for all K in 1 .. Length (State.m_pendingRoute) =>
+             Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)));
+
+         --  History invariants
+
+         pragma Loop_Invariant (History'Loop_Entry <= History);
+         pragma Loop_Invariant (Valid_Events (State.m_routeRequestId));
+         pragma Loop_Invariant (No_RouteRequest_Lost (State.m_pendingRoute));
+         pragma Loop_Invariant (No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses));
+         pragma Loop_Invariant (All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses));
+
+         declare
+            isFulfilled : constant Boolean :=
+              (for all J of Element (State.m_pendingAutoReq, i) =>
+                   Contains (State.m_routePlanResponses, j));
+         begin
+            if isFulfilled then
+               SendMatrix (Mailbox,
+                           State.m_uniqueAutomationRequests,
+                           State.m_pendingRoute,
+                           State.m_pendingAutoReq,
+                           State.m_routePlans,
+                           State.m_routeTaskPairing,
+                           State.m_routePlanResponses,
+                           State.m_taskOptions,
+                           Key (State.m_pendingAutoReq, i));
+
+               declare
+                  Dummy    : Int64_Formal_Set_Maps.Cursor := i;
+                  UAR_Key : constant Int64 := Key (State.m_pendingAutoReq, I);
+                  Pos      : constant Count_Type := Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), I) with Ghost;
+               begin
+                  Next (State.m_pendingAutoReq, i);
+                  Delete_PendingRoute (State.m_pendingAutoReq, State.m_pendingRoute, State.m_routeRequestId, Dummy);
+                  Delete (State.m_uniqueAutomationRequests, UAR_Key);
+                  D := D + 1;
+                  pragma Assert
+                    (for all K in 1 .. Pos - 1 =>
+                       Is_Pending (Model (State.m_pendingAutoReq), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K)));
+               end;
+            else
+               Next (State.m_pendingAutoReq, i);
+            end if;
+         end;
+         --  pragma Assert
+         --    (Model (State.m_pendingAutoReq) <= Int_Set_Maps_M.Map'(Model (State.m_pendingAutoReq))'Loop_Entry);
+      end loop;
+
       --  Restablish No_Finished_Route_Request
 
       pragma Assert
         (for all K in 1 .. Length (State.m_pendingRoute) =>
              Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)));
       Lift_From_Keys_To_Model (State.m_pendingRoute);
+      pragma Assert
+        (for all K in 1 .. Length (State.m_pendingAutoReq) =>
+             Is_Pending (Model (State.m_pendingAutoReq), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K)));
+      Lift_From_Keys_To_Model (State.m_pendingAutoReq);
+   end Check_All_Route_Plans_PendingAutoReq;
 
-      --  Check pending automation requests
+   procedure Check_All_Route_Plans
+     (Mailbox : in out Route_Aggregator_Mailbox;
+      State   : in out Route_Aggregator_State)
+   is
 
-      while Has_Element (State.m_pendingAutoReq, K) loop
-         declare
-            isFulfilled : constant Boolean :=
-             (for all J of Element (State.m_pendingAutoReq, K) =>
-                   Contains (State.m_routePlans, J));
-         begin
-
-            if isFulfilled then
-               SendMatrix (Mailbox,
-                           State.m_uniqueAutomationRequests,
-                           State.m_pendingAutoReq,
-                           State.m_routePlans,
-                           State.m_routeTaskPairing,
-                           State.m_routePlanResponses,
-                           State.m_taskOptions,
-                           Key (State.m_pendingAutoReq, K));
-               Delete (State.m_uniqueAutomationRequests, Key (State.m_pendingAutoReq, K));
-
-               declare
-                  Dummy : Int64_Formal_Set_Maps.Cursor := K;
-               begin
-                  Next (State.m_pendingAutoReq, K);
-                  Delete (State.m_pendingAutoReq, Dummy);
-               end;
-
-            else
-               Next (State.m_pendingAutoReq, K);
-            end if;
-
-         end;
-      end loop;
-
-
-      --  Remove for now, we only care about RouteRequest
-      --
-      -- check pending automation requests
-      --      auto k = m_pendingAutoReq.begin();
-      --      while (k != m_pendingAutoReq.end())
-      --      {
-      --          bool isFulfilled = true;
-      --          for (const int64_t& j : k->second)
-      --          {
-      --              if (m_routePlans.find(j) == m_routePlans.end())
-      --              {
-      --                  isFulfilled = false;
-      --                  break;
-      --              }
-      --          }
-      --
-      --          if (isFulfilled)
-      --          {
-      --              SendMatrix(k->first);
-      --              // finished with this automation request, discard
-      --              m_uniqueAutomationRequests.erase(k->first);
-      --              k = m_pendingAutoReq.erase(k);
-      --          }
-      --          else
-      --          {
-      --              k++;
-      --          }
-      --      }
+   begin
+      Check_All_Route_Plans_PendingRoute (Mailbox, State);
+      Check_All_Route_Plans_PendingAutoReq (Mailbox, State);
    end Check_All_Route_Plans;
 
    -------------------------------------
@@ -803,6 +923,7 @@ package body Route_Aggregator with SPARK_Mode is
                      TaskOptionList : TaskOption_Seq;
                      Found_Elig     : Boolean := False;
                      PlanRequest    : RoutePlanRequest;
+                     Set            : Int64_Formal_Set := Element (State.m_pendingAutoReq, ReqId);
                   begin
                      for TaskId of AReq.TaskList loop
 
@@ -832,6 +953,10 @@ package body Route_Aggregator with SPARK_Mode is
                      PlanRequest.VehicleID := VehicleId;
                      State.m_routeRequestId := State.m_routeRequestId + 1;
                      PlanRequest.RequestID := State.m_routeRequestId;
+                     Insert (Set, State.m_routeRequestId);
+                     Replace (State.m_pendingAutoReq,
+                                    ReqId,
+                                    Set);
 
                      if not FoundPlanningState then
                         Vehicle := ES_Maps.Get (Data.m_entityStatesInfo, VehicleId);
@@ -844,7 +969,7 @@ package body Route_Aggregator with SPARK_Mode is
                            TOP : constant TaskOptionPair :=
                            (VehicleId, 0, 0, Option.TaskId, Option.OptionId);
                            R : RouteConstraints;
-                           Set : Int64_Formal_Set := Element (State.m_pendingAutoReq, ReqId);
+
                         begin
                            Insert (State.m_routeTaskPairing, State.m_routeId + 1, TOP);
                            R.StartLocation := StartLocation;
@@ -854,11 +979,7 @@ package body Route_Aggregator with SPARK_Mode is
                            R.RouteID := State.m_routeId + 1;
                            PlanRequest.RouteRequests :=
                              Add (PlanRequest.RouteRequests, R);
-                           Insert (Set, State.m_routeId + 1);
                            State.m_routeId := State.m_routeId + 1;
-                           Replace (State.m_pendingAutoReq,
-                                    ReqId,
-                                    Set);
                         end;
                      end loop;
 
@@ -878,7 +999,6 @@ package body Route_Aggregator with SPARK_Mode is
                                     O2.TaskID,
                                     O2.OptionID);
                                  R   : RouteConstraints;
-                                 Set : Int64_Formal_Set := Element (State.m_pendingAutoReq, ReqId);
                               begin
                                  Insert (State.m_routeTaskPairing, State.m_routeId + 1, TOP);
                                  R.StartLocation := O1.EndLocation;
@@ -888,11 +1008,7 @@ package body Route_Aggregator with SPARK_Mode is
                                  R.RouteID := State.m_routeId + 1;
                                  PlanRequest.RouteRequests :=
                                    Add (PlanRequest.RouteRequests, R);
-                                 Insert (Set, State.m_routeId + 1);
                                  State.m_routeId := State.m_routeId + 1;
-                                 Replace (State.m_pendingAutoReq,
-                                          ReqId,
-                                          Set);
                               end;
                            end if;
                         end loop;
@@ -942,58 +1058,141 @@ package body Route_Aggregator with SPARK_Mode is
    procedure SendMatrix
      (Mailbox                    : in out Route_Aggregator_Mailbox;
       m_uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map;
+      m_pendingRoute             : Int64_Formal_Set_Map;
       m_pendingAutoReq           : Int64_Formal_Set_Map;
       m_routePlans               : in out Int64_IdPlanPair_Map;
       m_routeTaskPairing         : in out Int64_TaskOptionPair_Map;
       m_routePlanResponses       : in out Int64_RouteResponse_Map;
       m_taskOptions              : in out Int64_TaskPlanOptions_Map;
       autoKey                    : Int64)
-     with
-       SPARK_Mode => Off
    is
       areq            : constant UniqueAutomationRequest :=
         Element (m_uniqueAutomationRequests, autoKey);
       matrix          : AssignmentCostMatrix;
       pendingRequests : Int64_Formal_Set renames Element (m_pendingAutoReq, autoKey);
+      Old_routePlanResponses : constant Int64_RouteResponse_Map := m_routePlanResponses with Ghost;
+      Old_routePlans : constant Int64_IdPlanPair_Map := m_routePlans with Ghost;
    begin
       matrix.CorrespondingAutomationRequestID := areq.RequestID;
       matrix.OperatingRegion := areq.OperatingRegion;
       matrix.TaskList := areq.TaskList;
 
-      for rId of pendingRequests loop
+      for Cu in pendingRequests loop
 
-         if Contains (m_routePlans, rId) then
-            if Contains (m_routeTaskPairing, rId) then
+         pragma Loop_Invariant
+           (for all I in 1 .. Int_Set_P.Get (Positions (pendingRequests), Cu) - 1 =>
+               not Contains (m_routePlanResponses, Int_Set_E.Get (Elements (pendingRequests), I)));
+         pragma Loop_Invariant
+           (for all I in Int_Set_P.Get (Positions (pendingRequests), Cu) .. Length (pendingRequests) =>
+                Contains (m_routePlanResponses, Int_Set_E.Get (Elements (pendingRequests), I)));
+         pragma Loop_Invariant
+           (for all Id of Old_routePlanResponses =>
+              (if not Contains (pendingRequests, Id) then
+                    Contains (m_routePlanResponses, Id)));
+         pragma Loop_Invariant
+           (for all Id of Model (m_routePlanResponses) =>
+                Contains (Old_routePlanResponses, Id));
 
-               declare
-                  plan : constant IdPlanPair :=
-                    Element (m_routePlans, rId);
-                  taskpair : constant TaskOptionPair :=
-                    Element (m_routeTaskPairing, rId);
-                  toc : TaskOptionCost;
-               begin
-                  if plan.Cost < 0 then
-                     Put_Line ("Route not found: V[" & taskpair.vehicleId'Image & "](" & taskpair.prevTaskId'Image & "," & taskpair.prevTaskOption'Image &")-(" & taskpair.taskId'Image & ","&taskpair.taskOption'Image&")");
+         --  Invariants
+
+         pragma Loop_Invariant
+           (Valid_Plan_Responses (m_pendingRoute, m_pendingAutoReq, m_routePlanResponses));
+         pragma Loop_Invariant
+           (All_Plans_Registered (m_routePlanResponses, m_routePlans));
+         pragma Loop_Invariant
+           (Only_Pending_Plans (m_routePlanResponses, m_routePlans));
+
+         --  History invariants
+
+         pragma Loop_Invariant (No_RouteRequest_Lost (m_pendingRoute));
+         pragma Loop_Invariant (No_PlanResponse_Lost (m_pendingRoute, m_routePlanResponses));
+         pragma Loop_Invariant (All_Pending_Plans_Sent (m_pendingRoute, m_routePlanResponses));
+
+         declare
+            rId : constant Int64 := Element (pendingRequests, Cu);
+            pragma Assert (Contains (m_routePlanResponses, rId));
+         begin
+
+            declare
+               plan : Int64_RouteResponse_Maps.Cursor := Find (m_routePlanResponses, rId);
+
+               --  NB. The if statement checking whether rId is in
+               --  routePlanResponses was removed as SendRouteResponse is only
+               --  called when all plan responses have been received.
+               pragma Assert (Has_Element (m_routePlanResponses, plan));
+
+               resps : RP_Seq renames Element (m_routePlanResponses, plan).RouteResponses;
+            begin
+
+               -- delete all individual routes from storage
+
+               for i in 1 .. Last (resps) loop
+
+                  --  We have removed all elements of resps from routePlans
+                  --  up to i.
+
+                  pragma Loop_Invariant
+                    (for all RP of Model (m_routePlanResponses) =>
+                         (if RP /= rId then
+                              (for all Pl of Element (m_routePlanResponses, RP).RouteResponses =>
+                                     Contains (m_routePlans, Pl.RouteID)
+                               and then Element (m_routePlans, Pl.RouteID).Id = RP)));
+                  pragma Loop_Invariant
+                    (Only_Pending_Plans (m_routePlanResponses, m_routePlans));
+                  pragma Loop_Invariant
+                    (for all Pl of Model (m_routePlans) =>
+                         (if Element (m_routePlans, Pl).Id = rId then
+                            (for some K in i .. Last (resps) =>
+                                 Get (resps, K).RouteID = Pl)));
+                  pragma Loop_Invariant
+                    (for all K in i .. Last (resps) =>
+                         Contains (m_routePlans, Get (resps, K).RouteID)
+                     and then Element (m_routePlans, Get (resps, K).RouteID).Id = rId);
+
+                  if Contains (m_routeTaskPairing, Get (resps, i).RouteID) then
+
+                     declare
+                        routeplan : constant IdPlanPair :=
+                          Element (m_routePlans, Get (resps, i).RouteID);
+                        taskpair : constant TaskOptionPair :=
+                          Element (m_routeTaskPairing, Get (resps, i).RouteID);
+                        toc : TaskOptionCost;
+                     begin
+                        if routeplan.Cost < 0 then
+                           Put_Line ("Route not found: V[" & taskpair.vehicleId'Image & "](" & taskpair.prevTaskId'Image & "," & taskpair.prevTaskOption'Image &")-(" & taskpair.taskId'Image & ","&taskpair.taskOption'Image&")");
+                        end if;
+
+                        toc.DestinationTaskID := taskpair.taskId;
+                        toc.DestinationTaskOption := taskpair.taskOption;
+                        toc.InitialTaskID := taskpair.prevTaskId;
+                        toc.InitialTaskOption := taskpair.prevTaskOption;
+                        toc.TimeToGo := routeplan.Cost;
+                        toc.VehicleID := taskpair.vehicleId;
+                        pragma Assume (Length (matrix.CostMatrix) < Count_Type'Last, "we still have room in the matrix");
+                        matrix.CostMatrix := Add (matrix.CostMatrix, toc);
+                     end;
+
+                     Delete (m_routeTaskPairing, Get (resps, i).RouteID);
                   end if;
 
-                  toc.DestinationTaskID := taskpair.taskId;
-                  toc.DestinationTaskOption := taskpair.taskOption;
-                  toc.InitialTaskID := taskpair.prevTaskId;
-                  toc.InitialTaskOption := taskpair.prevTaskOption;
-                  toc.TimeToGo := plan.Cost;
-                  toc.VehicleID := taskpair.vehicleId;
-                  matrix.CostMatrix := Add (matrix.CostMatrix, toc);
-               end;
+                  --  We only delete plans associated to rId
+                  pragma Assert (Element (m_routePlans, Get (resps, i).RouteID).Id = rId);
+                  Delete (m_routePlans, Get (resps, i).RouteID);
+               end loop;
 
-               Delete (m_routeTaskPairing, rId);
-            end if;
-
-            if Contains (m_routePlanResponses, Element (m_routePlans, rId).id) then
-               Delete (m_routePlanResponses, Element (m_routePlans, rId).Id);
-            end if;
-            Delete (m_routePlans, rId);
-         end if;
+               pragma Assert
+                 (for all Pl of Model (m_routePlans) => Element (m_routePlans, Pl).Id /= rId);
+               pragma Assert (All_Pending_Plans_Sent (m_pendingRoute, m_routePlanResponses));
+               pragma Assert (No_overlaps (Model (m_pendingRoute), Model (m_pendingAutoReq)));
+               pragma Assert (for all Id of planToRoute (m_pendingRoute) => Id /= Key (m_routePlanResponses, plan));
+               Delete (m_routePlanResponses, plan);
+               pragma Assert (All_Pending_Plans_Sent (m_pendingRoute, m_routePlanResponses));
+               pragma Assert
+                 (Only_Pending_Plans (m_routePlanResponses, m_routePlans));
+            end;
+         end;
       end loop;
+
       sendBroadcastMessage(Mailbox, matrix);
       Clear (m_taskOptions);
    end SendMatrix;
@@ -1005,6 +1204,7 @@ package body Route_Aggregator with SPARK_Mode is
    procedure SendRouteResponse
      (Mailbox            : in out Route_Aggregator_Mailbox;
       pendingRoute       : Int64_Formal_Set_Map;
+      pendingAutoReq     : Int64_Formal_Set_Map;
       routePlanResponses : in out Int64_RouteResponse_Map;
       routePlans         : in out Int64_IdPlanPair_Map;
       routeKey           : Int64)
@@ -1012,6 +1212,7 @@ package body Route_Aggregator with SPARK_Mode is
       Response  : RouteResponse;
       PlanResponses : Int64_Formal_Set renames Element (pendingRoute, routeKey);
       Old_routePlanResponses : constant RR_Maps_M.Map := Model (routePlanResponses) with Ghost;
+      Old_routePlans : constant Int64_IdPlanPair_Map := routePlans with Ghost;
    begin
       response.ResponseID := routeKey;
       for Cu in PlanResponses loop
@@ -1040,7 +1241,7 @@ package body Route_Aggregator with SPARK_Mode is
          --  Invariants
 
          pragma Loop_Invariant
-           (Valid_Plan_Responses (pendingRoute, routePlanResponses));
+           (Valid_Plan_Responses (pendingRoute, pendingAutoReq, routePlanResponses));
          pragma Loop_Invariant
            (All_Plans_Registered (routePlanResponses, routePlans));
          pragma Loop_Invariant
@@ -1108,10 +1309,9 @@ package body Route_Aggregator with SPARK_Mode is
                end loop;
 
                pragma Assert
-                 (for all Pl of Model (routePlans) =>  Element (routePlans, Pl).Id /= rId);
-               Delete (routePlanResponses, plan);
-               pragma Assert
                  (Only_Pending_Plans (routePlanResponses, routePlans));
+               pragma Assert (plan = Find (routePlanResponses, rId));
+               Delete (routePlanResponses, plan);
             end;
          end;
       end loop;
@@ -1255,7 +1455,7 @@ package body Route_Aggregator with SPARK_Mode is
      (Data : in out Route_Aggregator_Configuration_Data;
       Entity_State : EntityState)
    is
-      Id : Int64 := Entity_State.Id;
+      Id : constant Int64 := Entity_State.Id;
    begin
       if not Contains (Data.m_airVehicles, Id) then
          pragma Assume (Length (Data.m_airVehicles) < Count_Type'Last, "We still have room for a new vehicle ID");
@@ -1298,7 +1498,7 @@ package body Route_Aggregator with SPARK_Mode is
      (Data : in out Route_Aggregator_Configuration_Data;
       Entity_State : EntityState)
    is
-      Id : Int64 := Entity_State.Id;
+      Id : constant Int64 := Entity_State.Id;
    begin
       if not Contains (Data.m_groundVehicles, Id) then
          pragma Assume (Length (Data.m_groundVehicles) < Count_Type'Last, "We still have room for a new vehicle ID");
@@ -1341,11 +1541,11 @@ package body Route_Aggregator with SPARK_Mode is
      (Data : in out Route_Aggregator_Configuration_Data;
       Entity_State : EntityState)
    is
-      Id : Int64 := Entity_State.Id;
+      Id : constant Int64 := Entity_State.Id;
    begin
-      if not Contains (Data.m_surfaceVehicles, Entity_State.Id) then
+      if not Contains (Data.m_surfaceVehicles, Id) then
          pragma Assume (Length (Data.m_surfaceVehicles) < Count_Type'Last, "We still have room for a new vehicle ID");
-         Data.m_surfaceVehicles := Add (Data.m_surfaceVehicles, Entity_State.Id);
+         Data.m_surfaceVehicles := Add (Data.m_surfaceVehicles, Id);
       end if;
 
       if not Contains (Data.m_entityStates, Int64_Sequences.First, Last (Data.m_entityStates), Id) then
