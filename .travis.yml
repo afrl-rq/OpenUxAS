@@ -39,7 +39,7 @@ script:
   - $TOOLS_DIR/OpenUxAS-bootstrap/anod build uxas-ada
   - $TOOLS_DIR/OpenUxAS-bootstrap/anod build uxas --qualifier=scenario=gcov
   - $TOOLS_DIR/OpenUxAS-bootstrap/anod build uxas-ada --qualifier=gcov
-  - eval `$TOOLS_DIR/OpenUxAS-bootstrap/anod setenv uxas --qualifier=scenario=gcov`
+  - eval "$( $TOOLS_DIR/OpenUxAS-bootstrap/anod printenv uxas --qualifier=scenario=gcov)"
   - testsuite/run-tests
-  - eval `$TOOLS_DIR/OpenUxAS-bootstrap/anod setenv uxas-ada --build-env`
+  - eval "$( $TOOLS_DIR/OpenUxAS-bootstrap/anod printenv uxas-ada --build-env)"
   - travis_wait 50 ./ada/arv-demo/testsuite/run-tests -E --timeout=1200
