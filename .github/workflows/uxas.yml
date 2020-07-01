@@ -32,12 +32,12 @@ jobs:
         if: ${{ matrix.component == 'uxas-ada' }}
         uses: ada-actions/toolchain@v0.2.0
         with:
-          distrib: community        
+          distrib: community
 
       - name: Build with anod
         run: |
           SHELL=/bin/bash $HOME/bootstrap/vpython/bin/python $HOME/bootstrap/anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
-      
+
       - name: Run C++ tests
         if: ${{ matrix.component == 'uxas' }}
         continue-on-error: ${{ matrix.qualifier == 'dev' }}
@@ -50,4 +50,4 @@ jobs:
         if: ${{ matrix.component == 'uxas-ada' }}
         run: |
           eval "$( $HOME/bootstrap/vpython/bin/python $HOME/bootstrap/anod -v printenv ${{ matrix.component }} --build-env )"
-          $HOME/bootstrap/vpython/bin/python $GITHUB_WORKSPACE/ada/arv-demo/testsuite/run-tests -E --timeout=1200
+          $HOME/bootstrap/vpython/bin/python $GITHUB_WORKSPACE/ada/arv-demo/testsuite/run-tests -E --timeout=2400
