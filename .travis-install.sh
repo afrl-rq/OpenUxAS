@@ -8,7 +8,7 @@ cd $TOOLS_DIR
 if ! [ -d OpenUxAS-bootstrap ]
 then
     git clone https://github.com/AdaCore/OpenUxAS-bootstrap.git;
-    envsubst < $TRAVIS_BUILD_DIR/.travis-bootstrap.patch
+    envsubst < $TRAVIS_BUILD_DIR/.travis-bootstrap.patch &> $TRAVIS_BUILD_DIR/.travis-bootstrap.patch;
     patch -d$TOOLS_DIR/OpenUxAS-bootstrap/ -p0 < $TRAVIS_BUILD_DIR/.travis-bootstrap.patch;
 
 else
