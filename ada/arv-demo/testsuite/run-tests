@@ -27,13 +27,13 @@ class GnatproveDriver(DiffTestDriver):
                 f_prj.write('      for Default_Switches ("ada") use ("-O2", "-gnatn", "-gnatp", "-fdata-sections","-ffunction-sections");\n')
                 f_prj.write('   end Compiler;\n')
                 f_prj.write('   package Prove is\n')
-                f_prj.write('      for Proof_Switches ("Ada") use ("-j0", "--no-counterexample", "--report=all", "-q", "--replay", "-u");\n')
+                f_prj.write('      for Proof_Switches ("Ada") use ("--no-counterexample", "--report=all", "-q", "--replay", "-u");\n')
                 f_prj.write('      for Proof_Dir use "../../..'+self.test_env["test_dir"]+'/../../../proof";\n')
                 f_prj.write('   end Prove;\n')
                 f_prj.write('end Test;\n')
 
 
-            self.shell(["gnatprove", "-P", self.working_dir("test.gpr")] + filenames, timeout=self.env.options.timeout)
+            self.shell(["gnatprove", "-P", self.working_dir("test.gpr"), "-j"+str(self.env.options.gnatprove_jobs)] + filenames ,timeout=self.env.options.timeout)
 
 class GnatproveTestsuite(Testsuite):
     test_driver_map = {"gnatprove": GnatproveDriver}
@@ -57,6 +57,15 @@ class GnatproveTestsuite(Testsuite):
             metavar="N",
             default=300,
             help="Modify the timeout of processes running gnatprove (not related to gnatprove's --timeout option)"
+        )
+        self.main.argument_parser.add_argument(
+            "-g",
+            "--gnatprove-jobs",
+            dest="gnatprove_jobs",
+            type=int,
+            metavar="N",
+            default=1,
+            help="Specify the number of jobs to run simultaneously on a gnatprove instance",
         )
 
     # Before running the testsuite, keep track in the environment of our
