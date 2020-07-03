@@ -148,12 +148,12 @@ package Route_Aggregator with SPARK_Mode is
             Disjoint (Int_Set_Maps_M.Get (pendingRoute, R_1),
                       Int_Set_Maps_M.Get (pendingAutoReq, R_2))));
 
-   function All_Pending_Routes_Seen
-     (pendingRoute   : Int_Set_Maps_M.Map;
+   function All_Pending_Requests_Seen
+     (pendingRequest : Int_Set_Maps_M.Map;
       routeRequestId : Int64) return Boolean
    is
-     (for all R_Id of pendingRoute =>
-          (for all Id of Int_Set_Maps_M.Get (pendingRoute, R_Id) =>
+     (for all R_Id of pendingRequest =>
+          (for all Id of Int_Set_Maps_M.Get (pendingRequest, R_Id) =>
                 Id <= routeRequestId));
 
    package UAR_Maps is new Ada.Containers.Formal_Ordered_Maps
@@ -194,30 +194,42 @@ package Route_Aggregator with SPARK_Mode is
    type RPReq_Seq is new RPReq_Sequences.Sequence;
 
    type Route_Aggregator_State is record
+      --  Unique ID associated to a RoutePlanRequest
       m_routeRequestId           : Int64 := 1;
+      --  Unique ID associated to a RouteConstraint in a RoutePlanRequest
       m_routeId                  : Int64 := 1000000;
+      --  Unique ID associated to a UniqueAutomationRequest
       m_autoRequestId            : Int64 := 1;
+      --  Set of route IDs that correspond to an original RouteRequest
       m_pendingRoute             : Int64_Formal_Set_Map;
+      --  Received RoutePlanResponses
       m_routePlanResponses       : Int64_RouteResponse_Map;
+      --  Individual RoutePlans contained in RoutePlanResponses
       m_routePlans               : Int64_IdPlanPair_Map;
-
+      --  Set of route IDs that correspond to an original UniqueAutomationRequest
       m_pendingAutoReq           : Int64_Formal_Set_Map;
+      --  Received UniqueAutomationRequests
       m_uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map;
+      --  Mapping from route ID to the corresponding task/option pair
       m_routeTaskPairing         : Int64_TaskOptionPair_Map;
+      --  Mapping from task ID to associated TaskplanOptions
       m_taskOptions              : Int64_TaskPlanOptions_Map;
    end record
      with Predicate =>
 
      --  Pending routes plan requests are associated to a seen identifier
 
-     All_Pending_Routes_Seen (Model (m_pendingRoute), m_routeRequestId)
-     and All_Pending_Routes_Seen (Model (m_pendingAutoReq), m_routeRequestId)
+     All_Pending_Requests_Seen (Model (m_pendingRoute), m_routeRequestId)
+     and All_Pending_Requests_Seen (Model (m_pendingAutoReq), m_routeRequestId)
 
-     --  Pending routes plan requests are associated to one route request only
+     --  Pending routes plan requests are associated to one route request
+     --  or one automation request only
 
      and No_Overlaps (Model (m_pendingRoute))
      and No_Overlaps (Model (m_pendingAutoReq))
      and No_Overlaps (Model (m_pendingRoute), Model (m_pendingAutoReq))
+
+     --  Pending automation requests are associated to a received automation request
 
      and (for all ReqID of m_pendingAutoReq => Contains (m_uniqueAutomationRequests, ReqID));
 
@@ -268,7 +280,8 @@ package Route_Aggregator with SPARK_Mode is
       pendingAutoReq     : Int64_Formal_Set_Map;
       routePlanResponses : Int64_RouteResponse_Map) return Boolean is
 
-      --  We only have route plan responses associated to pending routes
+      --  We only have route plan responses associated to pending routes or
+      --  pending automation requests
 
      (for all RP of Model (routePlanResponses) =>
            (Has_Key (planToRoute (pendingRoute), RP)
@@ -286,17 +299,18 @@ package Route_Aggregator with SPARK_Mode is
        Pre => Int_Set_Maps_M.Has_Key (pendingRoute, Request_Id);
    --  True iff we are still waiting for some route plan response for Id
 
-   function No_Finished_Route_Request
-     (pendingRoute       : Int64_Formal_Set_Map;
-      pendingAutoReq     : Int64_Formal_Set_Map;
-      routePlanResponses : Int64_RouteResponse_Map) return Boolean is
+   function No_Finished_Request
+     (pendingRoute, pendingAutoReq : Int64_Formal_Set_Map;
+      routePlanResponses           : Int64_RouteResponse_Map)
+      return Boolean
+   is
      ((for all Id of Model (pendingRoute) =>
           Is_Pending (Model (pendingRoute), Model (routePlanResponses), Id))
       and then
-     (for all Id of Model (pendingAutoReq) =>
-           Is_Pending (Model (pendingAutoReq), Model (routePlanResponses), Id)))
+      (for all Id of Model (pendingAutoReq) =>
+          Is_Pending (Model (pendingAutoReq), Model (routePlanResponses), Id)))
      with Ghost;
-   --  We only have pending route requests in m_pendingRoute
+   --  We only have pending requests in m_pendingRequest
 
    package Message_History with
      Ghost,
@@ -314,6 +328,10 @@ package Route_Aggregator with SPARK_Mode is
         (Index_Type   => Positive,
          Element_Type => Event);
       type History_Type is new Event_Sequences.Sequence;
+
+      --  At the moment, History only stores message exchanges related to
+      --  a received RouteRequest. In the future, this needs to be extended
+      --  to AutomationRequests.x
 
       History : History_Type;
 
@@ -420,7 +438,7 @@ package Route_Aggregator with SPARK_Mode is
      and All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
      and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
      and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
-     and No_Finished_Route_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
+     and No_Finished_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
 
      --  History invariants
 
@@ -436,7 +454,7 @@ package Route_Aggregator with SPARK_Mode is
      All_Plans_Registered (State.M_RoutePlanResponses, State.M_RoutePlans)
      and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
      and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
-     and No_Finished_Route_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
+     and No_Finished_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
 
      --  The response has been added to the history
 
@@ -482,7 +500,7 @@ package Route_Aggregator with SPARK_Mode is
      and All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
      and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
      and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
-     and No_Finished_Route_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
+     and No_Finished_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
 
      --  History invariants
 
@@ -496,7 +514,7 @@ package Route_Aggregator with SPARK_Mode is
      Post => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
      and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
      and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
-     and No_Finished_Route_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
+     and No_Finished_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
 
      --  The request has been added to the history
 
@@ -544,7 +562,7 @@ package Route_Aggregator with SPARK_Mode is
      Post => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
      and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
      and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
-     and No_Finished_Route_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
+     and No_Finished_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
 
      --  History invariants
 
@@ -682,8 +700,6 @@ package Route_Aggregator with SPARK_Mode is
 
      --  History invariants
 
-     and History'Old = History
-     and No_RouteRequest_Lost (m_pendingRoute)
      and No_PlanResponse_Lost (m_pendingRoute, m_routePlanResponses)
      and All_Pending_Plans_Sent (m_pendingRoute, m_routePlanResponses);
 

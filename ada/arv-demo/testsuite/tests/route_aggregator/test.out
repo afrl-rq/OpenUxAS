@@ -18,7 +18,7 @@ route_aggregator.adb:93:11: info: precondition proved
 route_aggregator.adb:93:64: info: precondition proved
 route_aggregator.adb:94:11: info: precondition proved
 route_aggregator.adb:100:10: info: precondition proved
-route_aggregator.adb:100:46: info: precondition proved
+route_aggregator.adb:100:48: info: precondition proved
 route_aggregator.adb:101:11: info: precondition proved
 route_aggregator.adb:102:22: info: precondition proved
 route_aggregator.adb:103:20: info: precondition proved
@@ -27,12 +27,12 @@ route_aggregator.adb:104:11: info: precondition proved
 route_aggregator.adb:104:24: info: precondition proved
 route_aggregator.adb:105:54: info: precondition proved
 route_aggregator.adb:111:07: info: precondition proved
-route_aggregator.adb:111:42: info: discriminant check proved
+route_aggregator.adb:111:44: info: discriminant check proved
 route_aggregator.adb:114:07: info: precondition proved
-route_aggregator.adb:118:22: info: assertion proved
+route_aggregator.adb:118:22: medium: assertion might fail, cannot prove No_Overlaps (Model (m_pendingRequest))
 route_aggregator.adb:119:22: info: assertion proved
 route_aggregator.adb:141:09: info: postcondition proved
-route_aggregator.adb:148:62: info: precondition proved
+route_aggregator.adb:148:64: info: precondition proved
 route_aggregator.adb:154:09: info: precondition proved
 route_aggregator.adb:155:24: info: precondition proved
 route_aggregator.adb:159:32: info: precondition proved
@@ -40,13 +40,13 @@ route_aggregator.adb:160:24: info: precondition proved
 route_aggregator.adb:163:33: info: precondition proved
 route_aggregator.adb:169:32: info: precondition proved
 route_aggregator.adb:173:10: info: precondition proved
-route_aggregator.adb:173:42: info: precondition proved
+route_aggregator.adb:173:44: info: precondition proved
 route_aggregator.adb:174:11: info: precondition proved
 route_aggregator.adb:174:24: info: precondition proved
 route_aggregator.adb:175:24: info: precondition proved
 route_aggregator.adb:176:19: info: precondition proved
 route_aggregator.adb:176:24: info: precondition proved
-route_aggregator.adb:176:63: info: precondition proved
+route_aggregator.adb:176:65: info: precondition proved
 route_aggregator.adb:182:07: info: precondition proved
 route_aggregator.adb:186:07: info: precondition proved
 route_aggregator.adb:200:11: info: postcondition proved
@@ -300,7 +300,7 @@ route_aggregator.adb:537:10: info: assertion proved
 route_aggregator.adb:538:15: info: precondition proved
 route_aggregator.adb:538:42: info: precondition proved
 route_aggregator.adb:542:07: info: precondition proved
-route_aggregator.adb:543:15: info: non-aliasing of formal parameters "m_pendingRoute" and "otherPending" proved
+route_aggregator.adb:543:15: info: non-aliasing of formal parameters "m_pendingRequest" and "otherPending" proved
 route_aggregator.adb:543:15: info: predicate check proved
 route_aggregator.adb:547:22: info: precondition proved
 route_aggregator.adb:547:22: info: assertion proved
@@ -317,430 +317,430 @@ route_aggregator.adb:598:10: info: precondition proved
 route_aggregator.adb:599:10: info: precondition proved
 route_aggregator.adb:603:14: info: postcondition proved
 route_aggregator.adb:605:10: info: precondition proved
-route_aggregator.adb:608:13: info: precondition proved
-route_aggregator.adb:608:105: info: precondition proved
+route_aggregator.adb:607:13: info: precondition proved
+route_aggregator.adb:607:105: info: precondition proved
+route_aggregator.adb:614:10: info: precondition proved
 route_aggregator.adb:615:10: info: precondition proved
-route_aggregator.adb:616:10: info: precondition proved
-route_aggregator.adb:624:33: info: loop invariant preservation proved
-route_aggregator.adb:624:33: info: loop invariant initialization proved
-route_aggregator.adb:627:13: info: loop invariant initialization proved
-route_aggregator.adb:627:13: info: loop invariant preservation proved
-route_aggregator.adb:627:58: info: overflow check proved
-route_aggregator.adb:629:13: info: loop invariant preservation proved
-route_aggregator.adb:629:13: info: loop invariant initialization proved
-route_aggregator.adb:631:13: info: loop invariant initialization proved
-route_aggregator.adb:631:13: info: loop invariant preservation proved
-route_aggregator.adb:631:45: info: precondition proved
-route_aggregator.adb:632:49: info: precondition proved
-route_aggregator.adb:632:96: info: overflow check proved
-route_aggregator.adb:633:35: info: precondition proved
-route_aggregator.adb:633:89: info: precondition proved
-route_aggregator.adb:635:13: info: loop invariant preservation proved
-route_aggregator.adb:635:13: info: loop invariant initialization proved
-route_aggregator.adb:635:45: info: precondition proved
-route_aggregator.adb:636:15: info: precondition proved
-route_aggregator.adb:636:107: info: precondition proved
-route_aggregator.adb:638:13: info: loop invariant initialization proved
-route_aggregator.adb:638:13: info: loop invariant preservation proved
-route_aggregator.adb:638:40: info: precondition proved
-route_aggregator.adb:639:31: info: precondition proved
-route_aggregator.adb:639:66: info: range check proved
-route_aggregator.adb:639:85: info: precondition proved
-route_aggregator.adb:639:133: info: overflow check proved
-route_aggregator.adb:639:133: info: range check proved
-route_aggregator.adb:644:13: info: loop invariant preservation proved
-route_aggregator.adb:644:13: info: loop invariant initialization proved
-route_aggregator.adb:646:13: info: loop invariant preservation proved
-route_aggregator.adb:646:13: info: loop invariant initialization proved
-route_aggregator.adb:648:13: info: precondition proved
-route_aggregator.adb:648:13: info: loop invariant preservation proved
-route_aggregator.adb:648:13: info: loop invariant initialization proved
+route_aggregator.adb:623:33: info: loop invariant preservation proved
+route_aggregator.adb:623:33: info: loop invariant initialization proved
+route_aggregator.adb:626:13: info: loop invariant initialization proved
+route_aggregator.adb:626:13: info: loop invariant preservation proved
+route_aggregator.adb:626:58: info: overflow check proved
+route_aggregator.adb:628:13: info: loop invariant preservation proved
+route_aggregator.adb:628:13: info: loop invariant initialization proved
+route_aggregator.adb:630:13: info: loop invariant initialization proved
+route_aggregator.adb:630:13: info: loop invariant preservation proved
+route_aggregator.adb:630:45: info: precondition proved
+route_aggregator.adb:631:49: info: precondition proved
+route_aggregator.adb:631:96: info: overflow check proved
+route_aggregator.adb:632:35: info: precondition proved
+route_aggregator.adb:632:89: info: precondition proved
+route_aggregator.adb:634:13: info: loop invariant preservation proved
+route_aggregator.adb:634:13: info: loop invariant initialization proved
+route_aggregator.adb:634:45: info: precondition proved
+route_aggregator.adb:635:15: info: precondition proved
+route_aggregator.adb:635:107: info: precondition proved
+route_aggregator.adb:637:13: info: loop invariant initialization proved
+route_aggregator.adb:637:13: info: loop invariant preservation proved
+route_aggregator.adb:637:40: info: precondition proved
+route_aggregator.adb:638:31: info: precondition proved
+route_aggregator.adb:638:66: info: range check proved
+route_aggregator.adb:638:85: info: precondition proved
+route_aggregator.adb:638:133: info: overflow check proved
+route_aggregator.adb:638:133: info: range check proved
+route_aggregator.adb:643:13: info: loop invariant preservation proved
+route_aggregator.adb:643:13: info: loop invariant initialization proved
+route_aggregator.adb:645:13: info: loop invariant preservation proved
+route_aggregator.adb:645:13: info: loop invariant initialization proved
+route_aggregator.adb:647:13: info: precondition proved
+route_aggregator.adb:647:13: info: loop invariant preservation proved
+route_aggregator.adb:647:13: info: loop invariant initialization proved
+route_aggregator.adb:651:33: info: loop invariant preservation proved
+route_aggregator.adb:651:33: info: loop invariant initialization proved
 route_aggregator.adb:652:33: info: loop invariant preservation proved
 route_aggregator.adb:652:33: info: loop invariant initialization proved
 route_aggregator.adb:653:33: info: loop invariant preservation proved
 route_aggregator.adb:653:33: info: loop invariant initialization proved
+route_aggregator.adb:654:33: info: precondition proved
 route_aggregator.adb:654:33: info: loop invariant preservation proved
 route_aggregator.adb:654:33: info: loop invariant initialization proved
 route_aggregator.adb:655:33: info: precondition proved
 route_aggregator.adb:655:33: info: loop invariant preservation proved
 route_aggregator.adb:655:33: info: loop invariant initialization proved
-route_aggregator.adb:656:33: info: precondition proved
-route_aggregator.adb:656:33: info: loop invariant preservation proved
-route_aggregator.adb:656:33: info: loop invariant initialization proved
-route_aggregator.adb:660:16: info: precondition proved
-route_aggregator.adb:660:29: info: precondition proved
-route_aggregator.adb:664:16: info: precondition proved
-route_aggregator.adb:664:49: info: non-aliasing of formal parameters "pendingRoute" and "routePlanResponses" proved
-route_aggregator.adb:664:49: info: non-aliasing of formal parameters "pendingRoute" and "routePlans" proved
-route_aggregator.adb:664:71: info: non-aliasing of formal parameters "pendingAutoReq" and "routePlanResponses" proved
-route_aggregator.adb:664:71: info: non-aliasing of formal parameters "pendingAutoReq" and "routePlans" proved
-route_aggregator.adb:664:95: info: non-aliasing of formal parameters "routePlanResponses" and "routePlans" proved
-route_aggregator.adb:664:95: info: predicate check proved
-route_aggregator.adb:664:123: info: predicate check proved
-route_aggregator.adb:664:138: info: precondition proved
-route_aggregator.adb:668:67: info: precondition proved
+route_aggregator.adb:659:16: info: precondition proved
+route_aggregator.adb:659:29: info: precondition proved
+route_aggregator.adb:663:16: info: precondition proved
+route_aggregator.adb:663:49: info: non-aliasing of formal parameters "pendingRoute" and "routePlanResponses" proved
+route_aggregator.adb:663:49: info: non-aliasing of formal parameters "pendingRoute" and "routePlans" proved
+route_aggregator.adb:663:71: info: non-aliasing of formal parameters "pendingAutoReq" and "routePlanResponses" proved
+route_aggregator.adb:663:71: info: non-aliasing of formal parameters "pendingAutoReq" and "routePlans" proved
+route_aggregator.adb:663:95: info: non-aliasing of formal parameters "routePlanResponses" and "routePlans" proved
+route_aggregator.adb:663:95: info: predicate check proved
+route_aggregator.adb:663:123: info: predicate check proved
+route_aggregator.adb:663:138: info: precondition proved
+route_aggregator.adb:667:67: info: precondition proved
+route_aggregator.adb:669:19: info: precondition proved
 route_aggregator.adb:670:19: info: precondition proved
-route_aggregator.adb:671:19: info: precondition proved
-route_aggregator.adb:671:45: info: non-aliasing of formal parameters "m_pendingRoute" and "otherpending" proved
-route_aggregator.adb:671:45: info: predicate check proved
-route_aggregator.adb:672:26: info: overflow check proved
-route_aggregator.adb:674:22: info: assertion proved
-route_aggregator.adb:675:24: info: precondition proved
-route_aggregator.adb:675:116: info: precondition proved
-route_aggregator.adb:677:31: info: precondition proved
-route_aggregator.adb:677:31: info: assertion proved
-route_aggregator.adb:680:16: info: precondition proved
-route_aggregator.adb:686:10: info: assertion proved
-route_aggregator.adb:687:14: info: precondition proved
-route_aggregator.adb:687:106: info: precondition proved
-route_aggregator.adb:698:10: info: precondition proved
-route_aggregator.adb:700:13: info: precondition proved
-route_aggregator.adb:700:105: info: precondition proved
+route_aggregator.adb:670:47: info: non-aliasing of formal parameters "m_pendingRequest" and "otherPending" proved
+route_aggregator.adb:670:47: info: predicate check proved
+route_aggregator.adb:671:26: info: overflow check proved
+route_aggregator.adb:673:22: info: assertion proved
+route_aggregator.adb:674:24: info: precondition proved
+route_aggregator.adb:674:116: info: precondition proved
+route_aggregator.adb:676:31: info: precondition proved
+route_aggregator.adb:676:31: info: assertion proved
+route_aggregator.adb:679:16: info: precondition proved
+route_aggregator.adb:685:10: info: assertion proved
+route_aggregator.adb:686:14: info: precondition proved
+route_aggregator.adb:686:106: info: precondition proved
+route_aggregator.adb:697:10: info: precondition proved
+route_aggregator.adb:699:13: info: precondition proved
+route_aggregator.adb:699:105: info: precondition proved
+route_aggregator.adb:705:10: info: precondition proved
 route_aggregator.adb:706:10: info: precondition proved
-route_aggregator.adb:707:10: info: precondition proved
-route_aggregator.adb:711:14: info: postcondition proved
-route_aggregator.adb:713:10: info: precondition proved
+route_aggregator.adb:710:14: info: postcondition proved
+route_aggregator.adb:712:10: info: precondition proved
+route_aggregator.adb:720:10: info: precondition proved
 route_aggregator.adb:721:10: info: precondition proved
-route_aggregator.adb:722:10: info: precondition proved
-route_aggregator.adb:732:33: info: loop invariant initialization proved
-route_aggregator.adb:732:33: info: loop invariant preservation proved
+route_aggregator.adb:730:33: info: loop invariant initialization proved
+route_aggregator.adb:730:33: info: loop invariant preservation proved
+route_aggregator.adb:733:13: info: loop invariant preservation proved
+route_aggregator.adb:733:13: info: loop invariant initialization proved
+route_aggregator.adb:733:60: info: overflow check proved
 route_aggregator.adb:735:13: info: loop invariant preservation proved
 route_aggregator.adb:735:13: info: loop invariant initialization proved
-route_aggregator.adb:735:60: info: overflow check proved
-route_aggregator.adb:737:13: info: loop invariant preservation proved
 route_aggregator.adb:737:13: info: loop invariant initialization proved
-route_aggregator.adb:739:13: info: loop invariant initialization proved
-route_aggregator.adb:739:13: info: loop invariant preservation proved
-route_aggregator.adb:739:45: info: precondition proved
-route_aggregator.adb:740:49: info: precondition proved
-route_aggregator.adb:740:98: info: overflow check proved
-route_aggregator.adb:741:35: info: precondition proved
-route_aggregator.adb:741:91: info: precondition proved
-route_aggregator.adb:743:13: info: loop invariant initialization proved
-route_aggregator.adb:743:13: info: loop invariant preservation proved
-route_aggregator.adb:743:45: info: precondition proved
-route_aggregator.adb:744:15: info: precondition proved
-route_aggregator.adb:744:109: info: precondition proved
-route_aggregator.adb:746:13: info: loop invariant initialization proved
-route_aggregator.adb:746:13: info: loop invariant preservation proved
-route_aggregator.adb:746:40: info: precondition proved
-route_aggregator.adb:747:29: info: precondition proved
-route_aggregator.adb:747:66: info: range check proved
-route_aggregator.adb:747:85: info: precondition proved
-route_aggregator.adb:747:135: info: overflow check proved
-route_aggregator.adb:747:135: info: range check proved
+route_aggregator.adb:737:13: medium: loop invariant might not be preserved by an arbitrary iteration
+route_aggregator.adb:737:45: info: precondition proved
+route_aggregator.adb:738:49: info: precondition proved
+route_aggregator.adb:738:98: info: overflow check proved
+route_aggregator.adb:739:35: info: precondition proved
+route_aggregator.adb:739:91: info: precondition proved
+route_aggregator.adb:741:13: info: loop invariant initialization proved
+route_aggregator.adb:741:13: info: loop invariant preservation proved
+route_aggregator.adb:741:45: info: precondition proved
+route_aggregator.adb:742:15: info: precondition proved
+route_aggregator.adb:742:109: info: precondition proved
+route_aggregator.adb:744:13: info: loop invariant initialization proved
+route_aggregator.adb:744:13: info: loop invariant preservation proved
+route_aggregator.adb:744:40: info: precondition proved
+route_aggregator.adb:745:29: info: precondition proved
+route_aggregator.adb:745:66: info: range check proved
+route_aggregator.adb:745:85: info: precondition proved
+route_aggregator.adb:745:135: info: overflow check proved
+route_aggregator.adb:745:135: info: range check proved
+route_aggregator.adb:750:13: info: loop invariant preservation proved
+route_aggregator.adb:750:13: info: loop invariant initialization proved
 route_aggregator.adb:752:13: info: loop invariant preservation proved
 route_aggregator.adb:752:13: info: loop invariant initialization proved
+route_aggregator.adb:754:13: info: precondition proved
 route_aggregator.adb:754:13: info: loop invariant preservation proved
 route_aggregator.adb:754:13: info: loop invariant initialization proved
-route_aggregator.adb:756:13: info: precondition proved
-route_aggregator.adb:756:13: info: loop invariant preservation proved
 route_aggregator.adb:756:13: info: loop invariant initialization proved
-route_aggregator.adb:758:13: info: loop invariant initialization proved
-route_aggregator.adb:758:13: info: loop invariant preservation proved
-route_aggregator.adb:759:14: info: precondition proved
-route_aggregator.adb:759:106: info: precondition proved
-route_aggregator.adb:763:33: info: loop invariant initialization proved
+route_aggregator.adb:756:13: info: loop invariant preservation proved
+route_aggregator.adb:757:14: info: precondition proved
+route_aggregator.adb:757:106: info: precondition proved
+route_aggregator.adb:761:33: info: loop invariant initialization proved
+route_aggregator.adb:761:33: info: loop invariant preservation proved
+route_aggregator.adb:762:33: info: loop invariant initialization proved
+route_aggregator.adb:762:33: info: loop invariant preservation proved
 route_aggregator.adb:763:33: info: loop invariant preservation proved
+route_aggregator.adb:763:33: info: loop invariant initialization proved
+route_aggregator.adb:764:33: info: precondition proved
 route_aggregator.adb:764:33: info: loop invariant initialization proved
 route_aggregator.adb:764:33: info: loop invariant preservation proved
+route_aggregator.adb:765:33: info: precondition proved
 route_aggregator.adb:765:33: info: loop invariant preservation proved
 route_aggregator.adb:765:33: info: loop invariant initialization proved
-route_aggregator.adb:766:33: info: precondition proved
-route_aggregator.adb:766:33: info: loop invariant initialization proved
-route_aggregator.adb:766:33: info: loop invariant preservation proved
-route_aggregator.adb:767:33: info: precondition proved
-route_aggregator.adb:767:33: info: loop invariant preservation proved
-route_aggregator.adb:767:33: info: loop invariant initialization proved
-route_aggregator.adb:771:16: info: precondition proved
-route_aggregator.adb:771:29: info: precondition proved
-route_aggregator.adb:775:16: info: precondition proved
-route_aggregator.adb:776:33: info: non-aliasing of formal parameters "m_uniqueAutomationRequests" and "m_routePlans" proved
-route_aggregator.adb:776:33: info: non-aliasing of formal parameters "m_uniqueAutomationRequests" and "m_routeTaskPairing" proved
-route_aggregator.adb:776:33: info: non-aliasing of formal parameters "m_uniqueAutomationRequests" and "m_routePlanResponses" proved
-route_aggregator.adb:776:33: info: non-aliasing of formal parameters "m_uniqueAutomationRequests" and "m_taskOptions" proved
-route_aggregator.adb:777:33: info: non-aliasing of formal parameters "m_pendingRoute" and "m_routePlans" proved
-route_aggregator.adb:777:33: info: non-aliasing of formal parameters "m_pendingRoute" and "m_routeTaskPairing" proved
-route_aggregator.adb:777:33: info: non-aliasing of formal parameters "m_pendingRoute" and "m_routePlanResponses" proved
-route_aggregator.adb:777:33: info: non-aliasing of formal parameters "m_pendingRoute" and "m_taskOptions" proved
-route_aggregator.adb:778:33: info: non-aliasing of formal parameters "m_pendingAutoReq" and "m_routePlans" proved
-route_aggregator.adb:778:33: info: non-aliasing of formal parameters "m_pendingAutoReq" and "m_routeTaskPairing" proved
-route_aggregator.adb:778:33: info: non-aliasing of formal parameters "m_pendingAutoReq" and "m_routePlanResponses" proved
-route_aggregator.adb:778:33: info: non-aliasing of formal parameters "m_pendingAutoReq" and "m_taskOptions" proved
-route_aggregator.adb:779:33: info: non-aliasing of formal parameters "m_routePlans" and "m_routeTaskPairing" proved
-route_aggregator.adb:779:33: info: non-aliasing of formal parameters "m_routePlans" and "m_routePlanResponses" proved
-route_aggregator.adb:779:33: info: non-aliasing of formal parameters "m_routePlans" and "m_taskOptions" proved
+route_aggregator.adb:769:16: info: precondition proved
+route_aggregator.adb:769:29: info: precondition proved
+route_aggregator.adb:773:16: info: precondition proved
+route_aggregator.adb:774:33: info: non-aliasing of formal parameters "m_uniqueAutomationRequests" and "m_routePlans" proved
+route_aggregator.adb:774:33: info: non-aliasing of formal parameters "m_uniqueAutomationRequests" and "m_routeTaskPairing" proved
+route_aggregator.adb:774:33: info: non-aliasing of formal parameters "m_uniqueAutomationRequests" and "m_routePlanResponses" proved
+route_aggregator.adb:774:33: info: non-aliasing of formal parameters "m_uniqueAutomationRequests" and "m_taskOptions" proved
+route_aggregator.adb:775:33: info: non-aliasing of formal parameters "m_pendingRoute" and "m_routePlans" proved
+route_aggregator.adb:775:33: info: non-aliasing of formal parameters "m_pendingRoute" and "m_routeTaskPairing" proved
+route_aggregator.adb:775:33: info: non-aliasing of formal parameters "m_pendingRoute" and "m_routePlanResponses" proved
+route_aggregator.adb:775:33: info: non-aliasing of formal parameters "m_pendingRoute" and "m_taskOptions" proved
+route_aggregator.adb:776:33: info: non-aliasing of formal parameters "m_pendingAutoReq" and "m_routePlans" proved
+route_aggregator.adb:776:33: info: non-aliasing of formal parameters "m_pendingAutoReq" and "m_routeTaskPairing" proved
+route_aggregator.adb:776:33: info: non-aliasing of formal parameters "m_pendingAutoReq" and "m_routePlanResponses" proved
+route_aggregator.adb:776:33: info: non-aliasing of formal parameters "m_pendingAutoReq" and "m_taskOptions" proved
+route_aggregator.adb:777:33: info: non-aliasing of formal parameters "m_routePlans" and "m_routeTaskPairing" proved
+route_aggregator.adb:777:33: info: non-aliasing of formal parameters "m_routePlans" and "m_routePlanResponses" proved
+route_aggregator.adb:777:33: info: non-aliasing of formal parameters "m_routePlans" and "m_taskOptions" proved
+route_aggregator.adb:777:33: info: predicate check proved
+route_aggregator.adb:778:33: info: non-aliasing of formal parameters "m_routeTaskPairing" and "m_routePlanResponses" proved
+route_aggregator.adb:778:33: info: non-aliasing of formal parameters "m_routeTaskPairing" and "m_taskOptions" proved
+route_aggregator.adb:778:33: info: predicate check proved
+route_aggregator.adb:779:33: info: non-aliasing of formal parameters "m_routePlanResponses" and "m_taskOptions" proved
 route_aggregator.adb:779:33: info: predicate check proved
-route_aggregator.adb:780:33: info: non-aliasing of formal parameters "m_routeTaskPairing" and "m_routePlanResponses" proved
-route_aggregator.adb:780:33: info: non-aliasing of formal parameters "m_routeTaskPairing" and "m_taskOptions" proved
 route_aggregator.adb:780:33: info: predicate check proved
-route_aggregator.adb:781:33: info: non-aliasing of formal parameters "m_routePlanResponses" and "m_taskOptions" proved
-route_aggregator.adb:781:33: info: predicate check proved
-route_aggregator.adb:782:33: info: predicate check proved
-route_aggregator.adb:783:28: info: precondition proved
-route_aggregator.adb:787:47: info: precondition proved
-route_aggregator.adb:788:67: info: precondition proved
+route_aggregator.adb:781:28: info: precondition proved
+route_aggregator.adb:785:47: info: precondition proved
+route_aggregator.adb:786:66: info: precondition proved
+route_aggregator.adb:788:19: info: precondition proved
+route_aggregator.adb:789:19: info: precondition proved
+route_aggregator.adb:789:47: info: non-aliasing of formal parameters "m_pendingRequest" and "otherPending" proved
+route_aggregator.adb:789:47: info: predicate check proved
 route_aggregator.adb:790:19: info: precondition proved
-route_aggregator.adb:791:19: info: precondition proved
-route_aggregator.adb:791:45: info: non-aliasing of formal parameters "m_pendingRoute" and "otherpending" proved
-route_aggregator.adb:791:45: info: predicate check proved
-route_aggregator.adb:792:19: info: precondition proved
-route_aggregator.adb:792:32: info: predicate check proved
-route_aggregator.adb:793:26: info: overflow check proved
-route_aggregator.adb:795:22: info: assertion proved
-route_aggregator.adb:796:24: info: precondition proved
-route_aggregator.adb:796:118: info: precondition proved
-route_aggregator.adb:799:16: info: precondition proved
+route_aggregator.adb:790:32: info: predicate check proved
+route_aggregator.adb:791:26: info: overflow check proved
+route_aggregator.adb:793:22: info: assertion proved
+route_aggregator.adb:794:24: info: precondition proved
+route_aggregator.adb:794:118: info: precondition proved
+route_aggregator.adb:797:16: info: precondition proved
+route_aggregator.adb:805:10: info: assertion proved
+route_aggregator.adb:806:14: info: precondition proved
+route_aggregator.adb:806:106: info: precondition proved
 route_aggregator.adb:809:10: info: assertion proved
 route_aggregator.adb:810:14: info: precondition proved
-route_aggregator.adb:810:106: info: precondition proved
-route_aggregator.adb:813:10: info: assertion proved
-route_aggregator.adb:814:14: info: precondition proved
-route_aggregator.adb:814:108: info: precondition proved
-route_aggregator.adb:824:07: info: precondition proved
-route_aggregator.adb:825:07: info: precondition proved
-route_aggregator.adb:1070:09: info: precondition proved
-route_aggregator.adb:1071:07: info: initialization of "matrix" proved
-route_aggregator.adb:1072:50: info: precondition proved
-route_aggregator.adb:1080:11: info: precondition proved
-route_aggregator.adb:1083:13: info: loop invariant preservation proved
-route_aggregator.adb:1083:13: info: loop invariant initialization proved
-route_aggregator.adb:1083:40: info: precondition proved
-route_aggregator.adb:1084:61: info: precondition proved
-route_aggregator.adb:1086:13: info: loop invariant preservation proved
-route_aggregator.adb:1086:13: info: loop invariant initialization proved
-route_aggregator.adb:1086:35: info: precondition proved
-route_aggregator.adb:1087:58: info: precondition proved
-route_aggregator.adb:1087:92: info: range check proved
+route_aggregator.adb:810:108: info: precondition proved
+route_aggregator.adb:820:07: info: precondition proved
+route_aggregator.adb:821:07: info: precondition proved
+route_aggregator.adb:1066:09: info: precondition proved
+route_aggregator.adb:1067:07: info: initialization of "matrix" proved
+route_aggregator.adb:1068:50: info: precondition proved
+route_aggregator.adb:1076:11: info: precondition proved
+route_aggregator.adb:1079:13: info: loop invariant preservation proved
+route_aggregator.adb:1079:13: info: loop invariant initialization proved
+route_aggregator.adb:1079:40: info: precondition proved
+route_aggregator.adb:1080:61: info: precondition proved
+route_aggregator.adb:1082:13: info: loop invariant preservation proved
+route_aggregator.adb:1082:13: info: loop invariant initialization proved
+route_aggregator.adb:1082:35: info: precondition proved
+route_aggregator.adb:1083:58: info: precondition proved
+route_aggregator.adb:1083:92: info: range check proved
+route_aggregator.adb:1085:13: info: precondition proved
+route_aggregator.adb:1085:13: info: loop invariant preservation proved
+route_aggregator.adb:1085:13: info: loop invariant initialization proved
 route_aggregator.adb:1089:13: info: precondition proved
-route_aggregator.adb:1089:13: info: loop invariant preservation proved
 route_aggregator.adb:1089:13: info: loop invariant initialization proved
-route_aggregator.adb:1093:13: info: precondition proved
-route_aggregator.adb:1093:13: info: loop invariant initialization proved
-route_aggregator.adb:1093:13: info: loop invariant preservation proved
-route_aggregator.adb:1099:13: info: precondition proved
+route_aggregator.adb:1089:13: info: loop invariant preservation proved
+route_aggregator.adb:1095:13: info: precondition proved
+route_aggregator.adb:1095:13: info: loop invariant preservation proved
+route_aggregator.adb:1095:13: info: loop invariant initialization proved
+route_aggregator.adb:1097:13: info: loop invariant preservation proved
+route_aggregator.adb:1097:13: info: loop invariant initialization proved
 route_aggregator.adb:1099:13: info: loop invariant preservation proved
 route_aggregator.adb:1099:13: info: loop invariant initialization proved
-route_aggregator.adb:1101:13: info: loop invariant preservation proved
-route_aggregator.adb:1101:13: info: loop invariant initialization proved
-route_aggregator.adb:1103:13: info: loop invariant preservation proved
-route_aggregator.adb:1103:13: info: loop invariant initialization proved
-route_aggregator.adb:1107:33: info: loop invariant preservation proved
-route_aggregator.adb:1107:33: info: loop invariant initialization proved
-route_aggregator.adb:1108:33: info: precondition proved
-route_aggregator.adb:1108:33: info: loop invariant initialization proved
-route_aggregator.adb:1108:33: info: loop invariant preservation proved
-route_aggregator.adb:1109:33: info: precondition proved
-route_aggregator.adb:1109:33: info: loop invariant preservation proved
-route_aggregator.adb:1109:33: info: loop invariant initialization proved
-route_aggregator.adb:1112:37: info: precondition proved
-route_aggregator.adb:1113:28: info: assertion proved
-route_aggregator.adb:1122:31: info: assertion proved
-route_aggregator.adb:1124:39: info: precondition proved
-route_aggregator.adb:1135:22: info: precondition proved
-route_aggregator.adb:1135:22: info: loop invariant preservation proved
-route_aggregator.adb:1135:22: info: loop invariant initialization proved
-route_aggregator.adb:1137:32: info: precondition proved
-route_aggregator.adb:1137:46: info: precondition proved
-route_aggregator.adb:1139:41: info: precondition proved
-route_aggregator.adb:1141:22: info: loop invariant initialization proved
-route_aggregator.adb:1141:22: info: loop invariant preservation proved
-route_aggregator.adb:1143:22: info: precondition proved
-route_aggregator.adb:1143:22: info: loop invariant initialization proved
-route_aggregator.adb:1143:22: info: loop invariant preservation proved
-route_aggregator.adb:1144:30: info: precondition proved
-route_aggregator.adb:1146:34: info: precondition proved
-route_aggregator.adb:1146:46: info: range check proved
-route_aggregator.adb:1148:22: info: loop invariant initialization proved
-route_aggregator.adb:1148:22: info: loop invariant preservation proved
-route_aggregator.adb:1149:50: info: precondition proved
-route_aggregator.adb:1149:62: info: range check proved
-route_aggregator.adb:1150:31: info: precondition proved
-route_aggregator.adb:1150:54: info: precondition proved
-route_aggregator.adb:1150:66: info: range check proved
-route_aggregator.adb:1152:52: info: precondition proved
-route_aggregator.adb:1156:27: info: precondition proved
-route_aggregator.adb:1156:50: info: precondition proved
-route_aggregator.adb:1158:27: info: precondition proved
-route_aggregator.adb:1158:56: info: precondition proved
-route_aggregator.adb:1159:25: info: initialization of "toc" proved
-route_aggregator.adb:1162:60: info: range check proved
-route_aggregator.adb:1162:87: info: range check proved
-route_aggregator.adb:1162:94: info: range check proved
-route_aggregator.adb:1162:122: info: range check proved
-route_aggregator.adb:1162:128: info: range check proved
-route_aggregator.adb:1162:160: info: range check proved
-route_aggregator.adb:1162:167: info: range check proved
-route_aggregator.adb:1162:191: info: range check proved
-route_aggregator.adb:1162:196: info: range check proved
-route_aggregator.adb:1162:222: info: range check proved
-route_aggregator.adb:1172:46: info: precondition proved
-route_aggregator.adb:1175:22: info: precondition proved
-route_aggregator.adb:1175:50: info: precondition proved
-route_aggregator.adb:1179:34: info: precondition proved
-route_aggregator.adb:1179:34: info: assertion proved
-route_aggregator.adb:1179:57: info: precondition proved
+route_aggregator.adb:1103:33: info: loop invariant preservation proved
+route_aggregator.adb:1103:33: info: loop invariant initialization proved
+route_aggregator.adb:1104:33: info: precondition proved
+route_aggregator.adb:1104:33: info: loop invariant initialization proved
+route_aggregator.adb:1104:33: info: loop invariant preservation proved
+route_aggregator.adb:1105:33: info: precondition proved
+route_aggregator.adb:1105:33: info: loop invariant preservation proved
+route_aggregator.adb:1105:33: info: loop invariant initialization proved
+route_aggregator.adb:1108:37: info: precondition proved
+route_aggregator.adb:1109:28: info: assertion proved
+route_aggregator.adb:1118:31: info: assertion proved
+route_aggregator.adb:1120:39: info: precondition proved
+route_aggregator.adb:1131:22: info: precondition proved
+route_aggregator.adb:1131:22: info: loop invariant preservation proved
+route_aggregator.adb:1131:22: info: loop invariant initialization proved
+route_aggregator.adb:1133:32: info: precondition proved
+route_aggregator.adb:1133:46: info: precondition proved
+route_aggregator.adb:1135:41: info: precondition proved
+route_aggregator.adb:1137:22: info: loop invariant initialization proved
+route_aggregator.adb:1137:22: info: loop invariant preservation proved
+route_aggregator.adb:1139:22: info: precondition proved
+route_aggregator.adb:1139:22: info: loop invariant initialization proved
+route_aggregator.adb:1139:22: info: loop invariant preservation proved
+route_aggregator.adb:1140:30: info: precondition proved
+route_aggregator.adb:1142:34: info: precondition proved
+route_aggregator.adb:1142:46: info: range check proved
+route_aggregator.adb:1144:22: info: loop invariant initialization proved
+route_aggregator.adb:1144:22: info: loop invariant preservation proved
+route_aggregator.adb:1145:50: info: precondition proved
+route_aggregator.adb:1145:62: info: range check proved
+route_aggregator.adb:1146:31: info: precondition proved
+route_aggregator.adb:1146:54: info: precondition proved
+route_aggregator.adb:1146:66: info: range check proved
+route_aggregator.adb:1148:52: info: precondition proved
+route_aggregator.adb:1152:27: info: precondition proved
+route_aggregator.adb:1152:50: info: precondition proved
+route_aggregator.adb:1154:27: info: precondition proved
+route_aggregator.adb:1154:56: info: precondition proved
+route_aggregator.adb:1155:25: info: initialization of "toc" proved
+route_aggregator.adb:1158:60: info: range check proved
+route_aggregator.adb:1158:87: info: range check proved
+route_aggregator.adb:1158:94: info: range check proved
+route_aggregator.adb:1158:122: info: range check proved
+route_aggregator.adb:1158:128: info: range check proved
+route_aggregator.adb:1158:160: info: range check proved
+route_aggregator.adb:1158:167: info: range check proved
+route_aggregator.adb:1158:191: info: range check proved
+route_aggregator.adb:1158:196: info: range check proved
+route_aggregator.adb:1158:222: info: range check proved
+route_aggregator.adb:1168:46: info: precondition proved
+route_aggregator.adb:1171:22: info: precondition proved
+route_aggregator.adb:1171:50: info: precondition proved
+route_aggregator.adb:1175:34: info: precondition proved
+route_aggregator.adb:1175:34: info: assertion proved
+route_aggregator.adb:1175:57: info: precondition proved
+route_aggregator.adb:1176:19: info: precondition proved
+route_aggregator.adb:1176:27: info: predicate check proved
+route_aggregator.adb:1176:41: info: precondition proved
 route_aggregator.adb:1180:19: info: precondition proved
-route_aggregator.adb:1180:27: info: predicate check proved
-route_aggregator.adb:1180:41: info: precondition proved
-route_aggregator.adb:1184:19: info: precondition proved
-route_aggregator.adb:1184:19: info: assertion proved
-route_aggregator.adb:1184:57: info: precondition proved
+route_aggregator.adb:1180:19: info: assertion proved
+route_aggregator.adb:1180:57: info: precondition proved
+route_aggregator.adb:1181:31: info: precondition proved
+route_aggregator.adb:1181:31: info: assertion proved
+route_aggregator.adb:1182:31: info: assertion proved
+route_aggregator.adb:1183:31: info: precondition proved
+route_aggregator.adb:1183:31: info: assertion proved
+route_aggregator.adb:1183:45: info: precondition proved
+route_aggregator.adb:1183:83: info: precondition proved
+route_aggregator.adb:1184:16: info: precondition proved
+route_aggregator.adb:1184:24: info: predicate check proved
 route_aggregator.adb:1185:31: info: precondition proved
 route_aggregator.adb:1185:31: info: assertion proved
-route_aggregator.adb:1186:31: info: assertion proved
-route_aggregator.adb:1187:31: info: precondition proved
-route_aggregator.adb:1187:31: info: assertion proved
-route_aggregator.adb:1187:45: info: precondition proved
-route_aggregator.adb:1187:83: info: precondition proved
-route_aggregator.adb:1188:16: info: precondition proved
-route_aggregator.adb:1188:24: info: predicate check proved
-route_aggregator.adb:1189:31: info: precondition proved
-route_aggregator.adb:1189:31: info: assertion proved
-route_aggregator.adb:1191:19: info: assertion proved
-route_aggregator.adb:1212:07: info: initialization of "Response" proved
-route_aggregator.adb:1213:48: info: precondition proved
-route_aggregator.adb:1218:11: info: precondition proved
-route_aggregator.adb:1222:33: info: loop invariant initialization proved
-route_aggregator.adb:1222:33: info: loop invariant preservation proved
-route_aggregator.adb:1222:69: info: precondition proved
-route_aggregator.adb:1228:13: info: loop invariant initialization proved
-route_aggregator.adb:1228:13: info: loop invariant preservation proved
-route_aggregator.adb:1228:40: info: precondition proved
-route_aggregator.adb:1229:58: info: precondition proved
-route_aggregator.adb:1231:13: info: loop invariant initialization proved
-route_aggregator.adb:1231:13: info: loop invariant preservation proved
-route_aggregator.adb:1231:35: info: precondition proved
-route_aggregator.adb:1232:54: info: precondition proved
-route_aggregator.adb:1232:86: info: range check proved
+route_aggregator.adb:1187:19: info: assertion proved
+route_aggregator.adb:1208:07: info: initialization of "Response" proved
+route_aggregator.adb:1209:48: info: precondition proved
+route_aggregator.adb:1214:11: info: precondition proved
+route_aggregator.adb:1218:33: info: loop invariant initialization proved
+route_aggregator.adb:1218:33: info: loop invariant preservation proved
+route_aggregator.adb:1218:69: info: precondition proved
+route_aggregator.adb:1224:13: info: loop invariant initialization proved
+route_aggregator.adb:1224:13: info: loop invariant preservation proved
+route_aggregator.adb:1224:40: info: precondition proved
+route_aggregator.adb:1225:58: info: precondition proved
+route_aggregator.adb:1227:13: info: loop invariant initialization proved
+route_aggregator.adb:1227:13: info: loop invariant preservation proved
+route_aggregator.adb:1227:35: info: precondition proved
+route_aggregator.adb:1228:54: info: precondition proved
+route_aggregator.adb:1228:86: info: range check proved
+route_aggregator.adb:1230:13: info: precondition proved
+route_aggregator.adb:1230:13: info: loop invariant preservation proved
+route_aggregator.adb:1230:13: info: loop invariant initialization proved
 route_aggregator.adb:1234:13: info: precondition proved
 route_aggregator.adb:1234:13: info: loop invariant preservation proved
 route_aggregator.adb:1234:13: info: loop invariant initialization proved
-route_aggregator.adb:1238:13: info: precondition proved
-route_aggregator.adb:1238:13: info: loop invariant preservation proved
-route_aggregator.adb:1238:13: info: loop invariant initialization proved
-route_aggregator.adb:1244:13: info: precondition proved
-route_aggregator.adb:1244:13: info: loop invariant preservation proved
+route_aggregator.adb:1240:13: info: precondition proved
+route_aggregator.adb:1240:13: info: loop invariant preservation proved
+route_aggregator.adb:1240:13: info: loop invariant initialization proved
+route_aggregator.adb:1242:13: info: loop invariant preservation proved
+route_aggregator.adb:1242:13: info: loop invariant initialization proved
 route_aggregator.adb:1244:13: info: loop invariant initialization proved
-route_aggregator.adb:1246:13: info: loop invariant preservation proved
-route_aggregator.adb:1246:13: info: loop invariant initialization proved
-route_aggregator.adb:1248:13: info: loop invariant initialization proved
-route_aggregator.adb:1248:13: info: loop invariant preservation proved
-route_aggregator.adb:1254:13: info: precondition proved
-route_aggregator.adb:1254:13: info: loop invariant preservation proved
-route_aggregator.adb:1254:13: info: loop invariant initialization proved
-route_aggregator.adb:1254:27: info: precondition proved
-route_aggregator.adb:1255:21: info: precondition proved
-route_aggregator.adb:1255:26: info: precondition proved
-route_aggregator.adb:1259:13: info: precondition proved
-route_aggregator.adb:1259:13: info: loop invariant initialization proved
-route_aggregator.adb:1259:13: info: loop invariant preservation proved
-route_aggregator.adb:1261:34: info: precondition proved
-route_aggregator.adb:1262:25: info: precondition proved
-route_aggregator.adb:1262:30: info: precondition proved
-route_aggregator.adb:1266:33: info: precondition proved
-route_aggregator.adb:1275:31: info: assertion proved
-route_aggregator.adb:1277:39: info: precondition proved
-route_aggregator.adb:1279:35: info: precondition proved
-route_aggregator.adb:1279:57: info: precondition proved
-route_aggregator.adb:1289:22: info: precondition proved
-route_aggregator.adb:1289:22: info: loop invariant preservation proved
-route_aggregator.adb:1289:22: info: loop invariant initialization proved
-route_aggregator.adb:1291:30: info: precondition proved
-route_aggregator.adb:1291:44: info: precondition proved
-route_aggregator.adb:1293:39: info: precondition proved
-route_aggregator.adb:1295:22: info: loop invariant preservation proved
-route_aggregator.adb:1295:22: info: loop invariant initialization proved
-route_aggregator.adb:1297:22: info: precondition proved
-route_aggregator.adb:1297:22: info: loop invariant initialization proved
-route_aggregator.adb:1297:22: info: loop invariant preservation proved
-route_aggregator.adb:1298:28: info: precondition proved
-route_aggregator.adb:1300:36: info: precondition proved
-route_aggregator.adb:1300:48: info: range check proved
-route_aggregator.adb:1302:22: info: loop invariant preservation proved
-route_aggregator.adb:1302:22: info: loop invariant initialization proved
-route_aggregator.adb:1303:46: info: precondition proved
-route_aggregator.adb:1303:58: info: range check proved
-route_aggregator.adb:1304:31: info: precondition proved
-route_aggregator.adb:1304:52: info: precondition proved
-route_aggregator.adb:1304:64: info: range check proved
-route_aggregator.adb:1307:34: info: precondition proved
-route_aggregator.adb:1307:34: info: assertion proved
-route_aggregator.adb:1307:55: info: precondition proved
-route_aggregator.adb:1308:19: info: precondition proved
-route_aggregator.adb:1308:27: info: predicate check proved
-route_aggregator.adb:1308:39: info: precondition proved
-route_aggregator.adb:1312:19: info: assertion proved
-route_aggregator.adb:1313:31: info: assertion proved
-route_aggregator.adb:1314:16: info: precondition proved
-route_aggregator.adb:1314:24: info: predicate check proved
-route_aggregator.adb:1318:22: info: assertion proved
-route_aggregator.adb:1320:10: info: precondition proved
-route_aggregator.adb:1320:10: info: assertion proved
-route_aggregator.adb:1320:24: info: precondition proved
-route_aggregator.adb:1321:18: info: precondition proved
-route_aggregator.adb:1321:23: info: precondition proved
-route_aggregator.adb:1328:18: info: precondition proved
-route_aggregator.adb:1353:07: medium: exception might be raised
-route_aggregator.adb:1406:07: info: precondition proved
-route_aggregator.adb:1406:20: info: predicate check proved
-route_aggregator.adb:1407:37: info: overflow check proved
-route_aggregator.adb:1409:12: info: predicate check proved
-route_aggregator.adb:1409:54: info: overflow check proved
-route_aggregator.adb:1423:10: info: predicate check proved, in call inlined at route_aggregator.adb:1470
-route_aggregator.adb:1423:10: info: predicate check proved, in call inlined at route_aggregator.adb:1513
-route_aggregator.adb:1423:10: info: predicate check proved, in call inlined at route_aggregator.adb:1555
-route_aggregator.adb:1423:39: info: precondition proved, in call inlined at route_aggregator.adb:1470
-route_aggregator.adb:1423:39: info: predicate check proved, in call inlined at route_aggregator.adb:1470
-route_aggregator.adb:1423:39: info: precondition proved, in call inlined at route_aggregator.adb:1513
-route_aggregator.adb:1423:39: info: predicate check proved, in call inlined at route_aggregator.adb:1513
-route_aggregator.adb:1423:39: info: precondition proved, in call inlined at route_aggregator.adb:1555
-route_aggregator.adb:1423:39: info: predicate check proved, in call inlined at route_aggregator.adb:1555
-route_aggregator.adb:1426:10: info: predicate check proved, in call inlined at route_aggregator.adb:1470
-route_aggregator.adb:1426:10: info: predicate check proved, in call inlined at route_aggregator.adb:1513
-route_aggregator.adb:1426:10: info: predicate check proved, in call inlined at route_aggregator.adb:1555
-route_aggregator.adb:1426:39: info: precondition proved, in call inlined at route_aggregator.adb:1470
-route_aggregator.adb:1426:39: info: predicate check proved, in call inlined at route_aggregator.adb:1470
-route_aggregator.adb:1426:39: info: precondition proved, in call inlined at route_aggregator.adb:1513
-route_aggregator.adb:1426:39: info: predicate check proved, in call inlined at route_aggregator.adb:1513
-route_aggregator.adb:1426:39: info: precondition proved, in call inlined at route_aggregator.adb:1555
-route_aggregator.adb:1426:39: info: predicate check proved, in call inlined at route_aggregator.adb:1555
-route_aggregator.adb:1441:14: info: predicate check proved
-route_aggregator.adb:1441:32: info: precondition proved
-route_aggregator.adb:1444:14: info: precondition proved
-route_aggregator.adb:1444:60: info: range check proved
-route_aggregator.adb:1446:14: info: predicate check proved
-route_aggregator.adb:1446:33: info: precondition proved
-route_aggregator.adb:1462:14: info: predicate check proved
-route_aggregator.adb:1462:32: info: precondition proved
-route_aggregator.adb:1465:14: info: precondition proved
-route_aggregator.adb:1465:60: info: range check proved
-route_aggregator.adb:1467:14: info: predicate check proved
-route_aggregator.adb:1467:33: info: precondition proved
-route_aggregator.adb:1484:14: info: predicate check proved
-route_aggregator.adb:1484:35: info: precondition proved
-route_aggregator.adb:1487:14: info: precondition proved
-route_aggregator.adb:1487:60: info: range check proved
-route_aggregator.adb:1489:14: info: predicate check proved
-route_aggregator.adb:1489:33: info: precondition proved
-route_aggregator.adb:1505:14: info: predicate check proved
-route_aggregator.adb:1505:35: info: precondition proved
-route_aggregator.adb:1508:14: info: precondition proved
-route_aggregator.adb:1508:60: info: range check proved
-route_aggregator.adb:1510:14: info: predicate check proved
-route_aggregator.adb:1510:33: info: precondition proved
-route_aggregator.adb:1527:14: info: predicate check proved
-route_aggregator.adb:1527:36: info: precondition proved
-route_aggregator.adb:1530:14: info: precondition proved
-route_aggregator.adb:1530:60: info: range check proved
-route_aggregator.adb:1532:14: info: predicate check proved
-route_aggregator.adb:1532:33: info: precondition proved
-route_aggregator.adb:1548:14: info: predicate check proved
-route_aggregator.adb:1548:36: info: precondition proved
-route_aggregator.adb:1551:14: info: precondition proved
-route_aggregator.adb:1551:60: info: range check proved
-route_aggregator.adb:1553:14: info: predicate check proved
-route_aggregator.adb:1553:33: info: precondition proved
+route_aggregator.adb:1244:13: info: loop invariant preservation proved
+route_aggregator.adb:1250:13: info: precondition proved
+route_aggregator.adb:1250:13: info: loop invariant preservation proved
+route_aggregator.adb:1250:13: info: loop invariant initialization proved
+route_aggregator.adb:1250:27: info: precondition proved
+route_aggregator.adb:1251:21: info: precondition proved
+route_aggregator.adb:1251:26: info: precondition proved
+route_aggregator.adb:1255:13: info: precondition proved
+route_aggregator.adb:1255:13: info: loop invariant initialization proved
+route_aggregator.adb:1255:13: info: loop invariant preservation proved
+route_aggregator.adb:1257:34: info: precondition proved
+route_aggregator.adb:1258:25: info: precondition proved
+route_aggregator.adb:1258:30: info: precondition proved
+route_aggregator.adb:1262:33: info: precondition proved
+route_aggregator.adb:1271:31: info: assertion proved
+route_aggregator.adb:1273:39: info: precondition proved
+route_aggregator.adb:1275:35: info: precondition proved
+route_aggregator.adb:1275:57: info: precondition proved
+route_aggregator.adb:1285:22: info: precondition proved
+route_aggregator.adb:1285:22: info: loop invariant preservation proved
+route_aggregator.adb:1285:22: info: loop invariant initialization proved
+route_aggregator.adb:1287:30: info: precondition proved
+route_aggregator.adb:1287:44: info: precondition proved
+route_aggregator.adb:1289:39: info: precondition proved
+route_aggregator.adb:1291:22: info: loop invariant preservation proved
+route_aggregator.adb:1291:22: info: loop invariant initialization proved
+route_aggregator.adb:1293:22: info: precondition proved
+route_aggregator.adb:1293:22: info: loop invariant initialization proved
+route_aggregator.adb:1293:22: info: loop invariant preservation proved
+route_aggregator.adb:1294:28: info: precondition proved
+route_aggregator.adb:1296:36: info: precondition proved
+route_aggregator.adb:1296:48: info: range check proved
+route_aggregator.adb:1298:22: info: loop invariant preservation proved
+route_aggregator.adb:1298:22: info: loop invariant initialization proved
+route_aggregator.adb:1299:46: info: precondition proved
+route_aggregator.adb:1299:58: info: range check proved
+route_aggregator.adb:1300:31: info: precondition proved
+route_aggregator.adb:1300:52: info: precondition proved
+route_aggregator.adb:1300:64: info: range check proved
+route_aggregator.adb:1303:34: info: precondition proved
+route_aggregator.adb:1303:34: info: assertion proved
+route_aggregator.adb:1303:55: info: precondition proved
+route_aggregator.adb:1304:19: info: precondition proved
+route_aggregator.adb:1304:27: info: predicate check proved
+route_aggregator.adb:1304:39: info: precondition proved
+route_aggregator.adb:1308:19: info: assertion proved
+route_aggregator.adb:1309:31: info: assertion proved
+route_aggregator.adb:1310:16: info: precondition proved
+route_aggregator.adb:1310:24: info: predicate check proved
+route_aggregator.adb:1314:22: info: assertion proved
+route_aggregator.adb:1316:10: info: precondition proved
+route_aggregator.adb:1316:10: info: assertion proved
+route_aggregator.adb:1316:24: info: precondition proved
+route_aggregator.adb:1317:18: info: precondition proved
+route_aggregator.adb:1317:23: info: precondition proved
+route_aggregator.adb:1324:18: info: precondition proved
+route_aggregator.adb:1349:07: medium: exception might be raised
+route_aggregator.adb:1402:07: info: precondition proved
+route_aggregator.adb:1402:20: info: predicate check proved
+route_aggregator.adb:1403:37: info: overflow check proved
+route_aggregator.adb:1405:12: info: predicate check proved
+route_aggregator.adb:1405:54: info: overflow check proved
+route_aggregator.adb:1419:10: info: predicate check proved, in call inlined at route_aggregator.adb:1466
+route_aggregator.adb:1419:10: info: predicate check proved, in call inlined at route_aggregator.adb:1509
+route_aggregator.adb:1419:10: info: predicate check proved, in call inlined at route_aggregator.adb:1551
+route_aggregator.adb:1419:39: info: precondition proved, in call inlined at route_aggregator.adb:1466
+route_aggregator.adb:1419:39: info: predicate check proved, in call inlined at route_aggregator.adb:1466
+route_aggregator.adb:1419:39: info: precondition proved, in call inlined at route_aggregator.adb:1509
+route_aggregator.adb:1419:39: info: predicate check proved, in call inlined at route_aggregator.adb:1509
+route_aggregator.adb:1419:39: info: precondition proved, in call inlined at route_aggregator.adb:1551
+route_aggregator.adb:1419:39: info: predicate check proved, in call inlined at route_aggregator.adb:1551
+route_aggregator.adb:1422:10: info: predicate check proved, in call inlined at route_aggregator.adb:1466
+route_aggregator.adb:1422:10: info: predicate check proved, in call inlined at route_aggregator.adb:1509
+route_aggregator.adb:1422:10: info: predicate check proved, in call inlined at route_aggregator.adb:1551
+route_aggregator.adb:1422:39: info: precondition proved, in call inlined at route_aggregator.adb:1466
+route_aggregator.adb:1422:39: info: predicate check proved, in call inlined at route_aggregator.adb:1466
+route_aggregator.adb:1422:39: info: precondition proved, in call inlined at route_aggregator.adb:1509
+route_aggregator.adb:1422:39: info: predicate check proved, in call inlined at route_aggregator.adb:1509
+route_aggregator.adb:1422:39: info: precondition proved, in call inlined at route_aggregator.adb:1551
+route_aggregator.adb:1422:39: info: predicate check proved, in call inlined at route_aggregator.adb:1551
+route_aggregator.adb:1437:14: info: predicate check proved
+route_aggregator.adb:1437:32: info: precondition proved
+route_aggregator.adb:1440:14: info: precondition proved
+route_aggregator.adb:1440:60: info: range check proved
+route_aggregator.adb:1442:14: info: predicate check proved
+route_aggregator.adb:1442:33: info: precondition proved
+route_aggregator.adb:1458:14: info: predicate check proved
+route_aggregator.adb:1458:32: info: precondition proved
+route_aggregator.adb:1461:14: info: precondition proved
+route_aggregator.adb:1461:60: info: range check proved
+route_aggregator.adb:1463:14: info: predicate check proved
+route_aggregator.adb:1463:33: info: precondition proved
+route_aggregator.adb:1480:14: info: predicate check proved
+route_aggregator.adb:1480:35: info: precondition proved
+route_aggregator.adb:1483:14: info: precondition proved
+route_aggregator.adb:1483:60: info: range check proved
+route_aggregator.adb:1485:14: info: predicate check proved
+route_aggregator.adb:1485:33: info: precondition proved
+route_aggregator.adb:1501:14: info: predicate check proved
+route_aggregator.adb:1501:35: info: precondition proved
+route_aggregator.adb:1504:14: info: precondition proved
+route_aggregator.adb:1504:60: info: range check proved
+route_aggregator.adb:1506:14: info: predicate check proved
+route_aggregator.adb:1506:33: info: precondition proved
+route_aggregator.adb:1523:14: info: predicate check proved
+route_aggregator.adb:1523:36: info: precondition proved
+route_aggregator.adb:1526:14: info: precondition proved
+route_aggregator.adb:1526:60: info: range check proved
+route_aggregator.adb:1528:14: info: predicate check proved
+route_aggregator.adb:1528:33: info: precondition proved
+route_aggregator.adb:1544:14: info: predicate check proved
+route_aggregator.adb:1544:36: info: precondition proved
+route_aggregator.adb:1547:14: info: precondition proved
+route_aggregator.adb:1547:60: info: range check proved
+route_aggregator.adb:1549:14: info: predicate check proved
+route_aggregator.adb:1549:33: info: precondition proved
 route_aggregator.ads:29:09: info: precondition proved
 route_aggregator.ads:29:48: info: precondition proved
 route_aggregator.ads:41:09: info: precondition proved
@@ -786,122 +786,122 @@ route_aggregator.ads:180:71: info: range check proved
 route_aggregator.ads:180:101: info: range check proved
 route_aggregator.ads:189:07: info: range check proved
 route_aggregator.ads:189:38: info: range check proved
-route_aggregator.ads:222:11: info: precondition proved
-route_aggregator.ads:230:14: info: postcondition proved
-route_aggregator.ads:230:15: info: precondition proved
-route_aggregator.ads:231:19: info: precondition proved
-route_aggregator.ads:231:46: info: precondition proved
-route_aggregator.ads:233:28: info: precondition proved
-route_aggregator.ads:234:16: info: precondition proved
-route_aggregator.ads:235:63: info: precondition proved
-route_aggregator.ads:236:49: info: precondition proved
-route_aggregator.ads:236:77: info: precondition proved
-route_aggregator.ads:246:07: info: precondition proved
-route_aggregator.ads:247:10: info: precondition proved
-route_aggregator.ads:247:24: info: precondition proved
-route_aggregator.ads:249:19: info: precondition proved
+route_aggregator.ads:234:11: info: precondition proved
+route_aggregator.ads:242:14: info: postcondition proved
+route_aggregator.ads:242:15: info: precondition proved
+route_aggregator.ads:243:19: info: precondition proved
+route_aggregator.ads:243:46: info: precondition proved
+route_aggregator.ads:245:28: info: precondition proved
+route_aggregator.ads:246:16: info: precondition proved
+route_aggregator.ads:247:63: info: precondition proved
+route_aggregator.ads:248:49: info: precondition proved
+route_aggregator.ads:248:77: info: precondition proved
 route_aggregator.ads:258:07: info: precondition proved
-route_aggregator.ads:259:40: info: precondition proved
-route_aggregator.ads:263:26: info: precondition proved
-route_aggregator.ads:263:55: info: precondition proved
-route_aggregator.ads:273:07: info: precondition proved
-route_aggregator.ads:274:22: info: precondition proved
-route_aggregator.ads:275:30: info: precondition proved
-route_aggregator.ads:283:07: info: precondition proved
-route_aggregator.ads:283:36: info: precondition proved
-route_aggregator.ads:293:08: info: precondition proved
-route_aggregator.ads:294:11: info: precondition proved
+route_aggregator.ads:259:10: info: precondition proved
+route_aggregator.ads:259:24: info: precondition proved
+route_aggregator.ads:261:19: info: precondition proved
+route_aggregator.ads:270:07: info: precondition proved
+route_aggregator.ads:271:40: info: precondition proved
+route_aggregator.ads:275:26: info: precondition proved
+route_aggregator.ads:275:55: info: precondition proved
+route_aggregator.ads:286:07: info: precondition proved
+route_aggregator.ads:287:22: info: precondition proved
+route_aggregator.ads:288:30: info: precondition proved
 route_aggregator.ads:296:07: info: precondition proved
-route_aggregator.ads:297:12: info: precondition proved
-route_aggregator.ads:318:07: info: initialization of "History" proved
-route_aggregator.ads:320:16: info: subprogram "Valid_Events" will terminate, terminating annotation has been proved
-route_aggregator.ads:321:10: info: precondition proved
-route_aggregator.ads:326:16: info: subprogram "RouteResponse_Sent" will terminate, terminating annotation has been proved
-route_aggregator.ads:327:10: info: precondition proved
-route_aggregator.ads:331:16: info: subprogram "PlanRequest_Sent" will terminate, terminating annotation has been proved
-route_aggregator.ads:332:10: info: precondition proved
-route_aggregator.ads:336:16: info: subprogram "No_RouteRequest_Lost" will terminate, terminating annotation has been proved
-route_aggregator.ads:337:10: info: precondition proved
-route_aggregator.ads:343:16: info: subprogram "No_PlanResponse_Lost" will terminate, terminating annotation has been proved
-route_aggregator.ads:347:10: info: precondition proved
-route_aggregator.ads:349:29: info: precondition proved
-route_aggregator.ads:354:16: info: subprogram "PlanRequest_Processed" will terminate, terminating annotation has been proved
-route_aggregator.ads:361:16: info: subprogram "All_Pending_Plans_Sent" will terminate, terminating annotation has been proved
+route_aggregator.ads:296:36: info: precondition proved
+route_aggregator.ads:307:08: info: precondition proved
+route_aggregator.ads:308:11: info: precondition proved
+route_aggregator.ads:310:08: info: precondition proved
+route_aggregator.ads:311:11: info: precondition proved
+route_aggregator.ads:336:07: info: initialization of "History" proved
+route_aggregator.ads:338:16: info: subprogram "Valid_Events" will terminate, terminating annotation has been proved
+route_aggregator.ads:339:10: info: precondition proved
+route_aggregator.ads:344:16: info: subprogram "RouteResponse_Sent" will terminate, terminating annotation has been proved
+route_aggregator.ads:345:10: info: precondition proved
+route_aggregator.ads:349:16: info: subprogram "PlanRequest_Sent" will terminate, terminating annotation has been proved
+route_aggregator.ads:350:10: info: precondition proved
+route_aggregator.ads:354:16: info: subprogram "No_RouteRequest_Lost" will terminate, terminating annotation has been proved
+route_aggregator.ads:355:10: info: precondition proved
+route_aggregator.ads:361:16: info: subprogram "No_PlanResponse_Lost" will terminate, terminating annotation has been proved
 route_aggregator.ads:365:10: info: precondition proved
-route_aggregator.ads:365:24: info: precondition proved
-route_aggregator.ads:377:14: high: all paths in "Euclidean_Plan" raise exceptions or do not terminate normally
-route_aggregator.ads:384:06: info: data dependencies proved
-route_aggregator.ads:406:16: info: precondition proved
-route_aggregator.ads:407:19: info: precondition proved
-route_aggregator.ads:415:11: info: precondition proved
-route_aggregator.ads:422:10: info: precondition proved
-route_aggregator.ads:429:10: info: precondition proved
-route_aggregator.ads:430:10: info: precondition proved
-route_aggregator.ads:436:06: info: postcondition proved
-route_aggregator.ads:438:10: info: precondition proved
-route_aggregator.ads:444:10: info: precondition proved
-route_aggregator.ads:444:43: info: overflow check proved
-route_aggregator.ads:445:10: info: precondition proved
-route_aggregator.ads:445:43: info: overflow check proved
-route_aggregator.ads:451:10: info: precondition proved
-route_aggregator.ads:452:10: info: precondition proved
-route_aggregator.ads:477:11: info: precondition proved
-route_aggregator.ads:478:14: info: precondition proved
-route_aggregator.ads:484:10: info: precondition proved
-route_aggregator.ads:491:10: info: precondition proved
-route_aggregator.ads:492:10: info: precondition proved
-route_aggregator.ads:496:14: info: postcondition proved
-route_aggregator.ads:498:10: info: precondition proved
-route_aggregator.ads:504:10: info: precondition proved
-route_aggregator.ads:504:43: info: overflow check proved
-route_aggregator.ads:505:10: info: precondition proved
-route_aggregator.ads:505:43: info: overflow check proved
-route_aggregator.ads:511:10: info: precondition proved
-route_aggregator.ads:512:10: info: precondition proved
-route_aggregator.ads:521:87: info: overflow check proved
-route_aggregator.ads:533:10: info: precondition proved
-route_aggregator.ads:539:10: info: precondition proved
-route_aggregator.ads:540:10: info: precondition proved
-route_aggregator.ads:544:14: info: postcondition proved
-route_aggregator.ads:546:10: info: precondition proved
-route_aggregator.ads:554:10: info: precondition proved
-route_aggregator.ads:555:10: info: precondition proved
-route_aggregator.ads:569:16: info: precondition proved
-route_aggregator.ads:569:44: info: precondition proved
-route_aggregator.ads:579:15: info: precondition proved
-route_aggregator.ads:584:15: info: precondition proved
-route_aggregator.ads:585:15: info: precondition proved
-route_aggregator.ads:590:12: info: postcondition proved
-route_aggregator.ads:590:13: info: precondition proved
-route_aggregator.ads:592:11: info: precondition proved
-route_aggregator.ads:593:31: info: precondition proved
-route_aggregator.ads:594:11: info: precondition proved
-route_aggregator.ads:595:31: info: precondition proved
-route_aggregator.ads:602:10: info: precondition proved
-route_aggregator.ads:607:46: info: overflow check proved
-route_aggregator.ads:608:10: info: precondition proved
-route_aggregator.ads:614:10: info: precondition proved
-route_aggregator.ads:616:34: info: precondition proved
-route_aggregator.ads:617:25: info: precondition proved
-route_aggregator.ads:617:30: info: precondition proved
-route_aggregator.ads:620:09: info: precondition proved
-route_aggregator.ads:620:23: info: precondition proved
-route_aggregator.ads:621:15: info: precondition proved
-route_aggregator.ads:621:20: info: precondition proved
-route_aggregator.ads:654:16: info: precondition proved
-route_aggregator.ads:654:44: info: precondition proved
-route_aggregator.ads:659:15: info: precondition proved
-route_aggregator.ads:664:15: info: precondition proved
-route_aggregator.ads:665:15: info: precondition proved
-route_aggregator.ads:669:14: info: postcondition proved
-route_aggregator.ads:669:15: info: precondition proved
-route_aggregator.ads:671:11: info: precondition proved
-route_aggregator.ads:672:31: info: precondition proved
-route_aggregator.ads:673:11: info: precondition proved
-route_aggregator.ads:674:31: info: precondition proved
-route_aggregator.ads:681:10: info: precondition proved
-route_aggregator.ads:687:10: info: precondition proved
-route_aggregator.ads:688:10: info: precondition proved
+route_aggregator.ads:367:29: info: precondition proved
+route_aggregator.ads:372:16: info: subprogram "PlanRequest_Processed" will terminate, terminating annotation has been proved
+route_aggregator.ads:379:16: info: subprogram "All_Pending_Plans_Sent" will terminate, terminating annotation has been proved
+route_aggregator.ads:383:10: info: precondition proved
+route_aggregator.ads:383:24: info: precondition proved
+route_aggregator.ads:395:14: high: all paths in "Euclidean_Plan" raise exceptions or do not terminate normally
+route_aggregator.ads:402:06: info: data dependencies proved
+route_aggregator.ads:424:16: info: precondition proved
+route_aggregator.ads:425:19: info: precondition proved
+route_aggregator.ads:433:11: info: precondition proved
+route_aggregator.ads:440:10: info: precondition proved
+route_aggregator.ads:447:10: info: precondition proved
+route_aggregator.ads:448:10: info: precondition proved
+route_aggregator.ads:454:06: info: postcondition proved
+route_aggregator.ads:456:10: info: precondition proved
+route_aggregator.ads:462:10: info: precondition proved
+route_aggregator.ads:462:43: info: overflow check proved
+route_aggregator.ads:463:10: info: precondition proved
+route_aggregator.ads:463:43: info: overflow check proved
+route_aggregator.ads:469:10: info: precondition proved
+route_aggregator.ads:470:10: info: precondition proved
+route_aggregator.ads:495:11: info: precondition proved
+route_aggregator.ads:496:14: info: precondition proved
+route_aggregator.ads:502:10: info: precondition proved
+route_aggregator.ads:509:10: info: precondition proved
+route_aggregator.ads:510:10: info: precondition proved
+route_aggregator.ads:514:14: info: postcondition proved
+route_aggregator.ads:516:10: info: precondition proved
+route_aggregator.ads:522:10: info: precondition proved
+route_aggregator.ads:522:43: info: overflow check proved
+route_aggregator.ads:523:10: info: precondition proved
+route_aggregator.ads:523:43: info: overflow check proved
+route_aggregator.ads:529:10: info: precondition proved
+route_aggregator.ads:530:10: info: precondition proved
+route_aggregator.ads:539:87: info: overflow check proved
+route_aggregator.ads:551:10: info: precondition proved
+route_aggregator.ads:557:10: info: precondition proved
+route_aggregator.ads:558:10: info: precondition proved
+route_aggregator.ads:562:14: info: postcondition proved
+route_aggregator.ads:564:10: info: precondition proved
+route_aggregator.ads:572:10: info: precondition proved
+route_aggregator.ads:573:10: info: precondition proved
+route_aggregator.ads:587:16: info: precondition proved
+route_aggregator.ads:587:44: info: precondition proved
+route_aggregator.ads:597:15: info: precondition proved
+route_aggregator.ads:602:15: info: precondition proved
+route_aggregator.ads:603:15: info: precondition proved
+route_aggregator.ads:608:12: info: postcondition proved
+route_aggregator.ads:608:13: info: precondition proved
+route_aggregator.ads:610:11: info: precondition proved
+route_aggregator.ads:611:31: info: precondition proved
+route_aggregator.ads:612:11: info: precondition proved
+route_aggregator.ads:613:31: info: precondition proved
+route_aggregator.ads:620:10: info: precondition proved
+route_aggregator.ads:625:46: info: overflow check proved
+route_aggregator.ads:626:10: info: precondition proved
+route_aggregator.ads:632:10: info: precondition proved
+route_aggregator.ads:634:34: info: precondition proved
+route_aggregator.ads:635:25: info: precondition proved
+route_aggregator.ads:635:30: info: precondition proved
+route_aggregator.ads:638:09: info: precondition proved
+route_aggregator.ads:638:23: info: precondition proved
+route_aggregator.ads:639:15: info: precondition proved
+route_aggregator.ads:639:20: info: precondition proved
+route_aggregator.ads:672:16: info: precondition proved
+route_aggregator.ads:672:44: info: precondition proved
+route_aggregator.ads:677:15: info: precondition proved
+route_aggregator.ads:682:15: info: precondition proved
+route_aggregator.ads:683:15: info: precondition proved
+route_aggregator.ads:687:14: info: postcondition proved
+route_aggregator.ads:687:15: info: precondition proved
+route_aggregator.ads:689:11: info: precondition proved
+route_aggregator.ads:690:31: info: precondition proved
+route_aggregator.ads:691:11: info: precondition proved
+route_aggregator.ads:692:31: info: precondition proved
+route_aggregator.ads:699:10: info: precondition proved
+route_aggregator.ads:703:10: info: precondition proved
+route_aggregator.ads:704:10: info: precondition proved
 a-cfhase.ads:497:18: info: precondition proved, in instantiation at route_aggregator.ads:48
 a-cfhase.ads:813:39: info: precondition proved, in instantiation at route_aggregator.ads:48
 a-cfhase.ads:822:17: info: precondition proved, in instantiation at route_aggregator.ads:48
@@ -916,13 +916,13 @@ a-cfhase.ads:1202:20: info: precondition proved, in instantiation at route_aggre
 a-cfhase.ads:1223:20: info: precondition proved, in instantiation at route_aggregator.ads:48
 a-cofuse.ads:243:22: info: overflow check proved, in instantiation at a-cfhase.ads:90, in instantiation at route_aggregator.ads:48
 a-cofuse.ads:244:26: info: overflow check proved, in instantiation at a-cfhase.ads:90, in instantiation at route_aggregator.ads:48
-a-cofuve.ads:95:13: info: subprogram "First" will terminate, terminating annotation has been proved, in instantiation at route_aggregator.ads:313
+a-cofuve.ads:95:13: info: subprogram "First" will terminate, terminating annotation has been proved, in instantiation at route_aggregator.ads:327
 a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at route_aggregator.ads:191
 a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:182
 a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cfhase.ads:102, in instantiation at route_aggregator.ads:48
 a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cforma.ads:112, in instantiation at route_aggregator.ads:62
 a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:174
-a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at route_aggregator.ads:313
+a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at route_aggregator.ads:327
 a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cforma.ads:112, in instantiation at route_aggregator.ads:159
 a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:99
 a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:119
@@ -934,7 +934,7 @@ a-cofuve.ads:232:54: info: overflow check proved, in instantiation at a-cforma.a
 a-cofuve.ads:232:54: info: overflow check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:174
 a-cofuve.ads:232:54: info: overflow check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:182
 a-cofuve.ads:232:54: info: overflow check proved, in instantiation at route_aggregator.ads:191
-a-cofuve.ads:232:54: info: overflow check proved, in instantiation at route_aggregator.ads:313
+a-cofuve.ads:232:54: info: overflow check proved, in instantiation at route_aggregator.ads:327
 a-cofuve.ads:237:63: info: range check proved, in instantiation at a-cfhase.ads:102, in instantiation at route_aggregator.ads:48
 a-cofuve.ads:237:63: info: range check proved, in instantiation at a-cforma.ads:112, in instantiation at route_aggregator.ads:62
 a-cofuve.ads:237:63: info: range check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:99
@@ -943,7 +943,7 @@ a-cofuve.ads:237:63: info: range check proved, in instantiation at a-cforma.ads:
 a-cofuve.ads:237:63: info: range check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:174
 a-cofuve.ads:237:63: info: range check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:182
 a-cofuve.ads:237:63: info: range check proved, in instantiation at route_aggregator.ads:191
-a-cofuve.ads:237:63: info: range check proved, in instantiation at route_aggregator.ads:313
+a-cofuve.ads:237:63: info: range check proved, in instantiation at route_aggregator.ads:327
 a-cofuve.ads:238:59: info: overflow check proved, in instantiation at a-cfhase.ads:102, in instantiation at route_aggregator.ads:48
 a-cofuve.ads:238:59: info: overflow check proved, in instantiation at a-cforma.ads:112, in instantiation at route_aggregator.ads:62
 a-cofuve.ads:238:59: info: overflow check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:99
@@ -952,7 +952,7 @@ a-cofuve.ads:238:59: info: overflow check proved, in instantiation at a-cforma.a
 a-cofuve.ads:238:59: info: overflow check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:174
 a-cofuve.ads:238:59: info: overflow check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:182
 a-cofuve.ads:238:59: info: overflow check proved, in instantiation at route_aggregator.ads:191
-a-cofuve.ads:238:59: info: overflow check proved, in instantiation at route_aggregator.ads:313
+a-cofuve.ads:238:59: info: overflow check proved, in instantiation at route_aggregator.ads:327
 a-cofuve.ads:238:76: info: overflow check proved, in instantiation at a-cfhase.ads:102, in instantiation at route_aggregator.ads:48
 a-cofuve.ads:238:76: info: overflow check proved, in instantiation at a-cforma.ads:112, in instantiation at route_aggregator.ads:62
 a-cofuve.ads:238:76: info: overflow check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:99
@@ -961,7 +961,7 @@ a-cofuve.ads:238:76: info: overflow check proved, in instantiation at a-cforma.a
 a-cofuve.ads:238:76: info: overflow check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:174
 a-cofuve.ads:238:76: info: overflow check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:182
 a-cofuve.ads:238:76: info: overflow check proved, in instantiation at route_aggregator.ads:191
-a-cofuve.ads:238:76: info: overflow check proved, in instantiation at route_aggregator.ads:313
+a-cofuve.ads:238:76: info: overflow check proved, in instantiation at route_aggregator.ads:327
 a-cofuve.ads:239:30: info: range check proved, in instantiation at a-cfhase.ads:102, in instantiation at route_aggregator.ads:48
 a-cofuve.ads:239:30: info: range check proved, in instantiation at a-cforma.ads:112, in instantiation at route_aggregator.ads:62
 a-cofuve.ads:239:30: info: range check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:99
@@ -970,7 +970,7 @@ a-cofuve.ads:239:30: info: range check proved, in instantiation at a-cforma.ads:
 a-cofuve.ads:239:30: info: range check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:174
 a-cofuve.ads:239:30: info: range check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:182
 a-cofuve.ads:239:30: info: range check proved, in instantiation at route_aggregator.ads:191
-a-cofuve.ads:239:30: info: range check proved, in instantiation at route_aggregator.ads:313
+a-cofuve.ads:239:30: info: range check proved, in instantiation at route_aggregator.ads:327
 a-cofuve.ads:300:52: info: overflow check proved, in instantiation at a-cfhase.ads:102, in instantiation at route_aggregator.ads:48
 a-cofuve.ads:300:52: info: overflow check proved, in instantiation at a-cforma.ads:112, in instantiation at route_aggregator.ads:62
 a-cofuve.ads:300:52: info: overflow check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:99
@@ -979,7 +979,7 @@ a-cofuve.ads:300:52: info: overflow check proved, in instantiation at a-cforma.a
 a-cofuve.ads:300:52: info: overflow check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:174
 a-cofuve.ads:300:52: info: overflow check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:182
 a-cofuve.ads:300:52: info: overflow check proved, in instantiation at route_aggregator.ads:191
-a-cofuve.ads:300:52: info: overflow check proved, in instantiation at route_aggregator.ads:313
+a-cofuve.ads:300:52: info: overflow check proved, in instantiation at route_aggregator.ads:327
 a-cfhama.ads:681:39: info: precondition proved, in instantiation at route_aggregator.ads:99
 a-cfhama.ads:681:39: info: precondition proved, in instantiation at route_aggregator.ads:119
 a-cfhama.ads:681:39: info: precondition proved, in instantiation at route_aggregator.ads:174

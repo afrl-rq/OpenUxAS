@@ -6,10 +6,8 @@
 <prover id="1" name="Z3" version="4.5.1-gnatprove" timelimit="60" steplimit="0" memlimit="2000"/>
 <prover id="2" name="CVC4" version="1.6-gnatprove" timelimit="60" steplimit="0" memlimit="2000"/>
 <file format="gnat-json">
-<path name=".."/><path name=".."/><path name=".."/><path name=".."/><path name=".."/>
-<path name=".."/><path name=".."/><path name=".."/><path name=".."/><path name=".."/>
-<path name="tmp"/><path name="tmpw5p2os77"/><path name="route_aggregator"/>
-<path name="gnatprove"/><path name="route_aggregator__euclidean_plan.gnat-json"/>
+<path name=".."/><path name=".."/><path name=".."/><path name="objs"/>
+<path name="release"/><path name="gnatprove"/><path name="route_aggregator__euclidean_plan.gnat-json"/>
 <theory name="Route_aggregator__euclidean_plan__subprogram_def">
  <goal name="def&#39;vc" expl="VC for def">
  <transf name="split_goal_wp_conj" >
@@ -30,6 +28,9 @@
   </transf>
   </goal>
   <goal name="def&#39;vc.4" expl="precondition" proved="true">
+  <proof prover="0" obsolete="true"><result status="timeout"/></proof>
+  <proof prover="1" obsolete="true"><result status="unknown" steps="462223"/></proof>
+  <proof prover="2" obsolete="true"><result status="unknown" steps="2094"/></proof>
   <transf name="trivial_true" proved="true" >
   </transf>
   </goal>
@@ -49,6 +50,8 @@
   <proof prover="0"><result status="timeout"/></proof>
   <proof prover="1"><result status="unknown" steps="462223"/></proof>
   <proof prover="2"><result status="unknown" steps="2094"/></proof>
+  <transf name="trivial_true" proved="true" >
+  </transf>
   </goal>
  </transf>
  </goal>
