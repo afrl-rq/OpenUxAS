@@ -8,7 +8,7 @@ jobs:
       matrix:
         os: [ubuntu-18.04, ubuntu-20.04]
         component: [uxas-ada, uxas, amase]
-        qualifier: [dev, scenario=gcov]
+        qualifier: [scenario=release, scenario=gcov]
         python-version: [3.7, 3.8]
     runs-on: ${{ matrix.os }}
     steps:
@@ -21,7 +21,7 @@ jobs:
 
       - name: Bootstrap anod
         run: |
-          curl -L https://github.com/AdaCore/OpenUxAS-bootstrap/raw/master/install/bootstrap | bash -s -- --no-gnat
+          curl -L https://github.com/AdaCore/OpenUxAS-bootstrap/raw/master/install/bootstrap | bash
 
       - name: Patch bootstrap
         run: |
@@ -40,7 +40,6 @@ jobs:
 
       - name: Run C++ tests
         if: ${{ matrix.component == 'uxas' }}
-        continue-on-error: ${{ matrix.qualifier == 'dev' }}
         run: |
           eval "$( $HOME/bootstrap/vpython/bin/python $HOME/bootstrap/anod -v printenv ${{ matrix.component }} --qualifier=${{ matrix.qualifier }} )"
           echo $PATH

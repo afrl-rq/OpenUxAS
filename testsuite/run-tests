@@ -69,8 +69,7 @@ def dump_gcov_summary(source_dir: str,
             continue
 
         if not display_includes_coverage and \
-                (source_file.endswith('.h') or
-                 source_file.endswith('.hpp')):
+                (source_file.endswith('.h') or source_file.endswith('.hpp')):
             continue
 
         with open(gcov_file) as fd:
@@ -117,7 +116,7 @@ def dump_gcov_summary(source_dir: str,
 class TestJob(ProcessJob):
     """Handle a test execution."""
 
-    PORTS = Queue()
+    PORTS: Queue = Queue()
 
     @property
     def cmdline(self):
@@ -190,7 +189,7 @@ class TestsuiteLoop(Walk):
         start_port = self.next_port
 
         # Do a maximum of 100 attempts.
-        for attempts in range(100):
+        for _ in range(100):
             try:
                 s = socket.socket()
                 s.bind(('127.0.0.1', self.next_port))
@@ -212,7 +211,7 @@ class TestsuiteLoop(Walk):
         super(TestsuiteLoop, self).set_scheduling_params()
         self.tokens = self.jobs
 
-        for idx in range(self.jobs * 4):
+        for _ in range(self.jobs * 4):
             # For each worker we allocate 4 ports. Each job will use 2 ports.
             # By allocating twice the necessary number we ensure that ports
             # are not reused immediatly. This ensure that the system has time
@@ -284,7 +283,7 @@ def main() -> int:
     m.parse_args()
 
     try:
-        import zmq
+        import zmq  # noqa: F401 (ignore warning from flake8)
     except ImportError:
         logging.critical("zmp package is required. do pip install zmq")
         return 1
@@ -302,7 +301,8 @@ def main() -> int:
 
     # Ensure gcda are stored in the testsuite dir. It ensures that we don't
     # pollute uxas build dir and ease reset of coverage info on each run.
-    if m.args.source_dir and m.args.build_dir:
+    if (m.args.source_dir and m.args.build_dir
+            and len(find(m.args.build_dir, "*.gc*")) > 0):
         logging.info('Enable coverage mode')
         logging.info('Sources: %s', m.args.source_dir)
         logging.info('Objects: %s', m.args.build_dir)
@@ -315,7 +315,8 @@ def main() -> int:
 
     TestsuiteLoop(actions=get_test_list(), jobs=m.args.jobs)
 
-    if m.args.source_dir is not None and m.args.build_dir is not None:
+    if (m.args.source_dir is not None and m.args.build_dir is not None
+            and len(find(m.args.build_dir, "*.gc*")) > 0):
         dump_gcov_summary(m.args.source_dir,
                           m.args.build_dir,
                           gcda_dir,
