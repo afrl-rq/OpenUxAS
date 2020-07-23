@@ -5,18 +5,21 @@ PLATFORM:=$(shell python -c "import sys; print(sys.platform)")
 DEBUG_BUILD=false
 
 # Root directory in which the object and the final executable will be created
-OBJECT_DIR=obj
+OBJECT_DIR=obj/cpp
+
+# Root directory under which the source files live
+SOURCE_DIR=src/cpp
 
 # Source directories for the uxas project
-SOURCE_DIRS:=src/Communications \
-             src/Includes \
-	     src/Services \
-	     src/Tasks \
-	     src/DPSS \
-	     src/Plans \
-	     src/Utilities \
-	     resources/AutomationDiagramDataService \
-	     src/VisilibityLib
+SOURCE_DIRS:=$(SOURCE_DIR)/Communications \
+             $(SOURCE_DIR)/Includes \
+	     	 $(SOURCE_DIR)/Services \
+	     	 $(SOURCE_DIR)/Tasks \
+		     $(SOURCE_DIR)/DPSS \
+		     $(SOURCE_DIR)/Plans \
+	    	 $(SOURCE_DIR)/Utilities \
+		     $(SOURCE_DIR)/VisilibityLib \
+	  	     resources/AutomationDiagramDataService
 
 # Compiler to be used
 CXX=g++
@@ -117,7 +120,7 @@ all: $(OBJECT_DIR)/uxas
 	@echo "[Project compiled]"
 
 # Main compilation and link
-$(OBJECT_DIR)/uxas.o: src/UxAS_Main.cpp
+$(OBJECT_DIR)/uxas.o: $(SOURCE_DIR)/UxAS_Main.cpp
 	$(call COMPILE_CXX,$@,$<)
 
 $(OBJECT_DIR)/uxas: $(OBJECT_DIR)/uxas.o $(OBJECTS)
