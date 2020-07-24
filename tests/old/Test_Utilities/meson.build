@@ -1,3 +1,0 @@
-subdir('AutomationRequestTests')
-subdir('EligibleEntitiesTests')
-

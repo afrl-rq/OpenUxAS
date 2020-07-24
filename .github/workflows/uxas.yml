@@ -51,4 +51,4 @@ jobs:
         if: ${{ matrix.component == 'uxas-ada' }}
         run: |
           eval "$( $HOME/bootstrap/vpython/bin/python $HOME/bootstrap/anod -v printenv ${{ matrix.component }} --build-env )"
-          $HOME/bootstrap/vpython/bin/python $GITHUB_WORKSPACE/tests/proof/run-tests -E --timeout=2400
+          $HOME/bootstrap/vpython/bin/python $GITHUB_WORKSPACE/tests/proof/run-proofs -E --timeout=2400
