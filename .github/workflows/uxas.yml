@@ -25,8 +25,10 @@ jobs:
 
       - name: Patch bootstrap
         run: |
-          envsubst < $GITHUB_WORKSPACE/.github/bootstrap.patch &> $GITHUB_WORKSPACE/.github/bootstrap.patch
-          patch -d$HOME/bootstrap -p0 < $GITHUB_WORKSPACE/.github/bootstrap.patch
+          envsubst < $GITHUB_WORKSPACE/.github/bootstrap.patch &> $HOME/subst-bootstrap.patch
+          cat $HOME/subst-bootstrap.patch
+          patch -d$HOME/bootstrap -p0 < $HOME/subst-bootstrap.patch
+          cat $HOME/bootstrap/specs/config/repositories.yaml
 
       - name: Install GNAT CE 2020
         if: ${{ matrix.component == 'uxas-ada' }}
@@ -43,10 +45,10 @@ jobs:
         run: |
           eval "$( $HOME/bootstrap/vpython/bin/python $HOME/bootstrap/anod -v printenv ${{ matrix.component }} --qualifier=${{ matrix.qualifier }} )"
           echo $PATH
-          $HOME/bootstrap/vpython/bin/python $GITHUB_WORKSPACE/testsuite/run-tests
+          $HOME/bootstrap/vpython/bin/python $GITHUB_WORKSPACE/tests/cpp/run-tests
 
       - name: Run Ada tests
         if: ${{ matrix.component == 'uxas-ada' }}
         run: |
           eval "$( $HOME/bootstrap/vpython/bin/python $HOME/bootstrap/anod -v printenv ${{ matrix.component }} --build-env )"
-          $HOME/bootstrap/vpython/bin/python $GITHUB_WORKSPACE/ada/arv-demo/testsuite/run-tests -E --timeout=2400
+          $HOME/bootstrap/vpython/bin/python $GITHUB_WORKSPACE/tests/proof/run-tests -E --timeout=2400

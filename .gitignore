@@ -48,13 +48,14 @@ examples/**/datawork/**
 /prerequisites/vpython
 
 #Ignore unnecessary session files
-ada/arv-demo/proof/sessions/*/*.xml.bak
-ada/arv-demo/proof/sessions/*/*.gz
-ada/arv-demo/proof/sessions/*/*.gz.bak
+src/ada/proof/sessions/*/*.xml.bak
+src/ada/proof/sessions/*/*.gz
+src/ada/proof/sessions/*/*.gz.bak
 
 # object files
 obj
 
 # testsuite results
-testsuite/log
-testsuite/results
+tests/cpp/log
+tests/cpp/results
+tests/proof/out
