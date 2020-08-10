@@ -2,7 +2,7 @@
 <UxAS FormatVersion="1.0" EntityID="100"  EntityType="Aircraft">
     <Service Type="AutomationRequestValidatorService"/>
     <Service Type="RouteAggregatorService" />
-    <Service Type="AutomationDataService" />
+    <Service Type="ExampleSparkService" />
 
     <!-- Send every message from zeromq bus to an external program using ZeroMQ
          Note: the external program must 'connect' using a SUB socket (for receive)

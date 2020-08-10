@@ -2,10 +2,10 @@
 package body afrl.cmasi.AutomationResponse.SPARK_Boundary with SPARK_Mode => Off is
 
    --------------------
-   -- Get_EntityList --
+   -- Get_WaypointEntity_Set --
    --------------------
 
-   function Get_WaypointEntitySet
+   function Get_WaypointEntity_Set
      (Response : AutomationResponse) return Int64_Set
    is
       L : constant Vect_MissionCommand_Acc_Acc := Response.getMissionCommandList;
@@ -15,6 +15,6 @@ package body afrl.cmasi.AutomationResponse.SPARK_Boundary with SPARK_Mode => Off
             Int64_Sets.Include (R, E.getVehicleID);
          end loop;
       end return;
-   end Get_WaypointEntitySet;
+   end Get_WaypointEntity_Set;
 
 end afrl.cmasi.AutomationResponse.SPARK_Boundary;

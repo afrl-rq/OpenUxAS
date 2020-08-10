@@ -2,4 +2,5 @@ package body afrl.impact.AngledAreaSearchTask.SPARK_Boundary with SPARK_Mode => 
 
    function Get_SearchAreaID (X : AngledAreaSearchTask) return Int64 renames
      getSearchAreaID;
+
 end afrl.impact.AngledAreaSearchTask.SPARK_Boundary;

@@ -3,12 +3,12 @@ with AFRL.CMASI.AutomationResponse; use AFRL.CMASI.AutomationResponse;
 
 with Common_Formal_Containers; use Common_Formal_Containers;
 
-package uxas.comms.lmcp_net_client.service.Automation_Data_Service is
+package uxas.comms.lmcp_net_client.service.Example_Spark_Service is
 
-   type Automation_Data_Service is new Service_Base with private;
-   type Automation_Data_Service_Ref is access all Automation_Data_Service;
+   type Example_Spark_Service is new Service_Base with private;
+   type Example_Spark_Service_Ref is access all Example_Spark_Service;
    
-   Type_Name : constant String := "AutomationDataService";
+   Type_Name : constant String := "ExampleSparkService";
    
    Directory_Name : constant String := "";
    
@@ -22,37 +22,36 @@ private
       AutomationIds : Int64_Set;
    end record;
    
-   type Automation_Data_Service is new Service_Base with record
+   type Example_Spark_Service is new Service_Base with record
       Configs : Configuration_Data;
    end record;
    
    procedure Handle_AutomationResponse_Msg
-     (This     : in out Automation_Data_Service;
+     (This     : in out Example_Spark_Service;
       Response : Object_Any);
    
    procedure Handle_MissionCommand_Msg
-     (This    : in out Automation_Data_Service;
+     (This    : in out Example_Spark_Service;
       Command : Object_Any);
    
    overriding
    procedure Process_Received_LMCP_Message
-     (This             : in out Automation_Data_Service;
+     (This             : in out Example_Spark_Service;
       Received_Message : not null Any_LMCP_Message;
       Should_Terminate : out Boolean);
    
    overriding
    procedure Configure
-     (This     : in out Automation_Data_Service;
+     (This     : in out Example_Spark_Service;
       XML_Node : DOM.Core.Element;
       Result   : out Boolean);
    
    overriding
    procedure Initialize
-     (This   : in out Automation_Data_Service;
+     (This   : in out Example_Spark_Service;
       Result : out Boolean);
    
    procedure Construct 
-     (This : in out Automation_Data_Service);
+     (This : in out Example_Spark_Service);
 
-
-end uxas.comms.lmcp_net_client.service.Automation_Data_Service;
+end uxas.comms.lmcp_net_client.service.Example_Spark_Service;
