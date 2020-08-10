@@ -18,8 +18,8 @@ with UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation;
 pragma Unreferenced (UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation);
 --  need package in closure for sake of package executable part
 
-with UxAS.Comms.LMCP_Net_Client.Service.Automation_Data_Service;
-pragma Unreferenced (UxAS.Comms.LMCP_Net_Client.Service.Automation_Data_Service);
+with UxAS.Comms.LMCP_Net_Client.Service.Example_Spark_Service;
+pragma Unreferenced (UxAS.Comms.LMCP_Net_Client.Service.Example_Spark_Service);
 --  need package in closure for sake of package executable part
 
 with Ada.Strings.Unbounded;  use Ada.Strings.Unbounded;
