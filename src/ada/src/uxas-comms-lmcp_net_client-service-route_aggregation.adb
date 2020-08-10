@@ -3,7 +3,7 @@ with Ada.Text_IO; use Ada.Text_IO; -- temporarily
 with Ada.Containers.Vectors;
 with DOM.Core.Elements;
 with Ada.Characters.Handling;
-with Route_Aggregator_Message_Conversions;
+with LMCP_Message_Conversions;
 
 with UxAS.Messages.Route.RouteRequest;          use UxAS.Messages.Route.RouteRequest;
 with UxAS.Messages.Route.RoutePlanRequest;      use UxAS.Messages.Route.RoutePlanRequest;
@@ -181,9 +181,9 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
       Route_Aggregator_Communication.Initialize
         (This.Mailbox,
          Source_Group => Value (This.Message_Source_Group),
-         Unique_Id    => Route_Aggregator_Common.Int64 (UxAS.Comms.LMCP_Net_Client.Unique_Entity_Send_Message_Id),
-         Entity_Id    => Route_Aggregator_Common.UInt32 (This.Entity_Id),
-         Service_Id   => Route_Aggregator_Common.UInt32 (This.Network_Id));
+         Unique_Id    => Common.Int64 (UxAS.Comms.LMCP_Net_Client.Unique_Entity_Send_Message_Id),
+         Entity_Id    => Common.UInt32 (This.Entity_Id),
+         Service_Id   => Common.UInt32 (This.Network_Id));
    end Initialize;
 
    -----------------------------------
@@ -253,7 +253,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
      (This : in out Route_Aggregator_Service;
       Msg  : RoutePlanResponse_Any)
    is
-      use Route_Aggregator_Message_Conversions;
+      use LMCP_Message_Conversions;
    begin
       Route_Aggregator.Handle_Route_Plan_Response (This.Mailbox, This.State, As_RoutePlanResponse_Message (Msg));
    end Handle_RoutePlanResponse_Msg;
@@ -266,7 +266,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
      (This : in out Route_Aggregator_Service;
       Msg  : RouteRequest_Any)
    is
-      use Route_Aggregator_Message_Conversions;
+      use LMCP_Message_Conversions;
    begin
       Route_Aggregator.Handle_Route_Request (This.Config, This.Mailbox, This.State, As_RouteRequest_Message (Msg));
    end Handle_RouteRequest_Msg;
@@ -279,7 +279,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
      (This : in out Route_Aggregator_Service;
       Msg  : EntityState_Any)
    is
-      use Route_Aggregator_Message_Conversions;
+      use LMCP_Message_Conversions;
    begin
       --  {
       --      int64_t id = std::static_pointer_cast<afrl::cmasi::EntityState>(receivedLmcpMessage->m_object)->getID();
@@ -299,7 +299,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
      (This : in out Route_Aggregator_Service;
       Msg  : EntityState_Any)
    is
-      use Route_Aggregator_Message_Conversions;
+      use LMCP_Message_Conversions;
    begin
       --  {
       --      int64_t id = std::static_pointer_cast<afrl::cmasi::EntityState>(receivedLmcpMessage->m_object)->getID();
@@ -319,7 +319,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
      (This : in out Route_Aggregator_Service;
       Msg  : EntityState_Any)
    is
-      use Route_Aggregator_Message_Conversions;
+      use LMCP_Message_Conversions;
    begin
       --  {
       --      int64_t id = std::static_pointer_cast<afrl::cmasi::EntityState>(receivedLmcpMessage->m_object)->getID();
@@ -339,7 +339,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
      (This : in out Route_Aggregator_Service;
       Msg  : EntityConfiguration_Any)
    is
-      Id : constant Route_Aggregator_Common.Int64 := Route_Aggregator_Common.Int64 (Msg.GetID);
+      Id : constant Common.Int64 := Common.Int64 (Msg.GetID);
    begin
       --  {
       --      int64_t id = std::static_pointer_cast<afrl::cmasi::EntityConfiguration>(receivedLmcpMessage->m_object)->getID();
@@ -359,7 +359,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
      (This : in out Route_Aggregator_Service;
       Msg  : EntityConfiguration_Any)
    is
-      Id : constant Route_Aggregator_Common.Int64 := Route_Aggregator_Common.Int64 (Msg.GetID);
+      Id : constant Common.Int64 := Common.Int64 (Msg.GetID);
    begin
       --  {
       --      int64_t id = std::static_pointer_cast<afrl::cmasi::EntityConfiguration>(receivedLmcpMessage->m_object)->getID();
@@ -379,7 +379,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
      (This : in out Route_Aggregator_Service;
       Msg  : EntityConfiguration_Any)
    is
-      Id : constant Route_Aggregator_Common.Int64 := Route_Aggregator_Common.Int64 (Msg.GetID);
+      Id : constant Common.Int64 := Common.Int64 (Msg.GetID);
    begin
       --  {
       --      int64_t id = std::static_pointer_cast<afrl::cmasi::EntityConfiguration>(receivedLmcpMessage->m_object)->getID();
@@ -410,7 +410,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
         (This.Config,
          This.Mailbox,
          This.State,
-         Route_Aggregator_Message_Conversions.As_UniqueAutomationRequest_Message (Msg));
+         LMCP_Message_Conversions.As_UniqueAutomationRequest_Message (Msg));
    end Handle_UniqueAutomationRequest_Msg;
 
    ----------------------------------------
@@ -438,7 +438,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
         (This.Config,
          This.Mailbox,
          This.State,
-         Route_Aggregator_Message_Conversions.As_UniqueAutomationRequest_Message (AReq));
+         LMCP_Message_Conversions.As_UniqueAutomationRequest_Message (AReq));
 
    end Handle_ImpactAutomationRequest_Msg;
 
@@ -455,7 +455,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
         (This.Mailbox,
          This.Config,
          This.State,
-         Route_Aggregator_Message_Conversions.As_TaskPlanOption_Message (Msg));
+         LMCP_Message_Conversions.As_TaskPlanOption_Message (Msg));
    end Handle_TaskPlanOptions_Msg;
 
    --------------------
@@ -466,7 +466,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
      (This : in out Route_Aggregator_Service;
       Plan : RoutePlanRequest_Any)
    is
-      use Route_Aggregator_Message_Conversions;
+      use LMCP_Message_Conversions;
    begin
       Route_Aggregator.Euclidean_Plan
         (Data               => This.Config,

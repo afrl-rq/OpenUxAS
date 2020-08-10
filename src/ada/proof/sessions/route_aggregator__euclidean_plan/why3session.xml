@@ -24,13 +24,13 @@
   </transf>
   </goal>
   <goal name="def&#39;vc.3" expl="postcondition" proved="true">
+  <proof prover="0" obsolete="true"><result status="timeout"/></proof>
+  <proof prover="1" obsolete="true"><result status="unknown" steps="439343"/></proof>
+  <proof prover="2" obsolete="true"><result status="unknown" steps="2094"/></proof>
   <transf name="trivial_true" proved="true" >
   </transf>
   </goal>
   <goal name="def&#39;vc.4" expl="precondition" proved="true">
-  <proof prover="0" obsolete="true"><result status="timeout"/></proof>
-  <proof prover="1" obsolete="true"><result status="unknown" steps="462223"/></proof>
-  <proof prover="2" obsolete="true"><result status="unknown" steps="2094"/></proof>
   <transf name="trivial_true" proved="true" >
   </transf>
   </goal>
@@ -43,13 +43,16 @@
   </transf>
   </goal>
   <goal name="def&#39;vc.7" expl="postcondition" proved="true">
+  <proof prover="0" obsolete="true"><result status="timeout"/></proof>
+  <proof prover="1" obsolete="true"><result status="unknown" steps="462223"/></proof>
+  <proof prover="2" obsolete="true"><result status="unknown" steps="2094"/></proof>
   <transf name="trivial_true" proved="true" >
   </transf>
   </goal>
   <goal name="def&#39;vc.8" expl="unreachable point">
-  <proof prover="0"><result status="timeout"/></proof>
-  <proof prover="1"><result status="unknown" steps="462223"/></proof>
-  <proof prover="2"><result status="unknown" steps="2094"/></proof>
+  <proof prover="0" timelimit="120"><result status="timeout"/></proof>
+  <proof prover="1" timelimit="120"><result status="unknown" steps="462000"/></proof>
+  <proof prover="2" timelimit="120"><result status="unknown" steps="2094"/></proof>
   <transf name="trivial_true" proved="true" >
   </transf>
   </goal>

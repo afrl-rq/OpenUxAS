@@ -4,7 +4,7 @@ with Ada.Containers.Functional_Maps;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Interfaces;
 
-package Route_Aggregator_Common with SPARK_Mode is
+package Common with SPARK_Mode is
 
    type UInt32 is new Interfaces.Unsigned_32;
 
@@ -37,4 +37,4 @@ package Route_Aggregator_Common with SPARK_Mode is
       Tail : String);
    --  Append Tail to Msg if there is enough room in the unbounded string
 
-end Route_Aggregator_Common;
+end Common;

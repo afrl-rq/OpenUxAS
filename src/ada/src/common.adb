@@ -1,4 +1,4 @@
-package body Route_Aggregator_Common is
+package body Common is
 
    -------------------
    -- Append_To_Msg --
@@ -9,4 +9,4 @@ package body Route_Aggregator_Common is
       Append (Msg, Tail);
    end Append_To_Msg;
 
-end Route_Aggregator_Common;
+end Common;
