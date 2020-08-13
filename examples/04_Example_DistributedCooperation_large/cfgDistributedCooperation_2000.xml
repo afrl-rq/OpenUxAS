@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
-<UxAS EntityID="1000" FormatVersion="1.0" EntityType="Aircraft">
+<UxAS EntityID="2000" FormatVersion="1.0" EntityType="Aircraft">
 
     <!-- NOTE:: "NetworkDevice" must be set equal to an active network interface device, e.g. wlan0 -->
     <!-- on Linux and Mac, type 'ifconfig' to find interface name -->
@@ -12,7 +12,7 @@
     </Bridge>
 
     <!-- Connect to AMASE on a single vehicle port (see config folder in OpenAMASE) -->
-    <Bridge Type="LmcpObjectNetworkTcpBridge" TcpAddress="tcp://127.0.0.1:9800" Server="FALSE" ConsiderSelfGenerated="TRUE">
+    <Bridge Type="LmcpObjectNetworkTcpBridge" TcpAddress="tcp://127.0.0.1:9900" Server="FALSE" ConsiderSelfGenerated="TRUE">
         <SubscribeToMessage MessageType="afrl.cmasi.MissionCommand" />
         <SubscribeToMessage MessageType="afrl.cmasi.LineSearchTask" />
         <SubscribeToMessage MessageType="afrl.impact.ImpactLineSearchTask" />
@@ -21,6 +21,8 @@
         <SubscribeToMessage MessageType="afrl.cmasi.VehicleActionCommand" />
         <SubscribeToMessage MessageType="afrl.cmasi.KeepInZone" />
         <SubscribeToMessage MessageType="afrl.cmasi.KeepOutZone" />
+        <SubscribeToMessage MessageType="larcfm.DAIDALUS.DAIDALUSConfiguration" />
+        <SubscribeToMessage MessageType="larcfm.DAIDALUS.WellClearViolationIntervals" />
     </Bridge>
 
     <Service Type="Test_SimulationTime"/>
@@ -32,9 +34,11 @@
     <Service Type="AssignmentTreeBranchBoundService" NumberNodesMaximum="0" CostFunction="MINMAX" />   
     <Service Type="PlanBuilderService"/>
     <Service Type="AutomationDiagramDataService"/>
-    <Service Type="DAIDALUS_WCV_Detection"/>
+    <!--Service Type="DAIDALUS_WCV_Detection" TrackStep="0.5" LookAheadTime="180" RTCAAlertLevels="3" HorizontalAcceleration="2.0" VerticalAcceleration=".25" TurnRate="3.0" VerticalRate="2.54" MinHorizontalRecovery="200"/-->
+    <Service Type="DAIDALUS_WCV_Detection" TrackStep="0.5" HorizontalAcceleration="10.0" VerticalAcceleration=".25" TurnRate="3.0" VerticalRate="2.54" MinGroundSpeed="14.9" MaxGroundSpeed="35.1" MaxAltitude="1000" CollisionAvoidanceFactor=".1" DTHR="200" ZTHR="200"/>
+    <Service Type="DAIDALUS_WCV_Response" />
 
-    <Service Type="WaypointPlanManagerService" VehicleID="1000" NumberWaypointsToServe="1000" NumberWaypointsOverlap="5"
+    <Service Type="WaypointPlanManagerService" VehicleID="2000" NumberWaypointsToServe="1000" NumberWaypointsOverlap="5"
              DefaultLoiterRadius_m="250"  param.turnType="FlyOver" AddLoiterToEndOfSegments="FALSE"
              AddLoiterToEndOfMission="FALSE" LoopBackToFirstTask="FALSE" GimbalPayloadId="1" />
 
@@ -42,6 +46,7 @@
 
         <Message MessageFileName="AirVehicleConfiguration_V1000.xml" SendTime_ms="50"/>
         <Message MessageFileName="AirVehicleConfiguration_V2000.xml" SendTime_ms="60"/>
+        <Message MessageFileName="AirVehicleConfiguration_V4208.xml" SendTime_ms="70"/>
 
         <!-- boundaries -->
         <Message MessageFileName="KeepOutZone_10.xml" SendTime_ms="200"/>
@@ -61,7 +66,7 @@
 
         <!-- The assignment coordinator -->
         <Message MessageFileName="AssignmentCoordinatorTask.xml" SendTime_ms="1000"/>
-        <!-- <Message MessageFileName="AirVehicleState_V1000.xml" SendTime_ms="2000"/> -->
+        <!-- <Message MessageFileName="AirVehicleState_V2000.xml" SendTime_ms="2000"/> -->
         <!-- coordniation request to perform the tasks -->
         <Message MessageFileName="CoordinatedAutomationRequest.xml" SendTime_ms="5000"/>
     </Service>
@@ -70,6 +75,7 @@
         <LogMessage MessageType="uxas" NumberMessagesToSkip="0"/>
         <LogMessage MessageType="afrl" NumberMessagesToSkip="0"/>
         <LogMessage MessageType="eid" NumberMessagesToSkip="0"/>
+        <LogMessage MessageType="larcfm" NumberMessagesToSkip="0"/>
     </Service>
 </UxAS>
 
