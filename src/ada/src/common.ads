@@ -12,6 +12,13 @@ package Common with SPARK_Mode is
    type Real32 is new Interfaces.IEEE_Float_32;
    type Real64 is new Interfaces.IEEE_Float_64;
 
+   function Get_TaskID   (TaskOptionID : Int64) return Int64 is (TaskOptionID / 100000);
+   --  Retrieve the TaskId from a TaskOptionId
+   function Get_OptionID (TaskOptionID : Int64) return Int64 is (TaskOptionID rem 100000);
+   --  Retrieve the OptionId from a TaskOptionId
+   function Get_TaskOptionID (TaskID, OptionID : Int64) return Int64 is (TaskID * 100000 + OptionID);
+   --  Generate TaskOptionID from TaskID and OptionID
+
    function Int64_Hash (X : Int64) return Ada.Containers.Hash_Type is
      (Ada.Containers.Hash_Type'Mod (X));
 
@@ -36,5 +43,4 @@ package Common with SPARK_Mode is
      (Msg  : in out Unbounded_String;
       Tail : String);
    --  Append Tail to Msg if there is enough room in the unbounded string
-
 end Common;
