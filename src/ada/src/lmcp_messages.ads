@@ -1,8 +1,8 @@
-with Route_Aggregator_Common; use Route_Aggregator_Common;
+with Common; use Common;
 with Ada.Containers.Functional_Vectors;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
-package Route_Aggregator_Messages with SPARK_Mode is
+package LMCP_Messages with SPARK_Mode is
 
    type Message_Root is abstract tagged null record;
 
@@ -259,4 +259,4 @@ package Route_Aggregator_Messages with SPARK_Mode is
       Options : TaskOption_Seq;
    end record;
 
-end Route_Aggregator_Messages;
+end LMCP_Messages;

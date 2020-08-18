@@ -29,7 +29,7 @@ route_aggregator.adb:105:54: info: precondition proved
 route_aggregator.adb:111:07: info: precondition proved
 route_aggregator.adb:111:44: info: discriminant check proved
 route_aggregator.adb:114:07: info: precondition proved
-route_aggregator.adb:118:22: medium: assertion might fail, cannot prove No_Overlaps (Model (m_pendingRequest))
+route_aggregator.adb:118:22: info: assertion proved
 route_aggregator.adb:119:22: info: assertion proved
 route_aggregator.adb:141:09: info: postcondition proved
 route_aggregator.adb:148:64: info: precondition proved
@@ -216,7 +216,7 @@ route_aggregator.adb:366:22: info: assertion proved
 route_aggregator.adb:367:25: info: precondition proved
 route_aggregator.adb:367:39: info: precondition proved
 route_aggregator.adb:369:34: info: precondition proved
-route_aggregator.adb:370:07: info: precondition proved
+route_aggregator.adb:370:07: medium: precondition might fail, cannot prove No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses)
 route_aggregator.adb:386:07: info: initialization of "PlanRequests" proved
 route_aggregator.adb:390:22: info: precondition proved
 route_aggregator.adb:390:22: info: assertion proved
@@ -291,7 +291,7 @@ route_aggregator.adb:523:13: info: assertion proved
 route_aggregator.adb:525:25: info: precondition proved
 route_aggregator.adb:525:25: info: assertion proved
 route_aggregator.adb:530:10: info: precondition proved
-route_aggregator.adb:531:51: medium: assertion might fail, cannot prove not Contains (PlanRequests, E.Id)
+route_aggregator.adb:530:10: info: assertion proved
 route_aggregator.adb:532:22: info: precondition proved
 route_aggregator.adb:532:22: info: assertion proved
 route_aggregator.adb:534:10: info: assertion proved
@@ -597,7 +597,7 @@ route_aggregator.adb:1184:16: info: precondition proved
 route_aggregator.adb:1184:24: info: predicate check proved
 route_aggregator.adb:1185:31: info: precondition proved
 route_aggregator.adb:1185:31: info: assertion proved
-route_aggregator.adb:1187:19: info: assertion proved
+route_aggregator.adb:1187:19: medium: assertion might fail, cannot prove Only_Pending_Plans (m_routePlanResponses, m_routePlans)
 route_aggregator.adb:1208:07: info: initialization of "Response" proved
 route_aggregator.adb:1209:48: info: precondition proved
 route_aggregator.adb:1214:11: info: precondition proved

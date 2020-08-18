@@ -1,5 +1,5 @@
-with Route_Aggregator_Messages; use Route_Aggregator_Messages;
-with Route_Aggregator_Common;   use Route_Aggregator_Common;
+with LMCP_Messages; use LMCP_Messages;
+with Common;        use Common;
 
 private with Ada.Strings.Unbounded;
 private with UxAS.Comms.LMCP_Object_Message_Sender_Pipes;
