@@ -375,21 +375,29 @@ package body UxAS.Comms.LMCP_Net_Client is
 
    procedure Execute_Network_Client (This : in out LMCP_Object_Network_Client_Base) is
       ReceivedLmcpMessage : Any_Lmcp_Message;
+      use Ada.Text_IO;
    begin
       This.Is_Thread_Started := True;
 
       while not This.Is_Terminate_Network_Client loop
-         This.Message_Receiver_Pipe.Get_Next_Message_Object (ReceivedLmcpMessage);
-         if ReceivedLmcpMessage /= null then
-            if Should_Kill_This_Service (This, ReceivedLmcpMessage) then
-               This.Is_Terminate_Network_Client := True;
-            else
-               Process_Received_LMCP_Message
-                 (LMCP_Object_Network_Client_Base'Class (This),  -- dispatch to subclass version
-                  Received_Message => ReceivedLmcpMessage,
-                  Should_Terminate => This.Is_Terminate_Network_Client);
+         begin
+            This.Message_Receiver_Pipe.Get_Next_Message_Object (ReceivedLmcpMessage);
+            if ReceivedLmcpMessage /= null then
+               if Should_Kill_This_Service (This, ReceivedLmcpMessage) then
+                  This.Is_Terminate_Network_Client := True;
+               else
+                  Process_Received_LMCP_Message
+                    (LMCP_Object_Network_Client_Base'Class (This),  -- dispatch to subclass version
+                     Received_Message => ReceivedLmcpMessage,
+                     Should_Terminate => This.Is_Terminate_Network_Client);
+               end if;
             end if;
-         end if;
+         exception
+            when Error : others =>
+               Put_Line ("Execute_Network_Client: ");
+               Put_Line (Exception_Information (Error));
+               Put_Line ("Execute_Network_Client: continuing");
+         end;
       end loop;
 
       This.Is_Base_Class_Termination_Finished := True;
@@ -418,53 +426,43 @@ package body UxAS.Comms.LMCP_Net_Client is
 
    procedure Execute_Serialized_Network_Client (This : in out LMCP_Object_Network_Client_Base) is
       Next_Received_Serialized_Lmcp_Object : Addressed_Attributed_Message_Ref;
+      use Ada.Text_IO;
    begin
-      --  m_isThreadStarted = true;
       This.Is_Thread_Started := True;
-      --  while (!m_isTerminateNetworkClient)
-      while not This.Is_Terminate_Network_Client loop
-         --  get the next serialized LMCP object message (if any) from the LMCP network server
-         --  std::unique_ptr<uxas::communications::data::AddressedAttributedMessage>   nextReceivedSerializedLmcpObject = m_lmcpObjectMessageReceiverPipe.getNextSerializedMessage();
-         This.Message_Receiver_Pipe.Get_Next_Serialized_Message (Next_Received_Serialized_Lmcp_Object);
 
-         --  if (nextReceivedSerializedLmcpObject)
-         if Next_Received_Serialized_Lmcp_Object /= null then
-            --  if (m_isBaseClassKillServiceProcessingPermitted
-            if This.Is_Base_Class_Kill_Service_Processing_Permitted and then
-               Has_KillService_Subscription (Next_Received_Serialized_Lmcp_Object)
-            then --  reconstitute LMCP object
-               declare
-                  --  std::shared_ptr<avtas::lmcp::Object> lmcpObject = deserializeMessage(nextReceivedSerializedLmcpObject->getPayload());
-                  Lmcp_Object : AVTAS.LMCP.Object.Object_Any;
-               begin
-                  Lmcp_Object := Deserialzed_Message (Next_Received_Serialized_Lmcp_Object.Payload);
-                  --  check KillService serviceID == my serviceID
-                  --  if (uxas::messages::uxnative::isKillService(lmcpObject)
-                  --          //&& m_entityIdString.compare(std::static_pointer_cast<uxas::messages::uxnative::KillService>(lmcpObject)->getEntityID()) == 0//TODO check entityID
-                  --          && m_networkIdString.compare(std::to_string(std::static_pointer_cast<uxas::messages::uxnative::KillService>(lmcpObject)->getServiceID())) == 0)
-                  if Should_Kill_This_Service (This, Lmcp_Object) then
-                     --      m_isTerminateNetworkClient = true;
-                     This.Is_Terminate_Network_Client := True;
-                     --  else if (processReceivedSerializedLmcpMessage(std::move(nextReceivedSerializedLmcpObject)))
-                     --  {
-                     --      m_isTerminateNetworkClient = true;
-                     --  }
-                  else
-                     Process_Received_Serialized_LMCP_Message
-                       (LMCP_Object_Network_Client_Base'Class (This),  -- dispatch to subclass version
-                        Received_Message => Any_Addressed_Attributed_Message (Next_Received_Serialized_Lmcp_Object),
-                        Should_Terminate           => This.Is_Terminate_Network_Client);
-                  end if;
-               end;
+      while not This.Is_Terminate_Network_Client loop
+         begin
+            This.Message_Receiver_Pipe.Get_Next_Serialized_Message (Next_Received_Serialized_Lmcp_Object);
+            if Next_Received_Serialized_Lmcp_Object /= null then
+               if This.Is_Base_Class_Kill_Service_Processing_Permitted and then
+                  Has_KillService_Subscription (Next_Received_Serialized_Lmcp_Object)
+               then --  reconstitute LMCP object
+                  declare
+                     Lmcp_Object : AVTAS.LMCP.Object.Object_Any;
+                  begin
+                     Lmcp_Object := Deserialzed_Message (Next_Received_Serialized_Lmcp_Object.Payload);
+                     if Should_Kill_This_Service (This, Lmcp_Object) then
+                        This.Is_Terminate_Network_Client := True;
+                     else
+                        Process_Received_Serialized_LMCP_Message
+                          (LMCP_Object_Network_Client_Base'Class (This),  -- dispatch to subclass version
+                           Received_Message => Any_Addressed_Attributed_Message (Next_Received_Serialized_Lmcp_Object),
+                           Should_Terminate => This.Is_Terminate_Network_Client);
+                     end if;
+                  end;
+               end if;
             end if;
-         end if;
+         exception
+            when Error : others =>
+               Put_Line ("Execute_Serialized_Network_Client: ");
+               Put_Line (Exception_Information (Error));
+               Put_Line ("Execute_Serialized_Network_Client: continuing");
+         end;         
       end loop;
 
-      --  m_isBaseClassTerminationFinished = true;
       This.Is_Base_Class_Termination_Finished := True;
 
       loop
-         --  m_isSubclassTerminationFinished = terminate();
          Stop (LMCP_Object_Network_Client_Base'Class (This), This.Is_Subclass_Termination_Finished);   -- dispatch to subclass version
          exit when This.Is_Subclass_Termination_Finished;
 
