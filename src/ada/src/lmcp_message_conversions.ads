@@ -8,6 +8,7 @@ with Afrl.Cmasi.KeyValuePair;               use Afrl.Cmasi.KeyValuePair;
 with Afrl.Cmasi.Location3D;                 use Afrl.Cmasi.Location3D;
 with Afrl.Cmasi.EntityState;                use Afrl.Cmasi.EntityState;
 with Uxas.Messages.Lmcptask.UniqueAutomationRequest; use Uxas.Messages.Lmcptask.UniqueAutomationRequest;
+with UxAS.Messages.lmcptask.AssignmentCostMatrix; use UxAS.Messages.lmcptask.AssignmentCostMatrix;
 with Uxas.Messages.Route.RouteRequest;      use Uxas.Messages.Route.RouteRequest;
 with Uxas.Messages.Route.RoutePlanRequest;  use Uxas.Messages.Route.RoutePlanRequest;
 with Uxas.Messages.Route.RouteConstraints;  use Uxas.Messages.Route.RouteConstraints;
@@ -15,6 +16,8 @@ with Uxas.Messages.lmcptask.TaskPlanOptions; use Uxas.Messages.lmcptask.TaskPlan
 with AVTAS.LMCP.Object;
 
 package LMCP_Message_Conversions is
+
+   function As_AssignmentCostMatrix_Message (msg : not null AssignmentCostMatrix_Any) return LMCP_Messages.AssignmentCostMatrix;
 
    function As_RouteConstraints_Message (Msg : not null RouteConstraints_Any) return LMCP_Messages.RouteConstraints;
 

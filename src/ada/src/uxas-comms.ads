@@ -31,14 +31,14 @@ package UxAS.Comms is
    --  These constants are used for defining the capacities of the dynamic
    --  strings. They are declared so that others (including child packages)
    --  can reference them when needed.
-   Content_String_Max_Length           : constant := 22 * 1024;
+   Content_String_Max_Length           : constant := 570 * 1024;
    Content_Type_Max_Length             : constant := 255; -- arbitrary
    Descriptor_Max_Length               : constant := 255; -- arbitrary
    Source_Group_Max_Length             : constant := 255; -- arbitrary
    Source_Entity_Id_Max_Length         : constant := 255; -- arbitrary
    Source_Service_Id_Max_Length        : constant := 255; -- arbitrary
    Address_Max_Length                  : constant := 255; -- arbitrary
-   Payload_Max_Length                  : constant := 22 * 1024;
+   Payload_Max_Length                  : constant := 570 * 1024;
 
    Max_Network_Name_Length             : constant := 255; -- arbitrary
    Max_Socket_Address_Length           : constant := 255; -- arbitrary

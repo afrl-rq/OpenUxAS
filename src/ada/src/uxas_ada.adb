@@ -18,6 +18,9 @@ with UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation;
 pragma Unreferenced (UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation);
 --  need package in closure for sake of package executable part
 
+with UxAS.Comms.LMCP_Net_Client.Service.Assignment_Tree_Branch_Bounding;
+pragma Unreferenced (UxAS.Comms.LMCP_Net_Client.Service.Assignment_Tree_Branch_Bounding);
+
 with Ada.Strings.Unbounded;  use Ada.Strings.Unbounded;
 with UxAS.Common.String_Constant.Lmcp_Network_Socket_Address;
 

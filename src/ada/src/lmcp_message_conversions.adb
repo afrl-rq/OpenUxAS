@@ -2,11 +2,54 @@ with Common;
 with AFRL.CMASI.Enumerations;
 with Afrl.Cmasi.AutomationRequest;
 with AVTAS.LMCP.Types;
-with UxAS.Messages.Route.RouteResponse;  use UxAS.Messages.Route.RouteResponse;
-with uxas.messages.lmcptask.AssignmentCostMatrix; use uxas.messages.lmcptask.AssignmentCostMatrix;
-with uxas.messages.lmcptask.TaskOptionCost; use uxas.messages.lmcptask.TaskOptionCost;
+with UxAS.Messages.Route.RouteResponse;            use UxAS.Messages.Route.RouteResponse;
+with uxas.messages.lmcptask.AssignmentCostMatrix;  use uxas.messages.lmcptask.AssignmentCostMatrix;
+with uxas.messages.lmcptask.TaskOptionCost;        use uxas.messages.lmcptask.TaskOptionCost;
+with uxas.messages.lmcptask.TaskAssignmentSummary; use uxas.messages.lmcptask.TaskAssignmentSummary;
+with uxas.messages.lmcptask.TaskAssignment;        use uxas.messages.lmcptask.TaskAssignment;
 
 package body LMCP_Message_Conversions is
+
+   -------------------------------------
+   -- As_AssignmentCostMatrix_Message --
+   -------------------------------------
+
+   function As_AssignmentCostMatrix_Message
+     (msg : not null AssignmentCostMatrix_Any)
+      return LMCP_Messages.AssignmentCostMatrix
+   is
+
+      function As_TaskOptionCost
+        (Arg : not null TaskOptionCost_Acc)
+         return LMCP_Messages.TaskOptionCost
+      is
+         Result : LMCP_Messages.TaskOptionCost;
+      begin
+         Result.VehicleID := Common.Int64 (Arg.getVehicleID);
+         Result.InitialTaskID := Common.Int64 (Arg.getIntialTaskID);
+         Result.InitialTaskOption := Common.Int64 (Arg.getIntialTaskOption);
+         Result.DestinationTaskID := Common.Int64 (Arg.getDestinationTaskID);
+         Result.DestinationTaskOption := Common.Int64 (Arg.getDestinationTaskOption);
+         Result.timeToGo := Common.Int64 (Arg.getTimeToGo);
+         return Result;
+      end As_TaskOptionCost;
+
+      use all type Common.Int64_Seq;
+      use all type LMCP_Messages.TOC_Seq;
+
+      Result : LMCP_Messages.AssignmentCostMatrix;
+   begin
+      Result.CorrespondingAutomationRequestID := Common.Int64 (Msg.all.getCorrespondingAutomationRequestID);
+      Result.OperatingRegion := Common.Int64 (Msg.all.getOperatingRegion);
+      for TaskId of Msg.all.getTaskList.all loop
+         Result.TaskList := Add (Result.TaskList, Common.Int64 (TaskId));
+      end loop;
+
+      for TaskOptionCost of Msg.all.getCostMatrix.all loop
+         Result.CostMatrix := Add (Result.CostMatrix, As_TaskOptionCost (TaskOptionCost));
+      end loop;
+      return Result;
+   end As_AssignmentCostMatrix_Message;
 
    function As_RouteConstraints_Acc (Msg : LMCP_Messages.RouteConstraints) return RouteConstraints_Acc;
 
@@ -465,9 +508,43 @@ package body LMCP_Message_Conversions is
          Result.TaskList := Add (Result.TaskList, Int64 (TaskId));
       end loop;
 
+      Result.TaskRelationships := Msg.all.getOriginalRequest.getTaskRelationships;
+
       return Result;
 
    end As_UniqueAutomationRequest_Message;
+
+   function As_TaskAssignment_Acc
+     (Msg : LMCP_Messages.TaskAssignment)
+      return TaskAssignment_Acc
+   is
+      Result : TaskAssignment_Acc := new TaskAssignment;
+      use Avtas.lmcp.types;
+   begin
+      Result.setTaskId (Int64 (Msg.TaskID));
+      Result.setOptionId (Int64 (Msg.OptionId));
+      Result.setAssignedVehicle (Int64 (Msg.AssignedVehicle));
+      Result.setTimeThreshold (Int64 (Msg.TimeThreshold));
+      Result.setTimeTaskCompleted (Int64 (Msg.TimeTaskCompleted));
+
+      return Result;
+   end As_TaskAssignment_Acc;
+
+   function As_TaskAssignmentSummary_Acc
+     (Msg : LMCP_Messages.TaskAssignmentSummary'Class)
+      return TaskAssignmentSummary_Acc
+   is
+      Result : TaskAssignmentSummary_Acc := new TaskAssignmentSummary;
+      use Avtas.lmcp.types;
+   begin
+      Result.setCorrespondingAutomationRequestID (Int64 (Msg.CorrespondingAutomationRequestID));
+      Result.setOperatingRegion (Int64 (Msg.OperatingRegion));
+
+      for TaskAssignment of Msg.TaskList loop
+         Result.getTaskList.Append (As_TaskAssignment_Acc (TaskAssignment));
+      end loop;
+      return Result;
+   end As_TaskAssignmentSummary_Acc;
 
    -------------------------------
    -- As_TaskPlanOption_Message --
@@ -601,6 +678,8 @@ package body LMCP_Message_Conversions is
          Result := AVTAS.LMCP.Object.Object_Any (As_RouteResponse_Acc (LMCP_Messages.RouteResponse'Class (Msg)));
       elsif Msg in LMCP_Messages.AssignmentCostMatrix'Class then
          Result := AVTAS.LMCP.Object.Object_Any (As_AssignmentCostMatrix_Acc (LMCP_Messages.AssignmentCostMatrix'Class (Msg)));
+      elsif Msg in LMCP_Messages.TaskAssignmentSummary'Class then
+         Result := AVTAS.LMCP.Object.Object_Any (As_TaskAssignmentSummary_Acc (LMCP_Messages.TaskAssignmentSummary'Class (Msg)));
       else
          raise Program_Error with "unexpected message kind in Route_Aggregator_Message_Conversions.As_Object_Any";
          --  UniqueAutomationRequest is in the class but not sent
