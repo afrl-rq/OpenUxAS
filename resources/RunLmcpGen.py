@@ -6,13 +6,16 @@ from __future__ import annotations
 import os
 import shutil
 import logging
+import re
 import subprocess
+import sys
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from argparse import Namespace
     from typing import List
+    from os import _Environ
 
 
 DESCRIPTION = """\
@@ -22,6 +25,13 @@ MDMs in the OpenUxAS repository.
 
 # Directory in which this script is executing.
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Anod search path
+ANOD_PATH = os.path.join(os.environ.get("HOME", ""), "bootstrap")
+
+# Anod binary
+ANOD_BIN = os.path.join(ANOD_PATH, "anod")
+
 OPENUXAS_DIR = os.path.abspath(os.path.join(ROOT_DIR, ".."))
 
 MDM_DIR = os.path.join(OPENUXAS_DIR, "mdms")
@@ -105,16 +115,39 @@ def configure_logging(args: Namespace) -> None:
         logging.getLogger("").addHandler(fileHandler)
 
 
-def log_call(cmd: List[str], cwd: str) -> None:
+def log_call(cmd: List[str], cwd: str, env: _Environ) -> None:
     """Log to debug and call."""
     logging.debug(f"Run `{' '.join(cmd)}` in {cwd}")
-    subprocess.run(cmd, cwd=cwd)
+    subprocess.run(cmd, cwd=cwd, env=env)
+
+
+def compute_env() -> _Environ:
+    """Compute the environment for running commands."""
+    base_env = os.environ
+
+    anod_cmd = [ANOD_BIN, "printenv", "lmcpgen", "--build-env", "--inline"]
+
+    if os.path.exists(ANOD_BIN):
+        result = subprocess.run(anod_cmd, capture_output=True)
+        a = re.split(
+            r"[ =]",
+            re.sub(
+                r'"', "", result.stdout.decode(sys.stdout.encoding)
+            ).strip(),
+        )
+
+        for i in range(0, len(a), 2):
+            base_env[a[i]] = a[i + 1]
+
+    return base_env
 
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
 
-    argument_parser = ArgumentParser(description=DESCRIPTION,)
+    argument_parser = ArgumentParser(
+        description=DESCRIPTION,
+    )
     add_logging_group(argument_parser)
 
     argument_parser.add_argument(
@@ -135,22 +168,26 @@ if __name__ == "__main__":
         )
         exit(1)
 
+    env = compute_env()
+
     logging.info("Building LmcpGen")
-    log_call(ANT_CMD, LMCP_DIR)
+    log_call(ANT_CMD, LMCP_DIR, env)
     logging.info("Done building LmcpGen")
 
     logging.info("Processing MDMs")
-    log_call(LMCP_CMD + ["-cpp", "-dir", SRC_CPP_LMCP], OPENUXAS_DIR)
+    log_call(LMCP_CMD + ["-cpp", "-dir", SRC_CPP_LMCP], OPENUXAS_DIR, env)
 
     if os.path.isdir(AMASE_DIR):
-        log_call(LMCP_CMD + ["-java", "-dir", AMASE_LMCP_DIR], OPENUXAS_DIR)
+        log_call(
+            LMCP_CMD + ["-java", "-dir", AMASE_LMCP_DIR], OPENUXAS_DIR, env
+        )
     else:
         logging.warning(
             "OpenAMASE is expected to be present and located adjacent to OpenUxAS"
         )
 
-    log_call(LMCP_CMD + ["-doc", "-dir", DOC_LMCP], OPENUXAS_DIR)
-    log_call(LMCP_CMD + ["-py", "-dir", PY_LMCP], OPENUXAS_DIR)
+    log_call(LMCP_CMD + ["-doc", "-dir", DOC_LMCP], OPENUXAS_DIR, env)
+    log_call(LMCP_CMD + ["-py", "-dir", PY_LMCP], OPENUXAS_DIR, env)
     logging.info("Done processing MDMs")
 
     if args.build_amase:
@@ -161,10 +198,10 @@ if __name__ == "__main__":
             exit(2)
 
         logging.info("Building java library for OpenAMASE")
-        log_call(ANT_CMD, AMASE_LMCP_DIR)
+        log_call(ANT_CMD, AMASE_LMCP_DIR, env)
         shutil.copy(
             os.path.join(AMASE_LMCP_DIR, "dist", "lmcplib.jar"),
             os.path.join(AMASE_DIR, "OpenAMASE", "lib"),
         )
-        log_call(ANT_CMD, os.path.join(AMASE_DIR, "OpenAMASE"))
+        log_call(ANT_CMD, os.path.join(AMASE_DIR, "OpenAMASE"), env)
         logging.info("Done building java library for OpenAMASE")

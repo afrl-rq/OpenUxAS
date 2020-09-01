@@ -1,6 +1,13 @@
 # Platform
 PLATFORM:=$(shell python -c "import sys; print(sys.platform)")
 
+# Check if anod is available and export the uxas build environment if so
+ifneq (,$(wildcard ${HOME}/bootstrap/anod))
+    ANODENV:=$(shell ${HOME}/bootstrap/anod printenv uxas --build-env --inline)
+else
+    ANODENV:=
+endif
+
 # Control whether full command line should be displayed during compilation
 DEBUG_BUILD=false
 
@@ -22,7 +29,7 @@ SOURCE_DIRS:=$(SOURCE_DIR)/Communications \
 	  	     resources/AutomationDiagramDataService
 
 # Compiler to be used
-CXX=g++
+CXX=$(ANODENV)g++
 
 # Default C++ compilation flags
 CXX_FLAGS:=-fPIC -std=c++11

@@ -8,23 +8,29 @@ import argparse
 import logging
 import os
 import pathlib
+import re
 import shutil
 import subprocess
+import sys
 import time
+import traceback
 from typing import TYPE_CHECKING
 import yaml
 
 if TYPE_CHECKING:
     from argparse import ArgumentParser, Namespace
     from typing import Any, Dict, List, Optional, Tuple
+    from os import _Environ
 
 
 # Directory in which this script is executing.
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Allow the OpenAMASE source directory to be specified as an environment
-# variable, so that we can interface with anod.
-AMASE_SRC_DIR = os.environ.get("AMASE_SOURCE_DIR")
+# Anod search path
+ANOD_PATH = os.path.join(os.environ.get("HOME", ""), "bootstrap")
+
+# Anod binary
+ANOD_BIN = os.path.join(ANOD_PATH, "anod")
 
 # Allow the environment specify how long we should wait after starting an
 # instance of OpenAMASE; default to 0 seconds.
@@ -159,11 +165,15 @@ Either run with `--amase_dir` and specify the absolute path to OpenAMASE, or,
 if you are using anod to build OpenUxAS from the OpenUxAS-bootstrap repository,
 build OpenAMASE with:
 
-    anod-build amase
+    anod build amase
+"""
 
-and then set your environment with:
 
-    eval `anod-setenv amase`
+UNBUILT_LOCAL_AMASE = """\
+There is an OpenAMASE source directory next to OpenUxAS, but it has not been
+built. This script will try to use the copy of OpenAMASE built by anod, if you
+are using anod to build OpenUxAS. If this is not what you want, you should
+manually build OpenAMASE.
 """
 
 
@@ -171,17 +181,30 @@ def resolve_amase_dir(args: Namespace) -> str:
     """
     Resolve the absolute path to the OpenAMASE source directory.
 
-    If the path is
-    not specified in either the script arguments or the environment, then print
-    a message and immediately exit.
+    1. if we've been given an absolute path in the arguments, use that.
+    2. see if there's a local OpenAMASE and use that.
+    3. see if OpenAMASE is in the environment variables.
+
+    If not, print a message and immediately exit.
     """
     if args.amase_dir:
         return args.amase_dir
-    elif AMASE_SRC_DIR:
-        return AMASE_SRC_DIR
-    else:
+
+    local_amase_path = os.path.abspath(
+        os.path.join(ROOT_DIR, "..", "OpenAMASE")
+    )
+    if os.path.exists(local_amase_path):
+        build_dir = os.path.join(local_amase_path, "OpenAMASE", "build")
+        if os.path.exists(build_dir):
+            return local_amase_path
+        else:
+            logging.warning(UNBUILT_LOCAL_AMASE)
+
+    if AMASE_SRC_DIR is None:
         logging.critical(MISSING_AMASE)
         exit(1)
+
+    return AMASE_SRC_DIR
 
 
 MISSING_UXAS = """\
@@ -190,11 +213,7 @@ and specify the absolute path to the OpenUXAS binary, manually add the OpenUxAS
 binary to your path, or, if you are using anod to build OpenUxAS from the
 OpenUxAS-bootstrap repository, build OpenUxAS with:
 
-    anod-build uxas
-
-and then set your environment with:
-
-    eval `anod-setenv uxas`
+    anod build uxas
 """
 
 
@@ -202,20 +221,26 @@ def resolve_uxas_bin(args: Namespace) -> str:
     """
     Resolve the OpenUxAS binary.
 
-    Either use the absolute path given in the program arguments or using
-    `uxas`. In the latter case, check to make sure that `uxas` is on the path.
+    1. if we've been given an absolute path in the arguments, use that.
+    2. see if there's a local uxas that's been built and use that.
+    3. see if uxas is on the path.
+
     If not, print a message and immediately exit.
     """
     if args.uxas_bin:
         return args.uxas_bin
 
+    local_uxas_path = os.path.join(ROOT_DIR, "obj", "cpp", "uxas")
+    if os.path.exists(local_uxas_path):
+        return local_uxas_path
+
     uxas_path = shutil.which("uxas")
 
-    if uxas_path is not None:
-        return uxas_path
-    else:
+    if uxas_path is None:
         logging.critical(MISSING_UXAS)
         exit(1)
+
+    return uxas_path
 
 
 def list_examples(examples_dir: str) -> None:
@@ -267,7 +292,7 @@ def check_amase(
 
 
 def run_amase(
-    scenario_file: str, example_dir: str, amase_dir: str
+    scenario_file: str, example_dir: str, amase_dir: str, env: _Environ
 ) -> subprocess.Popen:
     """Run the OpenAMASE part of the example."""
     amase_cmd = [
@@ -291,7 +316,7 @@ def run_amase(
     logging.debug(f"amase_cmd={amase_cmd}")
 
     return subprocess.Popen(
-        amase_cmd, cwd=os.path.join(amase_dir, "OpenAMASE")
+        amase_cmd, cwd=os.path.join(amase_dir, "OpenAMASE"), env=env
     )
 
 
@@ -368,12 +393,15 @@ def check_one_uxas(record: Dict[str, str], args: Namespace) -> Dict[str, str]:
 
 
 def run_uxas(
-    uxas_configs: List[Dict[str, str]], example_dir: str, popen: bool
+    uxas_configs: List[Dict[str, str]],
+    example_dir: str,
+    popen: bool,
+    env: _Environ,
 ) -> List[subprocess.Popen]:
     """Run an OpenUxAS instance for each configuration."""
     pids = list()
     for config in uxas_configs:
-        pid = run_one_uxas(config, example_dir, popen)
+        pid = run_one_uxas(config, example_dir, popen, env)
         if pid is not None:
             pids.append(pid)
 
@@ -384,7 +412,7 @@ def run_uxas(
 
 
 def run_one_uxas(
-    uxas_config: Dict[str, str], example_dir: str, popen: bool
+    uxas_config: Dict[str, str], example_dir: str, popen: bool, env: _Environ
 ) -> Optional[subprocess.Popen]:
     """Run one OpenUxAS instance."""
     config_file = uxas_config["config_file"]
@@ -407,7 +435,7 @@ def run_one_uxas(
         )
         logging.debug(f"uxas_cmd = {uxas_cmd}")
 
-        return subprocess.Popen(uxas_cmd, cwd=run_dir)
+        return subprocess.Popen(uxas_cmd, cwd=run_dir, env=env)
     else:
         logging.info(
             "Running OpenUxAS binary\n"
@@ -419,7 +447,7 @@ def run_one_uxas(
         )
         logging.debug(f"uxas_cmd = {uxas_cmd}")
 
-        subprocess.run(uxas_cmd, cwd=run_dir)
+        subprocess.run(uxas_cmd, cwd=run_dir, env=env)
         return None
 
 
@@ -442,6 +470,28 @@ def killall_uxases(popen: bool, pids: List[subprocess.Popen]) -> None:
                 time.sleep(0.1)
                 if pid.poll() is None:
                     logging.error(f"  Unable to kill PID {pid.pid}.")
+
+
+def compute_env() -> _Environ:
+    """Compute the environment for running commands."""
+    base_env = os.environ
+
+    anod_cmd = [ANOD_BIN, "printenv", "--inline"]
+
+    if os.path.exists(ANOD_BIN):
+        for spec in ["uxas", "amase"]:
+            cmd = anod_cmd + [spec]
+            result = subprocess.run(cmd, capture_output=True, env=base_env)
+            a = re.split(
+                r"[ =]",
+                re.sub(
+                    r'"', "", result.stdout.decode(sys.stdout.encoding)
+                ).strip(),
+            )
+            for i in range(0, len(a), 2):
+                base_env[a[i]] = a[i + 1]
+
+    return base_env
 
 
 # From
@@ -551,7 +601,8 @@ if __name__ == "__main__":
     )
 
     ap.add_argument(
-        "example", help="the example directory",
+        "example",
+        help="the example directory",
     )
 
     add_logging_group(ap)
@@ -617,6 +668,12 @@ if __name__ == "__main__":
 
         loaded_yaml = read_yaml(yaml_filename)
 
+        env = compute_env()
+
+        # Allow the OpenAMASE source directory to be specified as an environment
+        # variable, so that we can interface with anod.
+        AMASE_SRC_DIR = env.get("AMASE_SOURCE_DIR")
+
         amase_dir = resolve_amase_dir(args)
         (scenario_file, amase_delay) = check_amase(
             loaded_yaml, example_dir, args
@@ -625,7 +682,7 @@ if __name__ == "__main__":
         uxas_configs = check_uxas(loaded_yaml, args)
 
         if scenario_file:
-            amase_pid = run_amase(scenario_file, example_dir, amase_dir)
+            amase_pid = run_amase(scenario_file, example_dir, amase_dir, env)
 
             if amase_delay > 0:
                 print(
@@ -635,7 +692,7 @@ if __name__ == "__main__":
                 time.sleep(amase_delay)
 
         popen = scenario_file is not None
-        pids = run_uxas(uxas_configs, example_dir, popen)
+        pids = run_uxas(uxas_configs, example_dir, popen, env)
 
         if scenario_file:
             # Wait for the user to close AMASE
@@ -649,4 +706,5 @@ if __name__ == "__main__":
 
     except Exception as e:
         logging.critical(f"Got an exception {e}")
+        traceback.print_exc()
         ap.print_usage()
