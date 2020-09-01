@@ -2,7 +2,7 @@ with DOM.Core;
 
 with Route_Aggregator;                               use Route_Aggregator;
 with Route_Aggregator_Communication;                 use Route_Aggregator_Communication;
-with Route_Aggregator_Common;                        use Route_Aggregator_Common;
+with Common;                                         use Common;
 
 with Ada.Containers.Ordered_Maps;
 with Ada.Containers.Ordered_Sets;

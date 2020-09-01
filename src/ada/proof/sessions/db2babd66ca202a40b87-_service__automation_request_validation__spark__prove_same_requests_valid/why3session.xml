@@ -2,7 +2,7 @@
 <!DOCTYPE why3session PUBLIC "-//Why3//proof session v5//EN"
 "http://why3.lri.fr/why3session.dtd">
 <why3session shape_version="6">
-<prover id="0" name="CVC4" version="1.6-gnatprove" timelimit="0" steplimit="69942" memlimit="0"/>
+<prover id="0" name="CVC4" version="1.6-gnatprove" timelimit="60" steplimit="0" memlimit="2000"/>
 <prover id="1" name="altergo" version="1.30-gnatprove" timelimit="1" steplimit="0" memlimit="1000"/>
 <prover id="2" name="Z3" version="4.5.1-gnatprove" timelimit="1" steplimit="0" memlimit="1000"/>
 <file format="gnat-json" proved="true">
@@ -33,8 +33,8 @@
   </goal>
   <goal name="def&#39;vc.5" expl="postcondition" proved="true">
   <proof prover="0"><result status="valid" steps="63583"/></proof>
-  <proof prover="1"><result status="timeout"/></proof>
-  <proof prover="2"><result status="timeout"/></proof>
+  <proof prover="1" obsolete="true"><result status="timeout"/></proof>
+  <proof prover="2" obsolete="true"><result status="timeout" steps="1567143"/></proof>
   </goal>
  </transf>
  </goal>

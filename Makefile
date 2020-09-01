@@ -1,6 +1,19 @@
 # Platform
 PLATFORM:=$(shell python -c "import sys; print(sys.platform)")
 
+# Anod search path
+ANOD_PATH:=$(HOME)/bootstrap
+
+# Anod binary
+ANOD_BIN:=$(ANOD_PATH)/anod
+
+# Check if anod is available and export the uxas build environment if so
+ifneq (,$(wildcard $(ANOD_BIN)))
+    ANODENV:=$(shell $(ANOD_BIN) printenv uxas --build-env --inline)
+else
+    ANODENV:=
+endif
+
 # Control whether full command line should be displayed during compilation
 DEBUG_BUILD=false
 
@@ -21,8 +34,8 @@ SOURCE_DIRS:=$(SOURCE_DIR)/Communications \
 		     $(SOURCE_DIR)/VisilibityLib \
 	  	     resources/AutomationDiagramDataService
 
-# Compiler to be used
-CXX=g++
+# Compiler to be used - note the prefixed anod env here
+CXX=$(ANODENV)g++
 
 # Default C++ compilation flags
 CXX_FLAGS:=-fPIC -std=c++11
