@@ -29,7 +29,7 @@ route_aggregator.adb:105:54: info: precondition proved
 route_aggregator.adb:111:07: info: precondition proved
 route_aggregator.adb:111:44: info: discriminant check proved
 route_aggregator.adb:114:07: info: precondition proved
-route_aggregator.adb:118:22: medium: assertion might fail, cannot prove No_Overlaps (Model (m_pendingRequest))
+route_aggregator.adb:118:22: info: assertion proved
 route_aggregator.adb:119:22: info: assertion proved
 route_aggregator.adb:141:09: info: postcondition proved
 route_aggregator.adb:148:64: info: precondition proved
@@ -410,7 +410,7 @@ route_aggregator.adb:733:60: info: overflow check proved
 route_aggregator.adb:735:13: info: loop invariant preservation proved
 route_aggregator.adb:735:13: info: loop invariant initialization proved
 route_aggregator.adb:737:13: info: loop invariant initialization proved
-route_aggregator.adb:737:13: medium: loop invariant might not be preserved by an arbitrary iteration
+route_aggregator.adb:737:13: info: loop invariant preservation proved
 route_aggregator.adb:737:45: info: precondition proved
 route_aggregator.adb:738:49: info: precondition proved
 route_aggregator.adb:738:98: info: overflow check proved
@@ -917,15 +917,15 @@ a-cfhase.ads:1223:20: info: precondition proved, in instantiation at route_aggre
 a-cofuse.ads:243:22: info: overflow check proved, in instantiation at a-cfhase.ads:90, in instantiation at route_aggregator.ads:48
 a-cofuse.ads:244:26: info: overflow check proved, in instantiation at a-cfhase.ads:90, in instantiation at route_aggregator.ads:48
 a-cofuve.ads:95:13: info: subprogram "First" will terminate, terminating annotation has been proved, in instantiation at route_aggregator.ads:327
+a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cforma.ads:112, in instantiation at route_aggregator.ads:159
+a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:99
+a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:119
 a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at route_aggregator.ads:191
 a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:182
 a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cfhase.ads:102, in instantiation at route_aggregator.ads:48
 a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cforma.ads:112, in instantiation at route_aggregator.ads:62
 a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:174
 a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at route_aggregator.ads:327
-a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cforma.ads:112, in instantiation at route_aggregator.ads:159
-a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:99
-a-cofuve.ads:96:06: info: data dependencies proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:119
 a-cofuve.ads:232:54: info: overflow check proved, in instantiation at a-cfhase.ads:102, in instantiation at route_aggregator.ads:48
 a-cofuve.ads:232:54: info: overflow check proved, in instantiation at a-cforma.ads:112, in instantiation at route_aggregator.ads:62
 a-cofuve.ads:232:54: info: overflow check proved, in instantiation at a-cfhama.ads:107, in instantiation at route_aggregator.ads:99

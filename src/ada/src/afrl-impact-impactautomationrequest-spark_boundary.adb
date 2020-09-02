@@ -39,4 +39,5 @@ package body afrl.impact.ImpactAutomationRequest.SPARK_Boundary with SPARK_Mode 
          end loop;
       end return;
    end Get_TaskList_From_TrialRequest;
+
 end afrl.impact.ImpactAutomationRequest.SPARK_Boundary;

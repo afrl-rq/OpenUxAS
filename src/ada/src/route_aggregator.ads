@@ -5,8 +5,8 @@ with Ada.Containers.Formal_Ordered_Maps;
 with Ada.Containers.Functional_Maps;
 with Ada.Containers.Functional_Vectors;
 
-with Route_Aggregator_Messages;      use Route_Aggregator_Messages;
-with Route_Aggregator_Common;        use Route_Aggregator_Common;
+with LMCP_Messages;                  use LMCP_Messages;
+with Common;                         use Common;
 with Route_Aggregator_Communication; use Route_Aggregator_Communication;
 
 package Route_Aggregator with SPARK_Mode is

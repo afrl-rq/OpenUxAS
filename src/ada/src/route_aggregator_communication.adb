@@ -1,6 +1,6 @@
 with AVTAS.LMCP.Types;
 with UxAS.Common.String_Constant.Message_Group;
-with Route_Aggregator_Message_Conversions; use Route_Aggregator_Message_Conversions;
+with LMCP_Message_Conversions; use LMCP_Message_Conversions;
 
 package body Route_Aggregator_Communication is
 

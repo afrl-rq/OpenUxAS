@@ -11,4 +11,5 @@ package AFRL.CMASI.OperatingRegion.SPARK_Boundary with SPARK_Mode is
    function Get_Areas
      (Region : OperatingRegion) return OperatingRegionAreas
      with Global => null;
+
 end AFRL.CMASI.OperatingRegion.SPARK_Boundary;
