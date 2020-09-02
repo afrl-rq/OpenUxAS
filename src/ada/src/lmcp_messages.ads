@@ -1,8 +1,8 @@
-with Route_Aggregator_Common; use Route_Aggregator_Common;
+with Common; use Common;
 with Ada.Containers.Functional_Vectors;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
-package Route_Aggregator_Messages with SPARK_Mode is
+package LMCP_Messages with SPARK_Mode is
 
    type Message_Root is abstract tagged null record;
 
@@ -49,6 +49,7 @@ package Route_Aggregator_Messages with SPARK_Mode is
       OperatingRegion    : Int64;
       PlanningStates     : PlanningState_Seq;
       TaskList           : Int64_Seq;
+      TaskRelationships  : Unbounded_String;
    end record;
 
    type RouteConstraints is record
@@ -239,7 +240,7 @@ package Route_Aggregator_Messages with SPARK_Mode is
       StartHeading : Real32 := 0.0;
       -- Ending location for this option. A valid TaskOption must define EndLocation (null not allowed).
       EndLocation : Location3D;
-      -- Ending heading for thttps://www.youtube.com/watch?v=f7Yimxud4UIhis option
+      -- Ending heading for this option
       EndHeading : Real32 := 0.0;
    end record;
 
@@ -259,4 +260,31 @@ package Route_Aggregator_Messages with SPARK_Mode is
       Options : TaskOption_Seq;
    end record;
 
-end Route_Aggregator_Messages;
+   type TaskAssignment is record
+      -- Task ID
+      TaskID : Int64 := 0;
+      -- Option ID that was selected for this task
+      OptionID : Int64 := 0;
+      -- Vehicle that is assigned to this task
+      AssignedVehicle : Int64 := 0;
+      -- Time before which this task cannot begin
+      TimeThreshold : Int64 := 0;
+      -- Time that this task is assigned to be completed.
+      TimeTaskCompleted : Int64 := 0;
+   end record;
+
+   package TaskAssignment_Sequences is new Ada.Containers.Functional_Vectors
+     (Index_Type   => Positive,
+      Element_Type => TaskAssignment);
+   type TaskAssignment_Sequence is new TaskAssignment_Sequences.Sequence;
+
+   type TaskAssignmentSummary is new Message_Root with record
+      -- ID that matches this summary with the appropriate unique automation request
+      CorrespondingAutomationRequestID : Int64 := 0;
+      -- Operating region which was considered during this assignment
+      OperatingRegion : Int64 := 0;
+      -- Ordered list of tasks to be completed
+      TaskList : TaskAssignment_Sequence;
+   end record;
+
+end LMCP_Messages;

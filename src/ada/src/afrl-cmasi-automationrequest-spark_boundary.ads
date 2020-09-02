@@ -1,4 +1,5 @@
 with Common_Formal_Containers; use Common_Formal_Containers;
+
 package afrl.cmasi.AutomationRequest.SPARK_Boundary with SPARK_Mode is
    pragma Annotate (GNATprove, Terminating, SPARK_Boundary);
 
@@ -13,4 +14,5 @@ package afrl.cmasi.AutomationRequest.SPARK_Boundary with SPARK_Mode is
    function Get_TaskList
      (Request : AutomationRequest) return Int64_Vect
      with Global => null;
+
 end afrl.cmasi.AutomationRequest.SPARK_Boundary;

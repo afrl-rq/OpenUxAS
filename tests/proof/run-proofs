@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import sys
 from e3.testsuite import Testsuite
 from e3.testsuite.driver.diff import DiffTestDriver
 from argparse import ArgumentParser
@@ -76,4 +77,4 @@ class GnatproveTestsuite(Testsuite):
         self.env.rewrite_baselines = self.main.args.rewrite
 
 if __name__ == "__main__":
-    GnatproveTestsuite().testsuite_main()
+    sys.exit(GnatproveTestsuite().testsuite_main())

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <UxAS EntityID="100" FormatVersion="1.0" EntityType="Aircraft">
     <!-- Enable AMASE simulation by uncommenting this Bridge -->
-    <!-- <Bridge Type="LmcpObjectNetworkTcpBridge" TcpAddress="tcp://127.0.0.1:5555" Server="FALSE">
+    <Bridge Type="LmcpObjectNetworkTcpBridge" TcpAddress="tcp://127.0.0.1:5555" Server="FALSE">
         <SubscribeToMessage MessageType="afrl.cmasi.MissionCommand" />
         <SubscribeToMessage MessageType="afrl.cmasi.LineSearchTask" />
         <SubscribeToMessage MessageType="afrl.cmasi.VehicleActionCommand" />
-    </Bridge> -->
+    </Bridge>
     <Service Type="TaskManagerService"/>
-    <Service Type="AutomationRequestValidatorService"/>
+    <Service Type="AutomationRequestValidatorService" MaxResponseTime_ms="100000"/>
     <Service Type="SensorManagerService"/>
     <Service Type="RouteAggregatorService"/>
     <Service Type="RoutePlannerVisibilityService" MinimumWaypointSeparation_m="50.0"/>

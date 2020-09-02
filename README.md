@@ -64,7 +64,7 @@ Bootstrap your install by running this command:
 
 Configure your environment to run the build tool:
 
-    ~$ eval "$( ~/bootstrap/install/install-anod-venv --printenv )"
+    ~$ eval "$( cd ~/bootstrap && install/install-anod-venv --printenv )"
 
 Build OpenUxAS and OpenAMASE:
 
