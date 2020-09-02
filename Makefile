@@ -2,7 +2,7 @@
 PLATFORM:=$(shell python -c "import sys; print(sys.platform)")
 
 # Anod search path
-ANOD_PATH:=$(HOME)/bootstrap
+ANOD_PATH:=$(HOME)/daidalus
 
 # Anod binary
 ANOD_BIN:=$(ANOD_PATH)/anod
