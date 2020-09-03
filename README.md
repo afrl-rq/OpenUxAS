@@ -63,7 +63,7 @@ Before you begin, you will need:
 
 Bootstrap your install by running this command:
 
-    ~$ curl -L https://github.com/AdaCore/OpenUxAS-bootstrap/raw/DAIDALUS_integration/install/bootstrap | BOOTSTRAP_ROOT=~/daidalus BOOTSTRAP_FORK=AdaCore/OpenUxAS-bootstrap.git BOOTSTRAP_REF=DAIDALUS_integration bash
+    ~$ curl -L https://github.com/afrl-rq/OpenUxAS-bootstrap/raw/daidalus_integration/install/bootstrap | BOOTSTRAP_ROOT=~/daidalus BOOTSTRAP_REF=daidalus_integration bash
 
 Configure your environment to run the build tool:
 
