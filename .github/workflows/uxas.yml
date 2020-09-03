@@ -7,7 +7,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-18.04, ubuntu-20.04]
-        component: [uxas-ada, uxas, amase]
+        component: [uxas, amase]
         qualifier: [scenario=release, scenario=gcov]
         python-version: [3.7, 3.8]
     runs-on: ${{ matrix.os }}
@@ -21,7 +21,7 @@ jobs:
 
       - name: Bootstrap anod
         run: |
-          curl -L https://github.com/afrl-rq/OpenUxAS-bootstrap/raw/develop/install/bootstrap | bash
+          curl -L https://github.com/afrl-rq/OpenUxAS-bootstrap/raw/daidalus_integration/install/bootstrap | BOOTSTRAP_REF=daidalus_integration bash
 
       - name: Patch bootstrap
         run: |
