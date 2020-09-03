@@ -10,9 +10,6 @@ OpenUxAS
 
 [![Build Status](https://github.com/afrl-rq/OpenUxAS/workflows/Build/badge.svg)](https://github.com/afrl-rq/OpenUxAS/actions)
 
-> ***This branch is intended to facilitate in-progress efforts to integrate DAIDALUS into OpenUxAS.***
-> Most users should instead use the main development branch [here](http://github.com/afrl-rq/OpenUxAS-bootstrap).
-
 UxAS is a collection of modular services that interact via a common message-passing architecture.
 Similar in design to Robot Operating System (ROS), each service subscribes to messages in the system and responds to queries.
 UxAS uses the open-source library ZeroMQ to connect all services to each other.
@@ -63,20 +60,20 @@ Before you begin, you will need:
 
 Bootstrap your install by running this command:
 
-    ~$ curl -L https://github.com/AdaCore/OpenUxAS-bootstrap/raw/DAIDALUS_integration/install/bootstrap | BOOTSTRAP_ROOT=~/daidalus BOOTSTRAP_FORK=AdaCore/OpenUxAS-bootstrap.git BOOTSTRAP_REF=DAIDALUS_integration bash
+    ~$ curl -L https://github.com/afrl-rq/OpenUxAS-bootstrap/raw/develop/install/bootstrap | bash
 
 Configure your environment to run the build tool:
 
-    ~$ eval "$( cd ~/daidalus && install/install-anod-venv --printenv )"
+    ~$ eval "$( cd ~/bootstrap && install/install-anod-venv --printenv )"
 
 Build OpenUxAS and OpenAMASE:
 
-    ~/daidalus$ ./anod build uxas
-    ~/daidalus$ ./anod build amase
+    ~/bootstrap$ ./anod build uxas
+    ~/bootstrap$ ./anod build amase
 
 Now you can run the OpenUxAS examples:
 
-    ~/daidalus$ ./run-example 02_Example_WaterwaySearch
+    ~/bootstrap$ ./run-example 02_Example_WaterwaySearch
 
 
 # 2. Getting Started<a name="getting-started" />

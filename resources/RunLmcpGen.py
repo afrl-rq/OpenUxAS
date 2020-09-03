@@ -27,7 +27,7 @@ MDMs in the OpenUxAS repository.
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Anod search path
-ANOD_PATH = os.path.join(os.environ.get("HOME", ""), "daidalus")
+ANOD_PATH = os.path.join(os.environ.get("HOME", ""), "bootstrap")
 
 # Anod binary
 ANOD_BIN = os.path.join(ANOD_PATH, "anod")
