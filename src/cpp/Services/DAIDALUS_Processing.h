@@ -11,11 +11,11 @@
  * File:   DAIDALUS_WCV_Detection.h
  * Author: SeanR
  *
- * Created on Feb 06 2018
+ * Created on Oct 01 2020
  */
 
-#ifndef UXAS_DAIDALUS_WCV_DETECTION_H
-#define UXAS_DAIDALUS_WCV_DETECTION_H
+#ifndef UXAS_DAIDALUS_PROCESSING_H
+#define UXAS_DAIDALUS_PROCESSING_H
 
 
 
@@ -25,21 +25,28 @@
 #include "Position.h"
 #include "ServiceBase.h"
 #include "Velocity.h"
+#include "afrl/cmasi/Waypoint.h"
+#include "afrl/cmasi/MissionCommand.h"
+#include "afrl/cmasi/AltitudeType.h"
+#include "afrl/cmasi/SpeedType.h"
+#include "larcfm/DAIDALUS/WellClearViolationIntervals.h"
 
 #include <array>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
+
 namespace uxas
 {
 namespace service
 {
 
-/*! \class DAIDALUS_WCV_Detection
+/*! \class DAIDALUS_Processing
     \brief This is a service that acts as an interface between UxAS and NASA's DAIDALUS.
  * 
  * 
- * Configuration String: <Service Type="DAIDALUS_WCV_Detection" LookAheadTime="180" LeftTrack="180" RightTrack="180" MinGroundSpeed="5" 
+ * Configuration String: <Service Type="DAIDALUS_Processing" LookAheadTime="180" LeftTrack="180" RightTrack="180" MinGroundSpeed="5" 
  * MaxGroundSpeed="360.11 MinVerticalSpeed="xx" MaxVerticalSpeed="xx" MinAltitude="xx" MaxAltitude="xx" TrackStep="xx" GroundSpeedStep="xx" 
  * VerticalSpeedStep="xx" AltitudeStep="xx" HorizontalAcceleration="xx" VerticalAcceleration="xx" TurnRate="xx" BankAngle="xx" VerticalRate="xx"
  * RecoveryStabilityTime"xx" MinHorizontalRecovery="xx" MinVerticalRecovery="xx" isRecoveryTack="true" isRecoveryGroundTracK="true" 
@@ -88,8 +95,9 @@ namespace service
  *  - AlertTime3 - the time limit to determine if a WCV violation will occur before for the NEAR classification
  *  - EarlyAlertTime3 - the time limit to determine if a WCV violation will occur before for an early NEAR classification
  *  - HorizontalDetectionType - the type of time projection limit used in determination of WCV violation- TAUMOD, TCPA, or TEP
+ *  - AutomaticResponseStatus - ON for response to detected violations causing changes to vehicle action commands. Otherwise no change to vehicle behavior
  * 
- * Design: The objective of DAIDALUS_WCV_Detection is interface with NASA's DAIDALUS code to detect projected violations of the well-clear volume for
+ * Design: The objective of DAIDALUS_Processing is interface with NASA's DAIDALUS code to detect projected violations of the well-clear volume for
  *         the ownship.  This service then reports any detections of projected violations to other services along with the configuration parameters 
  *         used by DAIDALUS to determine the violations.
  * 
@@ -103,25 +111,29 @@ namespace service
  * Subscribed Messages:
  *  - afrl::cmasi::AirVehicleState
  *  - uxas::messages::uxnative::StartupComplete
+ *  - afrl::cmasi::AutomationResponse
+ *  - afrl::cmasi::MissionCommand
+ * 
  * 
  * Sent Messages:
  *  - larcfm::DAIDALUS::DAIDALUSConfiguration
  *  - larcfm::DAIDALUS:::WellClearViolationIntervals
+ *  - afrl::cmasi::VehicleActionCommand
  * 
  * 
  */
 
-class DAIDALUS_WCV_Detection : public ServiceBase
+class DAIDALUS_Processing : public ServiceBase
 {
 public:
 
     /** \brief This string is used to identify this service in XML configuration
-     * files, i.e. Service Type="DAIDALUS_WCV_Detection". It is also entered into
+     * files, i.e. Service Type="DAIDALUS_Processing". It is also entered into
      * service registry and used to create new instances of this service. */
     static const std::string&
     s_typeName()
     {
-        static std::string s_string("DAIDALUS_WCV_Detection");
+        static std::string s_string("DAIDALUS_Processing");
         return (s_string);
     };
 
@@ -141,24 +153,24 @@ public:
     static ServiceBase*
     create()
     {
-        return new DAIDALUS_WCV_Detection;
+        return new DAIDALUS_Processing;
     };
 
-    DAIDALUS_WCV_Detection();
+    DAIDALUS_Processing();
 
     virtual
-    ~DAIDALUS_WCV_Detection();
+    ~DAIDALUS_Processing();
 
 private:
 
     static
-    ServiceBase::CreationRegistrar<DAIDALUS_WCV_Detection> s_registrar;
+    ServiceBase::CreationRegistrar<DAIDALUS_Processing> s_registrar;
 
     /** brief Copy construction not permitted */
-    DAIDALUS_WCV_Detection(DAIDALUS_WCV_Detection const&) = delete;
+    DAIDALUS_Processing(DAIDALUS_Processing const&) = delete;
 
     /** brief Copy assignment operation not permitted */
-    void operator=(DAIDALUS_WCV_Detection const&) = delete;
+    void operator=(DAIDALUS_Processing const&) = delete;
 
     bool
     configure(const pugi::xml_node& serviceXmlNode) override;
@@ -176,7 +188,7 @@ private:
     processReceivedLmcpMessage(std::unique_ptr<uxas::communications::data::LmcpMessage> receivedLmcpMessage) override;
 
 
-private:
+private: //following are member variables associated with detection
     int64_t m_VehicleID;
     //DAIDALUS parameters   
     double m_lookahead_time_s = {180};   // seconds--Time horizon of all DAIDALUS functions (time)
@@ -233,11 +245,66 @@ private:
     
     larcfm::Daidalus m_daa;
     std::unordered_map<int64_t, MydaidalusPackage> m_daidalusVehicleInfo;
-    
+
+private:    //the following are member variables associated with response to DAIDALUS detections of loss of wellclear
+    enum states {OnMission=1, InConflict, OnHold} m_state{OnMission};
+    enum priority {Standard = 1, High = 2} m_priority{Standard};
+    bool m_isConflict {false};  //boolean stating whether or not a potential WCV has been detected that requires action
+    bool m_isOnMission {false};  //boolean stating whether or not UAV is executing waypoints on Mission or not (diverting)
+    bool m_isReadyToAct {false};    //boolean stating whether or not service has all necessary prerequisites in order to react to an imminent collision.
+    bool m_isTakenAction {false};   //boolean stating whether or not the service has issued a vehicle action command to the ownship.
+    bool m_isReadyToActWaypoint {false};    //boolean stating whether or not the service has received a waypoint designating the goal location
+    bool m_isReadyToActMissionCommand {false};  //boolean stating whether or not the service has received a mission command that lists all waypoints.
+    bool m_isReadyToActConfiguration {false};  //boolean stating whether or not service has received configuration parameters in order to process violation messages
+    bool m_isActionCompleted {false}; //boolean stating whether or not service has completed taking action for the violation under consideration.
+    bool m_isCloseToDesired {false};
+    double m_heading_tolerance_deg{0.5};
+    double m_groundspeed_tolerance_mps{5};
+    double m_verticalspeed_tolerance_mps{5};
+    double m_altitude_tolerance_m{10};
+    double m_tolerance_clock_s;
+    double m_tolerance_threshold_time_s{5};  //time needed to stay within desired state to be considered attained--seconds
+    double m_action_time_threshold_s;   // time threshold to hold when taking action
+    double m_priority_time_threshold_s; //time threshold to raise priority level when taking action
+    double m_action_hold_release_time_s;  //time at which an action hold must be released
+    double m_heading_max_deg{360.0};  //DAIDALUS maximum heading 
+    double m_heading_min_deg{0.0};   //DAIDALUS minimum heading 
+    double m_heading_interval_buffer_deg{5.0};  //degrees to buffer the heading bands interval by for avoidance maneuver
+    double m_groundspeed_interval_buffer_mps{10.0};   //speed to buffer the ground speed interval by for avoidance maneuver.
+    double m_verticalspeed_interval_buffer_mps{5.0};  //speed to buffer the vertical speed interval by for avoidance maneuver.
+    double m_altitude_interval_buffer_m{20.0};    //distance in meters to buffer the altitude interval by for avoidance maneuver.
+    int64_t m_NextWaypoint{-1};// {nullptr};
+    int64_t m_RoW;
+    uint16_t m_alertlevels_count;
+    std::shared_ptr<afrl::cmasi::MissionCommand> m_MissionCommand{nullptr};// {nullptr};
+    std::string m_AutomaticResponseStatus = "OFF";
+    std::vector<int64_t> m_ConflictResolutionList;
+
+    struct State
+    {
+        double altitude_m;
+        double horizontal_speed_mps;
+        double vertical_speed_mps;
+        double heading_deg;
+        double latitude_deg;
+        double longitude_deg;
+        double time_s;
+        double total_velocity_mps;
+        afrl::cmasi::AltitudeType::AltitudeType altitude_type;
+        afrl::cmasi::SpeedType::SpeedType speed_type;
+    }m_CurrentState, m_DivertState, m_ReturnState;
+    void ResetResponse();
+    void SetDivertState(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands);
+    bool isSafeToReturnToMission(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_band);
+    bool foundWCVAltitudeResolution(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands);
+    bool foundWCVVerticalSpeedResolution(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands);
+    bool foundWCVGroundSpeedResolution(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands);
+    bool foundWCVHeadingResolution(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands);
+   
    };
 
 } //namespace service
 } //namespace uxas
 
-#endif /* UXAS_DAIDALUS_WCV_DETECTION_H */
+#endif /* UXAS_DAIDALUS_Processing*/
 

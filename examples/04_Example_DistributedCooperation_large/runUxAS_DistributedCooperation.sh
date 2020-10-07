@@ -4,7 +4,7 @@
 SAVE_DIR=$(pwd)
 
 #location of the UxAS binary (executable)
-BIN="../../../build/uxas"
+BIN="../../../obj/cpp/uxas"
 
 #set the UAV ID
 UAV=1000
