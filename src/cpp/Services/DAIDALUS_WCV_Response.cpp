@@ -29,6 +29,7 @@
 #include "afrl/cmasi/CommandStatusType.h"
 #include "afrl/cmasi/GoToWaypointAction.h"
 #include "afrl/cmasi/MissionCommand.h"
+#include "afrl/cmasi/Waypoint.h"
 #include "Constants/Convert.h"
 
 
@@ -38,6 +39,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <iterator>
 #include <iostream>     // std::cout, cerr, etc
 
 // convenience definitions for the option strings
@@ -190,8 +192,12 @@ bool DAIDALUS_WCV_Response::foundWCVHeadingResolution(const std::shared_ptr<larc
         }
     }
 
-    if (std::fmod(m_DivertState.heading_deg + 360.0, 360.0) > std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) && 
-            std::fmod(m_DivertState.heading_deg +360.0, 360.0) <= std::fmod((m_CurrentState.heading_deg + 180.0)+360.0, 360.0))
+   //using angle wrapped versions of the CurrentState_heading_deg and DivertState.heading_deg to determine if Divert would result in a left turn
+    if ((std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) > std::fmod(m_DivertState.heading_deg + 360.0, 360.0) &&
+            (std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) - std::fmod(m_DivertState.heading_deg + 360.0, 360.0) >= 180.0)) ||
+            (std::fmod(m_DivertState.heading_deg + 360.0, 360.0) > std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) &&
+                std::fmod(m_DivertState.heading_deg + 360.0, 360.0) - std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) <= 180.0)) 
+
     {
         m_DivertState.heading_deg = std::fmod(m_DivertState.heading_deg + 360.0, 360.0);
     }
@@ -223,8 +229,11 @@ bool DAIDALUS_WCV_Response::foundWCVHeadingResolution(const std::shared_ptr<larc
             }
 
         }
-        if (std::fmod(m_DivertState.heading_deg + 360.0, 360.0) < std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) &&
-                std::fmod(m_DivertState.heading_deg + 360.0, 360.0) >= std::fmod((m_CurrentState.heading_deg -180.0) + 360.0, 360.0))
+        //using angle wrapped versions of the CurrentState_heading_deg and DivertState.heading_deg to determine if Divert would result in a left turn
+        if ((std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) > std::fmod(m_DivertState.heading_deg + 360.0, 360.0) &&
+                (std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) - std::fmod(m_DivertState.heading_deg + 360.0, 360.0) < 180.0)) ||
+                (std::fmod(m_DivertState.heading_deg + 360.0, 360.0) > std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) &&
+                    std::fmod(m_DivertState.heading_deg + 360.0, 360.0) - std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) > 180.0)) 
         {
             m_DivertState.heading_deg = std::fmod(m_DivertState.heading_deg + 360.0, 360.0);
         }
@@ -1132,6 +1141,15 @@ bool DAIDALUS_WCV_Response::processReceivedLmcpMessage(std::unique_ptr<uxas::com
                             //send safe to return to mission command
                             if (m_NextWaypoint != -1)
                             {
+                                //find pointer to the last next waypoint when still on mission. Then send MissionCommand with that point as
+                                //the second waypoint in the list due to WaypointManager's handling of Mission Commands.
+                                afrl::cmasi::Waypoint* NextWaypoint = m_MissionCommand->getWaypointList()[m_NextWaypoint - 1];
+                                auto iCutPoint = std::find(m_MissionCommand->getWaypointList().begin(), m_MissionCommand->getWaypointList().end(), NextWaypoint);
+                                std::cout << "HERE IS THE ITERATOR OF THE NEXT WAYPOINT FROM THE ORIGINAL MISSION COMMAND THAT I AM TRYING TO RETURN TO: " << std::distance(m_MissionCommand->getWaypointList().begin(),iCutPoint) << std::endl;
+                                if (iCutPoint != m_MissionCommand->getWaypointList().begin())
+                                    {
+                                        m_MissionCommand->getWaypointList().erase(m_MissionCommand->getWaypointList().begin(), iCutPoint-1);
+                                    }
                                 m_MissionCommand->setFirstWaypoint(m_NextWaypoint);
                                 sendSharedLmcpObjectBroadcastMessage(m_MissionCommand);
                                 m_state = OnMission;
