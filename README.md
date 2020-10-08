@@ -22,3 +22,8 @@ Verification. Springer, Cham, 2019.
 [Link](https://link.springer.com/content/pdf/10.1007%2F978-3-030-25540-4_20.pdf)
 
 The models referenced in that paper are included in this branch.
+
+Other models related to this work can be found on the dpssModel branch of the  
+archived OpenUxAS "Summer of Innovation" repository:
+https://github.com/afrl-rq/OpenUxAS-SoI/tree/dpssModel
+
