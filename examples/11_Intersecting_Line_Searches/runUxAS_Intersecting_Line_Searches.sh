@@ -3,6 +3,15 @@
 #save the current directory
 SAVE_DIR=$(pwd)
 
+#location of OpenAMASE
+BIN2="../../../OpenAMASE/OpenAMASE"
+# run OpenAMASE in separate terminal.  Note: requires "gnome-terminal"
+cd $BIN2
+/usr/bin/gnome-terminal -x java -Xmx2048m -splash:./data/amase_splash.png -classpath ./dist/*:./lib/*  avtas.app.Application --config config/daidalus --scenario "../../OpenUxAS/examples/11_Intersecting_Line_Searches/MessagesToSend/Intersecting_Line_Search.xml"; 
+sleep 5s
+# change back to original directory
+cd $SAVE_DIR
+
 #location of the UxAS binary (executable)
 BIN="../../../obj/cpp/uxas"
 
@@ -17,7 +26,7 @@ mkdir -p ${RUN_DIR}
 # change to the data directory
 cd ${RUN_DIR}
 # run UxAS is a separate terminal. Note: requires "gnome-terminal"
-/usr/bin/gnome-terminal -e $BIN" -cfgPath ../cfgDistributedCooperation_$UAV.xml"
+/usr/bin/gnome-terminal -e $BIN" -cfgPath ../cfgIntersecting_$UAV.xml"
 # change back to the original directory
 cd $SAVE_DIR
 
@@ -32,7 +41,7 @@ mkdir -p ${RUN_DIR}
 # change to the data directory
 cd ${RUN_DIR}
 # run UxAS is a separate terminal. Note: requires "gnome-terminal"
-/usr/bin/gnome-terminal -e $BIN" -cfgPath ../cfgDistributedCooperation_$UAV.xml"
+/usr/bin/gnome-terminal -e $BIN" -cfgPath ../cfgIntersecting_$UAV.xml"
 # change back to the original directory
 cd $SAVE_DIR
 
@@ -47,7 +56,6 @@ mkdir -p ${RUN_DIR}
 # change to the data directory
 cd ${RUN_DIR}
 # run UxAS is a separate terminal. Note: requires "gnome-terminal"
-/usr/bin/gnome-terminal -e $BIN" -cfgPath ../cfgDistributedCooperation_$UAV.xml"
+/usr/bin/gnome-terminal -e $BIN" -cfgPath ../cfgIntersecting_$UAV.xml"
 # change back to the original directory
 cd $SAVE_DIR
-
