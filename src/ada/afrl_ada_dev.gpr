@@ -70,7 +70,8 @@ project AFRL_Ada_Dev is
                "-gnatn",
                "-gnatp",
                "-fdata-sections",
-               "-ffunction-sections");
+               "-ffunction-sections",
+               "-gnatwa");
       end case;
    end Compiler;
 
