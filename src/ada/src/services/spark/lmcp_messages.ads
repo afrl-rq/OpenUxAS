@@ -43,36 +43,31 @@ package LMCP_Messages with SPARK_Mode is
       Element_Type => PlanningState);
    type PlanningState_Seq is new PS_Sequences.Sequence;
 
-   type UniqueAutomationRequest is new Message_Root with record
-      RequestID          : Int64;
+   type AutomationRequest is new Message_Root with record
       EntityList         : Int64_Seq;
-      OperatingRegion    : Int64;
-      PlanningStates     : PlanningState_Seq;
+      OperatingRegion    : Int64 := 0;
       TaskList           : Int64_Seq;
       TaskRelationships  : Unbounded_String;
+      RedoAllTasks       : Boolean := False;
    end record;
 
-   type RouteConstraints is record
-      -- ID denoting this set of route constraints
-      RouteID : Int64 := 0;
-      -- Location from which the planned route will start. A valid RouteConstraints message must define StartLocation (null not allowed).
-      StartLocation : Location3D;
-      -- Heading of entity at the start of the route
-      StartHeading : Real32 := 0.0;
-      -- If "true" the heading value in StartHeading must be used to start the route. If not, any starting heading can be used.
-      UseStartHeading : Boolean := true;
-      -- Location to which the planned route will end. A valid RouteConstraints message must define EndLocation (null not allowed).
-      EndLocation : Location3D;
-      -- Heading of entity at the end of the route
-      EndHeading : Real32 := 0.0;
-      -- If "true" the heading value in EndHeading must be used to end the route. If not, any ending heading can be used.
-      UseEndHeading : Boolean := true;
+   type TaskAutomationRequest is new AutomationRequest with record
+      RequestID          : Int64 := 0;
+      PlanningStates     : PlanningState_Seq;
+      SandboxRequest     : Boolean := False;
    end record;
 
-   package RC_Sequences is new Ada.Containers.Functional_Vectors
-     (Index_Type   => Positive,
-      Element_Type => RouteConstraints);
-   type RC_Seq is new RC_Sequences.Sequence;
+   type ImpactAutomationRequest is new AutomationRequest with record
+      RequestID          : Int64 := 0;
+      PlayID             : Int64 := 0;
+      SolutionID         : Int64 := 0;
+   end record;
+
+   type UniqueAutomationRequest is new AutomationRequest with record
+      RequestID          : Int64 := 0;
+      PlanningStates     : PlanningState_Seq;
+      SandboxRequest     : Boolean := False;
+   end record;
 
    type VehicleAction is record
       -- A list of tasks that are associated with this action. A length of zero denotes no associated tasks. This field is for analysis purposes. The automation service should associate a list of tasks with each action to enable analysis of the allocation of tasks to vehicles.
@@ -84,6 +79,20 @@ package LMCP_Messages with SPARK_Mode is
      (Index_Type   => Positive,
       Element_Type => VehicleAction);
    type VA_Seq is new VA_Sequences.Sequence;
+
+   type CommandStatusTypeEnum is (Pending, Approved, InProcess, Executed, Cancelled);
+
+   type VehicleActionCommand is new Message_Root with record
+      CommandId : Int64 := 0;
+      VehicleId : Int64 := 0;
+      VehicleActionList : VA_Seq;
+      Status : CommandStatusTypeEnum := Pending;
+   end record;
+
+   package VAC_Sequences is new Ada.Containers.Functional_Vectors
+     (Index_Type   => Positive,
+      Element_Type => VehicleActionCommand);
+   type VehicleActionCommand_Seq is new VAC_Sequences.Sequence;
 
    type Waypoint is new Location3D with record
       -- A unique waypoint number
@@ -113,6 +122,16 @@ package LMCP_Messages with SPARK_Mode is
       Element_Type => Waypoint);
    type WP_Seq is new WP_Sequences.Sequence;
 
+   type MissionCommand is new VehicleActionCommand with record
+      WaypointList : WP_Seq;
+      FirstWaypoint : Int64 := 0;
+   end record;
+
+   package MC_Sequences is new Ada.Containers.Functional_Vectors
+     (Index_Type   => Positive,
+      Element_Type => MissionCommand);
+   type MissionCommand_Seq is new MC_Sequences.Sequence;
+
    type KeyValuePair is record
       -- A key (name) for the property
       Key : Unbounded_String := To_Unbounded_String("");
@@ -124,6 +143,59 @@ package LMCP_Messages with SPARK_Mode is
      (Index_Type   => Positive,
       Element_Type => KeyValuePair);
    type KVP_Seq is new KVP_Sequences.Sequence;
+
+   type AutomationResponse is new Message_Root with record
+      MissionCommandList : MissionCommand_Seq;
+      VehicleCommandList : VehicleActionCommand_Seq;
+      Info               : KVP_Seq;
+   end record;
+
+   type TaskAutomationResponse is new AutomationResponse with record
+      ResponseID         : Int64 := 0;
+      FinalStates        : PlanningState_Seq;
+   end record;
+
+   type ImpactAutomationResponse is new AutomationResponse with record
+      ResponseID : Int64 := 0;
+      PlayId : Int64 := 0;
+      SolutionId : Int64 := 0;
+      Sandbox : Boolean := False;
+   end record;
+
+   type UniqueAutomationResponse is new AutomationResponse with record
+      ResponseID         : Int64 := 0;
+      FinalStates        : PlanningState_Seq;
+   end record;
+
+   type ServiceStatusTypeEnum is (Information, Warning, Error);
+
+   type ServiceStatus is new Message_Root with record
+      PercentComplete : Real32 := 0.0;
+      Info            : KVP_Seq;
+      StatusType      : ServiceStatusTypeEnum := Information;
+   end record;
+
+   type RouteConstraints is record
+      -- ID denoting this set of route constraints
+      RouteID : Int64 := 0;
+      -- Location from which the planned route will start. A valid RouteConstraints message must define StartLocation (null not allowed).
+      StartLocation : Location3D;
+      -- Heading of entity at the start of the route
+      StartHeading : Real32 := 0.0;
+      -- If "true" the heading value in StartHeading must be used to start the route. If not, any starting heading can be used.
+      UseStartHeading : Boolean := true;
+      -- Location to which the planned route will end. A valid RouteConstraints message must define EndLocation (null not allowed).
+      EndLocation : Location3D;
+      -- Heading of entity at the end of the route
+      EndHeading : Real32 := 0.0;
+      -- If "true" the heading value in EndHeading must be used to end the route. If not, any ending heading can be used.
+      UseEndHeading : Boolean := true;
+   end record;
+
+   package RC_Sequences is new Ada.Containers.Functional_Vectors
+     (Index_Type   => Positive,
+      Element_Type => RouteConstraints);
+   type RC_Seq is new RC_Sequences.Sequence;
 
    type RoutePlan is record
       -- ID denoting this plan corresponding with requested route constraint pair

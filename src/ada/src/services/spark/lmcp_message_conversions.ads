@@ -7,13 +7,17 @@ with Afrl.Cmasi.VehicleAction;              use Afrl.Cmasi.VehicleAction;
 with Afrl.Cmasi.KeyValuePair;               use Afrl.Cmasi.KeyValuePair;
 with Afrl.Cmasi.Location3D;                 use Afrl.Cmasi.Location3D;
 with Afrl.Cmasi.EntityState;                use Afrl.Cmasi.EntityState;
-with Uxas.Messages.Lmcptask.UniqueAutomationRequest; use Uxas.Messages.Lmcptask.UniqueAutomationRequest;
 with UxAS.Messages.lmcptask.AssignmentCostMatrix; use UxAS.Messages.lmcptask.AssignmentCostMatrix;
 with Uxas.Messages.Route.RouteRequest;      use Uxas.Messages.Route.RouteRequest;
 with Uxas.Messages.Route.RoutePlanRequest;  use Uxas.Messages.Route.RoutePlanRequest;
 with Uxas.Messages.Route.RouteConstraints;  use Uxas.Messages.Route.RouteConstraints;
 with Uxas.Messages.lmcptask.TaskPlanOptions; use Uxas.Messages.lmcptask.TaskPlanOptions;
 with AVTAS.LMCP.Object;
+with afrl.cmasi.AutomationRequest; use afrl.cmasi.AutomationRequest;
+with uxas.messages.lmcptask.TaskAutomationRequest; use uxas.messages.lmcptask.TaskAutomationRequest;
+with afrl.impact.ImpactAutomationRequest; use afrl.impact.ImpactAutomationRequest;
+with uxas.messages.lmcptask.UniqueAutomationResponse; use uxas.messages.lmcptask.UniqueAutomationResponse;
+with uxas.messages.lmcptask.UniqueAutomationRequest; use uxas.messages.lmcptask.UniqueAutomationRequest;
 
 package LMCP_Message_Conversions is
 
@@ -37,7 +41,15 @@ package LMCP_Message_Conversions is
 
    function As_RoutePlanRequest_Message (Msg : not null RoutePlanRequest_Any) return LMCP_Messages.RoutePlanRequest;
 
+   function As_AutomationRequest_Message (Msg : not null AutomationRequest_Any) return LMCP_Messages.AutomationRequest;
+
+   function As_TaskAutomationRequest_Message (Msg : not null TaskAutomationRequest_Any) return LMCP_Messages.TaskAutomationRequest;
+
+   function As_ImpactAutomationRequest_Message (Msg : not null ImpactAutomationRequest_Any) return LMCP_Messages.ImpactAutomationRequest;
+
    function As_UniqueAutomationRequest_Message (Msg : not null UniqueAutomationRequest_Any) return LMCP_Messages.UniqueAutomationRequest;
+
+   function As_UniqueAutomationResponse_Message (Msg : not null UniqueAutomationResponse_Any) return LMCP_Messages.UniqueAutomationResponse;
 
    function As_TaskPlanOption_Message (Msg : not null TaskPlanOptions_Any) return LMCP_Messages.TaskPlanOptions;
 
