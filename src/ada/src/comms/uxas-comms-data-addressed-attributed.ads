@@ -104,5 +104,4 @@ private
       Result           : out Boolean)
   with Pre'Class => Delimited_String'Length >= Minimum_Delimited_Address_Attribute_Message_String_Length;
 
-
 end UxAS.Comms.Data.Addressed.Attributed;

@@ -41,7 +41,7 @@ package body Assignment_Tree_Branch_Bound_Communication is
 
    --  this is sendSharedLmcpObjectBroadcastMessage(), in our code Send_Shared_LMCP_Object_Broadcast_Message
 
-   procedure SendBroadcastMessage
+   procedure sendBroadcastMessage
      (This : in out Assignment_Tree_Branch_Bound_Mailbox;
       Msg  : Message_Root'Class)
    is

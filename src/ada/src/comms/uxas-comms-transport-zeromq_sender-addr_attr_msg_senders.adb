@@ -31,8 +31,8 @@ package body UxAS.Comms.Transport.ZeroMQ_Sender.Addr_Attr_Msg_Senders is
          Payload           => Payload,
          Result            => Success);
 
-      if This.Kind = Stream then
-         raise Program_Error with "Send_Message is not implemented for STREAM";
+      if This.Kind = STREAM then
+         raise Program_Error with "Send_Message is not implemented for Stream";
       else  -- not a stream socket
          if UxAS.Common.Configuration_Manager.Is_ZeroMq_Multipart_Message then
             raise Program_Error with "Send_Message is not implemented for multipart messages";
@@ -53,8 +53,8 @@ package body UxAS.Comms.Transport.ZeroMQ_Sender.Addr_Attr_Msg_Senders is
       Message : Addressed_Attributed_Message_Ref)
    is
    begin
-      if This.Kind = Stream then
-         raise Program_Error with "Send_Addressed_Attributed_Message is not implemented for STREAM";
+      if This.Kind = STREAM then
+         raise Program_Error with "Send_Addressed_Attributed_Message is not implemented for Stream";
       else  -- not a stream socket
          if UxAS.Common.Configuration_Manager.Is_ZeroMq_Multipart_Message then
             raise Program_Error with "Send_Addressed_Attributed_Message is not implemented for multipart messages";

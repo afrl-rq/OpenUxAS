@@ -4,7 +4,7 @@ with LMCP_Message_Conversions;
 
 package body UxAS.Comms.LMCP_Net_Client.Service.Assignment_Tree_Branch_Bounding is
 
-  procedure Handle_AssignmentCostMatrix_Msg
+   procedure Handle_AssignmentCostMatrix_Msg
      (This : in out Assignment_Tree_Branch_Bound_Service;
       Msg  : AssignmentCostMatrix_Any);
 
@@ -77,9 +77,9 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Assignment_Tree_Branch_Bounding 
       This.Config.Number_Nodes_Maximum :=
         Common.Int64'Max (0, This.Config.Number_Nodes_Maximum);
 
-      This.Add_Subscription_Address (UxAS.Messages.Lmcptask.AssignmentCostMatrix.Subscription, Unused);
-      This.Add_Subscription_Address (UxAS.Messages.Lmcptask.TaskPlanOptions.Subscription, Unused);
-      This.Add_Subscription_Address (UxAS.Messages.Lmcptask.UniqueAutomationRequest.Subscription, Unused);
+      This.Add_Subscription_Address (UxAS.Messages.lmcptask.AssignmentCostMatrix.Subscription, Unused);
+      This.Add_Subscription_Address (UxAS.Messages.lmcptask.TaskPlanOptions.Subscription, Unused);
+      This.Add_Subscription_Address (UxAS.Messages.lmcptask.UniqueAutomationRequest.Subscription, Unused);
 
       Result := True;
    end Configure;
@@ -131,7 +131,6 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Assignment_Tree_Branch_Bounding 
          This.State,
          LMCP_Message_Conversions.As_UniqueAutomationRequest_Message (Msg));
    end Handle_UniqueAutomationRequest_Msg;
-
 
    ----------------
    -- Initialize --

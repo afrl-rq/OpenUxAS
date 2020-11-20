@@ -79,7 +79,7 @@ package UxAS.Comms.LMCP_Object_Message_Receiver_Pipes is
    --   getNextMessageObject();
    procedure Get_Next_Message_Object
      (This    : in out LMCP_Object_Message_Receiver_Pipe;
-      Message : out    Any_Lmcp_Message);
+      Message : out    Any_LMCP_Message);
 
    --   std::unique_ptr<uxas::communications::data::AddressedAttributedMessage>
    --   getNextSerializedMessage();
@@ -87,7 +87,7 @@ package UxAS.Comms.LMCP_Object_Message_Receiver_Pipes is
      (This    : in out LMCP_Object_Message_Receiver_Pipe;
       Message : out    Addressed_Attributed_Message_Ref);
 
-   --   std::unique_ptr<avtas::lmcp::Object>
+   --   std::unique_ptr<AVTAS::lmcp::Object>
    --   deserializeMessage(const std::string& payload);
    procedure Deserialize_Message
      (This    : in out LMCP_Object_Message_Receiver_Pipe;

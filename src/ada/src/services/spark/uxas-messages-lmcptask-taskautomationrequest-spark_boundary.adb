@@ -1,4 +1,4 @@
-package body uxas.messages.Lmcptask.TaskAutomationRequest.SPARK_Boundary with SPARK_Mode => Off is
+package body UxAS.Messages.lmcptask.TaskAutomationRequest.SPARK_Boundary with SPARK_Mode => Off is
 
    -----------------------------------------
    -- Get_EntityList_From_OriginalRequest --
@@ -57,4 +57,4 @@ package body uxas.messages.Lmcptask.TaskAutomationRequest.SPARK_Boundary with SP
       end return;
    end Get_TaskList_From_OriginalRequest;
 
-end uxas.messages.Lmcptask.TaskAutomationRequest.SPARK_Boundary;
+end UxAS.Messages.lmcptask.TaskAutomationRequest.SPARK_Boundary;

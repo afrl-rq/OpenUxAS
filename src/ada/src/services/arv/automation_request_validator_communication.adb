@@ -1,4 +1,4 @@
-with avtas.lmcp.types;
+with AVTAS.LMCP.Types;
 with LMCP_Message_Conversions; use LMCP_Message_Conversions;
 
 package body Automation_Request_Validator_Communication is
@@ -26,8 +26,8 @@ package body Automation_Request_Validator_Communication is
 
       This.Message_Sender_Pipe.Initialize_Push
         (Source_Group => Source_Group,
-         Entity_Id    => avtas.lmcp.types.UInt32 (Entity_Id),
-         Service_Id   => avtas.lmcp.types.UInt32 (Service_Id));
+         Entity_Id    => AVTAS.LMCP.Types.UInt32 (Entity_Id),
+         Service_Id   => AVTAS.LMCP.Types.UInt32 (Service_Id));
 
       This.Unique_Entity_Send_Message_Id := Unique_Id;
    end Initialize;

@@ -1,5 +1,5 @@
 
-package body afrl.cmasi.AutomationResponse.SPARK_Boundary with SPARK_Mode => Off is
+package body AFRL.CMASI.AutomationResponse.SPARK_Boundary with SPARK_Mode => Off is
 
    --------------------
    -- Get_WaypointEntity_Set --
@@ -17,4 +17,4 @@ package body afrl.cmasi.AutomationResponse.SPARK_Boundary with SPARK_Mode => Off
       end return;
    end Get_WaypointEntity_Set;
 
-end afrl.cmasi.AutomationResponse.SPARK_Boundary;
+end AFRL.CMASI.AutomationResponse.SPARK_Boundary;

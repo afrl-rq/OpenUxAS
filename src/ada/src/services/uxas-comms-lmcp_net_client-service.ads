@@ -46,7 +46,7 @@ package UxAS.Comms.LMCP_Net_Client.Service is
    procedure Configure_Service
      (This                     : in out Service_Base;
       Parent_Of_Work_Directory : String;
-      Service_Xml_Node         : DOM.Core.Element;
+      Service_XML_Node         : DOM.Core.Element;
       Result                   : out Boolean)
      with
        Pre'Class  => Constructed (This),

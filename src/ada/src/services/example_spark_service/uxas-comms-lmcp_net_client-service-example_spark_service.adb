@@ -1,31 +1,30 @@
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_IO;                                  use Ada.Text_IO;
 
-with AVTAS.Lmcp.Object.SPARK_Boundary; use AVTAS.Lmcp.Object.SPARK_Boundary;
-with AFRl.CMASI.AutomationResponse; use AFRl.CMASI.AutomationResponse;
-with AFRL.cmasi.AutomationResponse.SPARK_Boundary; use AFRL.cmasi.AutomationResponse.SPARK_Boundary;
-with AFRL.CMASI.MissionCommand; use AFRL.CMASI.MissionCommand;
+with AVTAS.LMCP.Object.SPARK_Boundary;             use AVTAS.LMCP.Object.SPARK_Boundary;
+with AFRL.CMASI.AutomationResponse;                use AFRL.CMASI.AutomationResponse;
+with AFRL.CMASI.AutomationResponse.SPARK_Boundary; use AFRL.CMASI.AutomationResponse.SPARK_Boundary;
+with AFRL.CMASI.MissionCommand;                    use AFRL.CMASI.MissionCommand;
 
 with UxAS.Comms.LMCP_Net_Client.Service.Example_Spark_Service.SPARK;
 
-package body uxas.comms.lmcp_net_client.service.Example_Spark_Service is
+package body UxAS.Comms.LMCP_Net_Client.Service.Example_Spark_Service is
    
-   ------------------------------
+   -----------------------------------
    -- Handle_AutomationResponse_Msg --
-   ------------------------------
+   -----------------------------------
    
    procedure Handle_AutomationResponse_Msg
      (This     : in out Example_Spark_Service;
       Response : Object_Any)
    is
    begin
-      This.Configs.AutomationIds :=
-         Int64_Sets.Union(This.Configs.AutomationIds,
-             Get_WaypointEntity_Set(AutomationResponse(Response.all)));
-   end;
+      This.Configs.AutomationIds := Int64_Sets.Union (This.Configs.AutomationIds, 
+                                                      Get_WaypointEntity_Set (AutomationResponse (Response.all)));
+   end Handle_AutomationResponse_Msg;
    
-   ------------------------------
+   -------------------------------
    -- Handle_MissionCommand_Msg --
-   ------------------------------
+   -------------------------------
    
    procedure Handle_MissionCommand_Msg
      (This    : in out Example_Spark_Service;
@@ -33,12 +32,12 @@ package body uxas.comms.lmcp_net_client.service.Example_Spark_Service is
    is
       Result : Boolean;
    begin
-      SPARK.Handle_MissionCommand(This, Wrap(Command), Result);
-   end;
+      SPARK.Handle_MissionCommand (This, Wrap (Command), Result);
+   end Handle_MissionCommand_Msg;
    
-   ------------------------------
+   -----------------------------------
    -- Process_Received_LMCP_Message --
-   ------------------------------
+   -----------------------------------
    
    overriding
    procedure Process_Received_LMCP_Message
@@ -58,16 +57,16 @@ package body uxas.comms.lmcp_net_client.service.Example_Spark_Service is
       Should_Terminate := False;
    end Process_Received_LMCP_Message;
       
-   ------------------------------
+   ---------------------------------
    -- Registry_Service_Type_Names --
-   ------------------------------
+   ---------------------------------
    
    function Registry_Service_Type_Names return Service_Type_Names_List is
      (Service_Type_Names_List'(1 => Instance (Service_Type_Name_Max_Length, Content => Type_Name)));
 
-   ------------------------------
+   ------------
    -- Create --
-   ------------------------------
+   ------------
    
    function Create return Any_Service is
       Result : Example_Spark_Service_Ref;
@@ -77,9 +76,9 @@ package body uxas.comms.lmcp_net_client.service.Example_Spark_Service is
       return Any_Service (Result);
    end Create;
    
-   ------------------------------
+   ---------------
    -- Configure --
-   ------------------------------
+   ---------------
    
    overriding
    procedure Configure
@@ -94,11 +93,11 @@ package body uxas.comms.lmcp_net_client.service.Example_Spark_Service is
       This.Add_Subscription_Address (AFRL.CMASI.MissionCommand.Subscription, Unused);
       
       Result := True;
-   end;
+   end Configure;
    
-   ------------------------------
+   ----------------
    -- Initialize --
-   ------------------------------
+   ----------------
    
    overriding
    procedure Initialize
@@ -109,6 +108,10 @@ package body uxas.comms.lmcp_net_client.service.Example_Spark_Service is
    begin
       Result := True;
    end Initialize;
+   
+   ---------------
+   -- Configure --
+   ---------------
    
    procedure Construct
      (This : in out Example_Spark_Service)
@@ -128,5 +131,4 @@ begin
    --  All concrete service subclasses must call this procedure in their
    --  own package like this, with their own params.
    Register_Service_Creation_Function_Pointers (Registry_Service_Type_Names, Create'Access);
-
-end uxas.comms.lmcp_net_client.service.Example_Spark_Service;
+end UxAS.Comms.LMCP_Net_Client.Service.Example_Spark_Service;

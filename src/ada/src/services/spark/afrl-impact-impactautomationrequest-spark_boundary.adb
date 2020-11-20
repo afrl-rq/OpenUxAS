@@ -1,4 +1,4 @@
-package body afrl.impact.ImpactAutomationRequest.SPARK_Boundary with SPARK_Mode => Off is
+package body AFRL.impact.ImpactAutomationRequest.SPARK_Boundary with SPARK_Mode => Off is
 
    --------------------------------------
    -- Get_EntityList_From_TrialRequest --
@@ -40,4 +40,4 @@ package body afrl.impact.ImpactAutomationRequest.SPARK_Boundary with SPARK_Mode 
       end return;
    end Get_TaskList_From_TrialRequest;
 
-end afrl.impact.ImpactAutomationRequest.SPARK_Boundary;
+end AFRL.impact.ImpactAutomationRequest.SPARK_Boundary;

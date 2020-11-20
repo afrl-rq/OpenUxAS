@@ -1,4 +1,4 @@
-package body afrl.cmasi.OperatingRegion.SPARK_Boundary with SPARK_Mode => Off is
+package body AFRL.CMASI.OperatingRegion.SPARK_Boundary with SPARK_Mode => Off is
 
    ---------------
    -- Get_Areas --
@@ -7,8 +7,8 @@ package body afrl.cmasi.OperatingRegion.SPARK_Boundary with SPARK_Mode => Off is
    function Get_Areas
      (Region : OperatingRegion) return OperatingRegionAreas
    is
-      InAreas  : constant afrl.cmasi.OperatingRegion.Vect_Int64_Acc := Region.getKeepInAreas;
-      OutAreas : constant afrl.cmasi.OperatingRegion.Vect_Int64_Acc := Region.getKeepInAreas;
+      InAreas  : constant AFRL.CMASI.OperatingRegion.Vect_Int64_Acc := Region.getKeepInAreas;
+      OutAreas : constant AFRL.CMASI.OperatingRegion.Vect_Int64_Acc := Region.getKeepInAreas;
    begin
       return R : OperatingRegionAreas do
          for E of InAreas.all loop
@@ -20,4 +20,4 @@ package body afrl.cmasi.OperatingRegion.SPARK_Boundary with SPARK_Mode => Off is
       end return;
    end Get_Areas;
 
-end afrl.cmasi.OperatingRegion.SPARK_Boundary;
+end AFRL.CMASI.OperatingRegion.SPARK_Boundary;

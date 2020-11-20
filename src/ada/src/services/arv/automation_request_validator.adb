@@ -1,6 +1,6 @@
 with Ada.Strings.Unbounded;      use Ada.Strings.Unbounded;
-with avtas.lmcp.types;
-with uxas.Comms.LMCP_Net_Client; use uxas.Comms.LMCP_Net_Client;
+with AVTAS.LMCP.Types;
+with UxAS.Comms.LMCP_Net_Client; use UxAS.Comms.LMCP_Net_Client;
 
 package body Automation_Request_Validator with SPARK_Mode is
 
@@ -442,7 +442,7 @@ package body Automation_Request_Validator with SPARK_Mode is
    ---------------------------
 
    procedure Get_Unique_Request_Id (Val : out Int64) is
-      Id : avtas.lmcp.types.Int64;
+      Id : AVTAS.LMCP.Types.Int64;
    begin
       Get_Unique_Entity_Send_Message_Id (Id);
       Val := Int64 (Id);

@@ -134,9 +134,9 @@ package LMCP_Messages with SPARK_Mode is
 
    type KeyValuePair is record
       -- A key (name) for the property
-      Key : Unbounded_String := To_Unbounded_String("");
+      Key : Unbounded_String := To_Unbounded_String ("");
       -- A value for the property
-      Value : Unbounded_String := To_Unbounded_String("");
+      Value : Unbounded_String := To_Unbounded_String ("");
    end record;
 
    package KVP_Sequences is new Ada.Containers.Functional_Vectors
@@ -183,13 +183,13 @@ package LMCP_Messages with SPARK_Mode is
       -- Heading of entity at the start of the route
       StartHeading : Real32 := 0.0;
       -- If "true" the heading value in StartHeading must be used to start the route. If not, any starting heading can be used.
-      UseStartHeading : Boolean := true;
+      UseStartHeading : Boolean := True;
       -- Location to which the planned route will end. A valid RouteConstraints message must define EndLocation (null not allowed).
       EndLocation : Location3D;
       -- Heading of entity at the end of the route
       EndHeading : Real32 := 0.0;
       -- If "true" the heading value in EndHeading must be used to end the route. If not, any ending heading can be used.
-      UseEndHeading : Boolean := true;
+      UseEndHeading : Boolean := True;
    end record;
 
    package RC_Sequences is new Ada.Containers.Functional_Vectors
@@ -327,7 +327,7 @@ package LMCP_Messages with SPARK_Mode is
       -- Task ID
       TaskID : Int64 := 0;
       -- Process algebra string encoding all of the different options
-      Composition : Unbounded_String := To_Unbounded_String("");
+      Composition : Unbounded_String := To_Unbounded_String ("");
       -- List of options.
       Options : TaskOption_Seq;
    end record;

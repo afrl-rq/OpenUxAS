@@ -1,4 +1,4 @@
-package body UxAS.Messages.LmcpTask.UniqueAutomationRequest.SPARK_Boundary with SPARK_Mode => Off is
+package body UxAS.Messages.lmcptask.UniqueAutomationRequest.SPARK_Boundary with SPARK_Mode => Off is
 
    ---------------------------------------------------
    -- Copy_PlanningState_From_TaskAutomationRequest --
@@ -6,11 +6,11 @@ package body UxAS.Messages.LmcpTask.UniqueAutomationRequest.SPARK_Boundary with 
 
    procedure Copy_PlanningState_From_TaskAutomationRequest
      (Target : in out My_UniqueAutomationRequest;
-      Source : uxas.messages.lmcptask.TaskAutomationRequest.TaskAutomationRequest)
+      Source : UxAS.Messages.lmcptask.TaskAutomationRequest.TaskAutomationRequest)
    is
    begin
       for planningState of Source.getPlanningStates.all loop
-         uxas.messages.lmcptask.UniqueAutomationRequest.Vect_PlanningState_Acc.Append (Target.Content.getPlanningStates.all, planningState); --  we need to do a clone here
+         UxAS.Messages.lmcptask.UniqueAutomationRequest.Vect_PlanningState_Acc.Append (Target.Content.getPlanningStates.all, planningState); --  we need to do a clone here
       end loop;
    end Copy_PlanningState_From_TaskAutomationRequest;
 
@@ -44,7 +44,7 @@ package body UxAS.Messages.LmcpTask.UniqueAutomationRequest.SPARK_Boundary with 
 
    procedure Copy_OriginalRequest_From_TaskAutomationRequest
      (Target : in out My_UniqueAutomationRequest;
-      Source : uxas.messages.lmcptask.TaskAutomationRequest.TaskAutomationRequest)
+      Source : UxAS.Messages.lmcptask.TaskAutomationRequest.TaskAutomationRequest)
    is
    begin
       Target.Content.setOriginalRequest (Source.getOriginalRequest); --  we need to do a clone here
@@ -81,7 +81,7 @@ package body UxAS.Messages.LmcpTask.UniqueAutomationRequest.SPARK_Boundary with 
    function Get_PlanningStates_Ids
      (Request : My_UniqueAutomationRequest) return Int64_Vect
    is
-      L : constant uxas.messages.Lmcptask.UniqueAutomationRequest.Vect_PlanningState_Acc_Acc :=
+      L : constant UxAS.Messages.lmcptask.UniqueAutomationRequest.Vect_PlanningState_Acc_Acc :=
         Request.Content.getPlanningStates;
    begin
       return R : Int64_Vect do
@@ -131,4 +131,4 @@ package body UxAS.Messages.LmcpTask.UniqueAutomationRequest.SPARK_Boundary with 
       this.Content.setSandBoxRequest (SandBoxRequest);
    end setSandBoxRequest;
 
-end UxAS.Messages.LmcpTask.UniqueAutomationRequest.SPARK_Boundary;
+end UxAS.Messages.lmcptask.UniqueAutomationRequest.SPARK_Boundary;

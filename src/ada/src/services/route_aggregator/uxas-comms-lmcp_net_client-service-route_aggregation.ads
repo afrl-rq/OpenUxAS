@@ -9,9 +9,9 @@ with Ada.Containers.Ordered_Sets;
 
 with AVTAS.LMCP.Types;
 with AFRL.CMASI.EntityState;                         use AFRL.CMASI.EntityState;
-with Afrl.Cmasi.EntityConfiguration;                 use Afrl.Cmasi.EntityConfiguration;
-with Uxas.Messages.Lmcptask.UniqueAutomationRequest; use Uxas.Messages.Lmcptask.UniqueAutomationRequest;
-with UxAS.Messages.Lmcptask.TaskPlanOptions;         use UxAS.Messages.Lmcptask.TaskPlanOptions;
+with AFRL.CMASI.EntityConfiguration;                 use AFRL.CMASI.EntityConfiguration;
+with UxAS.Messages.lmcptask.UniqueAutomationRequest; use UxAS.Messages.lmcptask.UniqueAutomationRequest;
+with UxAS.Messages.lmcptask.TaskPlanOptions;         use UxAS.Messages.lmcptask.TaskPlanOptions;
 
 package UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
 

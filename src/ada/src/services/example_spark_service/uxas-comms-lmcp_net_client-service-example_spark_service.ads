@@ -3,7 +3,7 @@ with AFRL.CMASI.AutomationResponse; use AFRL.CMASI.AutomationResponse;
 
 with Common_Formal_Containers; use Common_Formal_Containers;
 
-package uxas.comms.lmcp_net_client.service.Example_Spark_Service is
+package UxAS.Comms.LMCP_Net_Client.Service.Example_Spark_Service is
 
    type Example_Spark_Service is new Service_Base with private;
    type Example_Spark_Service_Ref is access all Example_Spark_Service;
@@ -54,4 +54,4 @@ private
    procedure Construct 
      (This : in out Example_Spark_Service);
 
-end uxas.comms.lmcp_net_client.service.Example_Spark_Service;
+end UxAS.Comms.LMCP_Net_Client.Service.Example_Spark_Service;

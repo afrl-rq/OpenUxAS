@@ -168,7 +168,7 @@ package body UxAS.Comms.LMCP_Object_Message_Receiver_Pipes is
 
    procedure Get_Next_Message_Object
      (This    : in out LMCP_Object_Message_Receiver_Pipe;
-      Message : out    Any_Lmcp_Message)
+      Message : out    Any_LMCP_Message)
    is
       Next_Message : Addressed_Attributed_Message_Ref;
       Object       : AVTAS.LMCP.Object.Object_Any;
@@ -214,7 +214,7 @@ package body UxAS.Comms.LMCP_Object_Message_Receiver_Pipes is
       Buffer.Put_Raw_Bytes (Payload);
       Buffer.Rewind;
 
-      AVTAS.LMCP.Factory.GetObject (Buffer, Message);
+      AVTAS.LMCP.Factory.getObject (Buffer, Message);
    end Deserialize_Message;
 
    ---------------
@@ -249,7 +249,7 @@ package body UxAS.Comms.LMCP_Object_Message_Receiver_Pipes is
         (Network_Name            => UxAS.Comms.Transport.Network_Name.ZmqLmcpNetwork,
          Socket_Address          => Socket_Address,
          Zmq_Socket_Type         => Zmq_SocketType,
-         Number_of_IO_Threads    => 1,
+         Number_Of_IO_Threads    => 1,
          Is_Server_Bind          => Is_Server,
          Is_Receive              => True,
          Receive_High_Water_Mark => Zmq_High_Water_Mark,

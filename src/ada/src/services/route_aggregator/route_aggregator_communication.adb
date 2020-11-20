@@ -66,7 +66,7 @@ package body Route_Aggregator_Communication is
                           when GroundPathPlanner   => Message_Group.GroundPathPlanner,
                           when AircraftPathPlanner => Message_Group.AircraftPathPlanner),
          Message      => As_Object_Any (Msg));
-   end sendLimitedCastMessage;
+   end SendLimitedCastMessage;
 
    --------------------------
    -- sendBroadcastMessage --
@@ -82,6 +82,6 @@ package body Route_Aggregator_Communication is
       This.Unique_Entity_Send_Message_Id := This.Unique_Entity_Send_Message_Id + 1;
       --  This.Message_Sender_Pipe.Send_Shared_Broadcast_Message (Msg);
       This.Message_Sender_Pipe.Send_Shared_Broadcast_Message (As_Object_Any (Msg));
-   end sendBroadcastMessage;
+   end SendBroadcastMessage;
 
 end Route_Aggregator_Communication;

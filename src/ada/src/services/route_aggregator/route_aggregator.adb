@@ -5,7 +5,7 @@ package body Route_Aggregator with SPARK_Mode is
 
    pragma Assertion_Policy (Ignore);
 
-   --  Lemmas used to factor out reasonning about the redefined model of
+   --  Lemmas used to factor out reasoning about the redefined model of
    --  Int64_Formal_Set_Maps
 
    -------------------
@@ -37,16 +37,16 @@ package body Route_Aggregator with SPARK_Mode is
    with Ghost,
      Global => null,
      Post =>
-       (for all Key of Model (pendingRoute) =>
-          (Find (Keys (pendingRoute), Key) > 0
-           and then Int_Set_Maps_K.Get (Keys (pendingRoute), Find (Keys (pendingRoute), Key)) =
+       (for all Key of Model (PendingRoute) =>
+          (Find (Keys (PendingRoute), Key) > 0
+           and then Int_Set_Maps_K.Get (Keys (PendingRoute), Find (Keys (PendingRoute), Key)) =
              Key))
    is
    begin
       null;
    end Lift_From_Keys_To_Model;
 
-   --  Subprograms wraping insertion and deletion in m_pendingRoute. They
+   --  Subprograms wrapping insertion and deletion in m_pendingRoute. They
    --  restate part of the postcondition of the callee, but also reestablish
    --  the predicate of Route_Aggregator_State and compute the effect of the
    --  modification on planToRoute.
@@ -59,7 +59,7 @@ package body Route_Aggregator with SPARK_Mode is
      (m_pendingRequest : in out Int64_Formal_Set_Map;
       otherPending     : Int64_Formal_Set_Map;
       m_routeRequestId : Int64;
-      RequestID        : int64;
+      RequestID        : Int64;
       PlanRequests     : Int64_Formal_Set)
      with Pre => not Int_Set_Maps_M.Has_Key (Model (m_pendingRequest), RequestID)
        and Length (m_pendingRequest) < m_pendingRequest.Capacity
@@ -79,7 +79,7 @@ package body Route_Aggregator with SPARK_Mode is
           (for all E of Int_Set_Maps_M.Get (Model (otherPending), R_Id) => not Contains (PlanRequests, E))),
      Post =>
 
-     --  Predicate of State
+--  Predicate of State
 
        All_Pending_Requests_Seen (Model (m_pendingRequest), m_routeRequestId)
      and No_Overlaps (Model (m_pendingRequest))
@@ -136,7 +136,7 @@ package body Route_Aggregator with SPARK_Mode is
 
        Post =>
 
-     --  Predicate of State
+--  Predicate of State
 
         All_Pending_Requests_Seen (Model (m_pendingRequest), m_routeRequestId)
      and No_Overlaps (Model (m_pendingRequest))
@@ -195,12 +195,14 @@ package body Route_Aggregator with SPARK_Mode is
    -----------
 
    function Model (M : Int64_Formal_Set_Map) return Int_Set_Maps_M.Map is
+
       function Model (S : Int64_Formal_Set) return Int64_Set with
         Post =>
           (for all E of Model'Result => Contains (S, E))
           and
-            (for all E of S => Contains (Model'Result, E))
-      is
+          (for all E of S => Contains (Model'Result, E));
+
+      function Model (S : Int64_Formal_Set) return Int64_Set is
          Res : Int64_Set;
       begin
          for C in S loop
@@ -247,7 +249,7 @@ package body Route_Aggregator with SPARK_Mode is
    -- planToRoute --
    -----------------
 
-   function PlanToRoute (PendingRoute : Int64_Formal_Set_Map) return Int64_Map is
+   function planToRoute (pendingRoute : Int64_Formal_Set_Map) return Int64_Map is
       Res : Int64_Map;
    begin
       for C in pendingRoute loop
@@ -304,8 +306,6 @@ package body Route_Aggregator with SPARK_Mode is
    -- Handle_Route_Plan_Response --
    --------------------------------
 
-   --  Actual implementation of the service
-
    procedure Handle_Route_Plan_Response
      (Mailbox  : in out Route_Aggregator_Mailbox;
       State    : in out Route_Aggregator_State;
@@ -345,7 +345,7 @@ package body Route_Aggregator with SPARK_Mode is
          pragma Loop_Invariant
            (Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans));
 
-         pragma Assume (Length (State.M_RoutePlans) < State.M_RoutePlans.Capacity, "We have enough room for all route plans");
+         pragma Assume (Length (State.m_routePlans) < State.m_routePlans.Capacity, "We have enough room for all route plans");
 
          declare
             ID   : Int64 := Get (Response.RouteResponses, p).RouteID;
@@ -471,7 +471,7 @@ package body Route_Aggregator with SPARK_Mode is
 
             -- create a new route plan request
 
-            pragma Assume (State.m_routeRequestId < int64'Last, "The request ID does not overflow");
+            pragma Assume (State.m_routeRequestId < Int64'Last, "The request ID does not overflow");
             planRequest : constant RoutePlanRequest :=
               (AssociatedTaskID  => Request.AssociatedTaskID,
                IsCostOnlyRequest => Request.IsCostOnlyRequest,
@@ -486,7 +486,7 @@ package body Route_Aggregator with SPARK_Mode is
             pragma Assume (Length (PlanRequests) < PlanRequests.Capacity, "We have enough room for all vehicles in planRequests");
             Insert (PlanRequests, planRequest.RequestID);
 
-            if Contains (Data.m_groundVehicles, vehicle_Id) then
+            if Contains (Data.m_groundVehicles, Vehicle_Id) then
                if Data.m_fastPlan then
                   -- short-circuit and just plan with straight line planner
 
@@ -498,7 +498,7 @@ package body Route_Aggregator with SPARK_Mode is
 
                   -- send externally
 
-                  sendLimitedCastMessage
+                  SendLimitedCastMessage
                     (Mailbox, GroundPathPlanner, planRequest);
                   pragma Assume (Length (History) < Count_Type'Last, "We still have room for a new event in History");
                   History := Add (History, (Kind => Send_PlanRequest, Id => planRequest.RequestID));
@@ -511,7 +511,7 @@ package body Route_Aggregator with SPARK_Mode is
 
                -- send to aircraft planner
 
-               sendLimitedCastMessage
+               SendLimitedCastMessage
                  (Mailbox, AircraftPathPlanner, planRequest);
                pragma Assume (Length (History) < Count_Type'Last, "We still have room for a new event in History");
                History := Add (History, (Kind => Send_PlanRequest, Id => planRequest.RequestID));
@@ -585,7 +585,7 @@ package body Route_Aggregator with SPARK_Mode is
      (Mailbox : in out Route_Aggregator_Mailbox;
       State   : in out Route_Aggregator_State)
      with
-       --  General invariants
+     --  General invariants
 
      Pre  => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
      and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
@@ -627,14 +627,14 @@ package body Route_Aggregator with SPARK_Mode is
          pragma Loop_Invariant
            (Model (State.m_pendingRoute) <= Int_Set_Maps_M.Map'(Model (State.m_pendingRoute))'Loop_Entry);
          pragma Loop_Invariant
-           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), I) - 1 =>
-              (for some L in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), I) - 1 + D =>
+           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), i) - 1 =>
+              (for some L in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), i) - 1 + D =>
                     Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K) = Int_Set_Maps_K.Get (Keys (State.m_pendingRoute)'Loop_Entry, L)));
          pragma Loop_Invariant
-           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), I) - 1 =>
+           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), i) - 1 =>
               Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)));
          pragma Loop_Invariant
-           (for all K in Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), I) .. Length (State.m_pendingRoute) =>
+           (for all K in Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), i) .. Length (State.m_pendingRoute) =>
                 Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K) = Int_Set_Maps_K.Get (Keys (State.m_pendingRoute)'Loop_Entry, K + D));
 
          --  General invariants
@@ -657,14 +657,14 @@ package body Route_Aggregator with SPARK_Mode is
          declare
             isFulfilled : constant Boolean :=
               (for all J of Element (State.m_pendingRoute, i) =>
-                   Contains (State.m_routePlanResponses, j));
+                   Contains (State.m_routePlanResponses, J));
          begin
             if isFulfilled then
                SendRouteResponse (Mailbox, State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses, State.m_routePlans, Key (State.m_pendingRoute, i));
 
                declare
                   Dummy    : Int64_Formal_Set_Maps.Cursor := i;
-                  Pos      : constant Count_Type := Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), I) with Ghost;
+                  Pos      : constant Count_Type := Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), i) with Ghost;
                begin
                   Next (State.m_pendingRoute, i);
                   Delete_PendingRequest (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routeRequestId, Dummy);
@@ -690,7 +690,7 @@ package body Route_Aggregator with SPARK_Mode is
      (Mailbox : in out Route_Aggregator_Mailbox;
       State   : in out Route_Aggregator_State)
      with
-       --  General invariants
+     --  General invariants
 
      Pre  => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
      and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
@@ -734,14 +734,14 @@ package body Route_Aggregator with SPARK_Mode is
          pragma Loop_Invariant
            (Model (State.m_pendingAutoReq) <= Int_Set_Maps_M.Map'(Model (State.m_pendingAutoReq))'Loop_Entry);
          pragma Loop_Invariant
-           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), I) - 1 =>
-              (for some L in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), I) - 1 + D =>
+           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), i) - 1 =>
+              (for some L in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), i) - 1 + D =>
                     Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K) = Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq)'Loop_Entry, L)));
          pragma Loop_Invariant
-           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), I) - 1 =>
+           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), i) - 1 =>
               Is_Pending (Model (State.m_pendingAutoReq), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K)));
          pragma Loop_Invariant
-           (for all K in Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), I) .. Length (State.m_pendingAutoReq) =>
+           (for all K in Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), i) .. Length (State.m_pendingAutoReq) =>
               Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K) = Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq)'Loop_Entry, K + D));
 
          --  General invariants
@@ -767,7 +767,7 @@ package body Route_Aggregator with SPARK_Mode is
          declare
             isFulfilled : constant Boolean :=
               (for all J of Element (State.m_pendingAutoReq, i) =>
-                   Contains (State.m_routePlanResponses, j));
+                   Contains (State.m_routePlanResponses, J));
          begin
             if isFulfilled then
                SendMatrix (Mailbox,
@@ -782,8 +782,8 @@ package body Route_Aggregator with SPARK_Mode is
 
                declare
                   Dummy   : Int64_Formal_Set_Maps.Cursor := i;
-                  UAR_Key : constant Int64 := Key (State.m_pendingAutoReq, I);
-                  Pos     : constant Count_Type := Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), I) with Ghost;
+                  UAR_Key : constant Int64 := Key (State.m_pendingAutoReq, i);
+                  Pos     : constant Count_Type := Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), i) with Ghost;
                begin
                   Next (State.m_pendingAutoReq, i);
                   Delete_PendingRequest (State.m_pendingAutoReq, State.m_pendingRoute, State.m_routeRequestId, Dummy);
@@ -811,11 +811,14 @@ package body Route_Aggregator with SPARK_Mode is
       Lift_From_Keys_To_Model (State.m_pendingAutoReq);
    end Check_All_Route_Plans_PendingAutoReq;
 
+   ---------------------------
+   -- Check_All_Route_Plans --
+   ---------------------------
+
    procedure Check_All_Route_Plans
      (Mailbox : in out Route_Aggregator_Mailbox;
       State   : in out Route_Aggregator_State)
    is
-
    begin
       Check_All_Route_Plans_PendingRoute (Mailbox, State);
       Check_All_Route_Plans_PendingAutoReq (Mailbox, State);
@@ -834,16 +837,16 @@ package body Route_Aggregator with SPARK_Mode is
    is
 
       C : UAR_Maps.Cursor :=
-        First (State.m_UniqueAutomationRequests);
+        First (State.m_uniqueAutomationRequests);
    begin
-      while Has_Element (State.m_UniqueAutomationRequests, C) loop
+      while Has_Element (State.m_uniqueAutomationRequests, C) loop
 
          declare
             Areq        : constant UniqueAutomationRequest :=
-              Element (State.m_UniqueAutomationRequests, C);
+              Element (State.m_uniqueAutomationRequests, C);
             AllReceived : constant Boolean :=
               (for all TaskId of Areq.TaskList =>
-                 Contains (State.m_TaskOptions, TaskId));
+                 Contains (State.m_taskOptions, TaskId));
          begin
 
             if AllReceived then
@@ -851,12 +854,12 @@ package body Route_Aggregator with SPARK_Mode is
                  (Mailbox,
                   Data,
                   State,
-                  Key (State.m_UniqueAutomationRequests, C));
+                  Key (State.m_uniqueAutomationRequests, C));
             end if;
 
          end;
 
-         Next (State.m_UniqueAutomationRequests, C);
+         Next (State.m_uniqueAutomationRequests, C);
       end loop;
    end Check_All_Task_Options_Received;
 
@@ -878,19 +881,19 @@ package body Route_Aggregator with SPARK_Mode is
    begin
       Insert (State.m_pendingAutoReq, ReqId, Empty_Formal_Set);
 
-      if Length (Element (State.m_UniqueAutomationRequests, ReqId).EntityList) = 0 then
+      if Length (Element (State.m_uniqueAutomationRequests, ReqId).EntityList) = 0 then
          declare
             AReq : UniqueAutomationRequest :=
-              Element (State.m_UniqueAutomationRequests, ReqId);
+              Element (State.m_uniqueAutomationRequests, ReqId);
          begin
             AReq.EntityList := Data.m_entityStates;
-            Replace (State.m_UniqueAutomationRequests, ReqId, AReq);
+            Replace (State.m_uniqueAutomationRequests, ReqId, AReq);
          end;
       end if;
 
       declare
          AReq : constant UniqueAutomationRequest :=
-           Element (State.m_UniqueAutomationRequests, ReqId);
+           Element (State.m_uniqueAutomationRequests, ReqId);
       begin
          For_Each_Vehicle : for VehicleId of AReq.EntityList loop
             Make_Request : declare
@@ -901,10 +904,10 @@ package body Route_Aggregator with SPARK_Mode is
             begin
                for PlanningState of AReq.PlanningStates loop
 
-                  if PlanningState.EntityId = VehicleId then
+                  if PlanningState.EntityID = VehicleId then
                      StartLocation := PlanningState.PlanningPosition;
                      StartHeading_Deg := PlanningState.PlanningHeading;
-                     FoundPlanningstate := True;
+                     FoundPlanningState := True;
                      exit;
                   end if;
 
@@ -924,7 +927,7 @@ package body Route_Aggregator with SPARK_Mode is
                      for TaskId of AReq.TaskList loop
 
                         if Contains (State.m_taskOptions, TaskId) then
-                           for Option of Element (State.m_TaskOptions, taskId).Options loop
+                           for Option of Element (State.m_taskOptions, TaskId).Options loop
 
                               Found_Elig := False;
                               for V of Option.EligibleEntities loop
@@ -935,7 +938,8 @@ package body Route_Aggregator with SPARK_Mode is
                               end loop;
 
                               if Length (Option.EligibleEntities) = 0
-                                or else Found_Elig then
+                                or else Found_Elig
+                              then
                                  TaskOptionList := Add (TaskOptionList, Option);
                               end if;
 
@@ -963,7 +967,7 @@ package body Route_Aggregator with SPARK_Mode is
                      for Option of TaskOptionList loop
                         declare
                            TOP : constant TaskOptionPair :=
-                           (VehicleId, 0, 0, Option.TaskId, Option.OptionId);
+                           (VehicleId, 0, 0, Option.TaskID, Option.OptionID);
                            R : RouteConstraints;
 
                         begin
@@ -1023,7 +1027,7 @@ package body Route_Aggregator with SPARK_Mode is
          end loop For_Each_Vehicle;
 
          for RPReq of sendAirPlanRequest loop
-            sendLimitedCastMessage (Mailbox,
+            SendLimitedCastMessage (Mailbox,
                                     AircraftPathPlanner,
                                     RPReq);
          end loop;
@@ -1035,7 +1039,7 @@ package body Route_Aggregator with SPARK_Mode is
                                State.m_routePlans,
                                RPReq);
             else
-               sendLimitedCastMessage (Mailbox,
+               SendLimitedCastMessage (Mailbox,
                                        GroundPathPlanner,
                                        RPReq);
             end if;
@@ -1155,7 +1159,7 @@ package body Route_Aggregator with SPARK_Mode is
                         toc : TaskOptionCost;
                      begin
                         if routeplan.Cost < 0 then
-                           Put_Line ("Route not found: V[" & taskpair.vehicleId'Image & "](" & taskpair.prevTaskId'Image & "," & taskpair.prevTaskOption'Image &")-(" & taskpair.taskId'Image & ","&taskpair.taskOption'Image&")");
+                           Put_Line ("Route not found: V[" & taskpair.vehicleId'Image & "](" & taskpair.prevTaskId'Image & "," & taskpair.prevTaskOption'Image & ")-(" & taskpair.taskId'Image & "," & taskpair.taskOption'Image&")");
                         end if;
 
                         toc.DestinationTaskID := taskpair.taskId;
@@ -1179,7 +1183,7 @@ package body Route_Aggregator with SPARK_Mode is
                pragma Assert
                  (for all Pl of Model (m_routePlans) => Element (m_routePlans, Pl).Id /= rId);
                pragma Assert (All_Pending_Plans_Sent (m_pendingRoute, m_routePlanResponses));
-               pragma Assert (No_overlaps (Model (m_pendingRoute), Model (m_pendingAutoReq)));
+               pragma Assert (No_Overlaps (Model (m_pendingRoute), Model (m_pendingAutoReq)));
                pragma Assert (for all Id of planToRoute (m_pendingRoute) => Id /= Key (m_routePlanResponses, plan));
                Delete (m_routePlanResponses, plan);
                pragma Assert (All_Pending_Plans_Sent (m_pendingRoute, m_routePlanResponses));
@@ -1189,7 +1193,7 @@ package body Route_Aggregator with SPARK_Mode is
          end;
       end loop;
 
-      sendBroadcastMessage(Mailbox, matrix);
+      SendBroadcastMessage (Mailbox, matrix);
       Clear (m_taskOptions);
    end SendMatrix;
 
@@ -1210,12 +1214,12 @@ package body Route_Aggregator with SPARK_Mode is
       Old_routePlanResponses : constant RR_Maps_M.Map := Model (routePlanResponses) with Ghost;
       Old_routePlans : constant Int64_IdPlanPair_Map := routePlans with Ghost;
    begin
-      response.ResponseID := routeKey;
+      Response.ResponseID := routeKey;
       for Cu in PlanResponses loop
 
          --  Number of elements added to response.Routes
 
-         pragma Loop_Invariant (Length (response.Routes) < Int_Set_P.Get (Positions (PlanResponses), Cu));
+         pragma Loop_Invariant (Length (Response.Routes) < Int_Set_P.Get (Positions (PlanResponses), Cu));
 
          --  We have removed all elements of PlanResponses from routePlanResponses
          --  up to Cu.
@@ -1272,7 +1276,7 @@ package body Route_Aggregator with SPARK_Mode is
 
                resps : RP_Seq renames Element (routePlanResponses, plan).RouteResponses;
             begin
-               response.Routes := Add (response.Routes, Element (routePlanResponses, plan));
+               Response.Routes := Add (Response.Routes, Element (routePlanResponses, plan));
 
                -- delete all individual routes from storage
 
@@ -1319,7 +1323,7 @@ package body Route_Aggregator with SPARK_Mode is
               or else PlanRequest_Sent (Id)));
 
       -- send the results of the query
-      sendBroadcastMessage(Mailbox, Response);
+      SendBroadcastMessage (Mailbox, Response);
       pragma Assume (Length (History) < Count_Type'Last, "We still have room for a new event in History");
       History := Add (History, (Kind => Send_RouteResponse, Id => Response.ResponseID));
    end SendRouteResponse;
@@ -1401,7 +1405,7 @@ package body Route_Aggregator with SPARK_Mode is
    begin
       Insert (State.m_uniqueAutomationRequests,
               State.m_autoRequestId + 1,
-              AReq);
+              Areq);
       State.m_autoRequestId := State.m_autoRequestId + 1;
       Check_All_Task_Options_Received (Mailbox, Data, State);
    end Handle_Unique_Automation_Request;

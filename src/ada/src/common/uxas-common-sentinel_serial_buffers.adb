@@ -9,6 +9,7 @@ package body UxAS.Common.Sentinel_Serial_Buffers is
       New_Data_Chunk : String;
       Result         : out String)
    is
+   pragma Unreferenced (Result);
    begin
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True, "Get_Next_Payload_String unimplemented");

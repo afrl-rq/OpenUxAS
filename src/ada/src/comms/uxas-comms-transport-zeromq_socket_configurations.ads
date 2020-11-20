@@ -10,7 +10,7 @@ package UxAS.Comms.Transport.ZeroMQ_Socket_Configurations is
       Is_Server_Bind          : Boolean;
       Receive_High_Water_Mark : Int32;
       Send_High_Water_Mark    : Int32;
-      Number_of_IO_Threads    : Positive;
+      Number_Of_IO_Threads    : Positive;
    end record;
 
    function Make  -- a convenience routine
@@ -18,7 +18,7 @@ package UxAS.Comms.Transport.ZeroMQ_Socket_Configurations is
       Socket_Address          : String;
       Is_Receive              : Boolean;
       Zmq_Socket_Type         : ZMQ.Sockets.Socket_Type;
-      Number_of_IO_Threads    : Positive;
+      Number_Of_IO_Threads    : Positive;
       Is_Server_Bind          : Boolean;
       Receive_High_Water_Mark : Int32;
       Send_High_Water_Mark    : Int32)

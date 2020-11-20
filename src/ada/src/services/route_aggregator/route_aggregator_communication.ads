@@ -20,12 +20,12 @@ package Route_Aggregator_Communication with SPARK_Mode is
       Entity_Id    : UInt32;
       Service_Id   : UInt32);
 
-   procedure sendLimitedCastMessage
+   procedure SendLimitedCastMessage
      (This : in out Route_Aggregator_Mailbox;
       Group : MessageGroup;
       Msg   : Message_Root'Class);
 
-   procedure sendBroadcastMessage
+   procedure SendBroadcastMessage
      (This : in out Route_Aggregator_Mailbox;
       Msg   : Message_Root'Class);
 

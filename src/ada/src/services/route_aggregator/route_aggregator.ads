@@ -31,7 +31,7 @@ package Route_Aggregator with SPARK_Mode is
    type Route_Aggregator_Configuration_Data is record
       m_entityStates     : Int64_Seq;
       m_entityStatesInfo : EntityState_Map;
-      --      std::unordered_map<int64_t, std::shared_ptr<afrl::cmasi::EntityConfiguration> > m_entityConfigurations;
+      --      std::unordered_map<int64_t, std::shared_ptr<AFRL::cmasi::EntityConfiguration> > m_entityConfigurations;
       m_airVehicles      : Int64_Set;
       m_groundVehicles   : Int64_Set;
       m_surfaceVehicles  : Int64_Set;
@@ -431,7 +431,7 @@ package Route_Aggregator with SPARK_Mode is
      --  Plans associated to Response are new
 
      and (for all Pl of Response.RouteResponses =>
-            not contains (State.m_routePlans, Pl.RouteID))
+            not Contains (State.m_routePlans, Pl.RouteID))
 
      --  General invariants
 
@@ -451,7 +451,7 @@ package Route_Aggregator with SPARK_Mode is
 
      Post =>
 
-     All_Plans_Registered (State.M_RoutePlanResponses, State.M_RoutePlans)
+     All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
      and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
      and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
      and No_Finished_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
@@ -535,7 +535,7 @@ package Route_Aggregator with SPARK_Mode is
       State   : in out Route_Aggregator_State;
       Areq    : UniqueAutomationRequest)
    with
-       Pre => State.m_autoRequestId < int64'Last
+       Pre => State.m_autoRequestId < Int64'Last
        and then not Contains (State.m_uniqueAutomationRequests, State.m_autoRequestId + 1)
        and then Length (State.m_uniqueAutomationRequests) < State.m_uniqueAutomationRequests.Capacity;
 
@@ -606,7 +606,7 @@ package Route_Aggregator with SPARK_Mode is
 
      Post =>
            (for all Id of Model (routePlanResponses) =>
-                Contains (Model(routePlanResponses)'Old, Id))
+                Contains (Model (routePlanResponses)'Old, Id))
      and (for all Id of Model (routePlanResponses) =>
                 not Contains (Element (pendingRoute, routeKey), Id))
      and (for all Id of Model (routePlanResponses)'Old =>
@@ -617,7 +617,7 @@ package Route_Aggregator with SPARK_Mode is
 
      and All_Plans_Registered (routePlanResponses, routePlans)
      and Only_Pending_Plans (routePlanResponses, routePlans)
-     and Valid_Plan_Responses (pendingRoute, pendingAutoReq,routePlanResponses)
+     and Valid_Plan_Responses (pendingRoute, pendingAutoReq, routePlanResponses)
 
      --  The route response was sent
 
@@ -668,7 +668,7 @@ package Route_Aggregator with SPARK_Mode is
 
      and then No_Overlaps (Model (m_pendingRoute))
      and then No_Overlaps (Model (m_pendingAutoReq))
-     and then No_Overlaps (Model (m_pendingroute), Model (m_pendingAutoReq))
+     and then No_Overlaps (Model (m_pendingRoute), Model (m_pendingAutoReq))
      and then (for all Id of Int_Set_Maps_M.Get (Model (m_pendingAutoReq), autoKey) =>
             Contains (m_routePlanResponses, Id))
 
@@ -682,10 +682,8 @@ package Route_Aggregator with SPARK_Mode is
      and then No_PlanResponse_Lost (m_pendingRoute, m_routePlanResponses)
      and then All_Pending_Plans_Sent (m_pendingRoute, m_routePlanResponses),
 
-
-
      Post => (for all Id of Model (m_routePlanResponses) =>
-                Contains (Model(m_routePlanResponses)'Old, Id))
+                Contains (Model (m_routePlanResponses)'Old, Id))
      and (for all Id of Model (m_routePlanResponses) =>
                 not Contains (Element (m_pendingAutoReq, autoKey), Id))
      and (for all Id of Model (m_routePlanResponses)'Old =>

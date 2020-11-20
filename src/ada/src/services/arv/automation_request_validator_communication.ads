@@ -1,7 +1,7 @@
 with Common; use Common;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with LMCP_Messages; use LMCP_Messages;
-with uxas.Comms.LMCP_Object_Message_Sender_Pipes;
+with UxAS.Comms.LMCP_Object_Message_Sender_Pipes;
 
 --  Package only concerned with message passing. It defines its own state,
 --  named Mailbox here, which is not mixed with the state of the service.
@@ -24,7 +24,7 @@ package Automation_Request_Validator_Communication with SPARK_Mode is
 private
    pragma SPARK_Mode (Off);
 
-   use uxas.Comms.LMCP_Object_Message_Sender_Pipes;
+   use UxAS.Comms.LMCP_Object_Message_Sender_Pipes;
 
    type Automation_Request_Validator_Mailbox is tagged limited record
       Message_Sender_Pipe           : LMCP_Object_Message_Sender_Pipe;

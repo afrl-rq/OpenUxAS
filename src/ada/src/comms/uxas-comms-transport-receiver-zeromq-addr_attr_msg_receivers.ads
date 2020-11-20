@@ -37,7 +37,7 @@ private
    subtype Message_Ptr_Deque is Message_Lists.List (Capacity => Max_Message_Deque_Depth);
 
    type ZeroMq_Addressed_Attributed_Message_Receiver is new ZeroMq_Receiver_Base with record
-      Is_Tcp_Stream           : Boolean;
+      Is_TCP_Stream           : Boolean;
       Receive_Tcp_Data_Buffer : Sentinel_Serial_Buffer (Capacity => Sentinal_Buffer_Max_Capacity);
       Received_Messages       : Message_Ptr_Deque;
    end record;

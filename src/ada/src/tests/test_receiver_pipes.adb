@@ -5,7 +5,7 @@ with UxAS.Comms.Data;                               use UxAS.Comms.Data;
 with UxAS.Comms.Transport.Receiver;                 use UxAS.Comms.Transport.Receiver;
 with UxAS.Comms.LMCP_Object_Message_Receiver_Pipes; use UxAS.Comms.LMCP_Object_Message_Receiver_Pipes;
 with UxAS.Comms.Data.LMCP_Messages;                 use UxAS.Comms.Data.LMCP_Messages;
-with Avtas.Lmcp.Object;
+with AVTAS.Lmcp.Object;
 
 procedure Test_Receiver_Pipes is
    Receiver : LMCP_Object_Message_Receiver_Pipe;

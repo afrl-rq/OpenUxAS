@@ -1,38 +1,38 @@
-with afrl.cmasi.AutomationRequest;                  use afrl.cmasi.AutomationRequest;
-with afrl.cmasi.EntityConfiguration;                use afrl.cmasi.EntityConfiguration;
-with afrl.cmasi.EntityState;                        use afrl.cmasi.EntityState;
-with afrl.cmasi.lmcpTask;                           use afrl.cmasi.lmcpTask;
-with afrl.cmasi.KeepInZone;                         use afrl.cmasi.KeepInZone;
-with afrl.cmasi.KeepOutZone;                        use afrl.cmasi.KeepOutZone;
-with afrl.cmasi.RemoveTasks;                        use afrl.cmasi.RemoveTasks;
-with afrl.cmasi.ServiceStatus;                      use afrl.cmasi.ServiceStatus;
-with afrl.cmasi.OperatingRegion;                    use afrl.cmasi.OperatingRegion;
+with AFRL.CMASI.AutomationRequest;                  use AFRL.CMASI.AutomationRequest;
+with AFRL.CMASI.EntityConfiguration;                use AFRL.CMASI.EntityConfiguration;
+with AFRL.CMASI.EntityState;                        use AFRL.CMASI.EntityState;
+with AFRL.CMASI.lmcpTask;                           use AFRL.CMASI.lmcpTask;
+with AFRL.CMASI.KeepInZone;                         use AFRL.CMASI.KeepInZone;
+with AFRL.CMASI.KeepOutZone;                        use AFRL.CMASI.KeepOutZone;
+with AFRL.CMASI.RemoveTasks;                        use AFRL.CMASI.RemoveTasks;
+with AFRL.CMASI.ServiceStatus;                      use AFRL.CMASI.ServiceStatus;
+with AFRL.CMASI.OperatingRegion;                    use AFRL.CMASI.OperatingRegion;
 
-with afrl.impact.ImpactAutomationRequest;           use afrl.impact.ImpactAutomationRequest;
-with afrl.impact.PointOfInterest;                   use afrl.impact.PointOfInterest;
-with afrl.impact.LineOfInterest;                    use afrl.impact.LineOfInterest;
-with afrl.impact.AreaOfInterest;                    use afrl.impact.AreaOfInterest;
+with AFRL.Impact.ImpactAutomationRequest;           use AFRL.Impact.ImpactAutomationRequest;
+with AFRL.Impact.PointOfInterest;                   use AFRL.Impact.PointOfInterest;
+with AFRL.Impact.LineOfInterest;                    use AFRL.Impact.LineOfInterest;
+with AFRL.Impact.AreaOfInterest;                    use AFRL.Impact.AreaOfInterest;
 
-with uxas.messages.lmcptask.TaskAutomationRequest;    use uxas.messages.lmcptask.TaskAutomationRequest;
-with uxas.messages.lmcptask.TaskInitialized;          use uxas.messages.lmcptask.TaskInitialized;
-with uxas.messages.lmcptask.UniqueAutomationResponse; use uxas.messages.lmcptask.UniqueAutomationResponse;
+with UxAS.Messages.lmcptask.TaskAutomationRequest;    use UxAS.Messages.lmcptask.TaskAutomationRequest;
+with UxAS.Messages.lmcptask.TaskInitialized;          use UxAS.Messages.lmcptask.TaskInitialized;
+with UxAS.Messages.lmcptask.UniqueAutomationResponse; use UxAS.Messages.lmcptask.UniqueAutomationResponse;
 
-with afrl.impact.AngledAreaSearchTask;
-with afrl.impact.ImpactLineSearchTask;
-with afrl.impact.ImpactPointSearchTask;
+with AFRL.Impact.AngledAreaSearchTask;
+with AFRL.Impact.ImpactLineSearchTask;
+with AFRL.Impact.ImpactPointSearchTask;
 
 with DOM.Core.Elements;
 
 with Common; use Common;
 with LMCP_Message_Conversions; use LMCP_Message_Conversions;
 
-package body uxas.Comms.LMCP_Net_Client.Service.Automation_Request_Validation is
+package body UxAS.Comms.LMCP_Net_Client.Service.Automation_Request_Validation is
 
    function UInt32_Attribute
      (XML_Node : DOM.Core.Element;
       Name     : String;
-      Default  : avtas.lmcp.types.UInt32)
-   return avtas.lmcp.types.UInt32;
+      Default  : AVTAS.LMCP.Types.UInt32)
+   return AVTAS.LMCP.Types.UInt32;
    --  convenience function
 
    --  Refactored out of Process_Received_LMCP_Message for readability, comprehension, etc.
@@ -146,23 +146,23 @@ package body uxas.Comms.LMCP_Net_Client.Service.Automation_Request_Validation is
       --  m_maxResponseTime_ms = ndComponent.attribute("MaxResponseTime_ms").as_uint(m_maxResponseTime_ms);
       --  if(m_maxResponseTime_ms < 10) m_maxResponseTime_ms = 10;
       This.Max_Response_Time := UInt32_Attribute (XML_Node, "MaxResponseTime_ms", Default => This.Max_Response_Time);
-      This.Max_Response_Time := avtas.lmcp.types.UInt32'Max (This.Max_Response_Time, 10);
+      This.Max_Response_Time := AVTAS.LMCP.Types.UInt32'Max (This.Max_Response_Time, 10);
 
       --  // translate regular, impact, and task automation requests to unique automation requests
       --  addSubscriptionAddress(afrl::cmasi::AutomationRequest::Subscription);
-      This.Add_Subscription_Address (afrl.cmasi.AutomationRequest.Subscription, Unused);
+      This.Add_Subscription_Address (AFRL.CMASI.AutomationRequest.Subscription, Unused);
       --  addSubscriptionAddress(afrl::impact::ImpactAutomationRequest::Subscription);
-      This.Add_Subscription_Address (afrl.impact.ImpactAutomationRequest.Subscription, Unused);
+      This.Add_Subscription_Address (AFRL.Impact.ImpactAutomationRequest.Subscription, Unused);
       --  addSubscriptionAddress(uxas::messages::task::TaskAutomationRequest::Subscription);
-      This.Add_Subscription_Address (uxas.messages.lmcptask.TaskAutomationRequest.Subscription, Unused);
+      This.Add_Subscription_Address (UxAS.Messages.lmcptask.TaskAutomationRequest.Subscription, Unused);
 
       --  // respond with appropriate automation response based on unique response
       --  addSubscriptionAddress(uxas::messages::task::UniqueAutomationResponse::Subscription);
-      This.Add_Subscription_Address (uxas.messages.lmcptask.UniqueAutomationResponse.Subscription, Unused);
+      This.Add_Subscription_Address (UxAS.Messages.lmcptask.UniqueAutomationResponse.Subscription, Unused);
 
       --  // track all entity configurations
       --  addSubscriptionAddress(afrl::cmasi::EntityConfiguration::Subscription);
-      This.Add_Subscription_Address (afrl.cmasi.EntityConfiguration.Subscription, Unused);
+      This.Add_Subscription_Address (AFRL.CMASI.EntityConfiguration.Subscription, Unused);
       --  std::vector< std::string > childconfigs = afrl::cmasi::EntityConfigurationDescendants();
       --  for(auto child : childconfigs)
       --      addSubscriptionAddress(child);
@@ -172,7 +172,7 @@ package body uxas.Comms.LMCP_Net_Client.Service.Automation_Request_Validation is
 
       --  // track all entity states
       --  addSubscriptionAddress(afrl::cmasi::EntityState::Subscription);
-      This.Add_Subscription_Address (afrl.cmasi.EntityState.Subscription, Unused);
+      This.Add_Subscription_Address (AFRL.CMASI.EntityState.Subscription, Unused);
       --  std::vector< std::string > childstates = afrl::cmasi::EntityStateDescendants();
       --  for(auto child : childstates)
       --      addSubscriptionAddress(child);
@@ -182,23 +182,23 @@ package body uxas.Comms.LMCP_Net_Client.Service.Automation_Request_Validation is
 
       --  // track airspace constraints
       --  addSubscriptionAddress(afrl::cmasi::OperatingRegion::Subscription);
-      This.Add_Subscription_Address (afrl.cmasi.OperatingRegion.Subscription, Unused);
+      This.Add_Subscription_Address (AFRL.CMASI.OperatingRegion.Subscription, Unused);
       --  addSubscriptionAddress(afrl::cmasi::KeepInZone::Subscription);
-      This.Add_Subscription_Address (afrl.cmasi.KeepInZone.Subscription, Unused);
+      This.Add_Subscription_Address (AFRL.CMASI.KeepInZone.Subscription, Unused);
       --  addSubscriptionAddress(afrl::cmasi::KeepOutZone::Subscription);
-      This.Add_Subscription_Address (afrl.cmasi.KeepOutZone.Subscription, Unused);
+      This.Add_Subscription_Address (AFRL.CMASI.KeepOutZone.Subscription, Unused);
 
       --  // track indicated locations of interest
       --  addSubscriptionAddress(afrl::impact::AreaOfInterest::Subscription);
-      This.Add_Subscription_Address (afrl.impact.AreaOfInterest.Subscription, Unused);
+      This.Add_Subscription_Address (AFRL.Impact.AreaOfInterest.Subscription, Unused);
       --  addSubscriptionAddress(afrl::impact::LineOfInterest::Subscription);
-      This.Add_Subscription_Address (afrl.impact.LineOfInterest.Subscription, Unused);
+      This.Add_Subscription_Address (AFRL.Impact.LineOfInterest.Subscription, Unused);
       --  addSubscriptionAddress(afrl::impact::PointOfInterest::Subscription);
-      This.Add_Subscription_Address (afrl.impact.PointOfInterest.Subscription, Unused);
+      This.Add_Subscription_Address (AFRL.Impact.PointOfInterest.Subscription, Unused);
 
       --  // track all tasks
       --  addSubscriptionAddress(afrl::cmasi::Task::Subscription);
-      This.Add_Subscription_Address (afrl.cmasi.lmcpTask.Subscription, Unused);
+      This.Add_Subscription_Address (AFRL.CMASI.lmcpTask.Subscription, Unused);
       --  std::vector< std::string > childtasks = afrl::cmasi::TaskDescendants();
       --  for(auto child : childtasks)
       --      addSubscriptionAddress(child);
@@ -208,13 +208,13 @@ package body uxas.Comms.LMCP_Net_Client.Service.Automation_Request_Validation is
 
       --  // task removal and initialization
       --  addSubscriptionAddress(afrl::cmasi::RemoveTasks::Subscription);
-      This.Add_Subscription_Address (afrl.cmasi.RemoveTasks.Subscription, Unused);
+      This.Add_Subscription_Address (AFRL.CMASI.RemoveTasks.Subscription, Unused);
       --  addSubscriptionAddress(uxas::messages::task::TaskInitialized::Subscription);
-      This.Add_Subscription_Address (uxas.messages.lmcptask.TaskInitialized.Subscription, Unused);
+      This.Add_Subscription_Address (UxAS.Messages.lmcptask.TaskInitialized.Subscription, Unused);
 
       --  // track errors during automation request pipeline
       --  addSubscriptionAddress(afrl::cmasi::ServiceStatus::Subscription);
-      This.Add_Subscription_Address (afrl.cmasi.ServiceStatus.Subscription, Unused);
+      This.Add_Subscription_Address (AFRL.CMASI.ServiceStatus.Subscription, Unused);
 
       --  return true;
       Result := True;
@@ -235,7 +235,7 @@ package body uxas.Comms.LMCP_Net_Client.Service.Automation_Request_Validation is
       Automation_Request_Validator_Communication.Initialize
         (This.Mailbox,
          Source_Group => Value (This.Message_Source_Group),
-         Unique_Id    => Common.Int64 (uxas.Comms.LMCP_Net_Client.Unique_Entity_Send_Message_Id),
+         Unique_Id    => Common.Int64 (UxAS.Comms.LMCP_Net_Client.Unique_Entity_Send_Message_Id),
          Entity_Id    => Common.UInt32 (This.Entity_Id),
          Service_Id   => Common.UInt32 (This.Network_Id));
 
@@ -357,15 +357,15 @@ package body uxas.Comms.LMCP_Net_Client.Service.Automation_Request_Validation is
       ID          : constant Common.Int64 := Common.Int64 (Job.getTaskID);
 
       Wrapped_Job : constant Task_Kind_And_Id :=
-        (if Job.getLmcpTypeName = afrl.impact.AngledAreaSearchTask.Subscription then
+        (if Job.getLmcpTypeName = AFRL.Impact.AngledAreaSearchTask.Subscription then
            (Kind         => Angled_Area_Search_Task,
-            SearchAreaID => Common.Int64 (afrl.impact.AngledAreaSearchTask.AngledAreaSearchTask (Job.all).getSearchAreaID))
-         elsif Job.getLmcpTypeName = afrl.impact.ImpactLineSearchTask.Subscription then
+            SearchAreaID => Common.Int64 (AFRL.Impact.AngledAreaSearchTask.AngledAreaSearchTask (Job.all).getSearchAreaID))
+         elsif Job.getLmcpTypeName = AFRL.Impact.ImpactLineSearchTask.Subscription then
            (Kind   => Impact_Line_Search_Task,
-            LineID => Common.Int64 (afrl.impact.ImpactLineSearchTask.ImpactLineSearchTask (Job.all).getLineID))
-         elsif Job.getLmcpTypeName = afrl.impact.ImpactPointSearchTask.Subscription then
+            LineID => Common.Int64 (AFRL.Impact.ImpactLineSearchTask.ImpactLineSearchTask (Job.all).getLineID))
+         elsif Job.getLmcpTypeName = AFRL.Impact.ImpactPointSearchTask.Subscription then
            (Kind             => Impact_Point_Search_Task,
-            SearchLocationID => Common.Int64 (afrl.impact.ImpactPointSearchTask.ImpactPointSearchTask (Job.all).getSearchLocationID))
+            SearchLocationID => Common.Int64 (AFRL.Impact.ImpactPointSearchTask.ImpactPointSearchTask (Job.all).getSearchLocationID))
          else (Kind => Other_Task));
 
    begin
@@ -551,8 +551,8 @@ package body uxas.Comms.LMCP_Net_Client.Service.Automation_Request_Validation is
       function Get_Areas
         (Region : OperatingRegion_Any) return OperatingRegionAreas
       is
-         InAreas  : constant afrl.cmasi.OperatingRegion.Vect_Int64_Acc := Region.all.getKeepInAreas;
-         OutAreas : constant afrl.cmasi.OperatingRegion.Vect_Int64_Acc := Region.all.getKeepOutAreas;
+         InAreas  : constant AFRL.CMASI.OperatingRegion.Vect_Int64_Acc := Region.all.getKeepInAreas;
+         OutAreas : constant AFRL.CMASI.OperatingRegion.Vect_Int64_Acc := Region.all.getKeepOutAreas;
       begin
          return R : OperatingRegionAreas do
             for E of InAreas.all loop
@@ -625,15 +625,15 @@ package body uxas.Comms.LMCP_Net_Client.Service.Automation_Request_Validation is
    function UInt32_Attribute
      (XML_Node : DOM.Core.Element;
       Name     : String;
-      Default  : avtas.lmcp.types.UInt32)
-      return avtas.lmcp.types.UInt32
+      Default  : AVTAS.LMCP.Types.UInt32)
+      return AVTAS.LMCP.Types.UInt32
    is
       use DOM.Core;
       Attr_Value : constant DOM_String := Elements.Get_Attribute (XML_Node, Name);
    begin
       if Attr_Value /= "" and then (for all C of Attr_Value => C in '0' .. '9')
       then
-         return avtas.lmcp.types.UInt32'Value (Attr_Value);
+         return AVTAS.LMCP.Types.UInt32'Value (Attr_Value);
       else
          return Default;
       end if;
@@ -655,4 +655,4 @@ begin
    --  located at the top of the cpp file
 
    Register_Service_Creation_Function_Pointers (Registry_Service_Type_Names, Create'Access);
-end uxas.Comms.LMCP_Net_Client.Service.Automation_Request_Validation;
+end UxAS.Comms.LMCP_Net_Client.Service.Automation_Request_Validation;

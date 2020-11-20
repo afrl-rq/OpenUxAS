@@ -18,13 +18,22 @@ project AFRL_Ada_Dev is
 
    for Object_Dir use "objs/" & App_Mode;
 
-   DEBUG_COMPILER_FLAGS :=
-     ("-gnatwa",
-      "-gnatyO",  --  Check that overriding subprograms are explicitly marked as such
-   -- "-gnatdF",  -- have SPARK allow restricted access types
-      "-gnateA",
-      "-g",
-      "-O0");
+   Style_Flags := ("-gnaty3aehiIklnOprstux");
+
+   Debug_Flags :=
+     ("-gnata",   -- enable assertions of all kinds
+      "-gnatwa",  -- enable all the usual warnings (but not absolutely all)
+      "-gnateA",  -- check for overlapping actual parameters
+      "-g",       -- include symbols etc used for debugging
+      "-O0");     -- don't optimize at all, for sake of debugging
+
+   GCOV_Flags := ("-fprofile-arcs", "-ftest-coverage");
+
+   Release_Flags := ("-O2",                  -- optimize a lot (but not absolutely all possible)
+                     "-gnatn",               -- inline across units (moderate, since we're using -O2)
+                     "-gnatp",               -- don't generate runtime checks
+                     "-fdata-sections",      -- data go into separate sections
+                     "-ffunction-sections"); -- routines go into separate sections
 
    package Naming is
 
@@ -52,18 +61,18 @@ project AFRL_Ada_Dev is
    package Linker is
       case App_Mode is
          when "gcov"              =>
-            for Default_Switches ("ada") use ("-Wl,--gc-sections", "-fprofile-arcs", "-ftest-coverage");
-    when "debug" | "release" =>
-       for Default_Switches ("ada") use ("-Wl,--gc-sections");
+            for Default_Switches ("ada") use ("-Wl,--gc-sections") & GCOV_Flags;
+         when "debug" | "release" =>
+            for Default_Switches ("ada") use ("-Wl,--gc-sections");
       end case;
    end Linker;
 
    package Compiler is
       case App_Mode is
          when "debug"   =>
-            for Default_Switches ("ada") use DEBUG_COMPILER_FLAGS & ("-gnata");
+            for Default_Switches ("ada") use Style_Flags & Debug_Flags;
          when "gcov"    =>
-            for Default_Switches ("ada") use DEBUG_COMPILER_FLAGS & ("-fprofile-arcs", "-ftest-coverage");
+            for Default_Switches ("ada") use Style_Flags & Debug_Flags & GCOV_Flags;
          when "release" =>
             for Default_Switches ("ada") use
               ("-O2",
@@ -72,6 +81,7 @@ project AFRL_Ada_Dev is
                "-fdata-sections",
                "-ffunction-sections",
                "-gnatwa");
+            for Default_Switches ("ada") use Style_Flags & Release_Flags;
       end case;
    end Compiler;
 

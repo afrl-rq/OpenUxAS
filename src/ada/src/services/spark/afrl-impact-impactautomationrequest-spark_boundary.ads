@@ -1,6 +1,6 @@
 with Common_Formal_Containers; use Common_Formal_Containers;
 
-package afrl.impact.ImpactAutomationRequest.SPARK_Boundary with SPARK_Mode is
+package AFRL.impact.ImpactAutomationRequest.SPARK_Boundary with SPARK_Mode is
 
    pragma Annotate (GNATprove, Terminating, SPARK_Boundary);
 
@@ -16,4 +16,4 @@ package afrl.impact.ImpactAutomationRequest.SPARK_Boundary with SPARK_Mode is
      (Request : ImpactAutomationRequest) return Int64_Vect
      with Global => null;
 
-end afrl.impact.ImpactAutomationRequest.SPARK_Boundary;
+end AFRL.impact.ImpactAutomationRequest.SPARK_Boundary;

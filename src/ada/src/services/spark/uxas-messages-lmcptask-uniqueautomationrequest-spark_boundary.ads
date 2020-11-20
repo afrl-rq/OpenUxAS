@@ -1,12 +1,12 @@
 with Common_Formal_Containers; use Common_Formal_Containers;
-with afrl.cmasi.AutomationRequest.SPARK_Boundary; use afrl.cmasi.AutomationRequest.SPARK_Boundary;
-with afrl.impact.ImpactAutomationRequest; use afrl.impact.ImpactAutomationRequest;
-with afrl.impact.ImpactAutomationRequest.SPARK_Boundary; use afrl.impact.ImpactAutomationRequest.SPARK_Boundary;
-with avtas.lmcp.object.SPARK_Boundary; use avtas.lmcp.object.SPARK_Boundary;
-with uxas.messages.lmcptask.TaskAutomationRequest; use uxas.messages.lmcptask.TaskAutomationRequest;
-with uxas.messages.lmcptask.TaskAutomationRequest.SPARK_Boundary; use uxas.messages.lmcptask.TaskAutomationRequest.SPARK_Boundary;
+with AFRL.CMASI.AutomationRequest.SPARK_Boundary; use AFRL.CMASI.AutomationRequest.SPARK_Boundary;
+with AFRL.impact.ImpactAutomationRequest; use AFRL.impact.ImpactAutomationRequest;
+with AFRL.impact.ImpactAutomationRequest.SPARK_Boundary; use AFRL.impact.ImpactAutomationRequest.SPARK_Boundary;
+with AVTAS.LMCP.object.SPARK_Boundary; use AVTAS.LMCP.object.SPARK_Boundary;
+with UxAS.Messages.lmcptask.TaskAutomationRequest; use UxAS.Messages.lmcptask.TaskAutomationRequest;
+with UxAS.Messages.lmcptask.TaskAutomationRequest.SPARK_Boundary; use UxAS.Messages.lmcptask.TaskAutomationRequest.SPARK_Boundary;
 
-package UxAS.Messages.LmcpTask.UniqueAutomationRequest.SPARK_Boundary with SPARK_Mode is
+package UxAS.Messages.lmcptask.UniqueAutomationRequest.SPARK_Boundary with SPARK_Mode is
    pragma Annotate (GNATprove, Terminating, SPARK_Boundary);
 
    --  This package introduces a wrapper around UniqueAutomationRequest.
@@ -56,7 +56,7 @@ package UxAS.Messages.LmcpTask.UniqueAutomationRequest.SPARK_Boundary with SPARK
 
    procedure Copy_PlanningState_From_TaskAutomationRequest
      (Target : in out My_UniqueAutomationRequest;
-      Source : uxas.messages.lmcptask.TaskAutomationRequest.TaskAutomationRequest)
+      Source : UxAS.Messages.lmcptask.TaskAutomationRequest.TaskAutomationRequest)
      with Global => null,
      Post => Get_PlanningStates_Ids (Target) =
      Get_PlanningStates_Ids (Source)
@@ -96,7 +96,7 @@ package UxAS.Messages.LmcpTask.UniqueAutomationRequest.SPARK_Boundary with SPARK
 
    procedure Copy_OriginalRequest_From_TaskAutomationRequest
      (Target : in out My_UniqueAutomationRequest;
-      Source : uxas.messages.lmcptask.TaskAutomationRequest.TaskAutomationRequest)
+      Source : UxAS.Messages.lmcptask.TaskAutomationRequest.TaskAutomationRequest)
      with Global => null,
      Post => Get_EntityList_From_OriginalRequest (Target) =
      Get_EntityList_From_OriginalRequest (Source)
@@ -154,4 +154,4 @@ private
 
    function Wrap (this : UniqueAutomationRequest) return My_UniqueAutomationRequest is
      (Content => this);
-end UxAS.Messages.LmcpTask.UniqueAutomationRequest.SPARK_Boundary;
+end UxAS.Messages.lmcptask.UniqueAutomationRequest.SPARK_Boundary;

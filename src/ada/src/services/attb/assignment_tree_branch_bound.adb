@@ -132,16 +132,16 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
      (TaskPlanOptions_Map : Int64_TPO_Map;
       TaskOptionId : Int64)
          return TaskOption
-      is
+   is
          TaskId           : constant Int64 := Get_TaskID (TaskOptionId);
          OptionId         : constant Int64 := Get_OptionID (TaskOptionId);
          Associated_TPO   : constant TaskPlanOptions := Get (TaskPlanOptions_Map, TaskId);
-      begin
+   begin
       for TaskOption of Associated_TPO.Options loop
 
             if TaskOption.OptionID = OptionId then
                return TaskOption;
-         end if;
+            end if;
       end loop;
       raise Program_Error;
    end Corresponding_TaskOption;
@@ -155,17 +155,17 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       VehicleId, InitTaskOptionId, DestTaskOptionId : Int64)
       return TaskOptionCost
    is
-      InitialTaskId         : Int64 := Get_TaskId (InitTaskOptionId);
-      InitialTaskOption     : Int64 := Get_OptionId (InitTaskOptionId);
-      DestinationTaskId     : Int64 := Get_TaskId (DestTaskOptionId);
-      DestinationTaskOption : Int64 := Get_OptionId (DestTaskOptionId);
+      InitialTaskId         : Int64 := Get_TaskID (InitTaskOptionId);
+      InitialTaskOption     : Int64 := Get_OptionID (InitTaskOptionId);
+      DestinationTaskId     : Int64 := Get_TaskID (DestTaskOptionId);
+      DestinationTaskOption : Int64 := Get_OptionID (DestTaskOptionId);
    begin
       for TOC of Assignment_Cost_Matrix.CostMatrix loop
          if
-           VehicleId = TOC.VehicleId
+           VehicleId = TOC.VehicleID
            and then InitialTaskId = TOC.InitialTaskID
            and then InitialTaskOption = TOC.InitialTaskOption
-           and then DestinationTaskId = TOC.DestinationTaskId
+           and then DestinationTaskId = TOC.DestinationTaskID
            and then DestinationTaskOption = TOC.DestinationTaskOption
          then
             return TOC;
@@ -197,7 +197,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       for taskId of TaskPlanOptions_Map loop
          declare
             compositionString              : Unbounded_String :=
-              Get (TaskPlanOptions_Map, TaskId).Composition;
+              Get (TaskPlanOptions_Map, taskId).Composition;
             algebraCompositionTaskOptionId : Unbounded_String :=
               To_Unbounded_String ("");
             isFinished                     : Boolean := False;
@@ -262,24 +262,24 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
          begin
             while not isFinished loop
 
-               if Length (TaskRelationships) > 0 then
+               if Length (TaskRelationShips) > 0 then
 
                   declare
-                     position : Natural := Unb.Index (TaskRelationships, "p");
+                     position : Natural := Unb.Index (TaskRelationShips, "p");
                   begin
 
                      if position > 0 then
                         algebraString :=
                           algebraString &
-                          Slice (TaskRelationships, 1, position - 1);
+                          Slice (TaskRelationShips, 1, position - 1);
                         position := position + 1;
 
                         declare
                            positionAfterId : Natural;
                            positionSpace   : Natural :=
-                             Unb.Index (TaskRelationships, " ", position);
+                             Unb.Index (TaskRelationShips, " ", position);
                            positionParen   : Natural :=
-                             Unb.Index (TaskRelationships, ")", position);
+                             Unb.Index (TaskRelationShips, ")", position);
                         begin
                            if positionSpace /= 0 and then positionParen /= 0 then
                               positionAfterId := Natural'Min (positionSpace, positionParen);
@@ -289,7 +289,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
 
                            declare
                               taskId : Int64 :=
-                                Int64'Value (Slice (TaskRelationships, position, positionAfterId-1));
+                                Int64'Value (Slice (TaskRelationShips, position, positionAfterId - 1));
                            begin
                               if Has_Key (taskIdVsAlgebraString, taskId) then
                                  algebraString :=
@@ -297,11 +297,11 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
                               else
                                  isFinished := True;
                               end if;
-                              Delete (TaskRelationships, 1, positionAfterId - 1);
+                              Delete (TaskRelationShips, 1, positionAfterId - 1);
                            end;
                         end;
                      else
-                        algebraString := algebraString & TaskRelationships;
+                        algebraString := algebraString & TaskRelationShips;
                         isFinished := True;
                      end if;
                   end;
@@ -312,10 +312,10 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
          end;
       else
          algebraString := algebraString & "|(";
-         for taskID of taskIdvsAlgebraString loop
+         for taskID of taskIdVsAlgebraString loop
             algebraString :=
               algebraString
-              & Get (taskIdVsAlgebraString, taskId)
+              & Get (taskIdVsAlgebraString, taskID)
               & " ";
          end loop;
          algebraString := algebraString & ")";
@@ -375,29 +375,29 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       --  the new TaskAssignment added at the end.
       Result.Assignment_Sequence :=
         Add (Assignment.Assignment_Sequence,
-             (Get_TaskId (TaskOptionID),
+             (Get_TaskID (TaskOptionId),
               Get_OptionID (TaskOptionId),
-              VehicleID,
+              VehicleId,
               TimeThreshold,
-              TimeTaskCompleted));
+              TimeTaskCOmpleted));
 
       --  Create the new Vehicle_Assignments map
       for EntityId of Assignment.Vehicle_Assignments loop
 
          --  If the key corresponds to the vehicle we assign the new task to,
          --  we compute its new total time.
-            if EntityId = VehicleID then
+            if EntityId = VehicleId then
 
                Result.Vehicle_Assignments :=
-                 Add (Result.Vehicle_Assignments, EntityId, (TimeTaskCompleted, TaskOptionId));
+                 Add (Result.Vehicle_Assignments, EntityId, (TimeTaskCOmpleted, TaskOptionId));
 
          --  Otherwise, the total time and last task remains the same
-         else
-            Result.Vehicle_Assignments :=
-              Add (Result.Vehicle_Assignments,
-                   EntityId,
-                   Get (Assignment.Vehicle_Assignments, EntityId));
-         end if;
+            else
+               Result.Vehicle_Assignments :=
+                 Add (Result.Vehicle_Assignments,
+                      EntityId,
+                      Get (Assignment.Vehicle_Assignments, EntityId));
+            end if;
       end loop;
       return Result;
    end New_Assignment;
@@ -424,7 +424,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
               Add (Result,
                    Get_TaskOptionID
                      (TaskAssignment.TaskID,
-                      TaskASsignment.OptionID));
+                      TaskAssignment.OptionID));
          end loop;
          return Result;
       end To_Sequence_Of_TaskOptionId;
@@ -432,7 +432,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       Result         : Children_Arr (1 .. 1000);
       Children_Nb    : Natural := 0;
       Objectives_IDs : Int64_Seq :=
-        Get_Next_Objectives_IDs
+        Get_Next_Objectives_Ids
           (To_Sequence_Of_TaskOptionId (Assignment),
            Algebra);
       --  List of TaskOptionIds to be assigned for the next iteration
@@ -474,7 +474,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
             end loop;
          when Cumulative =>
             for VehicleId of Assignment.Vehicle_Assignments loop
-               Result := Result + Get (Assignment.Vehicle_Assignments, VehicleID).TotalTime;
+               Result := Result + Get (Assignment.Vehicle_Assignments, VehicleId).TotalTime;
             end loop;
          when others =>
             raise Program_Error with "Cost function not implemented for " & Cost_Function'Image;
@@ -568,7 +568,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
          ReqId,
          Add
            (Element (State.m_taskPlanOptions, ReqId),
-            Options.TaskId,
+            Options.TaskID,
             Options));
       Check_Assignment_Ready (Mailbox, Data, State, Options.CorrespondingAutomationRequestID);
    end Handle_Task_Plan_Options;

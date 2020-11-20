@@ -162,37 +162,37 @@ package body Algebra with SPARK_Mode is
      (Formula : Unbounded_String;
       Algebra : out Algebra_Tree)
    is
-      Kind : Node_Kind_Type := Undefined;
+      Kind          : Node_Kind_Type := Undefined;
       Operator_Kind : Operator_Kind_Type := Undefined;
-      form : Unbounded_String := Formula;
+      Form          : Unbounded_String := Formula;
    begin
-      for J in 1 .. Length (form) loop
+      for J in 1 .. Length (Form) loop
 
-         if Element (form, J) = '.' then
+         if Element (Form, J) = '.' then
             Kind := Operator;
             Operator_Kind := Sequential;
-            form := To_Unbounded_String (Slice (form, J + 2, Index (Form, ")", Backward) - 1));
+            Form := To_Unbounded_String (Slice (Form, J + 2, Index (Form, ")", Backward) - 1));
             exit;
 
-         elsif Element (form, J) = '+' then
+         elsif Element (Form, J) = '+' then
             Kind := Operator;
             Operator_Kind := Alternative;
-            form := To_Unbounded_String (Slice (form, J + 2, Index (Form, ")", Backward) - 1));
+            Form := To_Unbounded_String (Slice (Form, J + 2, Index (Form, ")", Backward) - 1));
             exit;
 
-         elsif Element (form, J) = '|' then
+         elsif Element (Form, J) = '|' then
             Kind := Operator;
             Operator_Kind := Parallel;
-            form := To_Unbounded_String (Slice (form, J + 2, Index (Form, ")", Backward) - 1));
+            Form := To_Unbounded_String (Slice (Form, J + 2, Index (Form, ")", Backward) - 1));
             exit;
 
-         elsif Element (form, J) = 'p' then
+         elsif Element (Form, J) = 'p' then
             Kind := Action;
 
             if Index (Form, ")", Backward) = 0 then
-               form := To_Unbounded_String (Slice (form, J + 1, length (form)));
+               Form := To_Unbounded_String (Slice (Form, J + 1, Length (Form)));
             else
-               form := To_Unbounded_String (Slice (form, J + 1, Index (Form, ")", Backward) - 1));
+               Form := To_Unbounded_String (Slice (Form, J + 1, Index (Form, ")", Backward) - 1));
             end if;
 
             exit;
@@ -203,7 +203,7 @@ package body Algebra with SPARK_Mode is
       if Kind = Action then
          declare
             ActionID : Int64 :=
-              Int64'Value (To_String (form));
+              Int64'Value (To_String (Form));
          begin
             Algebra := new Algebra_Tree_Cell'(Node_Kind     => Action,
                                               TaskOptionId  => ActionID);
@@ -215,19 +215,19 @@ package body Algebra with SPARK_Mode is
             Children_Array : Algebra_Tree_Array (1 .. Max_Children);
             numChildren    : Children_Number := 0;
          begin
-            for J in 1 .. Length (form) loop
+            for J in 1 .. Length (Form) loop
 
-               if Element (form, J) in '+' | '.' | '|' then
+               if Element (Form, J) in '+' | '.' | '|' then
 
                   if numParenthesis = 0 then
                      declare
                         iEnd : Natural := J + 1;
                         numParenthesisTmp : Natural := 0;
                      begin
-                        while iEnd <= Length (form) loop
-                           if Element (form, iEnd) = '(' then
+                        while iEnd <= Length (Form) loop
+                           if Element (Form, iEnd) = '(' then
                               numParenthesisTmp := numParenthesisTmp + 1;
-                           elsif Element (form, iEnd) = ')' then
+                           elsif Element (Form, iEnd) = ')' then
                               numParenthesisTmp := numParenthesisTmp - 1;
                            end if;
                            if numParenthesisTmp = 0 then
@@ -236,33 +236,33 @@ package body Algebra with SPARK_Mode is
                            iEnd := iEnd + 1;
                         end loop;
                         numChildren := numChildren + 1;
-                        Parse_Formula (To_Unbounded_String (Slice (form, J, iEnd)),
+                        Parse_Formula (To_Unbounded_String (Slice (Form, J, iEnd)),
                                        Children_Array (numChildren));
                      end;
                   end if;
 
-               elsif Element (form, J) = 'p' then
+               elsif Element (Form, J) = 'p' then
                   if numParenthesis = 0 then
                      declare
                         iEnd : Natural := J + 2;
                      begin
-                        while iEnd <= Length (form) loop
-                           if Element (form, iEnd) in ')' | ' ' then
+                        while iEnd <= Length (Form) loop
+                           if Element (Form, iEnd) in ')' | ' ' then
                               exit;
                            end if;
                            iEnd := iEnd + 1;
                         end loop;
 
                         numChildren := numChildren + 1;
-                        Parse_Formula (To_Unbounded_String (Slice (form, J, iEnd)),
+                        Parse_Formula (To_Unbounded_String (Slice (Form, J, iEnd)),
                                        Children_Array (numChildren));
                      end;
                   end if;
 
-               elsif Element (form, J) = '(' then
+               elsif Element (Form, J) = '(' then
                   numParenthesis := numParenthesis + 1;
 
-               elsif Element (form, J) = ')' then
+               elsif Element (Form, J) = ')' then
                   numParenthesis := numParenthesis - 1;
                end if;
             end loop;

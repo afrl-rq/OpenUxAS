@@ -2,7 +2,7 @@ with String_Utils;            use String_Utils;
 with AVTAS.LMCP.ByteBuffers;  use AVTAS.LMCP.ByteBuffers;
 with AVTAS.LMCP.Factory;
 with UxAS.Common.Configuration_Manager;
-with UXAS.Messages.UxNative.KillService;
+with UxAS.Messages.UxNative.KillService;
 
 with Ada.Text_IO;
 with Ada.Exceptions; use Ada.Exceptions;
@@ -49,13 +49,13 @@ package body UxAS.Comms.LMCP_Net_Client is
    --  @return unique pointer to LMCP object if succeeds; unique pointer with
    --  unassigned native pointer.
    --
-   --      std::shared_ptr<avtas::lmcp::Object>
+   --      std::shared_ptr<AVTAS::lmcp::Object>
    --      deserializeMessage(const std::string& payload);
    function Deserialzed_Message (Payload : String) return AVTAS.LMCP.Object.Object_Any;
 
    function Should_Kill_This_Service
      (This : LMCP_Object_Network_Client_Base;
-      Msg  : Any_Lmcp_Message)
+      Msg  : Any_LMCP_Message)
    return Boolean;
 
    function Should_Kill_This_Service
@@ -132,7 +132,7 @@ package body UxAS.Comms.LMCP_Net_Client is
       Buffer : ByteBuffer (Capacity => Payload'Length);
    begin
       --  // allocate memory
-      --  avtas::lmcp::ByteBuffer lmcpByteBuffer;
+      --  AVTAS::lmcp::ByteBuffer lmcpByteBuffer;
       --  lmcpByteBuffer.allocate(payload.size());
       --  lmcpByteBuffer.rewind();
 
@@ -148,8 +148,8 @@ package body UxAS.Comms.LMCP_Net_Client is
       --  lmcpByteBuffer.rewind();
       Buffer.Rewind;
 
-      --  lmcpObject.reset(avtas::lmcp::Factory::getObject(lmcpByteBuffer));
-      AVTAS.LMCP.Factory.GetObject (Buffer, Result);
+      --  lmcpObject.reset(AVTAS::lmcp::Factory::getObject(lmcpByteBuffer));
+      AVTAS.LMCP.Factory.getObject (Buffer, Result);
 
       return Result;
    end Deserialzed_Message;
@@ -244,7 +244,7 @@ package body UxAS.Comms.LMCP_Net_Client is
    -- Get_Unique_Entity_Send_Message_Id --
    ---------------------------------------
 
-   procedure Get_Unique_Entity_Send_Message_Id (Value : out Int64)is
+   procedure Get_Unique_Entity_Send_Message_Id (Value : out Int64) is
    begin
       --  return (s_uniqueEntitySendMessageId++);
       Value := Unique_Entity_Send_Message_Id;
@@ -282,13 +282,13 @@ package body UxAS.Comms.LMCP_Net_Client is
       Unused : Boolean;
    begin
       --  m_entityId = uxas::common::ConfigurationManager::getInstance().getEntityId();
-      This.Entity_Id := UXAS.Common.Configuration_Manager.Instance.Get_Entity_Id;
+      This.Entity_Id := UxAS.Common.Configuration_Manager.Instance.Get_Entity_Id;
 
       --  m_entityIdString = std::to_string(m_entityId);
       Copy (To_String (This.Entity_Id), To => This.Entity_Id_String);
 
       --  m_entityType = uxas::common::ConfigurationManager::getInstance().getEntityType();
-      Copy (UXAS.Common.Configuration_Manager.Instance.Get_Entity_Type, To => This.Entity_Type);
+      Copy (UxAS.Common.Configuration_Manager.Instance.Get_Entity_Type, To => This.Entity_Type);
 
       --  m_networkClientTypeName = subclassTypeName;
       Copy (Subclass_Type_Name, To => This.Network_Client_Type_Name);
@@ -313,7 +313,7 @@ package body UxAS.Comms.LMCP_Net_Client is
 
       --  // network client can be terminated via received KillService message
       --  addSubscriptionAddress(uxas::messages::uxnative::KillService::Subscription);
-      This.Add_Subscription_Address (UXAS.Messages.UxNative.KillService.Subscription, Unused);
+      This.Add_Subscription_Address (UxAS.Messages.UxNative.KillService.Subscription, Unused);
 
       --  m_isConfigured = configure(networkClientXmlNode);
       Configure (LMCP_Object_Network_Client_Base'Class (This),
@@ -374,7 +374,7 @@ package body UxAS.Comms.LMCP_Net_Client is
    ----------------------------
 
    procedure Execute_Network_Client (This : in out LMCP_Object_Network_Client_Base) is
-      ReceivedLmcpMessage : Any_Lmcp_Message;
+      ReceivedLmcpMessage : Any_LMCP_Message;
       use Ada.Text_IO;
    begin
       This.Is_Thread_Started := True;
@@ -457,7 +457,7 @@ package body UxAS.Comms.LMCP_Net_Client is
                Put_Line ("Execute_Serialized_Network_Client: ");
                Put_Line (Exception_Information (Error));
                Put_Line ("Execute_Serialized_Network_Client: continuing");
-         end;         
+         end;
       end loop;
 
       This.Is_Base_Class_Termination_Finished := True;
@@ -713,10 +713,10 @@ package body UxAS.Comms.LMCP_Net_Client is
 
    function Should_Kill_This_Service
      (This : LMCP_Object_Network_Client_Base;
-      Msg  : Any_Lmcp_Message)
+      Msg  : Any_LMCP_Message)
     return Boolean
    is
-      use UXAS.Messages.UxNative.KillService;
+      use UxAS.Messages.UxNative.KillService;
 
       --  the lmcpgen C++ generated code in class KillService has these static functions:
       --
@@ -728,7 +728,7 @@ package body UxAS.Comms.LMCP_Net_Client is
       --  const uint16_t KillService::SeriesVersion = 9;
       --  const uint32_t KillService::TypeId = 4;
       --
-      --  bool isKillService(avtas::lmcp::Object* obj)
+      --  bool isKillService(AVTAS::lmcp::Object* obj)
       --  {
       --     if(!obj) return false;
       --     if(obj->getSeriesNameAsLong() != 6149751333668345413LL) return false;
@@ -751,7 +751,7 @@ package body UxAS.Comms.LMCP_Net_Client is
       --  && m_networkIdString.compare
       --    (std::to_string(std::static_pointer_cast<uxas::messages::uxnative::KillService>(receivedLmcpMessage->m_object)->getServiceID()))
       --    == 0)
-      return This.Network_Id_String = To_String (KillService (Msg.Payload.all).GetServiceID);
+      return This.Network_Id_String = To_String (KillService (Msg.Payload.all).getServiceID);
    end Should_Kill_This_Service;
 
    ------------------------------
@@ -763,7 +763,7 @@ package body UxAS.Comms.LMCP_Net_Client is
       Msg  : AVTAS.LMCP.Object.Object_Any)
    return Boolean
    is
-      use UXAS.Messages.UxNative.KillService;
+      use UxAS.Messages.UxNative.KillService;
    begin
       if not This.Is_Base_Class_Kill_Service_Processing_Permitted then
          return False;
@@ -777,7 +777,7 @@ package body UxAS.Comms.LMCP_Net_Client is
       --  check KillService serviceID == my serviceID
       --  //&& m_entityIdString.compare(std::static_pointer_cast<uxas::messages::uxnative::KillService>(lmcpObject)->getEntityID()) == 0//TODO check entityID
       --  && m_networkIdString.compare(std::to_string(std::static_pointer_cast<uxas::messages::uxnative::KillService>(lmcpObject)->getServiceID())) == 0)
-      return This.Network_Id_String = To_String (KillService (Msg.all).GetServiceID);
+      return This.Network_Id_String = To_String (KillService (Msg.all).getServiceID);
    end Should_Kill_This_Service;
 
    ----------------------------------
@@ -786,13 +786,13 @@ package body UxAS.Comms.LMCP_Net_Client is
 
    function Has_KillService_Subscription (Msg : Addressed_Attributed_Message_Ref) return Boolean is
       Descriptor : constant String := Msg.Message_Attributes_Reference.Payload_Descriptor;
-      Target     : constant String := UXAS.Messages.UxNative.KillService.Subscription;
+      Target     : constant String := UxAS.Messages.UxNative.KillService.Subscription;
       Pos        : Natural;
       use Ada.Strings;
    begin
       --  && nextReceivedSerializedLmcpObject->getMessageAttributesReference()->getDescriptor()
       --          .rfind(uxas::messages::uxnative::KillService::Subscription) != std::string::npos)
-      Pos := Ada.Strings.Fixed.Index (Source => Descriptor, Pattern => Target, Going => Backward) ;
+      Pos := Ada.Strings.Fixed.Index (Source => Descriptor, Pattern => Target, Going => Backward);
       return Pos /= 0;
    end Has_KillService_Subscription;
 

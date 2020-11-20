@@ -1,5 +1,5 @@
 
-package body afrl.cmasi.AutomationRequest.SPARK_Boundary with SPARK_Mode => Off is
+package body AFRL.CMASI.AutomationRequest.SPARK_Boundary with SPARK_Mode => Off is
 
    --------------------
    -- Get_EntityList --
@@ -41,4 +41,4 @@ package body afrl.cmasi.AutomationRequest.SPARK_Boundary with SPARK_Mode => Off 
       end return;
    end Get_TaskList;
 
-end afrl.cmasi.AutomationRequest.SPARK_Boundary;
+end AFRL.CMASI.AutomationRequest.SPARK_Boundary;
