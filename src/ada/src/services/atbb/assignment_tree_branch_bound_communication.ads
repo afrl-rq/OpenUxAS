@@ -1,5 +1,5 @@
-with LMCP_Messages; use LMCP_Messages;
 with Common;        use Common;
+with LMCP_Messages; use LMCP_Messages;
 
 private with Ada.Strings.Unbounded;
 private with UxAS.Comms.LMCP_Object_Message_Sender_Pipes;

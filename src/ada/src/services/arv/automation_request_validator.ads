@@ -1,10 +1,10 @@
 with Ada.Containers.Formal_Doubly_Linked_Lists;
-with Common; use Common;
-with Ada.Containers.Functional_Maps;
 with Ada.Containers.Formal_Hashed_Maps;
-with Ada.Containers; use all type Ada.Containers.Count_Type;
-with LMCP_Messages; use LMCP_Messages;
+with Ada.Containers.Functional_Maps;
+with Ada.Containers;                             use all type Ada.Containers.Count_Type;
 with Automation_Request_Validator_Communication; use Automation_Request_Validator_Communication;
+with Common;                                     use Common;
+with LMCP_Messages;                              use LMCP_Messages;
 
 --  Package containing the fonctionality of the service. It uses its communication
 --  counter-part to send and receive messages.
@@ -188,7 +188,8 @@ private
      (Entity_Ids      : Int64_Seq;
       Configurations  : Int64_Set;
       States          : Int64_Set;
-      Planning_States : PlanningState_Seq) return Boolean
+      Planning_States : PlanningState_Seq)
+      return Boolean
    is
      (All_Elements_In (Entity_Ids, Configurations)
        and then
@@ -207,7 +208,8 @@ private
      (Operating_Region  : Int64;
       Operating_Regions : Operating_Region_Map;
       KeepIn_Zones_Ids  : Int64_Set;
-      KeepOut_Zones_Ids : Int64_Set) return Boolean
+      KeepOut_Zones_Ids : Int64_Set)
+      return Boolean
    is
      (if Operating_Region /= 0
       then Has_Key (Operating_Regions, Operating_Region)
@@ -223,7 +225,8 @@ private
      (Available_Area_of_Interest_Ids  : Int64_Set;
       Available_Line_of_Interest_Ids  : Int64_Set;
       Available_Point_of_Interest_Ids : Int64_Set;
-      ItTask                          : Task_Kind_And_Id) return Boolean
+      ItTask                          : Task_Kind_And_Id)
+      return Boolean
    is
      (case ItTask.Kind is
          when Angled_Area_Search_Task  =>
@@ -243,7 +246,8 @@ private
       Available_Area_of_Interest_Ids  : Int64_Set;
       Available_Line_of_Interest_Ids  : Int64_Set;
       Available_Point_of_Interest_Ids : Int64_Set;
-      TaskIds                         : Int64_Seq) return Boolean
+      TaskIds                         : Int64_Seq)
+      return Boolean
    is
      (for all T of TaskIds =>
          Has_Key (Available_Tasks, T)
@@ -256,7 +260,8 @@ private
 
    function Valid_Automation_Request
      (This    : Automation_Request_Validator_Configuration_Data;
-      Request : UniqueAutomationRequest) return Boolean
+      Request : UniqueAutomationRequest)
+      return Boolean
    is
      (Check_For_Required_Entity_Configurations
        (Entity_Ids      => Request.EntityList,

@@ -1,5 +1,5 @@
-with Common;  use Common;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Common;                use Common;
 
 package Algebra with SPARK_Mode is
 

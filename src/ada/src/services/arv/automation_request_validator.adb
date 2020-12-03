@@ -349,6 +349,7 @@ package body Automation_Request_Validator with SPARK_Mode is
          declare
             TaskId      : constant Int64 := Get (TaskIds, I);
             IsReadyPrev : constant Boolean := IsReady with Ghost;
+            pragma Unreferenced (IsReadyPrev);
          begin
             if Has_Key (Available_Tasks, TaskId) then
                declare
@@ -618,9 +619,9 @@ package body Automation_Request_Validator with SPARK_Mode is
       end if;
 
       declare
-         Req : constant UniqueAutomationRequest := First_Element (Pending_Requests);
+         Req            : constant UniqueAutomationRequest := First_Element (Pending_Requests);
          Service_Status : ServiceStatus;
-         KVP : KeyValuePair;
+         KVP            : KeyValuePair;
       begin
          sendBroadcastMessage (Mailbox, Req);
          KVP.Key :=

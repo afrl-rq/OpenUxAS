@@ -1,5 +1,5 @@
-with LMCP_Messages; use LMCP_Messages;
 with Common;        use Common;
+with LMCP_Messages; use LMCP_Messages;
 
 private with Ada.Strings.Unbounded;
 private with UxAS.Comms.LMCP_Object_Message_Sender_Pipes;
@@ -20,12 +20,12 @@ package Route_Aggregator_Communication with SPARK_Mode is
       Entity_Id    : UInt32;
       Service_Id   : UInt32);
 
-   procedure SendLimitedCastMessage
+   procedure sendLimitedCastMessage
      (This : in out Route_Aggregator_Mailbox;
       Group : MessageGroup;
       Msg   : Message_Root'Class);
 
-   procedure SendBroadcastMessage
+   procedure sendBroadcastMessage
      (This : in out Route_Aggregator_Mailbox;
       Msg   : Message_Root'Class);
 

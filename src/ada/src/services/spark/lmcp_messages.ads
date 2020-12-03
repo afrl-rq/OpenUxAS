@@ -1,6 +1,6 @@
-with Common; use Common;
 with Ada.Containers.Functional_Vectors;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Common;                use Common;
 
 package LMCP_Messages with SPARK_Mode is
 

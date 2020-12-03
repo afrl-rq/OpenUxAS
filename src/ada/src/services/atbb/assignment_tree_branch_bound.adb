@@ -1,8 +1,11 @@
-with Ada.Containers; use Ada.Containers;
-with Ada.Text_IO; use Ada.Text_IO;
-with Ada.Strings; use Ada.Strings;
-with Ada.Strings.Fixed; use Ada.Strings.Fixed;
+with Ada.Containers;        use Ada.Containers;
+with Ada.Strings.Fixed;     use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Strings;           use Ada.Strings;
+with Ada.Text_IO;           use Ada.Text_IO;
+with Algebra;
+use Algebra;
+with Bounded_Stack;
 
 package body Assignment_Tree_Branch_Bound with SPARK_Mode is
 
@@ -26,15 +29,28 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
    end record;
 
    package Assignment_Stack is new Bounded_Stack (Assignment_Info);
-   use Assignment_Stack;
 
    type Stack is new Assignment_Stack.Stack;
 
    type Children_Arr is array (Positive range <>) of Assignment_Info;
 
+   package Int64_Unbounded_String_Maps is new Ada.Containers.Functional_Maps
+     (Key_Type     => Int64,
+      Element_Type => Unbounded_String);
+   type Int64_Unbounded_String_Map is new Int64_Unbounded_String_Maps.Map;
+
    ----------------------
    -- Useful functions --
    ----------------------
+
+   function Children
+     (Assignment             : Assignment_Info;
+      Algebra                : access constant Algebra_Tree_Cell;
+      TaskPlanOptions_Map    : Int64_TPO_Map;
+      Assignment_Cost_Matrix : AssignmentCostMatrix)
+      return Children_Arr;
+   --  Returns a sequence of Elements corresponding to all the possible
+   --  assignments considering Assignment.
 
    function Corresponding_TaskOption
      (TaskPlanOptions_Map : Int64_TPO_Map;
@@ -48,15 +64,6 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       return TaskOptionCost;
    --  Returns the TaskOptionCost corresponding to VehicleId going from
    --  InitTaskOptionId to DestTaskOptionId.
-
-   function Children
-     (Assignment             : Assignment_Info;
-      Algebra                : access constant Algebra_Tree_Cell;
-      TaskPlanOptions_Map    : Int64_TPO_Map;
-      Assignment_Cost_Matrix : AssignmentCostMatrix)
-      return Children_Arr;
-   --  Returns a sequence of Elements corresponding to all the possible
-   --  assignments considering Assignment.
 
    function Cost (Assignment : Assignment_Info; Cost_Function : Cost_Function_Kind) return Int64;
    --  Returns the cost of an assignment. This function can be expanded to
@@ -124,41 +131,96 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       Send_TaskAssignmentSummary (Mailbox, Data, State, ReqId);
    end Check_Assignment_Ready;
 
-   -----------------------------------
-   -- Find_Corresponding_TaskOption --
-   -----------------------------------
+   --------------
+   -- Children --
+   --------------
+
+   function Children
+     (Assignment             : Assignment_Info;
+      Algebra                : access constant Algebra_Tree_Cell;
+      TaskPlanOptions_Map    : Int64_TPO_Map;
+      Assignment_Cost_Matrix : AssignmentCostMatrix)
+      return Children_Arr
+   is
+      function To_Sequence_Of_TaskOptionId
+        (Assignment : Assignment_Info)
+         return Int64_Seq;
+
+      function To_Sequence_Of_TaskOptionId
+        (Assignment : Assignment_Info)
+         return Int64_Seq
+      is
+         Result : Int64_Seq;
+      begin
+         for TaskAssignment of Assignment.Assignment_Sequence loop
+            Result :=
+              Add (Result,
+                   Get_TaskOptionID
+                     (TaskAssignment.TaskID,
+                      TaskAssignment.OptionID));
+         end loop;
+         return Result;
+      end To_Sequence_Of_TaskOptionId;
+
+      Result         : Children_Arr (1 .. 1000);
+      Children_Nb    : Natural := 0;
+      Objectives_IDs : constant Int64_Seq :=
+        Get_Next_Objectives_Ids
+          (To_Sequence_Of_TaskOptionId (Assignment),
+           Algebra);
+      --  List of TaskOptionIds to be assigned for the next iteration
+   begin
+      for Objective_ID of Objectives_IDs loop
+         declare
+            TaskOpt : constant TaskOption := Corresponding_TaskOption (TaskPlanOptions_Map, Objective_ID);
+         begin
+
+            --  We add a new Assignment to Result for each eligible entity
+            --  for Objective_Id.
+            for EntityId of TaskOpt.EligibleEntities loop
+               Children_Nb := Children_Nb + 1;
+               Result (Children_Nb) := New_Assignment (Assignment, EntityId, Objective_ID, Assignment_Cost_Matrix, TaskPlanOptions_Map);
+            end loop;
+         end;
+      end loop;
+      return Result (1 .. Children_Nb);
+   end Children;
+
+   ------------------------------
+   -- Corresponding_TaskOption --
+   ------------------------------
 
    function Corresponding_TaskOption
      (TaskPlanOptions_Map : Int64_TPO_Map;
       TaskOptionId : Int64)
          return TaskOption
-   is
+      is
          TaskId           : constant Int64 := Get_TaskID (TaskOptionId);
          OptionId         : constant Int64 := Get_OptionID (TaskOptionId);
          Associated_TPO   : constant TaskPlanOptions := Get (TaskPlanOptions_Map, TaskId);
    begin
       for TaskOption of Associated_TPO.Options loop
 
-            if TaskOption.OptionID = OptionId then
-               return TaskOption;
-            end if;
+         if TaskOption.OptionID = OptionId then
+            return TaskOption;
+         end if;
       end loop;
       raise Program_Error;
    end Corresponding_TaskOption;
 
-   ---------------------------------------
-   -- Find_Corresponding_TaskOptionCost --
-   ---------------------------------------
+   ----------------------------------
+   -- Corresponding_TaskOptionCost --
+   ----------------------------------
 
    function Corresponding_TaskOptionCost
      (Assignment_Cost_Matrix                        : AssignmentCostMatrix;
       VehicleId, InitTaskOptionId, DestTaskOptionId : Int64)
       return TaskOptionCost
    is
-      InitialTaskId         : Int64 := Get_TaskID (InitTaskOptionId);
-      InitialTaskOption     : Int64 := Get_OptionID (InitTaskOptionId);
-      DestinationTaskId     : Int64 := Get_TaskID (DestTaskOptionId);
-      DestinationTaskOption : Int64 := Get_OptionID (DestTaskOptionId);
+      InitialTaskId         : constant Int64 := Get_TaskID (InitTaskOptionId);
+      InitialTaskOption     : constant Int64 := Get_OptionID (InitTaskOptionId);
+      DestinationTaskId     : constant Int64 := Get_TaskID (DestTaskOptionId);
+      DestinationTaskOption : constant Int64 := Get_OptionID (DestTaskOptionId);
    begin
       for TOC of Assignment_Cost_Matrix.CostMatrix loop
          if
@@ -174,21 +236,148 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       raise Program_Error;
    end Corresponding_TaskOptionCost;
 
+   ----------
+   -- Cost --
+   ----------
+
+   function Cost (Assignment : Assignment_Info; Cost_Function : Cost_Function_Kind) return Int64 is
+      Result : Int64 := 0;
+   begin
+
+      case Cost_Function is
+         when Minmax =>
+            for VehicleID of Assignment.Vehicle_Assignments loop
+               declare
+                  TotalTime : constant Int64 := Get (Assignment.Vehicle_Assignments, VehicleID).TotalTime;
+               begin
+                  if TotalTime > Result then
+                     Result := TotalTime;
+                  end if;
+               end;
+            end loop;
+         when Cumulative =>
+            for VehicleId of Assignment.Vehicle_Assignments loop
+               Result := Result + Get (Assignment.Vehicle_Assignments, VehicleId).TotalTime;
+            end loop;
+      end case;
+      return Result;
+   end Cost;
+
+   ---------------------
+   -- Greedy_Solution --
+   ---------------------
+
+   function Greedy_Solution
+     (Data                   : Assignment_Tree_Branch_Bound_Configuration_Data;
+      Assignment_Cost_Matrix : AssignmentCostMatrix;
+      TaskPlanOptions_Map    : Int64_TPO_Map;
+      Algebra                : access constant Algebra_Tree_Cell)
+      return Assignment_Info
+   is
+      Empty_TA_Seq : TaskAssignment_Sequence;
+      Result       : Assignment_Info :=
+        (Empty_TA_Seq,
+         Initialize_AssignmentVehicle (Assignment_Cost_Matrix));
+      Result_Cost  : Int64;
+   begin
+      while True loop
+
+         --  All computed costs will be greater than the current Cost, so
+         --  it is assigned to Int64'Last to actually find the Assignment that
+         --  minimizes the cost.
+         Result_Cost := Int64'Last;
+         declare
+            Children_A : constant Children_Arr :=
+              Children (Result, Algebra, TaskPlanOptions_Map, Assignment_Cost_Matrix);
+         begin
+            if Children_A'Length = 0 then
+               exit;
+            else
+               for Child of Children_A loop
+                  declare
+                     Current_Cost : constant Int64 := Cost (Child, Data.Cost_Function);
+                  begin
+
+                     if Current_Cost <= Result_Cost then
+                        Result := Child;
+                        Result_Cost := Current_Cost;
+                     end if;
+                  end;
+               end loop;
+            end if;
+         end;
+      end loop;
+      return Result;
+   end Greedy_Solution;
+
+   -----------------------------------
+   -- Handle_Assignment_Cost_Matrix --
+   -----------------------------------
+
+   procedure Handle_Assignment_Cost_Matrix
+     (Mailbox : in out Assignment_Tree_Branch_Bound_Mailbox;
+      Data    : Assignment_Tree_Branch_Bound_Configuration_Data;
+      State   : in out Assignment_Tree_Branch_Bound_State;
+      Matrix  : AssignmentCostMatrix)
+   is
+   begin
+      Insert (State.m_assignmentCostMatrixes, Matrix.CorrespondingAutomationRequestID, Matrix);
+      Check_Assignment_Ready (Mailbox, Data, State, Matrix.CorrespondingAutomationRequestID);
+   end Handle_Assignment_Cost_Matrix;
+
+   ------------------------------
+   -- Handle_Task_Plan_Options --
+   ------------------------------
+
+   procedure Handle_Task_Plan_Options
+     (Mailbox : in out Assignment_Tree_Branch_Bound_Mailbox;
+      Data    : Assignment_Tree_Branch_Bound_Configuration_Data;
+      State   : in out Assignment_Tree_Branch_Bound_State;
+      Options : TaskPlanOptions)
+   is
+      ReqId : constant Int64 := Options.CorrespondingAutomationRequestID;
+   begin
+      if not Contains (State.m_taskPlanOptions, ReqId) then
+         declare
+            Empty_Int64_TPO_Map : Int64_TPO_Map;
+         begin
+            Insert (State.m_taskPlanOptions, ReqId, Empty_Int64_TPO_Map);
+         end;
+      end if;
+      Replace
+        (State.m_taskPlanOptions,
+         ReqId,
+         Add
+           (Element (State.m_taskPlanOptions, ReqId),
+            Options.TaskID,
+            Options));
+      Check_Assignment_Ready (Mailbox, Data, State, Options.CorrespondingAutomationRequestID);
+   end Handle_Task_Plan_Options;
+
+   --------------------------------------
+   -- Handle_Unique_Automation_Request --
+   --------------------------------------
+
+   procedure Handle_Unique_Automation_Request
+     (Mailbox : in out Assignment_Tree_Branch_Bound_Mailbox;
+      Data    : Assignment_Tree_Branch_Bound_Configuration_Data;
+      State   : in out Assignment_Tree_Branch_Bound_State;
+      Areq    : UniqueAutomationRequest)
+   is
+   begin
+      Insert (State.m_uniqueAutomationRequests, Areq.RequestID, Areq);
+      Check_Assignment_Ready (Mailbox, Data, State, Areq.RequestID);
+   end Handle_Unique_Automation_Request;
+
    ------------------------
    -- Initialize_Algebra --
    ------------------------
-
-   package Int64_Unbounded_String_Maps is new Ada.Containers.Functional_Maps
-     (Key_Type     => Int64,
-      Element_Type => Unbounded_String);
-   type Int64_Unbounded_String_Map is new Int64_Unbounded_String_Maps.Map;
 
    procedure Initialize_Algebra
      (Automation_Request  : UniqueAutomationRequest;
       TaskPlanOptions_Map : Int64_TPO_Map;
       Algebra             : out Algebra_Tree)
    is
-      use all type Int64_Unbounded_String_Map;
       package Unb renames Ada.Strings.Unbounded;
 
       taskIdVsAlgebraString : Int64_Unbounded_String_Map;
@@ -218,9 +407,9 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
 
                         declare
                            positionAfterId : Natural;
-                           positionSpace   : Natural :=
+                           positionSpace   : constant Natural :=
                              Unb.Index (compositionString, " ", position);
-                           positionParen   : Natural :=
+                           positionParen   : constant Natural :=
                              Unb.Index (compositionString, ")", position);
                         begin
                            if positionSpace /= 0 and then positionParen /= 0 then
@@ -230,9 +419,9 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
                            end if;
 
                            declare
-                              optionId : Int64 :=
+                              optionId     : constant Int64 :=
                                 Int64'Value (Slice (compositionString, position, positionAfterId));
-                              taskOptionId : Int64 :=
+                              taskOptionId : constant Int64 :=
                                 Get_TaskOptionID (taskId, optionId);
                            begin
                               algebraCompositionTaskOptionId :=
@@ -276,9 +465,9 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
 
                         declare
                            positionAfterId : Natural;
-                           positionSpace   : Natural :=
+                           positionSpace   : constant Natural :=
                              Unb.Index (TaskRelationShips, " ", position);
-                           positionParen   : Natural :=
+                           positionParen   : constant Natural :=
                              Unb.Index (TaskRelationShips, ")", position);
                         begin
                            if positionSpace /= 0 and then positionParen /= 0 then
@@ -288,7 +477,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
                            end if;
 
                            declare
-                              taskId : Int64 :=
+                              taskId : constant Int64 :=
                                 Int64'Value (Slice (TaskRelationShips, position, positionAfterId - 1));
                            begin
                               if Has_Key (taskIdVsAlgebraString, taskId) then
@@ -355,17 +544,17 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       TaskPlanOptions_Map     : Int64_TPO_Map)
       return Assignment_Info
    is
-      Result : Assignment_Info;
-      Vehicle_Assignment : VehicleAssignmentCost :=
+      Result             : Assignment_Info;
+      Vehicle_Assignment : constant VehicleAssignmentCost :=
         Get (Assignment.Vehicle_Assignments, VehicleId);
-      TimeThreshold : Int64 :=
+      TimeThreshold      : constant Int64 :=
         Vehicle_Assignment.TotalTime
         + Corresponding_TaskOptionCost
             (Assignment_Cost_Matrix,
              VehicleId,
              Vehicle_Assignment.Last_TaskOptionID,
              TaskOptionId).TimeToGo;
-      TimeTaskCOmpleted : Int64 :=
+      TimeTaskCompleted  : constant Int64 :=
         TimeThreshold
         + Corresponding_TaskOption
              (TaskPlanOptions_Map,
@@ -379,7 +568,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
               Get_OptionID (TaskOptionId),
               VehicleId,
               TimeThreshold,
-              TimeTaskCOmpleted));
+              TimeTaskCompleted));
 
       --  Create the new Vehicle_Assignments map
       for EntityId of Assignment.Vehicle_Assignments loop
@@ -389,7 +578,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
             if EntityId = VehicleId then
 
                Result.Vehicle_Assignments :=
-                 Add (Result.Vehicle_Assignments, EntityId, (TimeTaskCOmpleted, TaskOptionId));
+                 Add (Result.Vehicle_Assignments, EntityId, (TimeTaskCompleted, TaskOptionId));
 
          --  Otherwise, the total time and last task remains the same
             else
@@ -401,192 +590,6 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       end loop;
       return Result;
    end New_Assignment;
-
-   ------------------
-   -- Get_Children --
-   ------------------
-
-   function Children
-     (Assignment             : Assignment_Info;
-      Algebra                : access constant Algebra_Tree_Cell;
-      TaskPlanOptions_Map    : Int64_TPO_Map;
-      Assignment_Cost_Matrix : AssignmentCostMatrix)
-      return Children_Arr
-   is
-      function To_Sequence_Of_TaskOptionId
-        (Assignment : Assignment_Info)
-         return Int64_Seq
-      is
-         Result : Int64_Seq;
-      begin
-         for TaskAssignment of Assignment.Assignment_Sequence loop
-            Result :=
-              Add (Result,
-                   Get_TaskOptionID
-                     (TaskAssignment.TaskID,
-                      TaskAssignment.OptionID));
-         end loop;
-         return Result;
-      end To_Sequence_Of_TaskOptionId;
-
-      Result         : Children_Arr (1 .. 1000);
-      Children_Nb    : Natural := 0;
-      Objectives_IDs : Int64_Seq :=
-        Get_Next_Objectives_Ids
-          (To_Sequence_Of_TaskOptionId (Assignment),
-           Algebra);
-      --  List of TaskOptionIds to be assigned for the next iteration
-   begin
-      for Objective_ID of Objectives_IDs loop
-         declare
-            TaskOpt : TaskOption := Corresponding_TaskOption (TaskPlanOptions_Map, Objective_ID);
-         begin
-
-            --  We add a new Assignment to Result for each eligible entity
-            --  for Objective_Id.
-            for EntityId of TaskOpt.EligibleEntities loop
-               Children_Nb := Children_Nb + 1;
-               Result (Children_Nb) := New_Assignment (Assignment, EntityId, Objective_ID, Assignment_Cost_Matrix, TaskPlanOptions_Map);
-            end loop;
-         end;
-      end loop;
-      return Result (1 .. Children_Nb);
-   end Children;
-
-   --------------
-   -- Get_Cost --
-   --------------
-
-   function Cost (Assignment : Assignment_Info; Cost_Function : Cost_Function_Kind) return Int64 is
-      Result : Int64 := 0;
-   begin
-
-      case Cost_Function is
-         when Minmax =>
-            for VehicleID of Assignment.Vehicle_Assignments loop
-               declare
-                  TotalTime : Int64 := Get (Assignment.Vehicle_Assignments, VehicleID).TotalTime;
-               begin
-                  if TotalTime > Result then
-                     Result := TotalTime;
-                  end if;
-               end;
-            end loop;
-         when Cumulative =>
-            for VehicleId of Assignment.Vehicle_Assignments loop
-               Result := Result + Get (Assignment.Vehicle_Assignments, VehicleId).TotalTime;
-            end loop;
-         when others =>
-            raise Program_Error with "Cost function not implemented for " & Cost_Function'Image;
-      end case;
-      return Result;
-   end Cost;
-
-   ---------------------
-   -- Greedy_Solution --
-   ---------------------
-
-   function Greedy_Solution
-     (Data                   : Assignment_Tree_Branch_Bound_Configuration_Data;
-      Assignment_Cost_Matrix : AssignmentCostMatrix;
-      TaskPlanOptions_Map    : Int64_TPO_Map;
-      Algebra                : access constant Algebra_Tree_Cell)
-      return Assignment_Info
-   is
-      Empty_TA_Seq : TaskAssignment_Sequence;
-      Result : Assignment_Info :=
-        (Empty_TA_Seq,
-         Initialize_AssignmentVehicle (Assignment_Cost_Matrix));
-      Result_Cost : Int64;
-   begin
-      while True loop
-
-         --  All computed costs will be greater than the current Cost, so
-         --  it is assigned to Int64'Last to actually find the Assignment that
-         --  minimizes the cost.
-         Result_Cost := Int64'Last;
-         declare
-            Children_A : Children_Arr :=
-              Children (Result, Algebra, TaskPlanOptions_Map, Assignment_Cost_Matrix);
-         begin
-            if Children_A'Length = 0 then
-               exit;
-            else
-               for Child of Children_A loop
-                  declare
-                     Current_Cost : Int64 := Cost (Child, Data.Cost_Function);
-                  begin
-
-                     if Current_Cost <= Result_Cost then
-                        Result := Child;
-                        Result_Cost := Current_Cost;
-                     end if;
-                  end;
-               end loop;
-            end if;
-         end;
-      end loop;
-      return Result;
-   end Greedy_Solution;
-
-   -----------------------------------
-   -- Handle_Assignment_Cost_Matrix --
-   -----------------------------------
-
-   procedure Handle_Assignment_Cost_Matrix
-     (Mailbox : in out Assignment_Tree_Branch_Bound_Mailbox;
-      Data    : Assignment_Tree_Branch_Bound_Configuration_Data;
-      State   : in out Assignment_Tree_Branch_Bound_State;
-      Matrix  : AssignmentCostMatrix)
-   is
-   begin
-      Insert (State.m_assignmentCostMatrixes, Matrix.CorrespondingAutomationRequestID, Matrix);
-      Check_Assignment_Ready (Mailbox, Data, State, Matrix.CorrespondingAutomationRequestID);
-   end Handle_Assignment_Cost_Matrix;
-
-   ------------------------------
-   -- Handle_Task_Plan_Options --
-   ------------------------------
-
-   procedure Handle_Task_Plan_Options
-     (Mailbox : in out Assignment_Tree_Branch_Bound_Mailbox;
-      Data    : Assignment_Tree_Branch_Bound_Configuration_Data;
-      State   : in out Assignment_Tree_Branch_Bound_State;
-      Options : TaskPlanOptions)
-   is
-      ReqId : Int64 := Options.CorrespondingAutomationRequestID;
-   begin
-      if not Contains (State.m_taskPlanOptions, ReqId) then
-         declare
-            Empty_Int64_TPO_Map : Int64_TPO_Map;
-         begin
-            Insert (State.m_taskPlanOptions, ReqId, Empty_Int64_TPO_Map);
-         end;
-      end if;
-      Replace
-        (State.m_taskPlanOptions,
-         ReqId,
-         Add
-           (Element (State.m_taskPlanOptions, ReqId),
-            Options.TaskID,
-            Options));
-      Check_Assignment_Ready (Mailbox, Data, State, Options.CorrespondingAutomationRequestID);
-   end Handle_Task_Plan_Options;
-
-   --------------------------------------
-   -- Handle_Unique_Automation_Request --
-   --------------------------------------
-
-   procedure Handle_Unique_Automation_Request
-     (Mailbox : in out Assignment_Tree_Branch_Bound_Mailbox;
-      Data    : Assignment_Tree_Branch_Bound_Configuration_Data;
-      State   : in out Assignment_Tree_Branch_Bound_State;
-      Areq    : UniqueAutomationRequest)
-   is
-   begin
-      Insert (State.m_uniqueAutomationRequests, Areq.RequestID, Areq);
-      Check_Assignment_Ready (Mailbox, Data, State, Areq.RequestID);
-   end Handle_Unique_Automation_Request;
 
    ------------------------------
    -- Run_Calculate_Assignment --
@@ -622,7 +625,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
          --  The element at the top of the stack is popped
          Pop (Search_Stack, Current_Element);
          declare
-            Children_A : constant Children_Arr :=
+            Children_A   : constant Children_Arr :=
               Children (Current_Element,
                             Algebra,
                             TaskPlanOptions_Map,
@@ -644,7 +647,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
             else
                for J in reverse Children_A'Range loop
                   declare
-                     Child : Assignment_Info := Children_A (J);
+                     Child : constant Assignment_Info := Children_A (J);
                   begin
                      if Cost (Child, Data.Cost_Function) < Min_Cost then
                         Push (Search_Stack, Child);
@@ -683,5 +686,4 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       Delete (State.m_assignmentCostMatrixes, ReqId);
       Delete (State.m_taskPlanOptions, ReqId);
    end Send_TaskAssignmentSummary;
-
 end Assignment_Tree_Branch_Bound;

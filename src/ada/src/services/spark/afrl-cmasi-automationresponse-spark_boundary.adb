@@ -1,4 +1,3 @@
-
 package body AFRL.CMASI.AutomationResponse.SPARK_Boundary with SPARK_Mode => Off is
 
    --------------------

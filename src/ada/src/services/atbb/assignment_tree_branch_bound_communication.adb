@@ -1,8 +1,5 @@
 with AVTAS.LMCP.Types;
-with UxAS.Common.String_Constant.Message_Group;
-with AVTAS.LMCP.Types;
-with UxAS.Common.String_Constant.Message_Group;
-with LMCP_Message_Conversions; use LMCP_Message_Conversions;
+with LMCP_Message_Conversions;                  use LMCP_Message_Conversions;
 
 package body Assignment_Tree_Branch_Bound_Communication is
 
@@ -39,7 +36,7 @@ package body Assignment_Tree_Branch_Bound_Communication is
    -- sendBroadcastMessage --
    --------------------------
 
-   --  this is sendSharedLmcpObjectBroadcastMessage(), in our code Send_Shared_LMCP_Object_Broadcast_Message
+   --  this is sendSharedLMCPObjectBroadcastMessage(), in our code Send_Shared_LMCP_Object_Broadcast_Message
 
    procedure sendBroadcastMessage
      (This : in out Assignment_Tree_Branch_Bound_Mailbox;

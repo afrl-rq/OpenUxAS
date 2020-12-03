@@ -1,6 +1,6 @@
-with Common; use Common;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with LMCP_Messages; use LMCP_Messages;
+with Common;                use Common;
+with LMCP_Messages;         use LMCP_Messages;
 with UxAS.Comms.LMCP_Object_Message_Sender_Pipes;
 
 --  Package only concerned with message passing. It defines its own state,

@@ -1,6 +1,5 @@
-with Ada.Containers.Formal_Vectors;
---  with Ada.Containers.Formal_Hashed_Sets;
 with Ada.Containers.Formal_Ordered_Sets;
+with Ada.Containers.Formal_Vectors;
 
 with AVTAS.LMCP.Types; use AVTAS.LMCP.Types;
 

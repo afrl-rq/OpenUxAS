@@ -36,7 +36,7 @@ package body Automation_Request_Validator_Communication is
    -- sendBroadcastMessage --
    --------------------------
 
-   --  this is sendSharedLmcpObjectBroadcastMessage(), in our code Send_Shared_LMCP_Object_Broadcast_Message
+   --  this is sendSharedLMCPObjectBroadcastMessage(), in our code Send_Shared_LMCP_Object_Broadcast_Message
 
    procedure sendBroadcastMessage
      (This : in out Automation_Request_Validator_Mailbox;
