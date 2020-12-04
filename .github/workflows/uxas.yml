@@ -32,7 +32,7 @@ jobs:
 
       - name: Install GNAT CE 2020
         if: ${{ matrix.component == 'uxas-ada' }}
-        uses: ada-actions/toolchain@v0.2.0
+        uses: ada-actions/toolchain@ce2020
         with:
           distrib: community
 
