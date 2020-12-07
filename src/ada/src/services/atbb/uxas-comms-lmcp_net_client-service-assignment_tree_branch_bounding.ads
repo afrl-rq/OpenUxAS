@@ -2,12 +2,7 @@ with DOM.Core;
 
 with Assignment_Tree_Branch_Bound;               use Assignment_Tree_Branch_Bound;
 with Assignment_Tree_Branch_Bound_Communication; use Assignment_Tree_Branch_Bound_Communication;
-with Common;                                     use Common;
 
-with AVTAS.LMCP.Types;
-with Uxas.Messages.Lmcptask.UniqueAutomationRequest; use Uxas.Messages.Lmcptask.UniqueAutomationRequest;
-with UxAS.Messages.Lmcptask.TaskPlanOptions;         use UxAS.Messages.Lmcptask.TaskPlanOptions;
-with UxAS.Messages.Lmcptask.AssignmentCostMatrix;    use UxAS.Messages.Lmcptask.AssignmentCostMatrix;
 package UxAS.Comms.LMCP_Net_Client.Service.Assignment_Tree_Branch_Bounding is
 
    type Assignment_Tree_Branch_Bound_Service is new Service_Base with private;

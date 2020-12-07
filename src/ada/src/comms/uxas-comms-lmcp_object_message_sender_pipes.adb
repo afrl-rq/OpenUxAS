@@ -145,14 +145,14 @@ package body UxAS.Comms.LMCP_Object_Message_Sender_Pipes is
    ------------------------------
 
    --   void
-   --   sendLimitedCastMessage(const std::string& castAddress, std::unique_ptr<avtas::lmcp::Object> lmcpObject);
+   --   sendLimitedCastMessage(const std::string& castAddress, std::unique_ptr<AVTAS::lmcp::Object> lmcpObject);
    procedure Send_LimitedCast_Message
      (This         : in out LMCP_Object_Message_Sender_Pipe;
       Cast_Address : String;
       Message      : AVTAS.LMCP.Object.Object_Any)
    is
-      --  avtas::lmcp::ByteBuffer* lmcpByteBuffer = avtas::lmcp::Factory::packMessage(lmcpObject.get(), true);
-      Buffer  : constant ByteBuffer := AVTAS.LMCP.Factory.PackMessage (Message, EnableChecksum => True);
+      --  AVTAS::lmcp::ByteBuffer* lmcpByteBuffer = AVTAS::lmcp::Factory::packMessage(lmcpObject.get(), true);
+      Buffer  : constant ByteBuffer := AVTAS.LMCP.Factory.packMessage (Message, enableChecksum => True);
       --  std::string serializedPayload = std::string(reinterpret_cast<char*>(lmcpByteBuffer->array()), lmcpByteBuffer->capacity());
       Payload : constant String := Buffer.Raw_Bytes;
    begin
@@ -203,8 +203,8 @@ package body UxAS.Comms.LMCP_Object_Message_Sender_Pipes is
       Cast_Address : String;
       Message      : AVTAS.LMCP.Object.Object_Any)
    is
-      --  avtas::lmcp::ByteBuffer* lmcpByteBuffer = avtas::lmcp::Factory::packMessage(lmcpObject.get(), true);
-      Buffer  : constant ByteBuffer := AVTAS.LMCP.Factory.PackMessage (Message, EnableChecksum => True);
+      --  AVTAS::lmcp::ByteBuffer* lmcpByteBuffer = AVTAS::lmcp::Factory::packMessage(lmcpObject.get(), true);
+      Buffer  : constant ByteBuffer := AVTAS.LMCP.Factory.packMessage (Message, enableChecksum => True);
       --  std::string serializedPayload = std::string(reinterpret_cast<char*>(lmcpByteBuffer->array()), lmcpByteBuffer->capacity());
       Payload : constant String := Buffer.Raw_Bytes;
    begin
@@ -283,7 +283,7 @@ package body UxAS.Comms.LMCP_Object_Message_Sender_Pipes is
       --  int32_t zmqhighWaterMark{100000};
       Zmq_High_Water_Mark : constant := 100_000;
 
-      zmqLmcpNetworkSendSocket : ZeroMq_Socket_Configuration;
+      ZmqLmcpNetworkSendSocket : ZeroMq_Socket_Configuration;
    begin
       --  m_entityId = entityId;
       --  m_serviceId = serviceId;
@@ -303,11 +303,10 @@ package body UxAS.Comms.LMCP_Object_Message_Sender_Pipes is
          Socket_Address          => Socket_Address,
          Is_Receive              => False,
          Zmq_Socket_Type         => Zmq_SocketType,
-         Number_of_IO_Threads    => 1,
+         Number_Of_IO_Threads    => 1,
          Is_Server_Bind          => Is_Server,
          Receive_High_Water_Mark => Zmq_High_Water_Mark,
          Send_High_Water_Mark    => Zmq_High_Water_Mark);
-
 
       --  m_transportSender = uxas::stduxas::make_unique<uxas::communications::transport::ZeroMqAddressedAttributedMessageSender>(
       --          (zmqSocketType == ZMQ_STREAM ? true : false));
@@ -319,7 +318,7 @@ package body UxAS.Comms.LMCP_Object_Message_Sender_Pipes is
         (Source_Group => Source_Group,
          Entity_Id    => Entity_Id,
          Service_Id   => Service_Id,
-         SocketConfig => zmqLmcpNetworkSendSocket);
+         SocketConfig => ZmqLmcpNetworkSendSocket);
    end Initialize_Zmq_Socket;
 
 end UxAS.Comms.LMCP_Object_Message_Sender_Pipes;

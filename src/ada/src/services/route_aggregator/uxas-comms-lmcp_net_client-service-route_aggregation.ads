@@ -1,17 +1,8 @@
 with DOM.Core;
 
+with Common;                                         use Common;
 with Route_Aggregator;                               use Route_Aggregator;
 with Route_Aggregator_Communication;                 use Route_Aggregator_Communication;
-with Common;                                         use Common;
-
-with Ada.Containers.Ordered_Maps;
-with Ada.Containers.Ordered_Sets;
-
-with AVTAS.LMCP.Types;
-with AFRL.CMASI.EntityState;                         use AFRL.CMASI.EntityState;
-with Afrl.Cmasi.EntityConfiguration;                 use Afrl.Cmasi.EntityConfiguration;
-with Uxas.Messages.Lmcptask.UniqueAutomationRequest; use Uxas.Messages.Lmcptask.UniqueAutomationRequest;
-with UxAS.Messages.Lmcptask.TaskPlanOptions;         use UxAS.Messages.Lmcptask.TaskPlanOptions;
 
 package UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation is
 

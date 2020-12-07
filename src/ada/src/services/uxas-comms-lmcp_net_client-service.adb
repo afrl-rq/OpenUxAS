@@ -155,7 +155,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service is
    procedure Configure_Service
      (This                     : in out Service_Base;
       Parent_Of_Work_Directory : String;
-      Service_Xml_Node         : DOM.Core.Element;
+      Service_XML_Node         : DOM.Core.Element;
       Result                   : out Boolean)
    is
 
@@ -178,12 +178,12 @@ package body UxAS.Comms.LMCP_Net_Client.Service is
         (This,
          Subclass_Type_Name      => Value (This.Service_Type),
          Processing_Kind         => This.Processing_Type,
-         Network_Client_XML_Node => Service_Xml_Node,
+         Network_Client_XML_Node => Service_XML_Node,
          Result                  => Result);
 
       if Result then
          declare
-            Group : constant DOM.Core.DOM_String := DOM.Core.Elements.Get_Attribute (Service_Xml_Node, Name => UxAS.Common.String_Constant.MessageGroup);
+            Group : constant DOM.Core.DOM_String := DOM.Core.Elements.Get_Attribute (Service_XML_Node, Name => UxAS.Common.String_Constant.MessageGroup);
          begin
             if Group /= "" then
                --  set source group value that will be assigned to source group field of sent messages

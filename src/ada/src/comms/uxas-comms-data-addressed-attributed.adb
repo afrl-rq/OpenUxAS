@@ -194,7 +194,7 @@ package body UxAS.Comms.Data.Addressed.Attributed is
       --      return (m_isValid);
       --  }
       --  else if (endOfMessageAttributesDelimIndex == (delimitedString.length() - 1))
-      elsif EndOfMessageAttributesDelimIndex = Delimited_String'length then
+      elsif EndOfMessageAttributesDelimIndex = Delimited_String'Length then
       --  {
       --      UXAS_LOG_ERROR(s_typeName(), "::parseAddressedAttributedMessageStringAndSetFields payload must be non-empty");
       --      m_isValid = false;
@@ -224,7 +224,7 @@ package body UxAS.Comms.Data.Addressed.Attributed is
             To => This.Address);
 
       --  m_payload = delimitedString.substr(endOfMessageAttributesDelimIndex + 1, delimitedString.length() - (endOfMessageAttributesDelimIndex + 1));
-      Copy (Delimited_String (EndOfMessageAttributesDelimIndex + 1 .. Delimited_String'last),
+      Copy (Delimited_String (EndOfMessageAttributesDelimIndex + 1 .. Delimited_String'Last),
             To => This.Payload);
 
       Copy (Delimited_String, To => This.Content_String);

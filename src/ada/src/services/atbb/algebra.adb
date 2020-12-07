@@ -1,17 +1,37 @@
-with Ada.Containers; use Ada.Containers;
-with Ada.Text_IO; use Ada.Text_IO;
-with Ada.Strings; use Ada.Strings;
+with Ada.Containers;    use Ada.Containers;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
+with Ada.Strings;       use Ada.Strings;
+with Ada.Text_IO;       use Ada.Text_IO;
 
 package body Algebra with SPARK_Mode is
 
    type Int64_Seq_Arr is array (Children_Index range <>) of Int64_Seq;
+
+   -----------------------
+   -- Local subprograms --
+   -----------------------
 
    procedure Next_Actions
      (Assignment             : Int64_Seq;
       Algebra                : not null access constant Algebra_Tree_Cell;
       Result                 : out Int64_Seq;
       Encounter_Executed_Out : out Boolean);
+
+   -----------------------------
+   -- Get_Next_Objectives_Ids --
+   -----------------------------
+
+   function Get_Next_Objectives_Ids
+     (Assignment : Int64_Seq;
+      Algebra    : access constant Algebra_Tree_Cell)
+      return Int64_Seq
+   is
+      Encounter_Executed : Boolean;
+      Result             : Int64_Seq;
+   begin
+      Next_Actions (Assignment, Algebra, Result, Encounter_Executed);
+      return Result;
+   end Get_Next_Objectives_Ids;
 
    ------------------
    -- Next_Actions --
@@ -29,7 +49,7 @@ package body Algebra with SPARK_Mode is
 
          when Action =>
             declare
-               ActionFound : Boolean :=
+               ActionFound : constant Boolean :=
                  (for some TaskOptionId of Assignment =>
                     (TaskOptionId = Algebra.TaskOptionId));
             begin
@@ -146,53 +166,45 @@ package body Algebra with SPARK_Mode is
       Result := ResultThis;
    end Next_Actions;
 
-   function Get_Next_Objectives_Ids
-     (Assignment : Int64_Seq;
-      Algebra    : access constant Algebra_Tree_Cell)
-      return Int64_Seq
-   is
-      Encounter_Executed : Boolean;
-      Result             : Int64_Seq;
-   begin
-      Next_Actions (Assignment, Algebra, Result, Encounter_Executed);
-      return Result;
-   end Get_Next_Objectives_Ids;
+   -------------------
+   -- Parse_Formula --
+   -------------------
 
    procedure Parse_Formula
      (Formula : Unbounded_String;
       Algebra : out Algebra_Tree)
    is
-      Kind : Node_Kind_Type := Undefined;
+      Kind          : Node_Kind_Type := Undefined;
       Operator_Kind : Operator_Kind_Type := Undefined;
-      form : Unbounded_String := Formula;
+      form          : Unbounded_String := Formula;
    begin
       for J in 1 .. Length (form) loop
 
          if Element (form, J) = '.' then
             Kind := Operator;
             Operator_Kind := Sequential;
-            form := To_Unbounded_String (Slice (form, J + 2, Index (Form, ")", Backward) - 1));
+            form := To_Unbounded_String (Slice (form, J + 2, Index (form, ")", Backward) - 1));
             exit;
 
          elsif Element (form, J) = '+' then
             Kind := Operator;
             Operator_Kind := Alternative;
-            form := To_Unbounded_String (Slice (form, J + 2, Index (Form, ")", Backward) - 1));
+            form := To_Unbounded_String (Slice (form, J + 2, Index (form, ")", Backward) - 1));
             exit;
 
          elsif Element (form, J) = '|' then
             Kind := Operator;
             Operator_Kind := Parallel;
-            form := To_Unbounded_String (Slice (form, J + 2, Index (Form, ")", Backward) - 1));
+            form := To_Unbounded_String (Slice (form, J + 2, Index (form, ")", Backward) - 1));
             exit;
 
          elsif Element (form, J) = 'p' then
             Kind := Action;
 
-            if Index (Form, ")", Backward) = 0 then
-               form := To_Unbounded_String (Slice (form, J + 1, length (form)));
+            if Index (form, ")", Backward) = 0 then
+               form := To_Unbounded_String (Slice (form, J + 1, Length (form)));
             else
-               form := To_Unbounded_String (Slice (form, J + 1, Index (Form, ")", Backward) - 1));
+               form := To_Unbounded_String (Slice (form, J + 1, Index (form, ")", Backward) - 1));
             end if;
 
             exit;
@@ -202,7 +214,7 @@ package body Algebra with SPARK_Mode is
 
       if Kind = Action then
          declare
-            ActionID : Int64 :=
+            ActionID : constant Int64 :=
               Int64'Value (To_String (form));
          begin
             Algebra := new Algebra_Tree_Cell'(Node_Kind     => Action,
@@ -221,7 +233,7 @@ package body Algebra with SPARK_Mode is
 
                   if numParenthesis = 0 then
                      declare
-                        iEnd : Natural := J + 1;
+                        iEnd              : Natural := J + 1;
                         numParenthesisTmp : Natural := 0;
                      begin
                         while iEnd <= Length (form) loop
@@ -279,9 +291,15 @@ package body Algebra with SPARK_Mode is
       end if;
    end Parse_Formula;
 
+   ----------------
+   -- Print_Tree --
+   ----------------
+
    procedure Print_Tree (Algebra : access constant Algebra_Tree_Cell) is
+      procedure Print_Tree_Aux (Node : access constant Algebra_Tree_Cell; I : Natural);
+
       procedure Print_Tree_Aux (Node : access constant Algebra_Tree_Cell; I : Natural) is
-         Prefix : String := I * " | ";
+         Prefix : constant String := I * " | ";
       begin
          if Node.Node_Kind = Action then
             Put_Line (Prefix & "Action node: " & Node.TaskOptionId'Image);

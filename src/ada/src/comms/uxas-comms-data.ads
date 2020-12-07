@@ -72,7 +72,7 @@ package UxAS.Comms.Data is
      Post'Class => Payload_Content_Type'Result'Length > 0;
 
    --  Descriptive qualifier for the payload.
-   --  Example values: "afrl.cmasi.AirVehicleState" (LMCP full type name)
+   --  Example values: "AFRL.CMASI.AirVehicleState" (LMCP full type name)
    --  for case LMCP payload; json qualifying descriptor. Generally, is additional
    --  description of the payload beyond the content type value. Valid values
    --  for descriptor are a controlled list - but less constrained than content

@@ -22,7 +22,7 @@ package body UxAS.Comms.Transport.ZeroMQ_Socket_Configurations is
       Copy (Socket_Address, To => Result.Socket_Address);
 
       Result.Zmq_Socket_Type := Zmq_Socket_Type;
-      Result.Number_of_IO_Threads := Number_Of_IO_Threads;
+      Result.Number_Of_IO_Threads := Number_Of_IO_Threads;
       Result.Is_Server_Bind := Is_Server_Bind;
       Result.Receive_High_Water_Mark := Receive_High_Water_Mark;
       Result.Send_High_Water_Mark := Send_High_Water_Mark;

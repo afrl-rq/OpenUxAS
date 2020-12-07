@@ -10,7 +10,7 @@ package UxAS.Common.String_Constant is
    ComponentManager            : constant String := "ComponentManager";
    Components                  : constant String := "Components";
    ConsoleLoggerSeverityLevel  : constant String := "ConsoleLoggerSeverityLevel";
-   EntityID                    : constant String := "EntityID";
+   EntityId                    : constant String := "EntityID";
    EntityType                  : constant String := "EntityType";
    FilterType                  : constant String := "FilterType";
    GapTime_Ms                  : constant String := "GapTime_ms";

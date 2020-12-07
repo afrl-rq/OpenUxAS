@@ -1,47 +1,38 @@
 with Ada.Characters.Handling;
 with DOM.Core.Elements;
 with LMCP_Message_Conversions;
+with Common;
+use Common;
+with UxAS.Messages.lmcptask.AssignmentCostMatrix;
+use UxAS.Messages.lmcptask.AssignmentCostMatrix;
+with UxAS.Messages.lmcptask.TaskPlanOptions;
+use UxAS.Messages.lmcptask.TaskPlanOptions;
+with UxAS.Messages.lmcptask.UniqueAutomationRequest;
+use UxAS.Messages.lmcptask.UniqueAutomationRequest;
 
 package body UxAS.Comms.LMCP_Net_Client.Service.Assignment_Tree_Branch_Bounding is
 
-  procedure Handle_AssignmentCostMatrix_Msg
+   -----------------------
+   -- Local subprograms --
+   -----------------------
+
+   procedure Handle_AssignmentCostMatrix_Msg
      (This : in out Assignment_Tree_Branch_Bound_Service;
       Msg  : AssignmentCostMatrix_Any);
-
-   procedure Handle_UniqueAutomationRequest_Msg
-     (This : in out Assignment_Tree_Branch_Bound_Service;
-      Msg  : UniqueAutomationRequest_Any);
 
    procedure Handle_TaskPlanOptions_Msg
      (This : in out Assignment_Tree_Branch_Bound_Service;
       Msg  : TaskPlanOptions_Any);
+
+   procedure Handle_UniqueAutomationRequest_Msg
+     (This : in out Assignment_Tree_Branch_Bound_Service;
+      Msg  : UniqueAutomationRequest_Any);
 
    function Int64_Attribute
      (XML_Node : DOM.Core.Element;
       Name     : String;
       Default  : Common.Int64)
    return Common.Int64;
-
-   ---------------------------------
-   -- Registry_Service_Type_Names --
-   ---------------------------------
-
-   function Registry_Service_Type_Names return Service_Type_Names_List is
-      (Service_Type_Names_List'(1 => Instance (Service_Type_Name_Max_Length, Content => Type_Name)));
-
-   ------------
-   -- Create --
-   ------------
-
-   function Create return Any_Service is
-      Result : Any_Service;
-   begin
-      Result := new Assignment_Tree_Branch_Bound_Service;
-      Result.Construct_Service
-        (Service_Type        => Type_Name,
-         Work_Directory_Name => Directory_Name);
-      return Result;
-   end Create;
 
    ---------------
    -- Configure --
@@ -77,16 +68,30 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Assignment_Tree_Branch_Bounding 
       This.Config.Number_Nodes_Maximum :=
         Common.Int64'Max (0, This.Config.Number_Nodes_Maximum);
 
-      This.Add_Subscription_Address (UxAS.Messages.Lmcptask.AssignmentCostMatrix.Subscription, Unused);
-      This.Add_Subscription_Address (UxAS.Messages.Lmcptask.TaskPlanOptions.Subscription, Unused);
-      This.Add_Subscription_Address (UxAS.Messages.Lmcptask.UniqueAutomationRequest.Subscription, Unused);
+      This.Add_Subscription_Address (UxAS.Messages.lmcptask.AssignmentCostMatrix.Subscription, Unused);
+      This.Add_Subscription_Address (UxAS.Messages.lmcptask.TaskPlanOptions.Subscription, Unused);
+      This.Add_Subscription_Address (UxAS.Messages.lmcptask.UniqueAutomationRequest.Subscription, Unused);
 
       Result := True;
    end Configure;
 
-   --------------------------------
+   ------------
+   -- Create --
+   ------------
+
+   function Create return Any_Service is
+      Result : Any_Service;
+   begin
+      Result := new Assignment_Tree_Branch_Bound_Service;
+      Result.Construct_Service
+        (Service_Type        => Type_Name,
+         Work_Directory_Name => Directory_Name);
+      return Result;
+   end Create;
+
+   -------------------------------------
    -- Handle_AssignmentCostMatrix_Msg --
-   --------------------------------
+   -------------------------------------
 
    procedure Handle_AssignmentCostMatrix_Msg
      (This : in out Assignment_Tree_Branch_Bound_Service;
@@ -132,7 +137,6 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Assignment_Tree_Branch_Bounding 
          LMCP_Message_Conversions.As_UniqueAutomationRequest_Message (Msg));
    end Handle_UniqueAutomationRequest_Msg;
 
-
    ----------------
    -- Initialize --
    ----------------
@@ -151,6 +155,27 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Assignment_Tree_Branch_Bounding 
          Entity_Id    => Common.UInt32 (This.Entity_Id),
          Service_Id   => Common.UInt32 (This.Network_Id));
    end Initialize;
+
+   ---------------------
+   -- Int64_Attribute --
+   ---------------------
+
+   function Int64_Attribute
+     (XML_Node : DOM.Core.Element;
+      Name     : String;
+      Default  : Common.Int64)
+   return Common.Int64
+   is
+      use DOM.Core;
+      Attr_Value : constant DOM_String := Elements.Get_Attribute (XML_Node, Name);
+   begin
+      if Attr_Value /= "" and then (for all C of Attr_Value => C in '0' .. '9')
+      then
+         return Common.Int64'Value (Attr_Value);
+      else
+         return Default;
+      end if;
+   end Int64_Attribute;
 
    -----------------------------------
    -- Process_Received_LMCP_Message --
@@ -175,26 +200,12 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Assignment_Tree_Branch_Bounding 
       Should_Terminate := False;
    end Process_Received_LMCP_Message;
 
-   ---------------------
-   -- Int64_Attribute --
-   ---------------------
+   ---------------------------------
+   -- Registry_Service_Type_Names --
+   ---------------------------------
 
-   function Int64_Attribute
-     (XML_Node : DOM.Core.Element;
-      Name     : String;
-      Default  : Common.Int64)
-   return Common.Int64
-   is
-      use DOM.Core;
-      Attr_Value : constant DOM_String := Elements.Get_Attribute (XML_Node, Name);
-   begin
-      if Attr_Value /= "" and then (for all C of Attr_Value => C in '0' .. '9')
-      then
-         return Common.Int64'Value (Attr_Value);
-      else
-         return Default;
-      end if;
-   end Int64_Attribute;
+   function Registry_Service_Type_Names return Service_Type_Names_List is
+      (Service_Type_Names_List'(1 => Instance (Service_Type_Name_Max_Length, Content => Type_Name)));
 
 begin
    --  All concrete service subclasses must call this procedure in their

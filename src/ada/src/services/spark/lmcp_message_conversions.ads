@@ -1,27 +1,27 @@
 with LMCP_Messages;
 
-with Afrl.Cmasi.Waypoint;                   use Afrl.Cmasi.Waypoint;
-with Uxas.Messages.Route.RoutePlan;         use Uxas.Messages.Route.RoutePlan;
-with Uxas.Messages.Route.RoutePlanResponse; use Uxas.Messages.Route.RoutePlanResponse;
-with Afrl.Cmasi.VehicleAction;              use Afrl.Cmasi.VehicleAction;
-with Afrl.Cmasi.KeyValuePair;               use Afrl.Cmasi.KeyValuePair;
-with Afrl.Cmasi.Location3D;                 use Afrl.Cmasi.Location3D;
-with Afrl.Cmasi.EntityState;                use Afrl.Cmasi.EntityState;
-with UxAS.Messages.lmcptask.AssignmentCostMatrix; use UxAS.Messages.lmcptask.AssignmentCostMatrix;
-with Uxas.Messages.Route.RouteRequest;      use Uxas.Messages.Route.RouteRequest;
-with Uxas.Messages.Route.RoutePlanRequest;  use Uxas.Messages.Route.RoutePlanRequest;
-with Uxas.Messages.Route.RouteConstraints;  use Uxas.Messages.Route.RouteConstraints;
-with Uxas.Messages.lmcptask.TaskPlanOptions; use Uxas.Messages.lmcptask.TaskPlanOptions;
+with AFRL.CMASI.AutomationRequest;                    use AFRL.CMASI.AutomationRequest;
+with AFRL.CMASI.EntityState;                          use AFRL.CMASI.EntityState;
+with AFRL.CMASI.KeyValuePair;                         use AFRL.CMASI.KeyValuePair;
+with AFRL.CMASI.Location3D;                           use AFRL.CMASI.Location3D;
+with AFRL.CMASI.VehicleAction;                        use AFRL.CMASI.VehicleAction;
+with AFRL.CMASI.Waypoint;                             use AFRL.CMASI.Waypoint;
+with AFRL.Impact.ImpactAutomationRequest;             use AFRL.Impact.ImpactAutomationRequest;
 with AVTAS.LMCP.Object;
-with afrl.cmasi.AutomationRequest; use afrl.cmasi.AutomationRequest;
-with uxas.messages.lmcptask.TaskAutomationRequest; use uxas.messages.lmcptask.TaskAutomationRequest;
-with afrl.impact.ImpactAutomationRequest; use afrl.impact.ImpactAutomationRequest;
-with uxas.messages.lmcptask.UniqueAutomationResponse; use uxas.messages.lmcptask.UniqueAutomationResponse;
-with uxas.messages.lmcptask.UniqueAutomationRequest; use uxas.messages.lmcptask.UniqueAutomationRequest;
+with UxAS.Messages.lmcptask.AssignmentCostMatrix;     use UxAS.Messages.lmcptask.AssignmentCostMatrix;
+with UxAS.Messages.lmcptask.TaskAutomationRequest;    use UxAS.Messages.lmcptask.TaskAutomationRequest;
+with UxAS.Messages.lmcptask.TaskPlanOptions;          use UxAS.Messages.lmcptask.TaskPlanOptions;
+with UxAS.Messages.lmcptask.UniqueAutomationRequest;  use UxAS.Messages.lmcptask.UniqueAutomationRequest;
+with UxAS.Messages.lmcptask.UniqueAutomationResponse; use UxAS.Messages.lmcptask.UniqueAutomationResponse;
+with UxAS.Messages.Route.RouteConstraints;            use UxAS.Messages.Route.RouteConstraints;
+with UxAS.Messages.Route.RoutePlan;                   use UxAS.Messages.Route.RoutePlan;
+with UxAS.Messages.Route.RoutePlanRequest;            use UxAS.Messages.Route.RoutePlanRequest;
+with UxAS.Messages.Route.RoutePlanResponse;           use UxAS.Messages.Route.RoutePlanResponse;
+with UxAS.Messages.Route.RouteRequest;                use UxAS.Messages.Route.RouteRequest;
 
 package LMCP_Message_Conversions is
 
-   function As_AssignmentCostMatrix_Message (msg : not null AssignmentCostMatrix_Any) return LMCP_Messages.AssignmentCostMatrix;
+   function As_AssignmentCostMatrix_Message (Msg : not null AssignmentCostMatrix_Any) return LMCP_Messages.AssignmentCostMatrix;
 
    function As_RouteConstraints_Message (Msg : not null RouteConstraints_Any) return LMCP_Messages.RouteConstraints;
 

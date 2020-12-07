@@ -63,13 +63,13 @@ package UxAS.Comms.LMCP_Object_Message_Sender_Pipes is
       Is_Server      : Boolean);
 
    --   void
-   --   sendBroadcastMessage(std::unique_ptr<avtas::lmcp::Object> lmcpObject);
+   --   sendBroadcastMessage(std::unique_ptr<AVTAS::lmcp::Object> lmcpObject);
    procedure Send_Broadcast_Message
      (This    : in out LMCP_Object_Message_Sender_Pipe;
       Message : AVTAS.LMCP.Object.Object_Any);
 
    --   void
-   --   sendLimitedCastMessage(const std::string& castAddress, std::unique_ptr<avtas::lmcp::Object> lmcpObject);
+   --   sendLimitedCastMessage(const std::string& castAddress, std::unique_ptr<AVTAS::lmcp::Object> lmcpObject);
    procedure Send_LimitedCast_Message
      (This         : in out LMCP_Object_Message_Sender_Pipe;
       Cast_Address : String;
@@ -82,13 +82,13 @@ package UxAS.Comms.LMCP_Object_Message_Sender_Pipes is
       Message : Addressed_Attributed_Message_Ref);
 
    --   void
-   --   sendSharedBroadcastMessage(const std::shared_ptr<avtas::lmcp::Object>& lmcpObject);
+   --   sendSharedBroadcastMessage(const std::shared_ptr<AVTAS::lmcp::Object>& lmcpObject);
    procedure Send_Shared_Broadcast_Message
      (This    : in out LMCP_Object_Message_Sender_Pipe;
       Message : AVTAS.LMCP.Object.Object_Any);
 
    --   void
-   --   sendSharedLimitedCastMessage(const std::string& castAddress, const std::shared_ptr<avtas::lmcp::Object>& lmcpObject);
+   --   sendSharedLimitedCastMessage(const std::string& castAddress, const std::shared_ptr<AVTAS::lmcp::Object>& lmcpObject);
    procedure Send_Shared_LimitedCast_Message
      (This         : in out LMCP_Object_Message_Sender_Pipe;
       Cast_Address : String;

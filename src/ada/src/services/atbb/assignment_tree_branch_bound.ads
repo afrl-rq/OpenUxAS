@@ -1,11 +1,8 @@
-with Ada.Containers.Functional_Maps;
-with Ada.Containers.Functional_Vectors;
-with Algebra;                           use Algebra;
-with Bounded_Stack;
-with Common;                            use Common;
-with LMCP_Messages;                     use LMCP_Messages;
 with Ada.Containers.Formal_Hashed_Maps;
+with Ada.Containers.Functional_Maps;
 with Assignment_Tree_Branch_Bound_Communication; use Assignment_Tree_Branch_Bound_Communication;
+with Common;                                     use Common;
+with LMCP_Messages;                              use LMCP_Messages;
 
 package Assignment_Tree_Branch_Bound with SPARK_Mode is
 

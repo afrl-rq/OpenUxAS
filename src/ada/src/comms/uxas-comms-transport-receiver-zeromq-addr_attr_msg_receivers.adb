@@ -20,7 +20,7 @@ package body UxAS.Comms.Transport.Receiver.ZeroMQ.Addr_Attr_Msg_Receivers is
          Entity_Id            => Entity_Id,
          Service_Id           => Service_Id,
          Socket_Configuration => Socket_Configuration);
-      This.Is_Tcp_Stream := Socket_Configuration.Zmq_Socket_Type = Stream;
+      This.Is_TCP_Stream := Socket_Configuration.Zmq_Socket_Type = STREAM;
    end Initialize;
 
    use Message_Lists;

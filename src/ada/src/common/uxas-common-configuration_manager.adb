@@ -110,8 +110,8 @@ package body UxAS.Common.Configuration_Manager is
 
       for K in Natural range 1 .. DOM.Core.Nodes.Length (Matching_Children) loop
          Unused := Append_Child
-           (UXAS_Node,
-            New_Child => DOM.Core.Documents.Import_Node (Doc, Item (Matching_Children, K-1), Deep => True));
+           (UxAS_Node,
+            New_Child => DOM.Core.Documents.Import_Node (Doc, Item (Matching_Children, K - 1), Deep => True));
       end loop;
       DOM.Core.Free (Matching_Children);
    end Populate_Enabled_Components;
@@ -244,10 +244,10 @@ package body UxAS.Common.Configuration_Manager is
 
       Children          : constant Node_List := DOM.Core.Documents.Get_Elements_By_Tag_Name (Root, String_Constant.UxAS);
       EntityInfoXmlNode : constant Node := DOM.Core.Nodes.Item (Children, Index => 0);
-    begin
+   begin
       if EntityInfoXmlNode /= null then
          declare
-            Str : constant DOM_String := Get_Attribute (EntityInfoXmlNode, Name => String_Constant.EntityID);
+            Str : constant DOM_String := Get_Attribute (EntityInfoXmlNode, Name => String_Constant.EntityId);
          begin
             if Str /= "" then
                This.Entity_Id := UInt32'Value (Str);

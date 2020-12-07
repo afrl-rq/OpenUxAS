@@ -1,6 +1,6 @@
 with Ada.Strings.Unbounded;      use Ada.Strings.Unbounded;
-with avtas.lmcp.types;
-with uxas.Comms.LMCP_Net_Client; use uxas.Comms.LMCP_Net_Client;
+with AVTAS.LMCP.Types;
+with UxAS.Comms.LMCP_Net_Client; use UxAS.Comms.LMCP_Net_Client;
 
 package body Automation_Request_Validator with SPARK_Mode is
 
@@ -349,6 +349,7 @@ package body Automation_Request_Validator with SPARK_Mode is
          declare
             TaskId      : constant Int64 := Get (TaskIds, I);
             IsReadyPrev : constant Boolean := IsReady with Ghost;
+            pragma Unreferenced (IsReadyPrev);
          begin
             if Has_Key (Available_Tasks, TaskId) then
                declare
@@ -442,7 +443,7 @@ package body Automation_Request_Validator with SPARK_Mode is
    ---------------------------
 
    procedure Get_Unique_Request_Id (Val : out Int64) is
-      Id : avtas.lmcp.types.Int64;
+      Id : AVTAS.LMCP.Types.Int64;
    begin
       Get_Unique_Entity_Send_Message_Id (Id);
       Val := Int64 (Id);
@@ -618,9 +619,9 @@ package body Automation_Request_Validator with SPARK_Mode is
       end if;
 
       declare
-         Req : constant UniqueAutomationRequest := First_Element (Pending_Requests);
+         Req            : constant UniqueAutomationRequest := First_Element (Pending_Requests);
          Service_Status : ServiceStatus;
-         KVP : KeyValuePair;
+         KVP            : KeyValuePair;
       begin
          sendBroadcastMessage (Mailbox, Req);
          KVP.Key :=

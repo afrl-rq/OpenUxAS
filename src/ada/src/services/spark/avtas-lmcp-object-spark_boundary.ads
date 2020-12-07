@@ -1,4 +1,4 @@
-package avtas.lmcp.object.SPARK_Boundary with SPARK_Mode is
+package AVTAS.LMCP.object.SPARK_Boundary with SPARK_Mode is
    pragma Annotate (GNATprove, Terminating, SPARK_Boundary);
 
    type My_Object_Any is private;
@@ -22,4 +22,4 @@ private
      (My_Object_Any (X));
    function Unwrap (X : My_Object_Any) return Object_Any is
      (Object_Any (X));
-end avtas.lmcp.object.SPARK_Boundary;
+end AVTAS.LMCP.Object.SPARK_Boundary;

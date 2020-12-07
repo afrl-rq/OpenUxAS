@@ -7,8 +7,7 @@ with UxAS.Comms.LMCP_Object_Message_Sender_Pipes;   use UxAS.Comms.LMCP_Object_M
 with UxAS.Comms.LMCP_Object_Message_Receiver_Pipes; use UxAS.Comms.LMCP_Object_Message_Receiver_Pipes;
 with UxAS.Comms.Data.Addressed.Attributed;          use UxAS.Comms.Data.Addressed.Attributed;
 
-package UxAS.Comms.LMCP_Net_Client
-is
+package UxAS.Comms.LMCP_Net_Client is
    pragma Elaborate_Body;
 
    type LMCP_Object_Network_Client_Base is abstract tagged limited private;
@@ -70,7 +69,7 @@ is
    --  @return address string to used to send a message to a specific service
    --  hosted by a particular UxAS entity.
    --
-   function Network_Client_Unicast_Address (Entity_Id : Uint32;  Network_Client_Id : Int64)
+   function Network_Client_Unicast_Address (Entity_Id : UInt32;  Network_Client_Id : Int64)
      return String;
 
    --   Multi-cast entity-based subscription address string
@@ -311,7 +310,7 @@ is
    --  @param lmcpObject LMCP object to be uni-casted/multi-casted.
    --
    --      void
-   --      sendLmcpObjectLimitedCastMessage(const std::string& castAddress, std::unique_ptr<avtas::lmcp::Object> lmcpObject);
+   --      sendLmcpObjectLimitedCastMessage(const std::string& castAddress, std::unique_ptr<AVTAS::lmcp::Object> lmcpObject);
    procedure Send_LMCP_Object_Limited_Cast_Message
      (This        : in out LMCP_Object_Network_Client_Base;
       CastAddress : String;
@@ -460,7 +459,7 @@ private
    --  address is derived from the full LMCP object name.
    --
    --      void
-   --      sendLmcpObjectBroadcastMessage(std::unique_ptr<avtas::lmcp::Object> lmcpObject);
+   --      sendLmcpObjectBroadcastMessage(std::unique_ptr<AVTAS::lmcp::Object> lmcpObject);
    procedure Send_LMCP_Object_Broadcast_Message
      (This : in out LMCP_Object_Network_Client_Base;
       Msg  : not null AVTAS.LMCP.Object.Object_Any);
@@ -485,7 +484,7 @@ private
    --       address is derived from the full LMCP object name.
    --
    --      void
-   --      sendSharedLmcpObjectBroadcastMessage(const std::shared_ptr<avtas::lmcp::Object>& lmcpObject);
+   --      sendSharedLmcpObjectBroadcastMessage(const std::shared_ptr<AVTAS::lmcp::Object>& lmcpObject);
    procedure Send_Shared_LMCP_Object_Broadcast_Message
      (This : in out LMCP_Object_Network_Client_Base;
       Msg  : not null AVTAS.LMCP.Object.Object_Any);
@@ -497,7 +496,7 @@ private
    --       @param lmcpObject LMCP object to be uni-casted/multi-casted.
    --
    --      void
-   --      sendSharedLmcpObjectLimitedCastMessage(const std::string& castAddress, const std::shared_ptr<avtas::lmcp::Object>& lmcpObject);
+   --      sendSharedLmcpObjectLimitedCastMessage(const std::string& castAddress, const std::shared_ptr<AVTAS::lmcp::Object>& lmcpObject);
    procedure Send_Shared_LMCP_Object_Limited_Cast_Message
      (This         : in out LMCP_Object_Network_Client_Base;
       Cast_Address : String;

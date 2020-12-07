@@ -1,20 +1,18 @@
-with Ada.Containers; use Ada.Containers;
-with Ada.Containers.Formal_Hashed_Sets;
 with Ada.Containers.Formal_Hashed_Maps;
+with Ada.Containers.Formal_Hashed_Sets;
 with Ada.Containers.Formal_Ordered_Maps;
 with Ada.Containers.Functional_Maps;
 with Ada.Containers.Functional_Vectors;
+with Ada.Containers;                     use Ada.Containers;
 
-with LMCP_Messages;                  use LMCP_Messages;
 with Common;                         use Common;
+with LMCP_Messages;                  use LMCP_Messages;
 with Route_Aggregator_Communication; use Route_Aggregator_Communication;
 
 package Route_Aggregator with SPARK_Mode is
    pragma Unevaluated_Use_Of_Old (Allow);
 
    pragma Assertion_Policy (Ignore);
-
---  private
 
    --  Configuration data is separated from the service state as it is not
    --  handled by the same primitives. We use functional containers, as it is
@@ -31,7 +29,6 @@ package Route_Aggregator with SPARK_Mode is
    type Route_Aggregator_Configuration_Data is record
       m_entityStates     : Int64_Seq;
       m_entityStatesInfo : EntityState_Map;
-      --      std::unordered_map<int64_t, std::shared_ptr<afrl::cmasi::EntityConfiguration> > m_entityConfigurations;
       m_airVehicles      : Int64_Set;
       m_groundVehicles   : Int64_Set;
       m_surfaceVehicles  : Int64_Set;
@@ -74,19 +71,10 @@ package Route_Aggregator with SPARK_Mode is
 
    function Same_Mappings
      (M : Int64_Formal_Set_Maps.Formal_Model.M.Map;
-      N : Int_Set_Maps_M.Map) return Boolean is
-     ((for all I of M => Int_Set_Maps_M.Has_Key (N, I))
-      and then (for all I of N => Contains (M, I))
-      and then
-        (for all I of N =>
-             (for all E of Int_Set_Maps_M.Get (N, I) =>
-                     Contains (Element (M, I), E)))
-      and then
-        (for all I of N =>
-             (for all E of Element (M, I) =>
-                     Contains (Int_Set_Maps_M.Get (N, I), E))))
+      N : Int_Set_Maps_M.Map)
+      return Boolean
    with Ghost,
-       Annotate => (GNATprove, Inline_For_Proof);
+        Annotate => (GNATprove, Inline_For_Proof);
    --  The two structures contain the same mappings
 
    function Model (M : Int64_Formal_Set_Map) return Int_Set_Maps_M.Map with
@@ -132,29 +120,14 @@ package Route_Aggregator with SPARK_Mode is
    --  State of the service is modified more often, data can be removed as
    --  well has added. Use formal containers for efficiency.
 
-   function Disjoint (S1, S2 : Int64_Set) return Boolean is
-     (for all E of S1 => not Contains (S2, E));
+   function No_Overlaps (pendingRoute : Int_Set_Maps_M.Map) return Boolean;
 
-   function No_Overlaps (pendingRoute : Int_Set_Maps_M.Map) return Boolean is
-     (for all R_1 of pendingRoute =>
-        (for all R_2 of pendingRoute =>
-             (if R_1 /= R_2 then
-                   Disjoint (Int_Set_Maps_M.Get (pendingRoute, R_1),
-                             Int_Set_Maps_M.Get (pendingRoute, R_2)))));
-
-   function No_Overlaps (pendingRoute, pendingAutoReq : Int_Set_Maps_M.Map) return Boolean is
-     (for all R_1 of pendingRoute =>
-         (for all R_2 of pendingAutoReq =>
-            Disjoint (Int_Set_Maps_M.Get (pendingRoute, R_1),
-                      Int_Set_Maps_M.Get (pendingAutoReq, R_2))));
+   function No_Overlaps (pendingRoute, pendingAutoReq : Int_Set_Maps_M.Map) return Boolean;
 
    function All_Pending_Requests_Seen
      (pendingRequest : Int_Set_Maps_M.Map;
-      routeRequestId : Int64) return Boolean
-   is
-     (for all R_Id of pendingRequest =>
-          (for all Id of Int_Set_Maps_M.Get (pendingRequest, R_Id) =>
-                Id <= routeRequestId));
+      routeRequestId : Int64)
+      return Boolean;
 
    package UAR_Maps is new Ada.Containers.Formal_Ordered_Maps
      (Key_Type => Int64,
@@ -233,7 +206,7 @@ package Route_Aggregator with SPARK_Mode is
 
      and (for all ReqID of m_pendingAutoReq => Contains (m_uniqueAutomationRequests, ReqID));
 
-   function planToRoute (pendingRoute : Int64_Formal_Set_Map) return Int64_Map with
+   function Plan_To_Route (pendingRoute : Int64_Formal_Set_Map) return Int64_Map with
      Ghost,
      Pre  => No_Overlaps (Model (pendingRoute)),
 
@@ -241,75 +214,53 @@ package Route_Aggregator with SPARK_Mode is
 
      Post => (for all I of Model (pendingRoute) =>
                  (for all K of Int_Set_Maps_M.Get (Model (pendingRoute), I) =>
-                      Has_Key (planToRoute'Result, K)
-                  and then Get (planToRoute'Result, K) = I))
-     and then (for all I of planToRoute'Result =>
-                Int_Set_Maps_M.Has_Key (Model (pendingRoute), Get (planToRoute'Result, I))
-               and then Contains (Int_Set_Maps_M.Get (Model (pendingRoute), Get (planToRoute'Result, I)), I));
+                      Has_Key (Plan_To_Route'Result, K)
+                  and then Get (Plan_To_Route'Result, K) = I))
+     and then (for all I of Plan_To_Route'Result =>
+                Int_Set_Maps_M.Has_Key (Model (pendingRoute), Get (Plan_To_Route'Result, I))
+               and then Contains (Int_Set_Maps_M.Get (Model (pendingRoute), Get (Plan_To_Route'Result, I)), I));
 
    --  Property of State
 
    function All_Plans_Registered
      (routePlanResponses : Int64_RouteResponse_Map;
-      routePlans         : Int64_IdPlanPair_Map) return Boolean is
-
+      routePlans         : Int64_IdPlanPair_Map)
+      return Boolean
+   with Ghost;
    --  All plans associated to pending route plan responses are registered
-
-     (for all RP of Model (routePlanResponses) =>
-        (for all Pl of Element (routePlanResponses, RP).RouteResponses =>
-              Contains (routePlans, Pl.RouteID)
-         and then Element (routePlans, Pl.RouteID).Id = RP))
-       with Ghost;
 
    function Only_Pending_Plans
      (routePlanResponses : Int64_RouteResponse_Map;
-      routePlans         : Int64_IdPlanPair_Map) return Boolean is
-
-   --  All plans are associated to a pending route plan response
-
-     (for all Pl of Model (routePlans) =>
-         Contains (routePlanResponses, Element (routePlans, Pl).Id)
-
-   --  Plans are stored in the route responses of the associated plan response
-
-      and then Contains (Element (routePlanResponses, Element (routePlans, Pl).Id).RouteResponses, Pl))
+      routePlans         : Int64_IdPlanPair_Map)
+      return Boolean
    with Ghost;
+   --  All plans are associated to a pending route plan response.
+   --  Plans are stored in the route responses of the associated plan response.
 
    function Valid_Plan_Responses
      (pendingRoute       : Int64_Formal_Set_Map;
       pendingAutoReq     : Int64_Formal_Set_Map;
-      routePlanResponses : Int64_RouteResponse_Map) return Boolean is
-
-      --  We only have route plan responses associated to pending routes or
-      --  pending automation requests
-
-     (for all RP of Model (routePlanResponses) =>
-           (Has_Key (planToRoute (pendingRoute), RP)
-            or else Has_Key (planToRoute (pendingAutoReq), RP)))
-     with Ghost,
-       Pre  => No_Overlaps (Model (pendingRoute)) and then No_Overlaps (Model (pendingAutoReq));
+      routePlanResponses : Int64_RouteResponse_Map)
+      return Boolean
+   with Ghost,
+        Pre  => No_Overlaps (Model (pendingRoute)) and then No_Overlaps (Model (pendingAutoReq));
+   --  We only have route plan responses associated to pending routes or
+   --  pending automation requests.
 
    function Is_Pending
      (pendingRoute       : Int_Set_Maps_M.Map;
       routePlanResponses : RR_Maps_M.Map;
-      Request_Id         : Int64) return Boolean is
-     (for some RP of Int_Set_Maps_M.Get (pendingRoute, Request_Id) =>
-           not Contains (routePlanResponses, RP))
+      Request_Id         : Int64)
+      return Boolean
    with Ghost,
-       Pre => Int_Set_Maps_M.Has_Key (pendingRoute, Request_Id);
+        Pre => Int_Set_Maps_M.Has_Key (pendingRoute, Request_Id);
    --  True iff we are still waiting for some route plan response for Id
 
    function No_Finished_Request
      (pendingRoute, pendingAutoReq : Int64_Formal_Set_Map;
       routePlanResponses           : Int64_RouteResponse_Map)
       return Boolean
-   is
-     ((for all Id of Model (pendingRoute) =>
-          Is_Pending (Model (pendingRoute), Model (routePlanResponses), Id))
-      and then
-      (for all Id of Model (pendingAutoReq) =>
-          Is_Pending (Model (pendingAutoReq), Model (routePlanResponses), Id)))
-     with Ghost;
+   with Ghost;
    --  We only have pending requests in m_pendingRequest
 
    package Message_History with
@@ -331,40 +282,30 @@ package Route_Aggregator with SPARK_Mode is
 
       --  At the moment, History only stores message exchanges related to
       --  a received RouteRequest. In the future, this needs to be extended
-      --  to AutomationRequests.x
+      --  to AutomationRequests.
 
       History : History_Type;
 
-      function Valid_Events (routeRequestId : Int64) return Boolean is
-        (for all E of History =>
-            (if E.Kind in Send_PlanRequest | Receive_PlanResponse then
-                  E.Id <= routeRequestId));
+      function Valid_Events (routeRequestId : Int64) return Boolean;
       --  All pln ids in history are smaller than routeRequestId
 
-      function RouteResponse_Sent (Id : Int64) return Boolean is
-        (for some E of History =>
-            E.Kind = Send_RouteResponse and then E.Id = Id);
+      function RouteResponse_Sent (Id : Int64) return Boolean;
       --  A route response was sent for this Id
 
-      function PlanRequest_Sent (Id : Int64) return Boolean is
-        (for some E of History =>
-            E.Kind = Send_PlanRequest and then E.Id = Id);
+      function PlanRequest_Sent (Id : Int64) return Boolean;
       --  A plan request was sent for this Id
 
-      function No_RouteRequest_Lost (pendingRoute : Int64_Formal_Set_Map) return Boolean is
-        (for all E of History =>
-            (if E.Kind = Receive_RouteRequest then
-                  Contains (pendingRoute, E.Id)
-             or else RouteResponse_Sent (E.Id)));
+      function No_RouteRequest_Lost (pendingRoute : Int64_Formal_Set_Map) return Boolean;
       --  All received route requests are either pending or answered
 
       function No_PlanResponse_Lost
         (pendingRoute       : Int64_Formal_Set_Map;
-         routePlanResponses : Int64_RouteResponse_Map) return Boolean
+         routePlanResponses : Int64_RouteResponse_Map)
+         return Boolean
       is
         (for all E of History =>
             (if E.Kind = Receive_PlanResponse
-               and Has_Key (planToRoute (pendingRoute), E.Id)
+               and Has_Key (Plan_To_Route (pendingRoute), E.Id)
              then Contains (routePlanResponses, E.Id)))
        with Pre => No_Overlaps (Model (pendingRoute));
       --  All received plan responses are stored
@@ -378,15 +319,36 @@ package Route_Aggregator with SPARK_Mode is
 
       function All_Pending_Plans_Sent
         (pendingRoute       : Int64_Formal_Set_Map;
-         routePlanResponses : Int64_RouteResponse_Map) return Boolean
+         routePlanResponses : Int64_RouteResponse_Map)
+         return Boolean
       is
-        (for all Id of planToRoute (pendingRoute) =>
+        (for all Id of Plan_To_Route (pendingRoute) =>
               PlanRequest_Processed (routePlanResponses, Id))
        with Pre => No_Overlaps (Model (pendingRoute));
       --  All plan requests associated to pending route request are either
       --  answered or sent (they are not all sent as some might go through
       --  fast planning).
 
+   private
+
+      function Valid_Events (routeRequestId : Int64) return Boolean is
+        (for all E of History =>
+            (if E.Kind in Send_PlanRequest | Receive_PlanResponse then
+                  E.Id <= routeRequestId));
+
+      function RouteResponse_Sent (Id : Int64) return Boolean is
+        (for some E of History =>
+            E.Kind = Send_RouteResponse and then E.Id = Id);
+
+      function PlanRequest_Sent (Id : Int64) return Boolean is
+        (for some E of History =>
+            E.Kind = Send_PlanRequest and then E.Id = Id);
+
+      function No_RouteRequest_Lost (pendingRoute : Int64_Formal_Set_Map) return Boolean is
+        (for all E of History =>
+            (if E.Kind = Receive_RouteRequest then
+                  Contains (pendingRoute, E.Id)
+             or else RouteResponse_Sent (E.Id)));
    end Message_History;
    use Message_History;
 
@@ -421,8 +383,8 @@ package Route_Aggregator with SPARK_Mode is
 
      --  The response is expected
 
-     (Has_Key (planToRoute (State.m_pendingRoute), Response.ResponseID)
-      or Has_Key (planToRoute (State.m_pendingAutoReq), Response.ResponseID))
+     (Has_Key (Plan_To_Route (State.m_pendingRoute), Response.ResponseID)
+      or Has_Key (Plan_To_Route (State.m_pendingAutoReq), Response.ResponseID))
 
      --  The response was not already received
 
@@ -431,7 +393,7 @@ package Route_Aggregator with SPARK_Mode is
      --  Plans associated to Response are new
 
      and (for all Pl of Response.RouteResponses =>
-            not contains (State.m_routePlans, Pl.RouteID))
+            not Contains (State.m_routePlans, Pl.RouteID))
 
      --  General invariants
 
@@ -451,7 +413,7 @@ package Route_Aggregator with SPARK_Mode is
 
      Post =>
 
-     All_Plans_Registered (State.M_RoutePlanResponses, State.M_RoutePlans)
+     All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
      and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
      and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
      and No_Finished_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
@@ -535,7 +497,7 @@ package Route_Aggregator with SPARK_Mode is
       State   : in out Route_Aggregator_State;
       Areq    : UniqueAutomationRequest)
    with
-       Pre => State.m_autoRequestId < int64'Last
+       Pre => State.m_autoRequestId < Int64'Last
        and then not Contains (State.m_uniqueAutomationRequests, State.m_autoRequestId + 1)
        and then Length (State.m_uniqueAutomationRequests) < State.m_uniqueAutomationRequests.Capacity;
 
@@ -606,7 +568,7 @@ package Route_Aggregator with SPARK_Mode is
 
      Post =>
            (for all Id of Model (routePlanResponses) =>
-                Contains (Model(routePlanResponses)'Old, Id))
+                Contains (Model (routePlanResponses)'Old, Id))
      and (for all Id of Model (routePlanResponses) =>
                 not Contains (Element (pendingRoute, routeKey), Id))
      and (for all Id of Model (routePlanResponses)'Old =>
@@ -617,7 +579,7 @@ package Route_Aggregator with SPARK_Mode is
 
      and All_Plans_Registered (routePlanResponses, routePlans)
      and Only_Pending_Plans (routePlanResponses, routePlans)
-     and Valid_Plan_Responses (pendingRoute, pendingAutoReq,routePlanResponses)
+     and Valid_Plan_Responses (pendingRoute, pendingAutoReq, routePlanResponses)
 
      --  The route response was sent
 
@@ -631,12 +593,12 @@ package Route_Aggregator with SPARK_Mode is
      and
         (for all E of History =>
             (if E.Kind = Receive_PlanResponse
-               and then Has_Key (planToRoute (pendingRoute), E.Id)
-               and then Get (planToRoute (pendingRoute), E.Id) /= routeKey
+               and then Has_Key (Plan_To_Route (pendingRoute), E.Id)
+               and then Get (Plan_To_Route (pendingRoute), E.Id) /= routeKey
              then Contains (routePlanResponses, E.Id)))
      and
-       (for all Id of planToRoute (pendingRoute) =>
-          (if Get (planToRoute (pendingRoute), Id) /= routeKey then
+       (for all Id of Plan_To_Route (pendingRoute) =>
+          (if Get (Plan_To_Route (pendingRoute), Id) /= routeKey then
                  Contains (routePlanResponses, Id)
            or else PlanRequest_Sent (Id)));
 
@@ -668,7 +630,7 @@ package Route_Aggregator with SPARK_Mode is
 
      and then No_Overlaps (Model (m_pendingRoute))
      and then No_Overlaps (Model (m_pendingAutoReq))
-     and then No_Overlaps (Model (m_pendingroute), Model (m_pendingAutoReq))
+     and then No_Overlaps (Model (m_pendingRoute), Model (m_pendingAutoReq))
      and then (for all Id of Int_Set_Maps_M.Get (Model (m_pendingAutoReq), autoKey) =>
             Contains (m_routePlanResponses, Id))
 
@@ -682,10 +644,8 @@ package Route_Aggregator with SPARK_Mode is
      and then No_PlanResponse_Lost (m_pendingRoute, m_routePlanResponses)
      and then All_Pending_Plans_Sent (m_pendingRoute, m_routePlanResponses),
 
-
-
      Post => (for all Id of Model (m_routePlanResponses) =>
-                Contains (Model(m_routePlanResponses)'Old, Id))
+                Contains (Model (m_routePlanResponses)'Old, Id))
      and (for all Id of Model (m_routePlanResponses) =>
                 not Contains (Element (m_pendingAutoReq, autoKey), Id))
      and (for all Id of Model (m_routePlanResponses)'Old =>
@@ -703,27 +663,95 @@ package Route_Aggregator with SPARK_Mode is
      and No_PlanResponse_Lost (m_pendingRoute, m_routePlanResponses)
      and All_Pending_Plans_Sent (m_pendingRoute, m_routePlanResponses);
 
-   procedure Handle_Air_Vehicle_Config
-     (Data : in out Route_Aggregator_Configuration_Data;
-      Id   : Int64);
+private
 
-   procedure Handle_Air_Vehicle_State
-     (Data : in out Route_Aggregator_Configuration_Data;
-      Entity_State : EntityState);
+   function Same_Mappings
+     (M : Int64_Formal_Set_Maps.Formal_Model.M.Map;
+      N : Int_Set_Maps_M.Map)
+      return Boolean
+   is
+     ((for all I of M => Int_Set_Maps_M.Has_Key (N, I))
+      and then (for all I of N => Contains (M, I))
+      and then
+        (for all I of N =>
+             (for all E of Int_Set_Maps_M.Get (N, I) =>
+                     Contains (Element (M, I), E)))
+      and then
+        (for all I of N =>
+             (for all E of Element (M, I) =>
+                     Contains (Int_Set_Maps_M.Get (N, I), E))));
 
-   procedure Handle_Ground_Vehicle_Config
-     (Data : in out Route_Aggregator_Configuration_Data;
-      Id   : Int64);
+   function Disjoint (S1, S2 : Int64_Set) return Boolean is
+     (for all E of S1 => not Contains (S2, E));
 
-   procedure Handle_Ground_Vehicle_State
-     (Data : in out Route_Aggregator_Configuration_Data;
-      Entity_State : EntityState);
+   function No_Overlaps (pendingRoute : Int_Set_Maps_M.Map) return Boolean is
+     (for all R_1 of pendingRoute =>
+        (for all R_2 of pendingRoute =>
+             (if R_1 /= R_2 then
+                   Disjoint (Int_Set_Maps_M.Get (pendingRoute, R_1),
+                             Int_Set_Maps_M.Get (pendingRoute, R_2)))));
 
-   procedure Handle_Surface_Vehicle_Config
-     (Data : in out Route_Aggregator_Configuration_Data;
-      Id   : Int64);
+   function No_Overlaps (pendingRoute, pendingAutoReq : Int_Set_Maps_M.Map) return Boolean is
+     (for all R_1 of pendingRoute =>
+         (for all R_2 of pendingAutoReq =>
+            Disjoint (Int_Set_Maps_M.Get (pendingRoute, R_1),
+                      Int_Set_Maps_M.Get (pendingAutoReq, R_2))));
 
-   procedure Handle_Surface_Vehicle_State
-     (Data : in out Route_Aggregator_Configuration_Data;
-      Entity_State : EntityState);
+   function All_Pending_Requests_Seen
+     (pendingRequest : Int_Set_Maps_M.Map;
+      routeRequestId : Int64)
+      return Boolean
+   is
+     (for all R_Id of pendingRequest =>
+          (for all Id of Int_Set_Maps_M.Get (pendingRequest, R_Id) =>
+                Id <= routeRequestId));
+
+   function All_Plans_Registered
+     (routePlanResponses : Int64_RouteResponse_Map;
+      routePlans         : Int64_IdPlanPair_Map)
+      return Boolean
+   is
+     (for all RP of Model (routePlanResponses) =>
+        (for all Pl of Element (routePlanResponses, RP).RouteResponses =>
+              Contains (routePlans, Pl.RouteID)
+         and then Element (routePlans, Pl.RouteID).Id = RP));
+
+   function Only_Pending_Plans
+     (routePlanResponses : Int64_RouteResponse_Map;
+      routePlans         : Int64_IdPlanPair_Map)
+      return Boolean
+   is
+     (for all Pl of Model (routePlans) =>
+        (Contains (routePlanResponses, Element (routePlans, Pl).Id)
+           and then Contains (Element (routePlanResponses, Element (routePlans, Pl).Id).RouteResponses, Pl)));
+
+   function Valid_Plan_Responses
+     (pendingRoute       : Int64_Formal_Set_Map;
+      pendingAutoReq     : Int64_Formal_Set_Map;
+      routePlanResponses : Int64_RouteResponse_Map)
+      return Boolean
+   is
+     (for all RP of Model (routePlanResponses) =>
+           (Has_Key (Plan_To_Route (pendingRoute), RP)
+            or else Has_Key (Plan_To_Route (pendingAutoReq), RP)));
+
+   function Is_Pending
+     (pendingRoute       : Int_Set_Maps_M.Map;
+      routePlanResponses : RR_Maps_M.Map;
+      Request_Id         : Int64)
+      return Boolean
+   is
+     (for some RP of Int_Set_Maps_M.Get (pendingRoute, Request_Id) =>
+           not Contains (routePlanResponses, RP));
+
+   function No_Finished_Request
+     (pendingRoute, pendingAutoReq : Int64_Formal_Set_Map;
+      routePlanResponses           : Int64_RouteResponse_Map)
+      return Boolean
+   is
+     ((for all Id of Model (pendingRoute) =>
+          Is_Pending (Model (pendingRoute), Model (routePlanResponses), Id))
+      and then
+      (for all Id of Model (pendingAutoReq) =>
+          Is_Pending (Model (pendingAutoReq), Model (routePlanResponses), Id)));
 end Route_Aggregator;

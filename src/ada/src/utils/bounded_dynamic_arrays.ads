@@ -96,7 +96,7 @@ package Bounded_Dynamic_Arrays is
    --  This that is currently assigned a value.
 
    function Empty (This : Sequence) return Boolean with
-     Post=> Empty'Result = (Length (This) = 0),
+     Post => Empty'Result = (Length (This) = 0),
      Inline;
 
    procedure Clear (This : out Sequence) with

@@ -29,7 +29,6 @@ package UxAS.Comms.Data.Addressed is
    type Addressed_Message_View is access constant Addressed_Message;
    type Any_Addressed_Message  is access Addressed_Message'Class;
 
-
    --  bool
    --  setAddressAndPayload(const std::string address, const std::string payload)
    procedure Set_Address_And_Payload

@@ -1,8 +1,21 @@
 with AVTAS.LMCP.Types;
-with UxAS.Common.String_Constant.Message_Group;
 with LMCP_Message_Conversions; use LMCP_Message_Conversions;
+with UxAS.Common.String_Constant.Message_Group;
 
 package body Route_Aggregator_Communication is
+
+   ----------------------------------------
+   -- Get_Next_Unique_Sending_Message_Id --
+   ----------------------------------------
+
+   procedure Get_Next_Unique_Sending_Message_Id
+     (This  : in out Route_Aggregator_Mailbox;
+      Value : out Int64)
+   is
+   begin
+      This.Unique_Entity_Send_Message_Id := This.Unique_Entity_Send_Message_Id + 1;
+      Value := This.Unique_Entity_Send_Message_Id;
+   end Get_Next_Unique_Sending_Message_Id;
 
    ----------------
    -- Initialize --
@@ -33,26 +46,29 @@ package body Route_Aggregator_Communication is
       This.Unique_Entity_Send_Message_Id := Unique_Id;
    end Initialize;
 
-   ----------------------------------------
-   -- Get_Next_Unique_Sending_Message_Id --
-   ----------------------------------------
+   --------------------------
+   -- sendBroadcastMessage --
+   --------------------------
 
-   procedure Get_Next_Unique_Sending_Message_Id
-     (This  : in out Route_Aggregator_Mailbox;
-      Value : out Int64)
+   --  this is sendSharedLMCPObjectBroadcastMessage(), in our code Send_Shared_LMCP_Object_Broadcast_Message
+
+   procedure sendBroadcastMessage
+     (This : in out Route_Aggregator_Mailbox;
+      Msg  : Message_Root'Class)
    is
    begin
       This.Unique_Entity_Send_Message_Id := This.Unique_Entity_Send_Message_Id + 1;
-      Value := This.Unique_Entity_Send_Message_Id;
-   end Get_Next_Unique_Sending_Message_Id;
+      --  This.Message_Sender_Pipe.Send_Shared_Broadcast_Message (Msg);
+      This.Message_Sender_Pipe.Send_Shared_Broadcast_Message (As_Object_Any (Msg));
+   end sendBroadcastMessage;
 
    ----------------------------
    -- sendLimitedCastMessage --
    ----------------------------
 
-   --  this is sendSharedLmcpObjectLimitedCastMessage(), in our code Send_Shared_LMCP_Object_Limited_Cast_Message
+   --  this is sendSharedLMCPObjectLimitedCastMessage(), in our code Send_Shared_LMCP_Object_Limited_Cast_Message
 
-   procedure SendLimitedCastMessage
+   procedure sendLimitedCastMessage
      (This  : in out Route_Aggregator_Mailbox;
       Group : MessageGroup;
       Msg   : Message_Root'Class)
@@ -67,21 +83,4 @@ package body Route_Aggregator_Communication is
                           when AircraftPathPlanner => Message_Group.AircraftPathPlanner),
          Message      => As_Object_Any (Msg));
    end sendLimitedCastMessage;
-
-   --------------------------
-   -- sendBroadcastMessage --
-   --------------------------
-
-   --  this is sendSharedLmcpObjectBroadcastMessage(), in our code Send_Shared_LMCP_Object_Broadcast_Message
-
-   procedure SendBroadcastMessage
-     (This : in out Route_Aggregator_Mailbox;
-      Msg  : Message_Root'Class)
-   is
-   begin
-      This.Unique_Entity_Send_Message_Id := This.Unique_Entity_Send_Message_Id + 1;
-      --  This.Message_Sender_Pipe.Send_Shared_Broadcast_Message (Msg);
-      This.Message_Sender_Pipe.Send_Shared_Broadcast_Message (As_Object_Any (Msg));
-   end sendBroadcastMessage;
-
 end Route_Aggregator_Communication;

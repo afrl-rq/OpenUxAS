@@ -1,7 +1,7 @@
 with Ada.Containers.Functional_Vectors;
 with Ada.Containers.Functional_Sets;
 with Ada.Containers.Functional_Maps;
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Strings.Unbounded;             use Ada.Strings.Unbounded;
 with Interfaces;
 
 package Common with SPARK_Mode is

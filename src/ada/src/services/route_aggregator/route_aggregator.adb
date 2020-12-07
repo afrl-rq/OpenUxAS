@@ -16,11 +16,14 @@ package body Route_Aggregator with SPARK_Mode is
      (M1, M2 : Int64_Formal_Set_Maps.Formal_Model.M.Map;
       N1, N2 : Int_Set_Maps_M.Map)
    --  Lemma: Inclusion of old models implies inclusion of redefined models
-
    with Ghost,
      Global => null,
      Pre  => Same_Mappings (M1, N1) and Same_Mappings (M2, N2) and M1 <= M2,
-     Post => N1 <= N2
+     Post => N1 <= N2;
+
+   procedure Model_Include
+     (M1, M2 : Int64_Formal_Set_Maps.Formal_Model.M.Map;
+      N1, N2 : Int_Set_Maps_M.Map)
    is
    begin
       null;
@@ -37,10 +40,12 @@ package body Route_Aggregator with SPARK_Mode is
    with Ghost,
      Global => null,
      Post =>
-       (for all Key of Model (pendingRoute) =>
-          (Find (Keys (pendingRoute), Key) > 0
-           and then Int_Set_Maps_K.Get (Keys (pendingRoute), Find (Keys (pendingRoute), Key)) =
-             Key))
+       (for all Key of Model (PendingRoute) =>
+          (Find (Keys (PendingRoute), Key) > 0
+           and then Int_Set_Maps_K.Get (Keys (PendingRoute), Find (Keys (PendingRoute), Key)) =
+             Key));
+
+   procedure Lift_From_Keys_To_Model (PendingRoute : Int64_Formal_Set_Map)
    is
    begin
       null;
@@ -49,96 +54,95 @@ package body Route_Aggregator with SPARK_Mode is
    --  Subprograms wraping insertion and deletion in m_pendingRoute. They
    --  restate part of the postcondition of the callee, but also reestablish
    --  the predicate of Route_Aggregator_State and compute the effect of the
-   --  modification on planToRoute.
+   --  modification on Plan_To_Route.
 
-   ---------------------------
-   -- Insert_PendingRequest --
-   ---------------------------
+   -----------------------
+   -- Local subprograms --
+   -----------------------
 
-   procedure Insert_PendingRequest
-     (m_pendingRequest : in out Int64_Formal_Set_Map;
-      otherPending     : Int64_Formal_Set_Map;
-      m_routeRequestId : Int64;
-      RequestID        : int64;
-      PlanRequests     : Int64_Formal_Set)
-     with Pre => not Int_Set_Maps_M.Has_Key (Model (m_pendingRequest), RequestID)
-       and Length (m_pendingRequest) < m_pendingRequest.Capacity
-       and
-         All_Pending_Requests_Seen (Model (m_pendingRequest), m_routeRequestId)
-       and
-         No_Overlaps (Model (m_pendingRequest))
-       and
-         No_Overlaps (Model (m_pendingRequest), Model (otherPending))
-       and
-         (for all Id of PlanRequests => Id <= m_routeRequestId)
-       and
-       (for all R_Id of Model (m_pendingRequest) =>
-          (for all E of Int_Set_Maps_M.Get (Model (m_pendingRequest), R_Id) => not Contains (PlanRequests, E)))
-       and
-       (for all R_Id of Model (otherPending) =>
-          (for all E of Int_Set_Maps_M.Get (Model (otherPending), R_Id) => not Contains (PlanRequests, E))),
-     Post =>
+   procedure Check_All_Route_Plans_PendingAutoReq
+     (Mailbox : in out Route_Aggregator_Mailbox;
+      State   : in out Route_Aggregator_State)
+     with
+     --  General invariants
 
-     --  Predicate of State
+     Pre  => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
+     and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
+     and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
+     and (for all K in 1 .. Length (State.m_pendingRoute) =>
+            Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)))
 
-       All_Pending_Requests_Seen (Model (m_pendingRequest), m_routeRequestId)
-     and No_Overlaps (Model (m_pendingRequest))
-     and No_Overlaps (Model (m_pendingRequest), Model (otherPending))
-     --  Part of the postcondition copied from Int64_Formal_Set_Maps.Insert
+     --  History invariants
 
-     and Model (m_pendingRequest)'Old <= Model (m_pendingRequest)
-     and Contains (Model (m_pendingRequest), RequestID)
-     and (for all E of Int_Set_Maps_M.Get (Model (m_pendingRequest), RequestID) =>
-            Contains (PlanRequests, E))
-     and (for all E of PlanRequests => Contains (Int_Set_Maps_M.Get (Model (m_pendingRequest), RequestID), E))
-     and (for all K of Model (m_pendingRequest) =>
-              Int_Set_Maps_M.Has_Key (Model (m_pendingRequest)'Old, K)
-          or K = RequestID)
+     and Valid_Events (State.m_routeRequestId)
+     and No_RouteRequest_Lost (State.m_pendingRoute)
+     and No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses)
+     and All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses),
 
-     --  Effect on planToRoute
+     --  General invariants
 
-     and planToRoute (m_pendingRequest)'Old <= planToRoute (m_pendingRequest)
-     and (for all I of PlanRequests =>
-            Has_Key (planToRoute (m_pendingRequest), I)
-          and then Get (planToRoute (m_pendingRequest), I) = RequestID)
-     and (for all I of planToRoute (m_pendingRequest) =>
-              Contains (PlanRequests, I) or Has_Key (planToRoute (m_pendingRequest)'Old, I))
-   is
-      Old_pendingRequest   : constant Int_Set_Maps_M.Map := Model (m_pendingRequest) with Ghost;
-      Old_pendingRequest_M : constant Int64_Formal_Set_Maps.Formal_Model.M.Map :=
-        Int64_Formal_Set_Maps.Formal_Model.Model (m_pendingRequest) with Ghost;
-   begin
-      Insert (m_pendingRequest, RequestID, PlanRequests);
-      --  Establish the effect on the redefined Model of maps of formal sets
+     Post => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
+     and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
+     and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
+     and No_Finished_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
 
-      Model_Include
-        (Old_pendingRequest_M, Int64_Formal_Set_Maps.Formal_Model.Model (m_pendingRequest),
-         Old_pendingRequest, Model (m_pendingRequest));
+     --  History invariants
 
-      pragma Assert (No_Overlaps (Model (m_pendingRequest)));
-      pragma Assert (All_Pending_Requests_Seen (Model (m_pendingRequest), m_routeRequestId));
+     and History'Old <= History
+     and Valid_Events (State.m_routeRequestId)
+     and No_RouteRequest_Lost (State.m_pendingRoute)
+     and No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses)
+     and All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses);
 
-   end Insert_PendingRequest;
+   procedure Check_All_Route_Plans_PendingRoute
+     (Mailbox : in out Route_Aggregator_Mailbox;
+      State   : in out Route_Aggregator_State)
+     with
+     --  General invariants
 
-   ---------------------------
-   -- Delete_PendingRequest --
-   ---------------------------
+     Pre  => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
+     and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
+     and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
+
+     --  History invariants
+
+     and Valid_Events (State.m_routeRequestId)
+     and No_RouteRequest_Lost (State.m_pendingRoute)
+     and No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses)
+     and All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses),
+
+     --  General invariants
+
+     Post => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
+     and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
+     and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
+     and (for all K in 1 .. Length (State.m_pendingRoute) =>
+            Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)))
+
+     --  History invariants
+
+     and History'Old <= History
+     and Valid_Events (State.m_routeRequestId)
+     and No_RouteRequest_Lost (State.m_pendingRoute)
+     and No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses)
+     and All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses);
 
    procedure Delete_PendingRequest
      (m_pendingRequest : in out Int64_Formal_Set_Map;
       otherPending     : Int64_Formal_Set_Map;
       m_routeRequestId : Int64;
       Position         : in out Int64_Formal_Set_Maps.Cursor)
-     with Pre => Has_Element (m_pendingRequest, Position)
+   with
+     Pre => Has_Element (m_pendingRequest, Position)
      and All_Pending_Requests_Seen (Model (m_pendingRequest), m_routeRequestId)
      and No_Overlaps (Model (m_pendingRequest))
      and No_Overlaps (Model (m_pendingRequest), Model (otherPending)),
 
-       Post =>
+     Post =>
 
      --  Predicate of State
 
-        All_Pending_Requests_Seen (Model (m_pendingRequest), m_routeRequestId)
+     All_Pending_Requests_Seen (Model (m_pendingRequest), m_routeRequestId)
      and No_Overlaps (Model (m_pendingRequest))
      and No_Overlaps (Model (m_pendingRequest), Model (otherPending))
 
@@ -168,13 +172,489 @@ package body Route_Aggregator with SPARK_Mode is
         Positions (m_pendingRequest)'Old,
         Cut   => Int_Set_Maps_P.Get (Positions (m_pendingRequest)'Old, Position'Old))
 
-     --  Effect on planToRoute
+     --  Effect on Plan_To_Route
 
-     and planToRoute (m_pendingRequest) <= planToRoute (m_pendingRequest)'Old
-     and (for all I of planToRoute (m_pendingRequest)'Old =>
-              Has_Key (planToRoute (m_pendingRequest), I)
-          or else Get (planToRoute (m_pendingRequest)'Old, I) = Key (m_pendingRequest, Position)'Old)
+     and Plan_To_Route (m_pendingRequest) <= Plan_To_Route (m_pendingRequest)'Old
+     and (for all I of Plan_To_Route (m_pendingRequest)'Old =>
+              Has_Key (Plan_To_Route (m_pendingRequest), I)
+          or else Get (Plan_To_Route (m_pendingRequest)'Old, I) = Key (m_pendingRequest, Position)'Old);
+
+   procedure Insert_PendingRequest
+     (m_pendingRequest : in out Int64_Formal_Set_Map;
+      otherPending     : Int64_Formal_Set_Map;
+      m_routeRequestId : Int64;
+      RequestID        : Int64;
+      PlanRequests     : Int64_Formal_Set)
+     with Pre => not Int_Set_Maps_M.Has_Key (Model (m_pendingRequest), RequestID)
+       and Length (m_pendingRequest) < m_pendingRequest.Capacity
+       and
+         All_Pending_Requests_Seen (Model (m_pendingRequest), m_routeRequestId)
+       and
+         No_Overlaps (Model (m_pendingRequest))
+       and
+         No_Overlaps (Model (m_pendingRequest), Model (otherPending))
+       and
+         (for all Id of PlanRequests => Id <= m_routeRequestId)
+       and
+       (for all R_Id of Model (m_pendingRequest) =>
+          (for all E of Int_Set_Maps_M.Get (Model (m_pendingRequest), R_Id) => not Contains (PlanRequests, E)))
+       and
+       (for all R_Id of Model (otherPending) =>
+          (for all E of Int_Set_Maps_M.Get (Model (otherPending), R_Id) => not Contains (PlanRequests, E))),
+     Post =>
+     --  Predicate of State
+       All_Pending_Requests_Seen (Model (m_pendingRequest), m_routeRequestId)
+     and No_Overlaps (Model (m_pendingRequest))
+     and No_Overlaps (Model (m_pendingRequest), Model (otherPending))
+
+     --  Part of the postcondition copied from Int64_Formal_Set_Maps.Insert
+     and Model (m_pendingRequest)'Old <= Model (m_pendingRequest)
+     and Contains (Model (m_pendingRequest), RequestID)
+     and (for all E of Int_Set_Maps_M.Get (Model (m_pendingRequest), RequestID) =>
+            Contains (PlanRequests, E))
+     and (for all E of PlanRequests => Contains (Int_Set_Maps_M.Get (Model (m_pendingRequest), RequestID), E))
+     and (for all K of Model (m_pendingRequest) =>
+              Int_Set_Maps_M.Has_Key (Model (m_pendingRequest)'Old, K)
+          or K = RequestID)
+
+     --  Effect on Plan_To_Route
+
+     and Plan_To_Route (m_pendingRequest)'Old <= Plan_To_Route (m_pendingRequest)
+     and (for all I of PlanRequests =>
+            Has_Key (Plan_To_Route (m_pendingRequest), I)
+          and then Get (Plan_To_Route (m_pendingRequest), I) = RequestID)
+     and (for all I of Plan_To_Route (m_pendingRequest) =>
+              Contains (PlanRequests, I) or Has_Key (Plan_To_Route (m_pendingRequest)'Old, I));
+
+   ---------------------------
+   -- Build_Matrix_Requests --
+   ---------------------------
+
+   procedure Build_Matrix_Requests
+     (Mailbox : in out Route_Aggregator_Mailbox;
+      Data  : Route_Aggregator_Configuration_Data;
+      State : in out Route_Aggregator_State;
+      ReqId : Int64)
+     with
+       SPARK_Mode => Off
    is
+      sendAirPlanRequest    : RPReq_Seq;
+      sendGroundPlanRequest : RPReq_Seq;
+      Empty_Formal_Set      : Int64_Formal_Set;
+   begin
+      Insert (State.m_pendingAutoReq, ReqId, Empty_Formal_Set);
+
+      if Length (Element (State.m_uniqueAutomationRequests, ReqId).EntityList) = 0 then
+         declare
+            AReq : UniqueAutomationRequest :=
+              Element (State.m_uniqueAutomationRequests, ReqId);
+         begin
+            AReq.EntityList := Data.m_entityStates;
+            Replace (State.m_uniqueAutomationRequests, ReqId, AReq);
+         end;
+      end if;
+
+      declare
+         AReq : constant UniqueAutomationRequest :=
+           Element (State.m_uniqueAutomationRequests, ReqId);
+      begin
+         For_Each_Vehicle : for VehicleId of AReq.EntityList loop
+            Make_Request : declare
+               StartHeading_Deg   : Real32 := 0.0;
+               StartLocation      : Location3D;
+               FoundPlanningState : Boolean := False;
+               Vehicle            : EntityState;
+            begin
+               for PlanningState of AReq.PlanningStates loop
+
+                  if PlanningState.EntityID = VehicleId then
+                     StartLocation := PlanningState.PlanningPosition;
+                     StartHeading_Deg := PlanningState.PlanningHeading;
+                     FoundPlanningState := True;
+                     exit;
+                  end if;
+
+               end loop;
+
+               if FoundPlanningState
+                 or else (for some EntityId of Data.m_entityStates =>
+                            (EntityId = VehicleId))
+               then
+
+                  Build_Eligible_Task_Options : declare
+                     TaskOptionList : TaskOption_Seq;
+                     Found_Elig     : Boolean := False;
+                     PlanRequest    : RoutePlanRequest;
+                     Set            : Int64_Formal_Set := Element (State.m_pendingAutoReq, ReqId);
+                  begin
+                     for TaskId of AReq.TaskList loop
+
+                        if Contains (State.m_taskOptions, TaskId) then
+                           for Option of Element (State.m_taskOptions, TaskId).Options loop
+
+                              Found_Elig := False;
+                              for V of Option.EligibleEntities loop
+                                 if V = VehicleId then
+                                    Found_Elig := True;
+                                    exit;
+                                 end if;
+                              end loop;
+
+                              if Length (Option.EligibleEntities) = 0
+                                or else Found_Elig
+                              then
+                                 TaskOptionList := Add (TaskOptionList, Option);
+                              end if;
+
+                           end loop;
+                        end if;
+                     end loop;
+
+                     PlanRequest.AssociatedTaskID := 0;
+                     PlanRequest.IsCostOnlyRequest := False;
+                     PlanRequest.OperatingRegion := AReq.OperatingRegion;
+                     PlanRequest.VehicleID := VehicleId;
+                     State.m_routeRequestId := State.m_routeRequestId + 1;
+                     PlanRequest.RequestID := State.m_routeRequestId;
+                     Insert (Set, State.m_routeRequestId);
+                     Replace (State.m_pendingAutoReq,
+                                    ReqId,
+                                    Set);
+
+                     if not FoundPlanningState then
+                        Vehicle := ES_Maps.Get (Data.m_entityStatesInfo, VehicleId);
+                        StartLocation := Vehicle.Location;
+                        StartHeading_Deg := Vehicle.Heading;
+                     end if;
+
+                     for Option of TaskOptionList loop
+                        declare
+                           TOP : constant TaskOptionPair :=
+                           (VehicleId, 0, 0, Option.TaskID, Option.OptionID);
+                           R   : RouteConstraints;
+
+                        begin
+                           Insert (State.m_routeTaskPairing, State.m_routeId + 1, TOP);
+                           R.StartLocation := StartLocation;
+                           R.StartHeading := StartHeading_Deg;
+                           R.EndLocation := Option.StartLocation;
+                           R.EndHeading := Option.StartHeading;
+                           R.RouteID := State.m_routeId + 1;
+                           PlanRequest.RouteRequests :=
+                             Add (PlanRequest.RouteRequests, R);
+                           State.m_routeId := State.m_routeId + 1;
+                        end;
+                     end loop;
+
+                     for T1 in TaskOptionList loop
+                        for T2 in TaskOptionList loop
+
+                           if T1 /= T2 then
+                              declare
+                                 O1  : constant TaskOption :=
+                                   Get (TaskOptionList, T1);
+                                 O2  : constant TaskOption :=
+                                   Get (TaskOptionList, T2);
+                                 TOP : constant TaskOptionPair :=
+                                   (VehicleId,
+                                    O1.TaskID,
+                                    O1.OptionID,
+                                    O2.TaskID,
+                                    O2.OptionID);
+                                 R   : RouteConstraints;
+                              begin
+                                 Insert (State.m_routeTaskPairing, State.m_routeId + 1, TOP);
+                                 R.StartLocation := O1.EndLocation;
+                                 R.StartHeading := O1.EndHeading;
+                                 R.EndLocation := O2.StartLocation;
+                                 R.EndHeading := O2.StartHeading;
+                                 R.RouteID := State.m_routeId + 1;
+                                 PlanRequest.RouteRequests :=
+                                   Add (PlanRequest.RouteRequests, R);
+                                 State.m_routeId := State.m_routeId + 1;
+                              end;
+                           end if;
+                        end loop;
+                     end loop;
+
+                     if Contains (Data.m_groundVehicles, VehicleId) then
+                        sendGroundPlanRequest :=
+                          Add (sendGroundPlanRequest, PlanRequest);
+                     else
+                        sendAirPlanRequest :=
+                          Add (sendAirPlanRequest, PlanRequest);
+                     end if;
+                  end Build_Eligible_Task_Options;
+               end if;
+            end Make_Request;
+         end loop For_Each_Vehicle;
+
+         for RPReq of sendAirPlanRequest loop
+            sendLimitedCastMessage (Mailbox,
+                                    AircraftPathPlanner,
+                                    RPReq);
+         end loop;
+
+         for RPReq of sendGroundPlanRequest loop
+            if Data.m_fastPlan then
+               Euclidean_Plan (Data,
+                               State.m_routePlanResponses,
+                               State.m_routePlans,
+                               RPReq);
+            else
+               sendLimitedCastMessage (Mailbox,
+                                       GroundPathPlanner,
+                                       RPReq);
+            end if;
+         end loop;
+
+         if Data.m_fastPlan then
+            Check_All_Route_Plans (Mailbox, State);
+         end if;
+      end;
+   end Build_Matrix_Requests;
+
+   ---------------------------
+   -- Check_All_Route_Plans --
+   ---------------------------
+
+   procedure Check_All_Route_Plans
+     (Mailbox : in out Route_Aggregator_Mailbox;
+      State   : in out Route_Aggregator_State)
+   is
+   begin
+      Check_All_Route_Plans_PendingRoute (Mailbox, State);
+      Check_All_Route_Plans_PendingAutoReq (Mailbox, State);
+   end Check_All_Route_Plans;
+
+   ------------------------------------------
+   -- Check_All_Route_Plans_PendingAutoReq --
+   ------------------------------------------
+
+   procedure Check_All_Route_Plans_PendingAutoReq
+     (Mailbox : in out Route_Aggregator_Mailbox;
+      State   : in out Route_Aggregator_State)
+   is
+      i : Int64_Formal_Set_Maps.Cursor := First (State.m_pendingAutoReq);
+      D : Count_Type := 0 with Ghost;
+      --  Number of removed elements
+   begin
+      --  Check pending automation requests
+
+      while Has_Element (State.m_pendingAutoReq, i) loop
+         pragma Loop_Invariant (Has_Element (State.m_pendingAutoReq, i));
+
+         pragma Loop_Invariant
+           (D = Length (State.m_pendingAutoReq)'Loop_Entry - Length (State.m_pendingAutoReq));
+         pragma Loop_Invariant
+           (Model (State.m_pendingAutoReq) <= Int_Set_Maps_M.Map'(Model (State.m_pendingAutoReq))'Loop_Entry);
+         pragma Loop_Invariant
+           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), i) - 1 =>
+              (for some L in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), i) - 1 + D =>
+                    Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K) = Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq)'Loop_Entry, L)));
+         pragma Loop_Invariant
+           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), i) - 1 =>
+              Is_Pending (Model (State.m_pendingAutoReq), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K)));
+         pragma Loop_Invariant
+           (for all K in Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), i) .. Length (State.m_pendingAutoReq) =>
+              Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K) = Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq)'Loop_Entry, K + D));
+
+         --  General invariants
+
+         pragma Loop_Invariant
+           (All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans));
+         pragma Loop_Invariant
+           (Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans));
+         pragma Loop_Invariant
+           (Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses));
+         pragma Loop_Invariant
+           (for all K in 1 .. Length (State.m_pendingRoute) =>
+             Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)));
+
+         --  History invariants
+
+         pragma Loop_Invariant (History'Loop_Entry <= History);
+         pragma Loop_Invariant (Valid_Events (State.m_routeRequestId));
+         pragma Loop_Invariant (No_RouteRequest_Lost (State.m_pendingRoute));
+         pragma Loop_Invariant (No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses));
+         pragma Loop_Invariant (All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses));
+
+         declare
+            isFulfilled : constant Boolean :=
+              (for all J of Element (State.m_pendingAutoReq, i) =>
+                   Contains (State.m_routePlanResponses, J));
+         begin
+            if isFulfilled then
+               SendMatrix (Mailbox,
+                           State.m_uniqueAutomationRequests,
+                           State.m_pendingRoute,
+                           State.m_pendingAutoReq,
+                           State.m_routePlans,
+                           State.m_routeTaskPairing,
+                           State.m_routePlanResponses,
+                           State.m_taskOptions,
+                           Key (State.m_pendingAutoReq, i));
+
+               declare
+                  Dummy   : Int64_Formal_Set_Maps.Cursor := i;
+                  UAR_Key : constant Int64 := Key (State.m_pendingAutoReq, i);
+                  Pos     : constant Count_Type := Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), i) with Ghost;
+               begin
+                  Next (State.m_pendingAutoReq, i);
+                  Delete_PendingRequest (State.m_pendingAutoReq, State.m_pendingRoute, State.m_routeRequestId, Dummy);
+                  Delete (State.m_uniqueAutomationRequests, UAR_Key);
+                  D := D + 1;
+                  pragma Assert
+                    (for all K in 1 .. Pos - 1 =>
+                       Is_Pending (Model (State.m_pendingAutoReq), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K)));
+               end;
+            else
+               Next (State.m_pendingAutoReq, i);
+            end if;
+         end;
+      end loop;
+
+      --  Restablish No_Finished_Request
+
+      pragma Assert
+        (for all K in 1 .. Length (State.m_pendingRoute) =>
+             Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)));
+      Lift_From_Keys_To_Model (State.m_pendingRoute);
+      pragma Assert
+        (for all K in 1 .. Length (State.m_pendingAutoReq) =>
+             Is_Pending (Model (State.m_pendingAutoReq), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K)));
+      Lift_From_Keys_To_Model (State.m_pendingAutoReq);
+   end Check_All_Route_Plans_PendingAutoReq;
+
+   ----------------------------------------
+   -- Check_All_Route_Plans_PendingRoute --
+   ----------------------------------------
+
+   procedure Check_All_Route_Plans_PendingRoute
+     (Mailbox : in out Route_Aggregator_Mailbox;
+      State   : in out Route_Aggregator_State)
+   is
+      i : Int64_Formal_Set_Maps.Cursor := First (State.m_pendingRoute);
+      D : Count_Type := 0 with Ghost;
+      --  Number of removed elements
+   begin
+      -- check pending route requests
+      while Has_Element (State.m_pendingRoute, i) loop
+         pragma Loop_Invariant (Has_Element (State.m_pendingRoute, i));
+
+         pragma Loop_Invariant
+           (D = Length (State.m_pendingRoute)'Loop_Entry - Length (State.m_pendingRoute));
+         pragma Loop_Invariant
+           (Model (State.m_pendingRoute) <= Int_Set_Maps_M.Map'(Model (State.m_pendingRoute))'Loop_Entry);
+         pragma Loop_Invariant
+           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), i) - 1 =>
+              (for some L in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), i) - 1 + D =>
+                    Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K) = Int_Set_Maps_K.Get (Keys (State.m_pendingRoute)'Loop_Entry, L)));
+         pragma Loop_Invariant
+           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), i) - 1 =>
+              Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)));
+         pragma Loop_Invariant
+           (for all K in Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), i) .. Length (State.m_pendingRoute) =>
+                Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K) = Int_Set_Maps_K.Get (Keys (State.m_pendingRoute)'Loop_Entry, K + D));
+
+         --  General invariants
+
+         pragma Loop_Invariant
+           (All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans));
+         pragma Loop_Invariant
+           (Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans));
+         pragma Loop_Invariant
+           (Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses));
+
+         --  History invariants
+
+         pragma Loop_Invariant (History'Loop_Entry <= History);
+         pragma Loop_Invariant (Valid_Events (State.m_routeRequestId));
+         pragma Loop_Invariant (No_RouteRequest_Lost (State.m_pendingRoute));
+         pragma Loop_Invariant (No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses));
+         pragma Loop_Invariant (All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses));
+
+         declare
+            isFulfilled : constant Boolean :=
+              (for all J of Element (State.m_pendingRoute, i) =>
+                   Contains (State.m_routePlanResponses, J));
+         begin
+            if isFulfilled then
+               SendRouteResponse (Mailbox, State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses, State.m_routePlans, Key (State.m_pendingRoute, i));
+
+               declare
+                  Dummy    : Int64_Formal_Set_Maps.Cursor := i;
+                  Pos      : constant Count_Type := Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), i) with Ghost;
+               begin
+                  Next (State.m_pendingRoute, i);
+                  Delete_PendingRequest (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routeRequestId, Dummy);
+                  D := D + 1;
+                  pragma Assert
+                    (for all K in 1 .. Pos - 1 =>
+                       Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)));
+               end;
+               pragma Assert (All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses));
+
+            else
+               Next (State.m_pendingRoute, i);
+            end if;
+         end;
+      end loop;
+
+      pragma Assert
+        (for all K in 1 .. Length (State.m_pendingRoute) =>
+             Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)));
+   end Check_All_Route_Plans_PendingRoute;
+
+   -------------------------------------
+   -- Check_All_Task_Options_Received --
+   -------------------------------------
+
+   procedure Check_All_Task_Options_Received
+     (Mailbox : in out Route_Aggregator_Mailbox;
+      Data  : Route_Aggregator_Configuration_Data;
+      State : in out Route_Aggregator_State)
+     with
+       SPARK_Mode => Off
+   is
+      C : UAR_Maps.Cursor :=
+        First (State.m_uniqueAutomationRequests);
+   begin
+      while Has_Element (State.m_uniqueAutomationRequests, C) loop
+
+         declare
+            Areq        : constant UniqueAutomationRequest :=
+              Element (State.m_uniqueAutomationRequests, C);
+            AllReceived : constant Boolean :=
+              (for all TaskId of Areq.TaskList =>
+                 Contains (State.m_taskOptions, TaskId));
+         begin
+
+            if AllReceived then
+               Build_Matrix_Requests
+                 (Mailbox,
+                  Data,
+                  State,
+                  Key (State.m_uniqueAutomationRequests, C));
+            end if;
+
+         end;
+
+         Next (State.m_uniqueAutomationRequests, C);
+      end loop;
+   end Check_All_Task_Options_Received;
+
+   ---------------------------
+   -- Delete_PendingRequest --
+   ---------------------------
+
+   procedure Delete_PendingRequest
+     (m_pendingRequest : in out Int64_Formal_Set_Map;
+      otherPending     : Int64_Formal_Set_Map;
+      m_routeRequestId : Int64;
+      Position         : in out Int64_Formal_Set_Maps.Cursor)
+   is
+      pragma Unreferenced (otherPending, m_routeRequestId);
       Old_pendingRoute_M : constant Int64_Formal_Set_Maps.Formal_Model.M.Map :=
         Int64_Formal_Set_Maps.Formal_Model.Model (m_pendingRequest) with Ghost;
       Old_pendingRoute   : constant Int_Set_Maps_M.Map := Model (m_pendingRequest) with Ghost;
@@ -188,123 +668,73 @@ package body Route_Aggregator with SPARK_Mode is
          Model (m_pendingRequest), Old_pendingRoute);
    end Delete_PendingRequest;
 
-   --  Model functions used in contracts
+   --------------------
+   -- Euclidean_Plan --
+   --------------------
 
-   -----------
-   -- Model --
-   -----------
-
-   function Model (M : Int64_Formal_Set_Map) return Int_Set_Maps_M.Map is
-      function Model (S : Int64_Formal_Set) return Int64_Set with
-        Post =>
-          (for all E of Model'Result => Contains (S, E))
-          and
-            (for all E of S => Contains (Model'Result, E))
-      is
-         Res : Int64_Set;
-      begin
-         for C in S loop
-            pragma Loop_Variant (Increases => Int_Set_P.Get (Positions (S), C));
-            pragma Loop_Invariant (Length (Res) = Int_Set_P.Get (Positions (S), C) - 1);
-            pragma Loop_Invariant (for all E of Res => Contains (S, E));
-            pragma Loop_Invariant
-              (for all K in 1 .. Int_Set_P.Get (Positions (S), C) - 1 =>
-                 Contains (Res, Int_Set_E.Get (Elements (S), K)));
-            pragma Loop_Invariant
-              (for all K in Int_Set_P.Get (Positions (S), C) .. Length (S) =>
-                    not Contains (Res, Int_Set_E.Get (Elements (S), K)));
-            Res := Add (Res, Element (S, C));
-         end loop;
-         return Res;
-      end Model;
-
-      Res : Int_Set_Maps_M.Map;
+   procedure Euclidean_Plan
+     (Data               : Route_Aggregator_Configuration_Data;
+      routePlanResponses : in out Int64_RouteResponse_Map;
+      routePlans         : in out Int64_IdPlanPair_Map;
+      Request            : RoutePlanRequest)
+   is
+      pragma Unreferenced (Data, routePlans, routePlanResponses, Request);
+      --  --  UxAS::common::utilities::CUnitConversions flatEarth;
+      --  FlatEarth : Conversions.Unit_Converter;
+      --  --  int64_t regionId = request->getOperatingRegion();
+      --  RegionId  : Int64 := Request.OperatingRegion;
+      --  --  int64_t vehicleId = request->getVehicleID();
+      --  VehicleId : Int64 := Request.VehicleID;
+      --  --  int64_t taskId = request->getAssociatedTaskID();
+      --  TaskId    : Int64 := Request.AssociatedTaskID;
+      --  --  double speed = 1.0; // default if no speed available
+      --  Speed : Real64 := 1.0;
    begin
-      for C in M loop
-         pragma Loop_Variant (Increases => Int_Set_Maps_P.Get (Positions (M), C));
-         pragma Loop_Invariant (Int_Set_Maps_M.Length (Res) = Int_Set_Maps_P.Get (Positions (M), C) - 1);
-         pragma Loop_Invariant (for all I of Res => Contains (M, I));
-         pragma Loop_Invariant
-           (for all I of Res =>
-              (for all E of Int_Set_Maps_M.Get (Res, I) =>
-                   Contains (Element (M, I), E)));
-         pragma Loop_Invariant
-           (for all I of Res =>
-              (for all E of Element (M, I) =>
-                   Contains (Int_Set_Maps_M.Get (Res, I), E)));
-         pragma Loop_Invariant
-           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (M), C) - 1 =>
-                 Int_Set_Maps_M.Has_Key (Res, Int_Set_Maps_K.Get (Keys (M), K)));
-         pragma Loop_Invariant
-           (for all K in Int_Set_Maps_P.Get (Positions (M), C) .. Length (M) =>
-                 not Int_Set_Maps_M.Has_Key (Res, Int_Set_Maps_K.Get (Keys (M), K)));
-         Res := Int_Set_Maps_M.Add (Res, Key (M, C), Model (Element (M, C)));
-      end loop;
-      return Res;
-   end Model;
+      raise Program_Error with "Euclidean_Plan is unimplemented";
 
-   -----------------
-   -- planToRoute --
-   -----------------
+      --  if (m_entityConfigurations.find(vehicleId) != m_entityConfigurations.end())
+      --  {
+      --      double speed = m_entityConfigurations[vehicleId]->getNominalSpeed();
+      --      if (speed < 1e-2)
+      --      {
+      --          speed = 1.0; // default to 1 if too small for division
+      --      }
+      --  }
 
-   function PlanToRoute (PendingRoute : Int64_Formal_Set_Map) return Int64_Map is
-      Res : Int64_Map;
-   begin
-      for C in pendingRoute loop
-         pragma Loop_Variant (Increases => Int_Set_Maps_P.Get (Positions (pendingRoute), C));
-         pragma Loop_Invariant
-           (for all I of Res =>
-              Int_Set_Maps_M.Has_Key (Model (pendingRoute), Get (Res, I))
-            and then Contains (Int_Set_Maps_M.Get (Model (pendingRoute), Get (Res, I)), I));
-         pragma Loop_Invariant
-           (for all J in 1 .. Int_Set_Maps_P.Get (Positions (pendingRoute), C) - 1 =>
-              (for all K of Int_Set_Maps_M.Get (Model (pendingRoute), Int_Set_Maps_K.Get (Keys (pendingRoute), J)) =>
-                   Has_Key (Res, K)
-               and then Get (Res, K) = Int_Set_Maps_K.Get (Keys (pendingRoute), J)));
-         pragma Loop_Invariant
-           (for all J in Int_Set_Maps_P.Get (Positions (pendingRoute), C) .. Length (pendingRoute) =>
-              (for all K of Int_Set_Maps_M.Get (Model (pendingRoute), Int_Set_Maps_K.Get (Keys (pendingRoute), J)) =>
-                   not Has_Key (Res, K)));
-
-         declare
-            routePlans : Int64_Formal_Set renames Element (pendingRoute, C);
-         begin
-            for C2 in routePlans loop
-               pragma Loop_Variant (Increases => Int_Set_P.Get (Positions (routePlans), C2));
-               pragma Loop_Invariant
-                 (for all I of Res =>
-                    Int_Set_Maps_M.Has_Key (Model (pendingRoute), Get (Res, I))
-                  and then Contains (Int_Set_Maps_M.Get (Model (pendingRoute), Get (Res, I)), I));
-               pragma Loop_Invariant
-                 (for all J in 1 .. Int_Set_Maps_P.Get (Positions (pendingRoute), C) - 1 =>
-                    (for all K of Int_Set_Maps_M.Get (Model (pendingRoute), Int_Set_Maps_K.Get (Keys (pendingRoute), J)) =>
-                         Has_Key (Res, K)
-                     and then Get (Res, K) = Int_Set_Maps_K.Get (Keys (pendingRoute), J)));
-               pragma Loop_Invariant
-                 (for all J in Int_Set_Maps_P.Get (Positions (pendingRoute), C) + 1 .. Length (pendingRoute) =>
-                      (for all K of Int_Set_Maps_M.Get (Model (pendingRoute), Int_Set_Maps_K.Get (Keys (pendingRoute), J)) =>
-                            not Has_Key (Res, K)));
-               pragma Loop_Invariant
-                 (for all J in 1 .. Int_Set_P.Get (Positions (routePlans), C2) - 1 =>
-                         Has_Key (Res, Int_Set_E.Get (Elements (routePlans), J))
-                     and then Get (Res, Int_Set_E.Get (Elements (routePlans), J)) = Key (pendingRoute, C));
-               pragma Loop_Invariant
-                 (for all J in Int_Set_P.Get (Positions (routePlans), C2) .. Length (routePlans) =>
-                         not Has_Key (Res, Int_Set_E.Get (Elements (routePlans), J)));
-
-               pragma Assume (Length (Res) < Count_Type'Last, "We have less than Count_Type'Last pending plan requests in total");
-               Res := Add (Res, Element (routePlans, C2), Key (pendingRoute, C));
-            end loop;
-         end;
-      end loop;
-      return Res;
-   end planToRoute;
+      --  auto response = std::shared_ptr<UxAS::messages::route::RoutePlanResponse>(new UxAS::messages::route::RoutePlanResponse);
+      --  response->setAssociatedTaskID(taskId);
+      --  response->setOperatingRegion(regionId);
+      --  response->setVehicleID(vehicleId);
+      --  response->setResponseID(request->getRequestID());
+      --
+      --  for (size_t k = 0; k < request->getRouteRequests().size(); k++)
+      --  {
+      --      UxAS::messages::route::RouteConstraints* routeRequest = request->getRouteRequests().at(k);
+      --      int64_t routeId = routeRequest->getRouteID();
+      --      VisiLibity::Point startPt, endPt;
+      --      double north, east;
+      --
+      --      UxAS::messages::route::RoutePlan* plan = new UxAS::messages::route::RoutePlan;
+      --      plan->setRouteID(routeId);
+      --
+      --      flatEarth.ConvertLatLong_degToNorthEast_m(routeRequest->getStartLocation()->getLatitude(), routeRequest->getStartLocation()->getLongitude(), north, east);
+      --      startPt.set_x(east);
+      --      startPt.set_y(north);
+      --
+      --      flatEarth.ConvertLatLong_degToNorthEast_m(routeRequest->getEndLocation()->getLatitude(), routeRequest->getEndLocation()->getLongitude(), north, east);
+      --      endPt.set_x(east);
+      --      endPt.set_y(north);
+      --
+      --      double linedist = VisiLibity::distance(startPt, endPt);
+      --      plan->setRouteCost(linedist / speed * 1000); // milliseconds to arrive
+      --      m_routePlans[routeId] = std::make_pair(request->getRequestID(), std::shared_ptr<UxAS::messages::route::RoutePlan>(plan));
+      --  }
+      --  m_routePlanResponses[response->getResponseID()] = response;
+   end Euclidean_Plan;
 
    --------------------------------
    -- Handle_Route_Plan_Response --
    --------------------------------
-
-   --  Actual implementation of the service
 
    procedure Handle_Route_Plan_Response
      (Mailbox  : in out Route_Aggregator_Mailbox;
@@ -345,11 +775,11 @@ package body Route_Aggregator with SPARK_Mode is
          pragma Loop_Invariant
            (Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans));
 
-         pragma Assume (Length (State.M_RoutePlans) < State.M_RoutePlans.Capacity, "We have enough room for all route plans");
+         pragma Assume (Length (State.m_routePlans) < State.m_routePlans.Capacity, "We have enough room for all route plans");
 
          declare
-            ID   : Int64 := Get (Response.RouteResponses, p).RouteID;
-            Plan : RoutePlan := Get (Response.RouteResponses, p);
+            ID   : constant Int64 := Get (Response.RouteResponses, p).RouteID;
+            Plan : constant RoutePlan := Get (Response.RouteResponses, p);
          begin
             Insert (State.m_routePlans, ID,
                     IdPlanPair'(Id   => Response.ResponseID,
@@ -380,12 +810,9 @@ package body Route_Aggregator with SPARK_Mode is
       State   : in out Route_Aggregator_State;
       Request : RouteRequest)
    is
-      use Int64_Sequences;
       use all type History_Type;
-      Vehicle_Ids  : Int64_Seq := Request.VehicleID;
-      PlanRequests : Int64_Formal_Set;
-      Old_routeRequestId : constant Int64 := State.m_routeRequestId with Ghost;
-
+      Vehicle_Ids        : Int64_Seq := Request.VehicleID;
+      PlanRequests       : Int64_Formal_Set;
    begin
       pragma Assert (No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses));
       pragma Assume (Length (History) < Count_Type'Last, "We still have room for a new event in History");
@@ -393,7 +820,7 @@ package body Route_Aggregator with SPARK_Mode is
       pragma Assert
         (for all Pos in Event_Sequences.First .. Last (History) - 1 =>
            (if Get (History, Pos).Kind = Receive_PlanResponse
-            and Has_Key (planToRoute (State.m_pendingRoute), Get (History, Pos).Id)
+            and Has_Key (Plan_To_Route (State.m_pendingRoute), Get (History, Pos).Id)
             then Contains (State.m_routePlanResponses, Get (History, Pos).Id)));
       pragma Assert (No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses));
 
@@ -471,7 +898,7 @@ package body Route_Aggregator with SPARK_Mode is
 
             -- create a new route plan request
 
-            pragma Assume (State.m_routeRequestId < int64'Last, "The request ID does not overflow");
+            pragma Assume (State.m_routeRequestId < Int64'Last, "The request ID does not overflow");
             planRequest : constant RoutePlanRequest :=
               (AssociatedTaskID  => Request.AssociatedTaskID,
                IsCostOnlyRequest => Request.IsCostOnlyRequest,
@@ -486,7 +913,7 @@ package body Route_Aggregator with SPARK_Mode is
             pragma Assume (Length (PlanRequests) < PlanRequests.Capacity, "We have enough room for all vehicles in planRequests");
             Insert (PlanRequests, planRequest.RequestID);
 
-            if Contains (Data.m_groundVehicles, vehicle_Id) then
+            if Contains (Data.m_groundVehicles, Vehicle_Id) then
                if Data.m_fastPlan then
                   -- short-circuit and just plan with straight line planner
 
@@ -577,475 +1004,108 @@ package body Route_Aggregator with SPARK_Mode is
       Check_All_Task_Options_Received (Mailbox, Data, State);
    end Handle_Task_Plan_Options;
 
+   --------------------------------------
+   -- Handle_Unique_Automation_Request --
+   --------------------------------------
+
+   procedure Handle_Unique_Automation_Request
+     (Data    : Route_Aggregator_Configuration_Data;
+      Mailbox : in out Route_Aggregator_Mailbox;
+      State   : in out Route_Aggregator_State;
+      Areq    : UniqueAutomationRequest)
+   is
+   begin
+      Insert (State.m_uniqueAutomationRequests,
+              State.m_autoRequestId + 1,
+              Areq);
+      State.m_autoRequestId := State.m_autoRequestId + 1;
+      Check_All_Task_Options_Received (Mailbox, Data, State);
+   end Handle_Unique_Automation_Request;
+
    ---------------------------
-   -- Check_All_Route_Plans --
+   -- Insert_PendingRequest --
    ---------------------------
 
-   procedure Check_All_Route_Plans_PendingRoute
-     (Mailbox : in out Route_Aggregator_Mailbox;
-      State   : in out Route_Aggregator_State)
-     with
-       --  General invariants
-
-     Pre  => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
-     and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
-     and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
-
-     --  History invariants
-
-     and Valid_Events (State.m_routeRequestId)
-     and No_RouteRequest_Lost (State.m_pendingRoute)
-     and No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses)
-     and All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses),
-
-     --  General invariants
-
-     Post => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
-     and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
-     and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
-     and (for all K in 1 .. Length (State.m_pendingRoute) =>
-            Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)))
-
-     --  History invariants
-
-     and History'Old <= History
-     and Valid_Events (State.m_routeRequestId)
-     and No_RouteRequest_Lost (State.m_pendingRoute)
-     and No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses)
-     and All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses)
+   procedure Insert_PendingRequest
+     (m_pendingRequest : in out Int64_Formal_Set_Map;
+      otherPending     : Int64_Formal_Set_Map;
+      m_routeRequestId : Int64;
+      RequestID        : Int64;
+      PlanRequests     : Int64_Formal_Set)
    is
-      i : Int64_Formal_Set_Maps.Cursor := First (State.m_pendingRoute);
-      D : Count_Type := 0 with Ghost;
-      --  Number of removed elements
+      pragma Unreferenced (otherPending);
+      Old_pendingRequest   : constant Int_Set_Maps_M.Map := Model (m_pendingRequest) with Ghost;
+      Old_pendingRequest_M : constant Int64_Formal_Set_Maps.Formal_Model.M.Map :=
+        Int64_Formal_Set_Maps.Formal_Model.Model (m_pendingRequest) with Ghost;
    begin
-      -- check pending route requests
-      while Has_Element (State.m_pendingRoute, i) loop
-         pragma Loop_Invariant (Has_Element (State.m_pendingRoute, i));
+      Insert (m_pendingRequest, RequestID, PlanRequests);
+      --  Establish the effect on the redefined Model of maps of formal sets
 
-         pragma Loop_Invariant
-           (D = Length (State.m_pendingRoute)'Loop_Entry - Length (State.m_pendingRoute));
-         pragma Loop_Invariant
-           (Model (State.m_pendingRoute) <= Int_Set_Maps_M.Map'(Model (State.m_pendingRoute))'Loop_Entry);
-         pragma Loop_Invariant
-           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), I) - 1 =>
-              (for some L in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), I) - 1 + D =>
-                    Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K) = Int_Set_Maps_K.Get (Keys (State.m_pendingRoute)'Loop_Entry, L)));
-         pragma Loop_Invariant
-           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), I) - 1 =>
-              Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)));
-         pragma Loop_Invariant
-           (for all K in Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), I) .. Length (State.m_pendingRoute) =>
-                Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K) = Int_Set_Maps_K.Get (Keys (State.m_pendingRoute)'Loop_Entry, K + D));
+      Model_Include
+        (Old_pendingRequest_M, Int64_Formal_Set_Maps.Formal_Model.Model (m_pendingRequest),
+         Old_pendingRequest, Model (m_pendingRequest));
 
-         --  General invariants
+      pragma Assert (No_Overlaps (Model (m_pendingRequest)));
+      pragma Assert (All_Pending_Requests_Seen (Model (m_pendingRequest), m_routeRequestId));
 
-         pragma Loop_Invariant
-           (All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans));
-         pragma Loop_Invariant
-           (Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans));
-         pragma Loop_Invariant
-           (Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses));
+   end Insert_PendingRequest;
 
-         --  History invariants
+   --  Model functions used in contracts
 
-         pragma Loop_Invariant (History'Loop_Entry <= History);
-         pragma Loop_Invariant (Valid_Events (State.m_routeRequestId));
-         pragma Loop_Invariant (No_RouteRequest_Lost (State.m_pendingRoute));
-         pragma Loop_Invariant (No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses));
-         pragma Loop_Invariant (All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses));
+   -----------
+   -- Model --
+   -----------
 
-         declare
-            isFulfilled : constant Boolean :=
-              (for all J of Element (State.m_pendingRoute, i) =>
-                   Contains (State.m_routePlanResponses, j));
-         begin
-            if isFulfilled then
-               SendRouteResponse (Mailbox, State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses, State.m_routePlans, Key (State.m_pendingRoute, i));
+   function Model (M : Int64_Formal_Set_Map) return Int_Set_Maps_M.Map is
 
-               declare
-                  Dummy    : Int64_Formal_Set_Maps.Cursor := i;
-                  Pos      : constant Count_Type := Int_Set_Maps_P.Get (Positions (State.m_pendingRoute), I) with Ghost;
-               begin
-                  Next (State.m_pendingRoute, i);
-                  Delete_PendingRequest (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routeRequestId, Dummy);
-                  D := D + 1;
-                  pragma Assert
-                    (for all K in 1 .. Pos - 1 =>
-                       Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)));
-               end;
-               pragma Assert (All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses));
+      function Model (S : Int64_Formal_Set) return Int64_Set with
+        Post =>
+          (for all E of Model'Result => Contains (S, E))
+          and
+            (for all E of S => Contains (Model'Result, E));
 
-            else
-               Next (State.m_pendingRoute, i);
-            end if;
-         end;
-      end loop;
-
-      pragma Assert
-        (for all K in 1 .. Length (State.m_pendingRoute) =>
-             Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)));
-   end Check_All_Route_Plans_PendingRoute;
-
-   procedure Check_All_Route_Plans_PendingAutoReq
-     (Mailbox : in out Route_Aggregator_Mailbox;
-      State   : in out Route_Aggregator_State)
-     with
-       --  General invariants
-
-     Pre  => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
-     and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
-     and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
-     and (for all K in 1 .. Length (State.m_pendingRoute) =>
-            Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)))
-
-     --  History invariants
-
-     and Valid_Events (State.m_routeRequestId)
-     and No_RouteRequest_Lost (State.m_pendingRoute)
-     and No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses)
-     and All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses),
-
-     --  General invariants
-
-     Post => All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans)
-     and Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans)
-     and Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
-     and No_Finished_Request (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses)
-
-     --  History invariants
-
-     and History'Old <= History
-     and Valid_Events (State.m_routeRequestId)
-     and No_RouteRequest_Lost (State.m_pendingRoute)
-     and No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses)
-     and All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses)
-   is
-      i : Int64_Formal_Set_Maps.Cursor := First (State.m_pendingAutoReq);
-      D : Count_Type := 0 with Ghost;
-      --  Number of removed elements
-   begin
-      --  Check pending automation requests
-
-      while Has_Element (State.m_pendingAutoReq, i) loop
-         pragma Loop_Invariant (Has_Element (State.m_pendingAutoReq, i));
-
-         pragma Loop_Invariant
-           (D = Length (State.m_pendingAutoReq)'Loop_Entry - Length (State.m_pendingAutoReq));
-         pragma Loop_Invariant
-           (Model (State.m_pendingAutoReq) <= Int_Set_Maps_M.Map'(Model (State.m_pendingAutoReq))'Loop_Entry);
-         pragma Loop_Invariant
-           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), I) - 1 =>
-              (for some L in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), I) - 1 + D =>
-                    Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K) = Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq)'Loop_Entry, L)));
-         pragma Loop_Invariant
-           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), I) - 1 =>
-              Is_Pending (Model (State.m_pendingAutoReq), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K)));
-         pragma Loop_Invariant
-           (for all K in Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), I) .. Length (State.m_pendingAutoReq) =>
-              Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K) = Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq)'Loop_Entry, K + D));
-
-         --  General invariants
-
-         pragma Loop_Invariant
-           (All_Plans_Registered (State.m_routePlanResponses, State.m_routePlans));
-         pragma Loop_Invariant
-           (Only_Pending_Plans (State.m_routePlanResponses, State.m_routePlans));
-         pragma Loop_Invariant
-           (Valid_Plan_Responses (State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses));
-         pragma Loop_Invariant
-           (for all K in 1 .. Length (State.m_pendingRoute) =>
-             Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)));
-
-         --  History invariants
-
-         pragma Loop_Invariant (History'Loop_Entry <= History);
-         pragma Loop_Invariant (Valid_Events (State.m_routeRequestId));
-         pragma Loop_Invariant (No_RouteRequest_Lost (State.m_pendingRoute));
-         pragma Loop_Invariant (No_PlanResponse_Lost (State.m_pendingRoute, State.m_routePlanResponses));
-         pragma Loop_Invariant (All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses));
-
-         declare
-            isFulfilled : constant Boolean :=
-              (for all J of Element (State.m_pendingAutoReq, i) =>
-                   Contains (State.m_routePlanResponses, j));
-         begin
-            if isFulfilled then
-               SendMatrix (Mailbox,
-                           State.m_uniqueAutomationRequests,
-                           State.m_pendingRoute,
-                           State.m_pendingAutoReq,
-                           State.m_routePlans,
-                           State.m_routeTaskPairing,
-                           State.m_routePlanResponses,
-                           State.m_taskOptions,
-                           Key (State.m_pendingAutoReq, i));
-
-               declare
-                  Dummy   : Int64_Formal_Set_Maps.Cursor := i;
-                  UAR_Key : constant Int64 := Key (State.m_pendingAutoReq, I);
-                  Pos     : constant Count_Type := Int_Set_Maps_P.Get (Positions (State.m_pendingAutoReq), I) with Ghost;
-               begin
-                  Next (State.m_pendingAutoReq, i);
-                  Delete_PendingRequest (State.m_pendingAutoReq, State.m_pendingRoute, State.m_routeRequestId, Dummy);
-                  Delete (State.m_uniqueAutomationRequests, UAR_Key);
-                  D := D + 1;
-                  pragma Assert
-                    (for all K in 1 .. Pos - 1 =>
-                       Is_Pending (Model (State.m_pendingAutoReq), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K)));
-               end;
-            else
-               Next (State.m_pendingAutoReq, i);
-            end if;
-         end;
-      end loop;
-
-      --  Restablish No_Finished_Request
-
-      pragma Assert
-        (for all K in 1 .. Length (State.m_pendingRoute) =>
-             Is_Pending (Model (State.m_pendingRoute), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingRoute), K)));
-      Lift_From_Keys_To_Model (State.m_pendingRoute);
-      pragma Assert
-        (for all K in 1 .. Length (State.m_pendingAutoReq) =>
-             Is_Pending (Model (State.m_pendingAutoReq), Model (State.m_routePlanResponses), Int_Set_Maps_K.Get (Keys (State.m_pendingAutoReq), K)));
-      Lift_From_Keys_To_Model (State.m_pendingAutoReq);
-   end Check_All_Route_Plans_PendingAutoReq;
-
-   procedure Check_All_Route_Plans
-     (Mailbox : in out Route_Aggregator_Mailbox;
-      State   : in out Route_Aggregator_State)
-   is
-
-   begin
-      Check_All_Route_Plans_PendingRoute (Mailbox, State);
-      Check_All_Route_Plans_PendingAutoReq (Mailbox, State);
-   end Check_All_Route_Plans;
-
-   -------------------------------------
-   -- Check_All_Task_Options_Received --
-   -------------------------------------
-
-   procedure Check_All_Task_Options_Received
-     (Mailbox : in out Route_Aggregator_Mailbox;
-      Data  : Route_Aggregator_Configuration_Data;
-      State : in out Route_Aggregator_State)
-     with
-       SPARK_Mode => Off
-   is
-
-      C : UAR_Maps.Cursor :=
-        First (State.m_UniqueAutomationRequests);
-   begin
-      while Has_Element (State.m_UniqueAutomationRequests, C) loop
-
-         declare
-            Areq        : constant UniqueAutomationRequest :=
-              Element (State.m_UniqueAutomationRequests, C);
-            AllReceived : constant Boolean :=
-              (for all TaskId of Areq.TaskList =>
-                 Contains (State.m_TaskOptions, TaskId));
-         begin
-
-            if AllReceived then
-               Build_Matrix_Requests
-                 (Mailbox,
-                  Data,
-                  State,
-                  Key (State.m_UniqueAutomationRequests, C));
-            end if;
-
-         end;
-
-         Next (State.m_UniqueAutomationRequests, C);
-      end loop;
-   end Check_All_Task_Options_Received;
-
-   -------------------------
-   -- BuildMatrixRequests --
-   -------------------------
-
-   procedure Build_Matrix_Requests
-     (Mailbox : in out Route_Aggregator_Mailbox;
-      Data  : Route_Aggregator_Configuration_Data;
-      State : in out Route_Aggregator_State;
-      ReqId : Int64)
-     with
-       SPARK_Mode => Off
-   is
-      sendAirPlanRequest    : RPReq_Seq;
-      sendGroundPlanRequest : RPReq_Seq;
-      Empty_Formal_Set      : Int64_Formal_Set;
-   begin
-      Insert (State.m_pendingAutoReq, ReqId, Empty_Formal_Set);
-
-      if Length (Element (State.m_UniqueAutomationRequests, ReqId).EntityList) = 0 then
-         declare
-            AReq : UniqueAutomationRequest :=
-              Element (State.m_UniqueAutomationRequests, ReqId);
-         begin
-            AReq.EntityList := Data.m_entityStates;
-            Replace (State.m_UniqueAutomationRequests, ReqId, AReq);
-         end;
-      end if;
-
-      declare
-         AReq : constant UniqueAutomationRequest :=
-           Element (State.m_UniqueAutomationRequests, ReqId);
+      function Model (S : Int64_Formal_Set) return Int64_Set is
+         Res : Int64_Set;
       begin
-         For_Each_Vehicle : for VehicleId of AReq.EntityList loop
-            Make_Request : declare
-               StartHeading_Deg   : Real32 := 0.0;
-               StartLocation      : Location3D;
-               FoundPlanningState : Boolean := False;
-               Vehicle            : EntityState;
-            begin
-               for PlanningState of AReq.PlanningStates loop
-
-                  if PlanningState.EntityId = VehicleId then
-                     StartLocation := PlanningState.PlanningPosition;
-                     StartHeading_Deg := PlanningState.PlanningHeading;
-                     FoundPlanningstate := True;
-                     exit;
-                  end if;
-
-               end loop;
-
-               if FoundPlanningState
-                 or else (for some EntityId of Data.m_entityStates =>
-                            (EntityId = VehicleId))
-               then
-
-                  Build_Eligible_Task_Options : declare
-                     TaskOptionList : TaskOption_Seq;
-                     Found_Elig     : Boolean := False;
-                     PlanRequest    : RoutePlanRequest;
-                     Set            : Int64_Formal_Set := Element (State.m_pendingAutoReq, ReqId);
-                  begin
-                     for TaskId of AReq.TaskList loop
-
-                        if Contains (State.m_taskOptions, TaskId) then
-                           for Option of Element (State.m_TaskOptions, taskId).Options loop
-
-                              Found_Elig := False;
-                              for V of Option.EligibleEntities loop
-                                 if V = VehicleId then
-                                    Found_Elig := True;
-                                    exit;
-                                 end if;
-                              end loop;
-
-                              if Length (Option.EligibleEntities) = 0
-                                or else Found_Elig then
-                                 TaskOptionList := Add (TaskOptionList, Option);
-                              end if;
-
-                           end loop;
-                        end if;
-                     end loop;
-
-                     PlanRequest.AssociatedTaskID := 0;
-                     PlanRequest.IsCostOnlyRequest := False;
-                     PlanRequest.OperatingRegion := AReq.OperatingRegion;
-                     PlanRequest.VehicleID := VehicleId;
-                     State.m_routeRequestId := State.m_routeRequestId + 1;
-                     PlanRequest.RequestID := State.m_routeRequestId;
-                     Insert (Set, State.m_routeRequestId);
-                     Replace (State.m_pendingAutoReq,
-                                    ReqId,
-                                    Set);
-
-                     if not FoundPlanningState then
-                        Vehicle := ES_Maps.Get (Data.m_entityStatesInfo, VehicleId);
-                        StartLocation := Vehicle.Location;
-                        StartHeading_Deg := Vehicle.Heading;
-                     end if;
-
-                     for Option of TaskOptionList loop
-                        declare
-                           TOP : constant TaskOptionPair :=
-                           (VehicleId, 0, 0, Option.TaskId, Option.OptionId);
-                           R : RouteConstraints;
-
-                        begin
-                           Insert (State.m_routeTaskPairing, State.m_routeId + 1, TOP);
-                           R.StartLocation := StartLocation;
-                           R.StartHeading := StartHeading_Deg;
-                           R.EndLocation := Option.StartLocation;
-                           R.EndHeading := Option.StartHeading;
-                           R.RouteID := State.m_routeId + 1;
-                           PlanRequest.RouteRequests :=
-                             Add (PlanRequest.RouteRequests, R);
-                           State.m_routeId := State.m_routeId + 1;
-                        end;
-                     end loop;
-
-                     for T1 in TaskOptionList loop
-                        for T2 in TaskOptionList loop
-
-                           if T1 /= T2 then
-                              declare
-                                 O1  : constant TaskOption :=
-                                   Get (TaskOptionList, T1);
-                                 O2  : constant TaskOption :=
-                                   Get (TaskOptionList, T2);
-                                 TOP : constant TaskOptionPair :=
-                                   (VehicleId,
-                                    O1.TaskID,
-                                    O1.OptionID,
-                                    O2.TaskID,
-                                    O2.OptionID);
-                                 R   : RouteConstraints;
-                              begin
-                                 Insert (State.m_routeTaskPairing, State.m_routeId + 1, TOP);
-                                 R.StartLocation := O1.EndLocation;
-                                 R.StartHeading := O1.EndHeading;
-                                 R.EndLocation := O2.StartLocation;
-                                 R.EndHeading := O2.StartHeading;
-                                 R.RouteID := State.m_routeId + 1;
-                                 PlanRequest.RouteRequests :=
-                                   Add (PlanRequest.RouteRequests, R);
-                                 State.m_routeId := State.m_routeId + 1;
-                              end;
-                           end if;
-                        end loop;
-                     end loop;
-
-                     if Contains (Data.m_groundVehicles, VehicleId) then
-                        sendGroundPlanRequest :=
-                          Add (sendGroundPlanRequest, PlanRequest);
-                     else
-                        sendAirPlanRequest :=
-                          Add (sendAirPlanRequest, PlanRequest);
-                     end if;
-                  end Build_Eligible_Task_Options;
-               end if;
-            end Make_Request;
-         end loop For_Each_Vehicle;
-
-         for RPReq of sendAirPlanRequest loop
-            sendLimitedCastMessage (Mailbox,
-                                    AircraftPathPlanner,
-                                    RPReq);
+         for C in S loop
+            pragma Loop_Variant (Increases => Int_Set_P.Get (Positions (S), C));
+            pragma Loop_Invariant (Length (Res) = Int_Set_P.Get (Positions (S), C) - 1);
+            pragma Loop_Invariant (for all E of Res => Contains (S, E));
+            pragma Loop_Invariant
+              (for all K in 1 .. Int_Set_P.Get (Positions (S), C) - 1 =>
+                 Contains (Res, Int_Set_E.Get (Elements (S), K)));
+            pragma Loop_Invariant
+              (for all K in Int_Set_P.Get (Positions (S), C) .. Length (S) =>
+                    not Contains (Res, Int_Set_E.Get (Elements (S), K)));
+            Res := Add (Res, Element (S, C));
          end loop;
+         return Res;
+      end Model;
 
-         for RPReq of sendGroundPlanRequest loop
-            if Data.m_fastPlan then
-               Euclidean_Plan (Data,
-                               State.m_routePlanResponses,
-                               State.m_routePlans,
-                               RPReq);
-            else
-               sendLimitedCastMessage (Mailbox,
-                                       GroundPathPlanner,
-                                       RPReq);
-            end if;
-         end loop;
-
-         if Data.m_fastPlan then
-            Check_All_Route_Plans (Mailbox, State);
-         end if;
-      end;
-   end Build_Matrix_Requests;
+      Res : Int_Set_Maps_M.Map;
+   begin
+      for C in M loop
+         pragma Loop_Variant (Increases => Int_Set_Maps_P.Get (Positions (M), C));
+         pragma Loop_Invariant (Int_Set_Maps_M.Length (Res) = Int_Set_Maps_P.Get (Positions (M), C) - 1);
+         pragma Loop_Invariant (for all I of Res => Contains (M, I));
+         pragma Loop_Invariant
+           (for all I of Res =>
+              (for all E of Int_Set_Maps_M.Get (Res, I) =>
+                   Contains (Element (M, I), E)));
+         pragma Loop_Invariant
+           (for all I of Res =>
+              (for all E of Element (M, I) =>
+                   Contains (Int_Set_Maps_M.Get (Res, I), E)));
+         pragma Loop_Invariant
+           (for all K in 1 .. Int_Set_Maps_P.Get (Positions (M), C) - 1 =>
+                 Int_Set_Maps_M.Has_Key (Res, Int_Set_Maps_K.Get (Keys (M), K)));
+         pragma Loop_Invariant
+           (for all K in Int_Set_Maps_P.Get (Positions (M), C) .. Length (M) =>
+                 not Int_Set_Maps_M.Has_Key (Res, Int_Set_Maps_K.Get (Keys (M), K)));
+         Res := Int_Set_Maps_M.Add (Res, Key (M, C), Model (Element (M, C)));
+      end loop;
+      return Res;
+   end Model;
 
    ----------------
    -- SendMatrix --
@@ -1067,7 +1127,6 @@ package body Route_Aggregator with SPARK_Mode is
       matrix          : AssignmentCostMatrix;
       pendingRequests : Int64_Formal_Set renames Element (m_pendingAutoReq, autoKey);
       Old_routePlanResponses : constant Int64_RouteResponse_Map := m_routePlanResponses with Ghost;
-      Old_routePlans : constant Int64_IdPlanPair_Map := m_routePlans with Ghost;
    begin
       matrix.CorrespondingAutomationRequestID := areq.RequestID;
       matrix.OperatingRegion := areq.OperatingRegion;
@@ -1110,7 +1169,7 @@ package body Route_Aggregator with SPARK_Mode is
          begin
 
             declare
-               plan : Int64_RouteResponse_Maps.Cursor := Find (m_routePlanResponses, rId);
+               plan  : Int64_RouteResponse_Maps.Cursor := Find (m_routePlanResponses, rId);
 
                --  NB. The if statement checking whether rId is in
                --  routePlanResponses was removed as SendRouteResponse is only
@@ -1150,12 +1209,17 @@ package body Route_Aggregator with SPARK_Mode is
                      declare
                         routeplan : constant IdPlanPair :=
                           Element (m_routePlans, Get (resps, i).RouteID);
-                        taskpair : constant TaskOptionPair :=
+                        taskpair  : constant TaskOptionPair :=
                           Element (m_routeTaskPairing, Get (resps, i).RouteID);
-                        toc : TaskOptionCost;
+                        toc       : TaskOptionCost;
                      begin
                         if routeplan.Cost < 0 then
-                           Put_Line ("Route not found: V[" & taskpair.vehicleId'Image & "](" & taskpair.prevTaskId'Image & "," & taskpair.prevTaskOption'Image &")-(" & taskpair.taskId'Image & ","&taskpair.taskOption'Image&")");
+                           Put_Line ("Route not found: V[" &
+                                       taskpair.vehicleId'Image & "](" &
+                                       taskpair.prevTaskId'Image & "," &
+                                       taskpair.prevTaskOption'Image & ")-(" &
+                                       taskpair.taskId'Image & "," &
+                                       taskpair.taskOption'Image & ")");
                         end if;
 
                         toc.DestinationTaskID := taskpair.taskId;
@@ -1179,8 +1243,8 @@ package body Route_Aggregator with SPARK_Mode is
                pragma Assert
                  (for all Pl of Model (m_routePlans) => Element (m_routePlans, Pl).Id /= rId);
                pragma Assert (All_Pending_Plans_Sent (m_pendingRoute, m_routePlanResponses));
-               pragma Assert (No_overlaps (Model (m_pendingRoute), Model (m_pendingAutoReq)));
-               pragma Assert (for all Id of planToRoute (m_pendingRoute) => Id /= Key (m_routePlanResponses, plan));
+               pragma Assert (No_Overlaps (Model (m_pendingRoute), Model (m_pendingAutoReq)));
+               pragma Assert (for all Id of Plan_To_Route (m_pendingRoute) => Id /= Key (m_routePlanResponses, plan));
                Delete (m_routePlanResponses, plan);
                pragma Assert (All_Pending_Plans_Sent (m_pendingRoute, m_routePlanResponses));
                pragma Assert
@@ -1189,7 +1253,7 @@ package body Route_Aggregator with SPARK_Mode is
          end;
       end loop;
 
-      sendBroadcastMessage(Mailbox, matrix);
+      sendBroadcastMessage (Mailbox, matrix);
       Clear (m_taskOptions);
    end SendMatrix;
 
@@ -1205,17 +1269,16 @@ package body Route_Aggregator with SPARK_Mode is
       routePlans         : in out Int64_IdPlanPair_Map;
       routeKey           : Int64)
    is
-      Response  : RouteResponse;
-      PlanResponses : Int64_Formal_Set renames Element (pendingRoute, routeKey);
+      Response               : RouteResponse;
+      PlanResponses          : Int64_Formal_Set renames Element (pendingRoute, routeKey);
       Old_routePlanResponses : constant RR_Maps_M.Map := Model (routePlanResponses) with Ghost;
-      Old_routePlans : constant Int64_IdPlanPair_Map := routePlans with Ghost;
    begin
-      response.ResponseID := routeKey;
+      Response.ResponseID := routeKey;
       for Cu in PlanResponses loop
 
          --  Number of elements added to response.Routes
 
-         pragma Loop_Invariant (Length (response.Routes) < Int_Set_P.Get (Positions (PlanResponses), Cu));
+         pragma Loop_Invariant (Length (Response.Routes) < Int_Set_P.Get (Positions (PlanResponses), Cu));
 
          --  We have removed all elements of PlanResponses from routePlanResponses
          --  up to Cu.
@@ -1247,15 +1310,15 @@ package body Route_Aggregator with SPARK_Mode is
          --  We have only removed responses associated to routeKey
 
          pragma Loop_Invariant
-           (for all Id of planToRoute (pendingRoute) =>
-                (if Get (planToRoute (pendingRoute), Id) /= routeKey then
+           (for all Id of Plan_To_Route (pendingRoute) =>
+                (if Get (Plan_To_Route (pendingRoute), Id) /= routeKey then
                       Contains (routePlanResponses, Id)
                  or else PlanRequest_Sent (Id)));
          pragma Loop_Invariant
            (for all E of History =>
               (if E.Kind = Receive_PlanResponse
-               and then Has_Key (planToRoute (pendingRoute), E.Id)
-               and then Get (planToRoute (pendingRoute), E.Id) /= routeKey
+               and then Has_Key (Plan_To_Route (pendingRoute), E.Id)
+               and then Get (Plan_To_Route (pendingRoute), E.Id) /= routeKey
                then Contains (routePlanResponses, E.Id)));
 
          declare
@@ -1263,7 +1326,7 @@ package body Route_Aggregator with SPARK_Mode is
          begin
 
             declare
-               plan : Int64_RouteResponse_Maps.Cursor := Find (routePlanResponses, rId);
+               plan  : Int64_RouteResponse_Maps.Cursor := Find (routePlanResponses, rId);
 
                --  NB. The if statement checking whether rId is in
                --  routePlanResponses was removed as SendRouteResponse is only
@@ -1272,7 +1335,7 @@ package body Route_Aggregator with SPARK_Mode is
 
                resps : RP_Seq renames Element (routePlanResponses, plan).RouteResponses;
             begin
-               response.Routes := Add (response.Routes, Element (routePlanResponses, plan));
+               Response.Routes := Add (Response.Routes, Element (routePlanResponses, plan));
 
                -- delete all individual routes from storage
 
@@ -1313,242 +1376,71 @@ package body Route_Aggregator with SPARK_Mode is
       end loop;
       pragma Assert (All_Plans_Registered (routePlanResponses, routePlans));
       pragma Assert
-        (for all Id of planToRoute (pendingRoute) =>
-             (if Get (planToRoute (pendingRoute), Id) /= routeKey then
+        (for all Id of Plan_To_Route (pendingRoute) =>
+             (if Get (Plan_To_Route (pendingRoute), Id) /= routeKey then
                    Contains (routePlanResponses, Id)
               or else PlanRequest_Sent (Id)));
 
       -- send the results of the query
-      sendBroadcastMessage(Mailbox, Response);
+      sendBroadcastMessage (Mailbox, Response);
       pragma Assume (Length (History) < Count_Type'Last, "We still have room for a new event in History");
       History := Add (History, (Kind => Send_RouteResponse, Id => Response.ResponseID));
    end SendRouteResponse;
 
-   --------------------
-   -- Euclidean_Plan --
-   --------------------
+   -----------------
+   -- Plan_To_Route --
+   -----------------
 
-   procedure Euclidean_Plan
-     (Data               : Route_Aggregator_Configuration_Data;
-      routePlanResponses : in out Int64_RouteResponse_Map;
-      routePlans         : in out Int64_IdPlanPair_Map;
-      Request            : RoutePlanRequest)
-   is
-      pragma Unreferenced (Data, routePlans, routePlanResponses, Request);
-      --  --  uxas::common::utilities::CUnitConversions flatEarth;
-      --  FlatEarth : Conversions.Unit_Converter;
-      --  --  int64_t regionId = request->getOperatingRegion();
-      --  RegionId  : Int64 := Request.OperatingRegion;
-      --  --  int64_t vehicleId = request->getVehicleID();
-      --  VehicleId : Int64 := Request.VehicleID;
-      --  --  int64_t taskId = request->getAssociatedTaskID();
-      --  TaskId    : Int64 := Request.AssociatedTaskID;
-      --  --  double speed = 1.0; // default if no speed available
-      --  Speed : Real64 := 1.0;
+   function Plan_To_Route (pendingRoute : Int64_Formal_Set_Map) return Int64_Map is
+      Res : Int64_Map;
    begin
-      raise Program_Error with "Euclidean_Plan is unimplemented";
+      for C in pendingRoute loop
+         pragma Loop_Variant (Increases => Int_Set_Maps_P.Get (Positions (pendingRoute), C));
+         pragma Loop_Invariant
+           (for all I of Res =>
+              Int_Set_Maps_M.Has_Key (Model (pendingRoute), Get (Res, I))
+            and then Contains (Int_Set_Maps_M.Get (Model (pendingRoute), Get (Res, I)), I));
+         pragma Loop_Invariant
+           (for all J in 1 .. Int_Set_Maps_P.Get (Positions (pendingRoute), C) - 1 =>
+              (for all K of Int_Set_Maps_M.Get (Model (pendingRoute), Int_Set_Maps_K.Get (Keys (pendingRoute), J)) =>
+                   Has_Key (Res, K)
+               and then Get (Res, K) = Int_Set_Maps_K.Get (Keys (pendingRoute), J)));
+         pragma Loop_Invariant
+           (for all J in Int_Set_Maps_P.Get (Positions (pendingRoute), C) .. Length (pendingRoute) =>
+              (for all K of Int_Set_Maps_M.Get (Model (pendingRoute), Int_Set_Maps_K.Get (Keys (pendingRoute), J)) =>
+                   not Has_Key (Res, K)));
 
-      --  if (m_entityConfigurations.find(vehicleId) != m_entityConfigurations.end())
-      --  {
-      --      double speed = m_entityConfigurations[vehicleId]->getNominalSpeed();
-      --      if (speed < 1e-2)
-      --      {
-      --          speed = 1.0; // default to 1 if too small for division
-      --      }
-      --  }
+         declare
+            routePlans : Int64_Formal_Set renames Element (pendingRoute, C);
+         begin
+            for C2 in routePlans loop
+               pragma Loop_Variant (Increases => Int_Set_P.Get (Positions (routePlans), C2));
+               pragma Loop_Invariant
+                 (for all I of Res =>
+                    Int_Set_Maps_M.Has_Key (Model (pendingRoute), Get (Res, I))
+                  and then Contains (Int_Set_Maps_M.Get (Model (pendingRoute), Get (Res, I)), I));
+               pragma Loop_Invariant
+                 (for all J in 1 .. Int_Set_Maps_P.Get (Positions (pendingRoute), C) - 1 =>
+                    (for all K of Int_Set_Maps_M.Get (Model (pendingRoute), Int_Set_Maps_K.Get (Keys (pendingRoute), J)) =>
+                         Has_Key (Res, K)
+                     and then Get (Res, K) = Int_Set_Maps_K.Get (Keys (pendingRoute), J)));
+               pragma Loop_Invariant
+                 (for all J in Int_Set_Maps_P.Get (Positions (pendingRoute), C) + 1 .. Length (pendingRoute) =>
+                      (for all K of Int_Set_Maps_M.Get (Model (pendingRoute), Int_Set_Maps_K.Get (Keys (pendingRoute), J)) =>
+                            not Has_Key (Res, K)));
+               pragma Loop_Invariant
+                 (for all J in 1 .. Int_Set_P.Get (Positions (routePlans), C2) - 1 =>
+                         Has_Key (Res, Int_Set_E.Get (Elements (routePlans), J))
+                     and then Get (Res, Int_Set_E.Get (Elements (routePlans), J)) = Key (pendingRoute, C));
+               pragma Loop_Invariant
+                 (for all J in Int_Set_P.Get (Positions (routePlans), C2) .. Length (routePlans) =>
+                         not Has_Key (Res, Int_Set_E.Get (Elements (routePlans), J)));
 
-      --  auto response = std::shared_ptr<uxas::messages::route::RoutePlanResponse>(new uxas::messages::route::RoutePlanResponse);
-      --  response->setAssociatedTaskID(taskId);
-      --  response->setOperatingRegion(regionId);
-      --  response->setVehicleID(vehicleId);
-      --  response->setResponseID(request->getRequestID());
-      --
-      --  for (size_t k = 0; k < request->getRouteRequests().size(); k++)
-      --  {
-      --      uxas::messages::route::RouteConstraints* routeRequest = request->getRouteRequests().at(k);
-      --      int64_t routeId = routeRequest->getRouteID();
-      --      VisiLibity::Point startPt, endPt;
-      --      double north, east;
-      --
-      --      uxas::messages::route::RoutePlan* plan = new uxas::messages::route::RoutePlan;
-      --      plan->setRouteID(routeId);
-      --
-      --      flatEarth.ConvertLatLong_degToNorthEast_m(routeRequest->getStartLocation()->getLatitude(), routeRequest->getStartLocation()->getLongitude(), north, east);
-      --      startPt.set_x(east);
-      --      startPt.set_y(north);
-      --
-      --      flatEarth.ConvertLatLong_degToNorthEast_m(routeRequest->getEndLocation()->getLatitude(), routeRequest->getEndLocation()->getLongitude(), north, east);
-      --      endPt.set_x(east);
-      --      endPt.set_y(north);
-      --
-      --      double linedist = VisiLibity::distance(startPt, endPt);
-      --      plan->setRouteCost(linedist / speed * 1000); // milliseconds to arrive
-      --      m_routePlans[routeId] = std::make_pair(request->getRequestID(), std::shared_ptr<uxas::messages::route::RoutePlan>(plan));
-      --  }
-      --  m_routePlanResponses[response->getResponseID()] = response;
-   end Euclidean_Plan;
-
-   --------------------------------------
-   -- Handle_Unique_Automation_Request --
-   --------------------------------------
-
-   procedure Handle_Unique_Automation_Request
-     (Data    : Route_Aggregator_Configuration_Data;
-      Mailbox : in out Route_Aggregator_Mailbox;
-      State   : in out Route_Aggregator_State;
-      Areq    : UniqueAutomationRequest)
-   is
-   begin
-      Insert (State.m_uniqueAutomationRequests,
-              State.m_autoRequestId + 1,
-              AReq);
-      State.m_autoRequestId := State.m_autoRequestId + 1;
-      Check_All_Task_Options_Received (Mailbox, Data, State);
-   end Handle_Unique_Automation_Request;
-
-   ------------------------
-   -- Insert_EntityState --
-   ------------------------
-
-   procedure Insert_EntityState
-     (m_entityStatesInfo : in out EntityState_Map;
-      Entity_State : EntityState)
-   is
-   begin
-      if ES_Maps.Has_Key (m_entityStatesInfo, Entity_State.Id) then
-         m_entityStatesInfo := ES_Maps.Set (m_entityStatesInfo, Entity_State.Id, Entity_State);
-      else
-         pragma Assume (Length (m_entityStatesInfo) < Count_Type'Last, "We still have room for a new entityState");
-         m_entityStatesInfo := ES_Maps.Add (m_entityStatesInfo, Entity_State.Id, Entity_State);
-      end if;
-   end Insert_EntityState;
-
-   -------------------------------
-   -- Handle_Air_Vehicle_Config --
-   -------------------------------
-
-   procedure Handle_Air_Vehicle_Config
-     (Data : in out Route_Aggregator_Configuration_Data;
-      Id   : Int64)
-   is
-   begin
-      if not Contains (Data.m_airVehicles, Id) then
-         pragma Assume (Length (Data.m_airVehicles) < Count_Type'Last, "We still have room for a new vehicle ID");
-         Data.m_airVehicles := Add (Data.m_airVehicles, Id);
-      end if;
-
-      if not Contains (Data.m_entityStates, Int64_Sequences.First, Last (Data.m_entityStates), Id) then
-         pragma Assume (Length (Data.m_entityStates) < Count_Type'Last, "We still have room for a new vehicle ID");
-         Data.m_entityStates := Add (Data.m_entityStates, Id);
-      end if;
-   end Handle_Air_Vehicle_Config;
-
-   ------------------------------
-   -- Handle_Air_Vehicle_State --
-   ------------------------------
-
-   procedure Handle_Air_Vehicle_State
-     (Data : in out Route_Aggregator_Configuration_Data;
-      Entity_State : EntityState)
-   is
-      Id : constant Int64 := Entity_State.Id;
-   begin
-      if not Contains (Data.m_airVehicles, Id) then
-         pragma Assume (Length (Data.m_airVehicles) < Count_Type'Last, "We still have room for a new vehicle ID");
-         Data.m_airVehicles := Add (Data.m_airVehicles, Id);
-      end if;
-
-      if not Contains (Data.m_entityStates, Int64_Sequences.First, Last (Data.m_entityStates), Id) then
-         pragma Assume (Length (Data.m_entityStates) < Count_Type'Last, "We still have room for a new vehicle ID");
-         Data.m_entityStates := Add (Data.m_entityStates, Id);
-      end if;
-
-      Insert_EntityState (Data.m_entityStatesInfo, Entity_State);
-   end Handle_Air_Vehicle_State;
-
-   ----------------------------------
-   -- Handle_Ground_Vehicle_Config --
-   ----------------------------------
-
-   procedure Handle_Ground_Vehicle_Config
-     (Data : in out Route_Aggregator_Configuration_Data;
-      Id   : Int64)
-   is
-   begin
-      if not Contains (Data.m_groundVehicles, Id) then
-         pragma Assume (Length (Data.m_groundVehicles) < Count_Type'Last, "We still have room for a new vehicle ID");
-         Data.m_groundVehicles := Add (Data.m_groundVehicles, Id);
-      end if;
-
-      if not Contains (Data.m_entityStates, Int64_Sequences.First, Last (Data.m_entityStates), Id) then
-         pragma Assume (Length (Data.m_entityStates) < Count_Type'Last, "We still have room for a new vehicle ID");
-         Data.m_entityStates := Add (Data.m_entityStates, Id);
-      end if;
-   end Handle_Ground_Vehicle_Config;
-
-   ---------------------------------
-   -- Handle_Ground_Vehicle_State --
-   ---------------------------------
-
-   procedure Handle_Ground_Vehicle_State
-     (Data : in out Route_Aggregator_Configuration_Data;
-      Entity_State : EntityState)
-   is
-      Id : constant Int64 := Entity_State.Id;
-   begin
-      if not Contains (Data.m_groundVehicles, Id) then
-         pragma Assume (Length (Data.m_groundVehicles) < Count_Type'Last, "We still have room for a new vehicle ID");
-         Data.m_groundVehicles := Add (Data.m_groundVehicles, Id);
-      end if;
-
-      if not Contains (Data.m_entityStates, Int64_Sequences.First, Last (Data.m_entityStates), Id) then
-         pragma Assume (Length (Data.m_entityStates) < Count_Type'Last, "We still have room for a new vehicle ID");
-         Data.m_entityStates := Add (Data.m_entityStates, Id);
-      end if;
-
-      Insert_EntityState (Data.m_entityStatesInfo, Entity_State);
-   end Handle_Ground_Vehicle_State;
-
-   -----------------------------------
-   -- Handle_Surface_Vehicle_Config --
-   -----------------------------------
-
-   procedure Handle_Surface_Vehicle_Config
-     (Data : in out Route_Aggregator_Configuration_Data;
-      Id   : Int64)
-   is
-   begin
-      if not Contains (Data.m_surfaceVehicles, Id) then
-         pragma Assume (Length (Data.m_surfaceVehicles) < Count_Type'Last, "We still have room for a new vehicle ID");
-         Data.m_surfaceVehicles := Add (Data.m_surfaceVehicles, Id);
-      end if;
-
-      if not Contains (Data.m_entityStates, Int64_Sequences.First, Last (Data.m_entityStates), Id) then
-         pragma Assume (Length (Data.m_entityStates) < Count_Type'Last, "We still have room for a new vehicle ID");
-         Data.m_entityStates := Add (Data.m_entityStates, Id);
-      end if;
-   end Handle_Surface_Vehicle_Config;
-
-   ----------------------------------
-   -- Handle_Surface_Vehicle_State --
-   ----------------------------------
-
-   procedure Handle_Surface_Vehicle_State
-     (Data : in out Route_Aggregator_Configuration_Data;
-      Entity_State : EntityState)
-   is
-      Id : constant Int64 := Entity_State.Id;
-   begin
-      if not Contains (Data.m_surfaceVehicles, Id) then
-         pragma Assume (Length (Data.m_surfaceVehicles) < Count_Type'Last, "We still have room for a new vehicle ID");
-         Data.m_surfaceVehicles := Add (Data.m_surfaceVehicles, Id);
-      end if;
-
-      if not Contains (Data.m_entityStates, Int64_Sequences.First, Last (Data.m_entityStates), Id) then
-         pragma Assume (Length (Data.m_entityStates) < Count_Type'Last, "We still have room for a new vehicle ID");
-         Data.m_entityStates := Add (Data.m_entityStates, Id);
-      end if;
-      Insert_EntityState (Data.m_entityStatesInfo, Entity_State);
-   end Handle_Surface_Vehicle_State;
-
+               pragma Assume (Length (Res) < Count_Type'Last, "We have less than Count_Type'Last pending plan requests in total");
+               Res := Add (Res, Element (routePlans, C2), Key (pendingRoute, C));
+            end loop;
+         end;
+      end loop;
+      return Res;
+   end Plan_To_Route;
 end Route_Aggregator;
