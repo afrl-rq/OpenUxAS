@@ -172,7 +172,7 @@ package body Algebra with SPARK_Mode is
 
    procedure Parse_Formula
      (Formula : Unbounded_String;
-      Algebra : out Algebra_Tree)
+      Algebra : out not null Algebra_Tree)
    is
       Kind          : Node_Kind_Type := Undefined;
       Operator_Kind : Operator_Kind_Type := Undefined;
@@ -224,7 +224,7 @@ package body Algebra with SPARK_Mode is
       else
          declare
             numParenthesis : Natural := 0;
-            Children_Array : Algebra_Tree_Array (1 .. Max_Children);
+            Children_Arr   : Algebra_Tree_Array (1 .. Max_Children);
             numChildren    : Children_Number := 0;
          begin
             for J in 1 .. Length (form) loop
@@ -249,7 +249,7 @@ package body Algebra with SPARK_Mode is
                         end loop;
                         numChildren := numChildren + 1;
                         Parse_Formula (To_Unbounded_String (Slice (form, J, iEnd)),
-                                       Children_Array (numChildren));
+                                       Children_Arr (numChildren));
                      end;
                   end if;
 
@@ -267,7 +267,7 @@ package body Algebra with SPARK_Mode is
 
                         numChildren := numChildren + 1;
                         Parse_Formula (To_Unbounded_String (Slice (form, J, iEnd)),
-                                       Children_Array (numChildren));
+                                       Children_Arr (numChildren));
                      end;
                   end if;
 
@@ -280,9 +280,10 @@ package body Algebra with SPARK_Mode is
             end loop;
             declare
                Nb_Children : constant Children_Number := numChildren;
-               Children    : Children_Collection (Nb_Children);
+               Children    : Children_Collection (Nb_Children)
+                 := (Num_Children => Nb_Children,
+                     Children     => Children_Array (Children_Arr (1 .. Nb_Children)));
             begin
-               Children.Children := Children_Array (1 .. Nb_Children);
                Algebra := new Algebra_Tree_Cell'(Node_Kind     => Operator,
                                                  Operator_Kind => Operator_Kind,
                                                  Collection    => Children);
