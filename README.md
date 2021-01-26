@@ -42,6 +42,7 @@ We've organized this README into sections, to simplify navigation.
 4. [Running the Examples](#examples)
 5. [Running the Tests](#tests)
 6. [Building the Documentation](#docs)
+7. [Adding New Examples](#add-examples)
 
 
 # 1. Quick Start<a name="quick-start" />
@@ -213,3 +214,144 @@ If you'd like to do this process manually, then:
    * Open terminal in directory `doc/doxygen`
    * `sh RunDoxygen.sh`
    * In newly created `html` folder, open index.html
+
+
+# 7. Adding New Examples<a name="add-examples" />
+
+As described [above](#examples), you can easily run OpenUxAS examples using the `run-example` script.
+You can also easily add new examples to OpenUxAS that will work with the `run-example` script.
+
+There are three essential parts of an example:
+
+1. the directory that contains the example;
+2. the input files that provide example data; and
+3. the YAML file that describes the details of how the example should be configured and run.
+
+## 7.1. Creating an Example Directory
+
+The `run-example` script will run examples from anywhere, provided you specify the path to the directory containing one or more examples by using the `--examples-dir` option.
+By default, `run-example` looks for examples under the `examples` directory in this repository.
+These instructions assume that you will put your new example in the root of `examples`.
+
+The examples provided in the `examples` directory follow a particular naming convention.
+While this convention makes finding and referring to examples simpler, it is not required: you may name your example however you like (although the repository maintainers may request that you follow a particular naming convention).
+
+We'll name our new example `20_NewExample`.
+Create the directory for the example:
+
+    OpenUxAS$ mkdir examples/20_NewExample
+
+## 7.2. Creating the Input Files
+
+The details of the input files required for OpenUxAS and OpenAMASE are beyond the scope of this README.
+The examples included in this repository offer insight and templates that can be copied and specialized for your new example.
+You can also find details in the User Manual, which you can build following the instructions [above](#docs).
+
+For the purposes of this README, we will simply copy the files in `02_Example_WaterwaySearch`.
+Copy the following to your new example:
+
+* `cfg_WaterwaySearch.xml`
+* `Scenario_WaterwaySearch.xml`
+* everything under `MessagesToSend`
+
+That is:
+
+    OpenUxAS/examples$ cp 02_Example_WaterwaySearch/cfg_WaterwaySearch.xml 20_NewExample
+    OpenUxAS/examples$ cp 02_Example_WaterwaySearch/Scenario_WaterwaySearch.xml 20_NewExample
+    OpenUxAS/examples$ cp -R 02_Example_WaterwaySearch/MessagesToSend 20_NewExample
+
+## 7.3. Creating the YAML File
+
+The YAML file, which must be named `config.yaml`, describes the details of how the example should be configured and run.
+Continuing the example from the two sections above, the YAML file would have the following contents:
+
+    amase:
+        scenario: Scenario_WaterwaySearch.xml
+
+    uxas:
+        config: cfg_WaterwaySearch.xml
+        rundir: RUNDIR_WaterwaySearch
+
+Broadly, there are two relevant sections to the YAML file:
+
+1. `amase`: an optional section that specifies that OpenAMASE should be run and that provides configuration parameters for OpenAMASE -- if unspecified, OpenAMASE will not be started and any OpenUxAS instances will not be connected to any display (as is the case for the `01_HelloWorld` example); and
+2. `uxas` or `uxases`: a required section that specifies that one or more instances of OpenUXAS should be run and that provides configuration parameters for each OpenUxAS instance.
+
+### 7.3.1. OpenAMASE Configuration
+
+If your example requires OpenAMASE, you must provide configuration parameters for OpenAMASE in the `amase` section of the YAML file.
+This section is specified as follows:
+
+    amase:
+        scenario: <scenario file>
+        delay: <delay in ms>
+
+The `scenario` parameter must always be specified and the scenario file must exist.
+The scenario file should be an OpenAMASE scenario, as shown above.
+
+The `delay` parameter is optional and is relatively brittle.
+If specified, the parameter is the number of milliseconds to wait after OpenAMASE is started before starting any OpenUxAS instances.
+You should instead include the `Test_SimulationTime` service in your OpenUxAS configuration so that your OpenUxAS instances will wait for OpenAMASE to start the simulation before starting their timers.
+The `cfg_WaterwaySearch.xml` includes this service.
+
+### 7.3.2. Single OpenUxAS Configuration
+
+A single instance of OpenUxAS can be specified using the `uxas` section of the YAML file.
+This section is specified as follows:
+
+    uxas:
+        config: <configuration file>
+        bin: <OpenUxAS binary>
+        rundir: <directory for instance outputs>
+
+The `config` parameter must always be specified and the configuration file must exist.
+The configuration file should be an OpenUxAS configuration, as shown above.
+The path to the configuration file is local to the directory containing the YAML file.
+
+The `bin` parameter is optional.
+You should use this parameter if you want to specify that a particular OpenUxAS binary should be used.
+This should be the binary filename, not a path.
+
+The expected use case for this parameter is to support running instances of OpenUxAS that are developed in languages other than C++ (which is the default language for OpenUxAS development).
+For example, if the Ada (partial) implementation of OpenUxAS should be included in an example, the `bin` parameter would be specified to be the binary built by the Ada build process: `uxas-ada`.
+`run-example` will then search for `uxas-ada` on your PATH.
+
+***Note: the `bin` parameter in the YAML file is always followed.***
+That is, if a binary is specified in the YAML file, none of the options provided to the user for controlling which binary is used will be respected.
+Unless there is a clear reason to specify a binary (as in the example above), it is always better to leave the binary unspecified in the YAML file.
+This way, the user has maximum flexibility in selecting the binary they wish for use in the example.
+
+If you do not use this parameter, `run-example` will attempt to find the OpenUxAS binary as follows:
+
+1. based on the command-line option `--uxas-bin` provided to `run-example`;
+2. by looking for `OpenUxAS/obj/cpp/uxas`, which is the output of running `make all`;
+3. by looking for `uxas` on your PATH.
+
+The `rundir` parameter is also optional.
+This is the directory that `run-example` will create and into which OpenUxAS will place files created during runtime, such as the database file containing messages created during execution.
+The path for `rundir` is relative to the folder containing the YAML file.
+If the `rundir` parameter is not used, `run-example` will create a directory named `RUNDIR` in the directory containing the YAML file.
+
+### 7.3.3. Multiple OpenUxAS Configuration
+
+OpenUxAS is a distributed platform, so we expect that multiple instance of OpenUxAS will be used for many examples.
+Multiple instances of OpenUxAS can be specified using the `uxases` section of the YAML file.
+The syntax of this section is nearly identical to that describe above:
+
+    uxases:
+      - config: <configuration file 1>
+        bin: <binary 1>
+        rundir: <rundir 1>
+
+      - config: <configuration file n>
+        bin: <binary n>
+        rundir: <rundir n>
+
+***Note: the `-` in front of `config` is important as is the whitespace/alignment of bin and rundir with config.** This is part of how YAML syntax for lists works.*
+
+You may specify as many instances as you need in this way.
+
+Each configuration file should be distinct, as it will specify the parameters particular to that instance of OpenUxAS.
+You should also consider specifying the rundir when using multiple instance of OpenUxAS so that you can be sure to identify which output is associated with which instance.
+
+The example `03_Example_DistributedCooperation` illustrates the use of multiple OpenUxAS instances.
