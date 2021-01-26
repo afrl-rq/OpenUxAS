@@ -274,7 +274,7 @@ Continuing the example from the two sections above, the YAML file would have the
 
 Broadly, there are two relevant sections to the YAML file:
 
-1. `amase`: an optional section that specifies that OpenAMASE should be run and that provides configuration parameters for OpenAMASE; and
+1. `amase`: an optional section that specifies that OpenAMASE should be run and that provides configuration parameters for OpenAMASE -- if unspecified, OpenAMASE will not be started and any OpenUxAS instances will not be connected to any display (as is the case for the `01_HelloWorld` example); and
 2. `uxas` or `uxases`: a required section that specifies that one or more instances of OpenUXAS should be run and that provides configuration parameters for each OpenUxAS instance.
 
 ### 7.3.1. OpenAMASE Configuration
@@ -290,6 +290,7 @@ The `scenario` parameter must always be specified and the scenario file must exi
 The scenario file should be an OpenAMASE scenario, as shown above.
 
 The `delay` parameter is optional and is relatively brittle.
+If specified, the parameter is the number of milliseconds to wait after OpenAMASE is started before starting any OpenUxAS instances.
 You should instead include the `Test_SimulationTime` service in your OpenUxAS configuration so that your OpenUxAS instances will wait for OpenAMASE to start the simulation before starting their timers.
 The `cfg_WaterwaySearch.xml` includes this service.
 
@@ -327,7 +328,7 @@ If you do not use this parameter, `run-example` will attempt to find the OpenUxA
 3. by looking for `uxas` on your PATH.
 
 The `rundir` parameter is also optional.
-This is the directory in which output and logs written by OpenUxAS will be placed.
+This is the directory that `run-example` will create and into which OpenUxAS will place file created during runtime, such as the database file containing messages created during execution.
 The path for `rundir` is relative to the folder containing the YAML file.
 If the `rundir` parameter is not used, `run-example` will create a directory named `RUNDIR` in the directory containing the YAML file.
 
