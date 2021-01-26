@@ -328,7 +328,7 @@ If you do not use this parameter, `run-example` will attempt to find the OpenUxA
 3. by looking for `uxas` on your PATH.
 
 The `rundir` parameter is also optional.
-This is the directory that `run-example` will create and into which OpenUxAS will place file created during runtime, such as the database file containing messages created during execution.
+This is the directory that `run-example` will create and into which OpenUxAS will place files created during runtime, such as the database file containing messages created during execution.
 The path for `rundir` is relative to the folder containing the YAML file.
 If the `rundir` parameter is not used, `run-example` will create a directory named `RUNDIR` in the directory containing the YAML file.
 
