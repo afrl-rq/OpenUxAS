@@ -1,0 +1,185 @@
+-- sequences.lus
+--
+-- Proof of concept for a theory of sequences realized in jkind's lustre.
+--
+-- Note that this theory doesn't actually compile, because there's no notion of
+-- contracts for uninterpreted functions. But we need these so that we can say
+-- *something* about the result of the function.
+--
+-- There are 6 uninterpreted functions:
+--  first_index
+--  last_index
+--
+--  get
+--
+--  any_index_of
+--  first_index_of
+--  last_index_off
+--
+-- The last three functions are three (rather than a simpler index_of) because
+-- index_of for sequences is not guaranteed to be a function: a sequence may
+-- have duplicated elements. So we say that there are three of these and we
+-- don't actually, in the contract, bother with quantification to guarantee
+-- that we're returning the first / last (in particular). This makes the theory
+-- a bit weaker than it might otherwise have been.
+--
+-- Note that this theory doesn't currently support empty sequences. All
+-- sequences must have at least one element.
+
+
+-- Represent a sequence by an integer. This is effectively a way to reference
+-- the sequence in the base uninterpreted functions.
+type sequence_type = int;
+
+
+-- Represent an element by an integer. This too should be viewed as a
+-- reference to the actual element.
+type element_type  = int;
+
+-- Declare -1 to be an invalid element.
+const no_element : element_type = -1;
+
+
+-- Represent an index. Valid indices are >= 0.
+type index_type    = int;
+
+-- Declare -1 to be an invalid index.
+const no_index : index_type = -1;
+
+
+-- Get the first index of the given sequence.
+function first_index(sequence : sequence_type) returns (index : index_type);
+contract
+    0 <= index and index <= last_index(sequence);
+
+
+-- Get the last index of the given sequence.
+function last_index(sequence : sequence_type) returns (index : index_type);
+contract
+    first_index(sequence) <= index;
+
+
+-- Convenience function to determine if a given index of a given sequence is
+-- between the first and last index.
+node valid_index(sequence : sequence_type; index : index_type) returns (r : bool);
+let
+    r = first_index(sequence) <= index and index <= last_index(sequence);
+tel
+
+
+-- Get the element at the given index. If the index is invalid, return no
+-- element.
+function get(sequence : sequence_type; index : index_type) returns (element : element_type);
+contract
+    (valid_index(sequence, index) and any_index_of(sequence, element) = index)
+
+    xor
+
+    element = no_element;
+
+
+-- Get the index of the first occurrence of the given element. If the element
+-- is not contained in the sequence, then return no_index.
+function first_index_of(sequence : sequence_type; element : element_type) returns (index : index_type);
+contract
+    (valid_index(sequence, index) and get(sequence, index) = element)
+
+    xor
+
+    index = no_index;
+
+
+-- Get the index of the last occurrence of the given element. If the element is
+-- not contained in the sequence, then return no_index.
+function last_index_of(sequence : sequence_type; element : element_type) returns (index : index_type);
+contract
+    (valid_index(sequence, index) and get(sequence, index) = element)
+
+    xor
+
+    index = no_index;
+
+
+-- Get the index of any occurrence of the given element. If the element is not
+-- contained in the sequence, then return no_index.
+function any_index_of(sequence : sequence_type; element : element_type) returns (index : index_type);
+contract
+    (valid_index(sequence, index) and get(sequence, index) = element)
+
+    xor
+
+    index = no_index;
+
+
+-- True if the sequence contains the given element.
+node contains(sequence : sequence_type; element : element_type) returns (r : bool);
+let
+    r = (any_index_of(sequence, element) <> no_index);
+tel;
+
+
+-- True if the given element is the first element in the sequence.
+node is_first(sequence : sequence_type; element : element_type) returns (r : bool);
+let
+    r = (first_index_of(sequence, element) = first_index(sequence));
+tel;
+
+
+-- True if the given element is the last element in the sequence.
+node is_last(sequence : sequence_type; element : element_type) returns (r : bool);
+let
+    r = (first_index_of(sequence, element) = last_index(sequence));
+tel;
+
+
+-- True if the first occurrence of element1 is prior to the first occurrence of
+-- element2 in the sequence.
+node before(sequence : sequence_type; element1, element2 : element_type) returns (r : bool);
+var
+    index1, index2 : index_type;
+let
+    index1 = first_index_of(sequence, element1);
+    index2 = first_index_of(sequence, element2);
+
+    r = if index1 <> no_index and index <> no_index and element1 <> element2 then
+            index1 < index2
+        else
+            false;
+tel;
+
+
+-- True if the last occurrence of element1 is prior to the last occurrence of
+-- element2 in the sequence.
+node after(sequence : sequence_type; element1, element2 : element_type) returns (r : bool);
+var
+    index1, index2 : index_type;
+let
+    index1 = last_index_of(element1);
+    index2 = last_index_of(element2);
+
+    r = if index1 <> no_index and index <> no_index and element1 <> element2 then
+            index1 > index2
+        else
+            false;
+tel;
+
+
+-- True if any occurrence of element1 is adjacent to any occurrence of element2
+-- in the sequence. That is, there is no other element skolem that is between
+-- element1 and element2 in the sequence.
+node adjacent(sequence : sequence_type; element1, element2, skolem : element_type) returns (r : bool);
+var
+    index1, index2, indexs : index_type;
+let
+    index1 = any_index_of(sequence, element1);
+    index2 = any_index_of(sequence, element2);
+    indexs = any_index_of(sequence, skolem);
+
+    r = if index1 <> no_index and index <> no_index and element1 <> element2 then
+            not (
+                (index1 <= indexs and indexs <= index2) or
+                (index2 <= indexs and indexs <= index1)
+            )
+        else
+            false;
+tel;

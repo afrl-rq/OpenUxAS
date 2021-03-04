@@ -1,0 +1,22 @@
+-- uninterp.lus
+--
+-- Confirm that uninterpreted functions in Lustre work as we would hope.
+--
+-- The critical property is proved by jkind. This does not work with kind2,
+-- which does not have uninterpreted functions.
+
+-- An uninterpreted predicate.
+function f(a, b: int) returns (r: bool);
+
+-- Confirm that uninterpreted functions indeed behave as functions.
+node test(a, b, x, y: int) returns (r: bool);
+var
+    prop : bool;
+let
+    -- ignore this
+    r = a = b;
+
+    -- for all a, b, x, y such that a = x and b = y => f(a,b) = f(x,y)
+    prop = (a = x and b = y) => (f(a,b) = f(x,y));
+    --%PROPERTY prop;
+tel;
