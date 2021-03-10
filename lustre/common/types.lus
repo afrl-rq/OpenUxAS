@@ -1,0 +1,87 @@
+-- types.lus
+--
+-- Type definitions, common constants, and common predicates for OpenUxAS.
+
+include "sequences.lus"
+
+-- Represent the kind of message sent with an enum.
+type message_kind = enum {
+    -- An empty message.
+    --
+    -- Relevant fields:
+    --  [none]
+    none,
+
+    -- Mission Command.
+    --
+    -- Relevant fields:
+    --  id
+    --  waypoint
+    mission_command,
+
+    -- Automation Response
+    --
+    -- Relevant fields:
+    --  id
+    --  route
+    automation_response,
+
+    -- Unique Automation Response
+    --
+    -- Relevant fields:
+    --  id
+    --  route
+    unique_automation_response
+};
+
+
+-- Represent the ID of a message with an unconstrained integer.
+type id_type = int;
+
+const no_id : id_type = -1;
+
+
+-- Represent a route as a sequence
+type route_type = sequence_type;
+
+const no_route : route_type = empty_sequence;
+
+
+-- Represent a waypoint as a sequence element
+--
+-- This also should be viewed as an opaque reference to a waypoint.
+type waypoint_type = element_type;
+
+const no_waypoint : waypoint_type = no_element;
+
+
+-- Represent a message.
+--
+-- A more realistic representation would use a discriminated record, but we
+-- don't have support for that in Lustre.
+type message = struct {
+    -- The kind of message
+    kind     : message_kind;
+
+    -- The ID of this message
+    id       : id_type;
+
+    -- The ID of another message that is referenced by this message
+    ref      : id_type;
+
+    -- A route
+    route    : route_type;
+
+    -- A waypoint
+    waypoint : waypoint_type;
+};
+
+
+-- An empty message. This is interpreted as no message having been received.
+const no_message : message = message { 
+    kind     = none;
+    id       = no_id;
+    ref      = no_id;
+    route    = no_route;
+    waypoint = no_waypoint;
+};

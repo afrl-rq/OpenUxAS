@@ -1,0 +1,203 @@
+-- waypoint-manager.lus
+--
+-- 
+
+include "../common/types.lus"
+include "../common/pltl.lus"
+
+-- Retrieve the next waypoint from a route.
+node next_waypoint(route : route_type) returns (waypoint : waypoint_type);
+var
+    index : index_type;
+let
+    index = no_index -> if route = pre(route) then
+                            pre(index) + 1
+                        else
+                            route.first_index;
+
+    waypoint = get(route, index);
+tel;
+
+
+--
+-- The Waypoint Manager Service
+--
+node waypoint_manager(
+    -- The message currently received by the service
+    msg: message;
+) returns (
+    -- The message currently sent by the service
+    out : message
+);
+var
+    -- ===================================================================== --
+    -- Service state
+    --
+    -- The route from which this service will stream waypoints
+    route : route_type;
+
+    -- The ID of the message that provided the route above
+    route_msg_id : id_type;
+
+    -- The waypoint to send
+    waypoint : waypoint_type;
+
+    -- The ID of the message that will send the waypoint
+    waypoint_msg_id : id_type;
+
+
+    -- ===================================================================== --
+    -- Convenience variables
+    pre_route           : route_type;
+    pre_route_msg_id    : id_type;
+    pre_waypoint_msg_id : id_type;
+
+    -- Property variables
+    waypoint_on_route                 : bool;
+    route_in_referenced_prior_message : bool;
+
+const 
+    -- These constants represent skolemized universally quantified variables 
+    -- that we use to link details of a message appearing the past with details
+    -- of our output message.
+    automation_response_id    : id_type;
+    automation_response_route : route_type;    
+let
+    -- ===================================================================== --
+    -- Bookkeeping
+
+    -- Compute prior values of relevant state variables.
+    --
+    -- We group these here for convenience in setting their initial conditions.
+    pre_route           = no_route -> pre(route);
+    pre_route_msg_id    = no_id    -> pre(route_msg_id);
+    pre_waypoint_msg_id = no_id    -> pre(waypoint_msg_id);
+
+
+    -- ===================================================================== --
+    -- Service Behavior
+
+    -- These expressions serve as high-level specifications of service
+    -- behavior. Each is preceded by a natural-language description of the
+    -- specification, set off in quotes for clarity.
+
+    -- "If there is a stored route, the service shall get the next waypoint
+    --  from the route."
+    --
+    -- Note that this happens "before" we determine if there is a new route.
+    waypoint = if pre_route <> no_route then
+                   next_waypoint(pre_route)
+               else
+                   no_waypoint;
+
+
+    -- "If there is a next waypoint, the service shall send the next waypoint
+    --  in a Mission Command message that references the ID of the Automation
+    --  Response message that provided the stored route."
+    --
+    -- Note two things:
+    --  1. this happens "before" we determine if there is a new route that we
+    --     we should store and from which we should start streaming waypoints.
+    --     So the service will wait one time step before responding to a new
+    --     route.
+    --
+    --  2. we don't update the waypoint_msg_id state variable until "after" we
+    --     have determined if there's a new route (so that we can use the ID
+    --     of the message setting the route to reset the waypoint_msg_id). Thus
+    --     we manually increment the previous waypoint_msg_id here in building
+    --     the message.
+    out   = if waypoint <> no_waypoint then
+                message {
+                    kind     = mission_command;
+                    id       = pre_waypoint_msg_id + 1;
+                    ref      = pre_route_msg_id;
+                    route    = no_route;
+                    waypoint = waypoint;
+                }
+            else
+                no_message;
+
+
+    -- "If the service receives an Automation Response message, the service
+    --  shall store the route from the Automation Response message. Otherwise,
+    --  if there is no next waypoint, the service shall clear the stored
+    --  route."
+    route = if msg.kind = automation_response then
+                msg.route
+            else if waypoint <> no_waypoint then
+                pre_route
+            else
+                no_route;
+
+
+    -- "If the service receives an Automation Response message, the service
+    --  shall store the ID of the Automation Response message."
+    route_msg_id = if msg.kind = automation_response then
+                       msg.id
+                   else
+                       pre_route_msg_id;
+
+
+    -- "The service shall generate an ID for the Mission Command message."
+    waypoint_msg_id = if msg.kind = automation_response then
+                          msg.id + 1
+                      else if waypoint <> no_waypoint then
+                          pre_waypoint_msg_id + 1
+                      else
+                          no_id;
+
+
+    -- ===================================================================== --
+    -- Properties of Interest
+    
+    check "The Waypoint Manager never sends 'no waypoint' as part of a Mission 
+           Command."
+        (
+            out.kind = mission_command
+        ) => (
+            out.waypoint <> no_waypoint
+        );
+    
+    -- Here, we use these properties to build up to the service postcondition,
+    -- because it's easier to think about the property decomposed.
+
+    -- Since we send waypoints from the route *before* we update the route
+    -- stored based on any new message, the contains predicate checks against
+    -- pre_route.
+    waypoint_on_route = (
+        out.kind = mission_command
+    ) => (
+        contains(pre_route, out.waypoint)
+    );
+
+    check "When the Waypoint Manager sends a Mission Command, the waypoint sent
+           is contained in the stored route."
+        waypoint_on_route;
+
+
+    -- Again, the check in the antecedent here uses pre_route, because we send
+    -- Mission Commands prior to updating the stored route.
+    route_in_referenced_prior_message = (
+        out.kind  = mission_command and
+        out.ref   = automation_response_id and
+        pre_route = automation_response_route
+    ) => (
+        O(msg.kind  = automation_response and 
+          msg.id    = automation_response_id and 
+          msg.route = automation_response_route)
+    );
+ 
+    check "When the Waypoint Manager sends a Mission Command, the stored route
+           belongs to the previously received Automation Response that is
+           referenced in the Mission Command."
+        route_in_referenced_prior_message;
+
+
+    -- ===================================================================== --
+    -- Service Requirements
+
+    check "When the Waypoint Manager sends a Mission Command, the waypoint sent
+           is contained in the route that belongs to the previously received
+           Automation Response that is referenced in the Mission Command."
+        waypoint_on_route and route_in_referenced_prior_message;
+tel;

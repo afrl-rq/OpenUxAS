@@ -1,0 +1,35 @@
+-- pltl.lus
+--
+-- Adapted from:
+--     https://github.com/lgwagner/pattern-observers/blob/master/pltl/pltl.lus
+-- and flattened to make reading cexs easier (arguably).
+
+node H(a : bool) returns (holds : bool);
+let
+   holds = a and (true -> pre holds);
+tel;
+
+node O(a : bool) returns (holds : bool);
+let
+   holds = a or (false -> pre holds);
+tel;
+
+node Y(a : bool) returns (holds : bool);
+let
+   holds = (false -> pre a);
+tel;
+
+node Z(a : bool) returns (holds : bool);
+let
+   holds = (true -> pre a);
+tel;
+
+node S(a : bool; b : bool) returns (holds : bool);
+let
+   holds = b or (a and (false -> pre holds));
+tel;
+
+node T(a : bool; b : bool) returns (holds : bool);
+let
+   holds = b and (a or (true -> pre holds));
+tel;
