@@ -24,10 +24,16 @@ tel;
 --
 node waypoint_manager(
     -- The message currently received by the service
-    msg: message;
+    in_msg: message;
+
+    -- The ID to be used for ID generation
+    in_id : id_type;
 ) returns (
     -- The message currently sent by the service
-    out : message
+    out_msg : message;
+
+    -- The ID to be used for future ID generation
+    out_id : id_type;
 );
 var
     -- ===================================================================== --
@@ -42,15 +48,11 @@ var
     -- The waypoint to send
     waypoint : waypoint_type;
 
-    -- The ID of the message that will send the waypoint
-    waypoint_msg_id : id_type;
-
 
     -- ===================================================================== --
     -- Convenience variables
     pre_route           : route_type;
     pre_route_msg_id    : id_type;
-    pre_waypoint_msg_id : id_type;
 
     -- Property variables
     waypoint_on_route                 : bool;
@@ -71,8 +73,7 @@ let
     -- We group these here for convenience in setting their initial conditions.
     pre_route           = no_route -> pre(route);
     pre_route_msg_id    = no_id    -> pre(route_msg_id);
-    pre_waypoint_msg_id = no_id    -> pre(waypoint_msg_id);
-
+    
 
     -- ===================================================================== --
     -- Service Behavior
@@ -85,10 +86,17 @@ let
     --  from the route."
     --
     -- Note that this happens "before" we determine if there is a new route.
-    waypoint = if pre_route <> no_route then
-                   next_waypoint(pre_route)
-               else
-                   no_waypoint;
+    waypoint =  if pre_route <> no_route then
+                    next_waypoint(pre_route)
+                else
+                    no_waypoint;
+
+    
+    -- "The service shall increment the ID for new messages."
+    out_id =    if waypoint <> no_waypoint then
+                    in_id + 1
+                else
+                    in_id;
 
 
     -- "If there is a next waypoint, the service shall send the next waypoint
@@ -106,24 +114,26 @@ let
     --     of the message setting the route to reset the waypoint_msg_id). Thus
     --     we manually increment the previous waypoint_msg_id here in building
     --     the message.
-    out   = if waypoint <> no_waypoint then
-                message {
-                    kind     = mission_command;
-                    id       = pre_waypoint_msg_id + 1;
-                    ref      = pre_route_msg_id;
-                    route    = no_route;
-                    waypoint = waypoint;
-                }
-            else
-                no_message;
+    out_msg   = if waypoint <> no_waypoint then
+                    message {
+                        kind     = mission_command;
+                        id       = out_id;
+                        ref      = pre_route_msg_id;
+                        route    = no_route;
+                        waypoint = waypoint;
+                    }
+                else
+                    no_message;
 
 
     -- "If the service receives an Automation Response message, the service
     --  shall store the route from the Automation Response message. Otherwise,
     --  if there is no next waypoint, the service shall clear the stored
     --  route."
-    route = if msg.kind = automation_response then
-                msg.route
+    route = if in_msg.kind = automation_response and 
+               nonempty_sequence(in_msg.route)
+            then
+                in_msg.route
             else if waypoint <> no_waypoint then
                 pre_route
             else
@@ -132,19 +142,12 @@ let
 
     -- "If the service receives an Automation Response message, the service
     --  shall store the ID of the Automation Response message."
-    route_msg_id = if msg.kind = automation_response then
-                       msg.id
-                   else
-                       pre_route_msg_id;
-
-
-    -- "The service shall generate an ID for the Mission Command message."
-    waypoint_msg_id = if msg.kind = automation_response then
-                          msg.id + 1
-                      else if waypoint <> no_waypoint then
-                          pre_waypoint_msg_id + 1
-                      else
-                          no_id;
+    route_msg_id = if in_msg.kind = automation_response and 
+                       nonempty_sequence(in_msg.route)
+                    then
+                        in_msg.id
+                    else
+                        pre_route_msg_id;
 
 
     -- ===================================================================== --
@@ -153,9 +156,9 @@ let
     check "The Waypoint Manager never sends 'no waypoint' as part of a Mission 
            Command."
         (
-            out.kind = mission_command
+            out_msg.kind = mission_command
         ) => (
-            out.waypoint <> no_waypoint
+            out_msg.waypoint <> no_waypoint
         );
     
     -- Here, we use these properties to build up to the service postcondition,
@@ -165,9 +168,9 @@ let
     -- stored based on any new message, the contains predicate checks against
     -- pre_route.
     waypoint_on_route = (
-        out.kind = mission_command
+        out_msg.kind = mission_command
     ) => (
-        contains(pre_route, out.waypoint)
+        contains(pre_route, out_msg.waypoint)
     );
 
     check "When the Waypoint Manager sends a Mission Command, the waypoint sent
@@ -178,19 +181,27 @@ let
     -- Again, the check in the antecedent here uses pre_route, because we send
     -- Mission Commands prior to updating the stored route.
     route_in_referenced_prior_message = (
-        out.kind  = mission_command and
-        out.ref   = automation_response_id and
+        out_msg.kind  = mission_command and
+        out_msg.ref   = automation_response_id and
         pre_route = automation_response_route
     ) => (
-        O(msg.kind  = automation_response and 
-          msg.id    = automation_response_id and 
-          msg.route = automation_response_route)
+        O(in_msg.kind  = automation_response and 
+          in_msg.id    = automation_response_id and 
+          in_msg.route = automation_response_route)
     );
  
     check "When the Waypoint Manager sends a Mission Command, the stored route
            belongs to the previously received Automation Response that is
            referenced in the Mission Command."
         route_in_referenced_prior_message;
+
+
+    check "Correct ID handling."
+        if out_msg <> no_message then
+            out_msg.id = out_id and
+            out_id     = in_id + 1
+        else
+            out_id = in_id;
 
 
     -- ===================================================================== --

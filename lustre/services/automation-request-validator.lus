@@ -1,0 +1,127 @@
+-- automation-request-validator.lus
+
+include "../common/types.lus"
+include "../common/pltl.lus"
+
+--
+-- The Automation Request Validator service
+--
+node automation_request_validator(
+    -- The message currently received by the service
+    in_msg : message;
+
+    -- The ID to be used for ID generation
+    in_id : id_type;
+) returns (
+    -- The message currently sent by the service
+    out_msg : message;
+
+    -- The ID to be used for future ID generation
+    out_id : id_type;
+);
+var
+    -- ===================================================================== --
+    -- Service state
+    --
+    -- The route that this service should pass on
+    route : route_type;
+
+    -- The ID of the message that provided the route above
+    route_msg_id : id_type;
+
+    -- ===================================================================== --
+    -- Convenience variables
+    pre_route           : route_type;
+    pre_route_msg_id    : id_type;
+
+const
+    -- These constants represent skolemized universally quantified variables 
+    -- that we use to link details of a message appearing the past with details
+    -- of our output message.
+    unique_automation_response_id    : id_type;
+    unique_automation_response_route : route_type;
+
+let
+    -- ===================================================================== --
+    -- Bookkeeping
+
+    -- Compute prior values of relevant state variables.
+    --
+    -- We group these here for convenience in setting their initial conditions.
+    pre_route           = no_route -> pre(route);
+    pre_route_msg_id    = no_id    -> pre(route_msg_id);
+
+
+    -- ===================================================================== --
+    -- Service Behavior
+
+    -- These expressions serve as high-level specifications of service
+    -- behavior. Each is preceded by a natural-language description of the
+    -- specification, set off in quotes for clarity.
+
+    -- "The service shall increment the ID for new messages."
+    out_id = if pre_route <> no_route then
+                 in_id + 1
+             else
+                 in_id;
+
+
+    -- "If there is a stored route, the service shall send the stored route in
+    --  an Automation Response message."
+    out_msg   = if pre_route <> no_route then
+                    message {
+                        kind     = automation_response;
+                        id       = out_id;
+                        ref      = pre_route_msg_id;
+                        route    = pre_route;
+                        waypoint = no_waypoint;
+                    }
+                else
+                    no_message;
+
+
+    -- "If the service receives a Unique Automation Response message, the
+    --  service shall store the route from the Unique Automation Response
+    --  message. Otherwise, the service shall clear the stored route."
+    route = if in_msg.kind = unique_automation_response then
+                in_msg.route
+            else
+                no_route;
+
+
+    -- "If the service receives a Unique Automation Response message, the
+    --  service shall store the ID of the Unique Automation Response message."
+    route_msg_id = if in_msg.kind = unique_automation_response then
+                       in_msg.id
+                   else
+                       pre_route_msg_id;
+
+
+    -- ===================================================================== --
+    -- Properties of Interest
+
+    check "Correct ID handling."
+        if out_msg <> no_message then
+            out_msg.id = out_id and
+            out_id     = in_id + 1
+        else
+            out_id = in_id;
+
+
+    -- ===================================================================== --
+    -- Service Requirements
+
+    check "When the Automation Request Validator sends an Automation Response
+           message, the route sent belongs to the previously received Unique
+           Automation Response message that is referenced in the Automation
+           Response message."
+        (
+            out_msg.kind  = automation_response and
+            out_msg.ref   = unique_automation_response_id and
+            out_msg.route = unique_automation_response_route
+        ) => (
+            O(in_msg.kind  = unique_automation_response and
+              in_msg.id    = unique_automation_response_id and
+              in_msg.route = unique_automation_response_route)
+        );
+tel;
