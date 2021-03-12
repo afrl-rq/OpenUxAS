@@ -35,13 +35,19 @@ var
     pre_route_msg_id    : id_type;
 
 const
-    -- These constants represent skolemized universally quantified variables 
+    -- This constant represents a skolemized universally quantified variable 
     -- that we use to link details of a message appearing the past with details
     -- of our output message.
-    unique_automation_response_id    : id_type;
-    unique_automation_response_route : route_type;
+    unique_automation_response_msg : message;
 
 let
+    -- Choice of the free constant unique_automation_response_msg must satisfy
+    -- out identity predicate, in particular in relation to inputs. This
+    -- doesn't mean that unique_automation_response_msg *must* be an input
+    -- *unless* the ID is so constrained.
+    assert (ids_imply_equality(in_msg, unique_automation_response_msg));
+    
+    
     -- ===================================================================== --
     -- Bookkeeping
 
@@ -100,7 +106,8 @@ let
     -- ===================================================================== --
     -- Properties of Interest
 
-    check "Correct ID handling."
+    check "P1. The Automation Request Validator correctly sets the ID of
+           messages it sends and correctly updates its output ID."
         if out_msg <> no_message then
             out_msg.id = out_id and
             out_id     = in_id + 1
@@ -111,17 +118,15 @@ let
     -- ===================================================================== --
     -- Service Requirements
 
-    check "When the Automation Request Validator sends an Automation Response
-           message, the route sent belongs to the previously received Unique
-           Automation Response message that is referenced in the Automation
-           Response message."
+    check "R1. When the Automation Request Validator sends an Automation
+           Response message, the route sent belongs to the previously received
+           Unique Automation Response message that is referenced in the
+           Automation Response message."
         (
             out_msg.kind  = automation_response and
-            out_msg.ref   = unique_automation_response_id and
-            out_msg.route = unique_automation_response_route
+            out_msg.ref   = unique_automation_response_msg.id
         ) => (
-            O(in_msg.kind  = unique_automation_response and
-              in_msg.id    = unique_automation_response_id and
-              in_msg.route = unique_automation_response_route)
+            pre(O(in_msg = unique_automation_response_msg)) and
+            out_msg.route = unique_automation_response_msg.route
         );
 tel;

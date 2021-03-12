@@ -38,13 +38,17 @@ const
     -- These constants represent skolemized universally quantified variables 
     -- that we use to link details of a message appearing the past with details
     -- of our output message.
-    automation_response_id    : id_type;
-    automation_response_route : route_type;
-
-    unique_automation_response_id    : id_type;
-    unique_automation_response_route : route_type;
+    -- automation_response_msg        : message;
+    unique_automation_response_msg : message;
  
 let
+    -- Choice of the free messages must satisfy our identity predicate, in 
+    -- particular in relation to inputs. This doesn't mean that the free
+    -- messages *must* be an input *unless* the ID is so constrained.
+    assert (ids_imply_equality(in_msg, automation_response_msg));
+    assert (ids_imply_equality(in_msg, unique_automation_response_msg));
+
+
     -- ===================================================================== --
     -- Environment Modeling
 
@@ -58,7 +62,7 @@ let
         or
 
         -- the previously sent message (loop closure)
-        (in_msg = (no_message -> pre(in_msg)) and 
+        (in_msg = (no_message -> pre(out_msg)) and 
          in_msg <> no_message and
          in_id  = in_msg.id)
         
@@ -77,6 +81,12 @@ let
     -- this constraint effectively saves us from having to model a message bus
     -- that allows arbitrarily many messages to be sent and then queued up for
     -- retrieval one at a time.
+    --
+    -- A more interesting approach might be to pass all messages to a node that
+    -- represents the bus and have the node pick a random order in which to
+    -- output the messages. The constraint could be that no new messages could
+    -- be sent until the bus was "empty". This would allow message orders to be
+    -- arbitrary.
     assert
         not (
             arv_msg <> no_message and
@@ -104,49 +114,38 @@ let
                             (no_message, in_id);
 
 
-    -- check "Valid Mission Command"
-    --     (
-    --         out_msg.kind = mission_command and
-    --         out_msg.ref  = automation_response_id and
-    --         contains(unique_automation_response_route, out_msg.waypoint) and
-
-    --         -- follow the reference chain to the expected source message
-    --         O(in_msg.id  = automation_response_id and
-    --           in_msg.ref = unique_automation_response_id)
-    --     ) => (
-    --         -- the expected source message exists and has the expected data
-    --         O(in_msg.kind  = unique_automation_response and
-    --           in_msg.id    = unique_automation_response_id and
-    --           in_msg.route = unique_automation_response_route)
-    --     );
-
-
-    
-    -- ===================================================================== --
-    -- Lemmas
-    --
-    -- These properties are not necessarily of interest in and of themselves,
-    -- but they are found to be necessary to prove properties of interest.
-
-    check "Lemma 1: cannot receive two Automation Response messages in a row."
-        (
-            in_msg.kind = automation_response
-        ) => (
-            pre(in_msg.kind) <> automation_response
-        );
-
-
     -- ===================================================================== --
     -- Environment Consistency Checks
 
-    check "Environment: input IDs are non-decreasing."
+    -- These aren't required for proof, but help with troubleshooting
+    -- failing properties (by making cleaner inductive counterexamples).
+
+    check "E1: input IDs are non-decreasing."
         in_id >= (0 -> pre(in_id));
+
+    check "E2: input IDs are nonnegative."
+        in_id >= -1;
+
+    check "E3: in message IDs are increasing."
+        in_msg <> no_message => (
+            in_msg.id > (-1 -> pre(in_msg.id))
+        );
+
+    check "E4: in message IDs are nonnegative."
+        in_msg <> no_message => (
+            in_msg.id >= 0
+        );
+
+    check "E5: no_message has ID -1."
+        in_msg = no_message => (
+            in_msg.id = -1
+        );
 
 
     -- ===================================================================== --
     -- Properties of Interest
 
-    check "All services correctly handle output ID and message ID."
+    check "P1. All services correctly handle output ID and message ID."
         if out_msg <> no_message then
             out_msg.id = out_id and
             out_id     = in_id + 1
@@ -154,56 +153,64 @@ let
             out_id = in_id;
 
 
-    check "Mission Command messages reference prior Automation Response
+    -- This property is gratuitous
+    check "P2. Mission Command messages reference prior Automation Response
            messages."
         (
             out_msg.kind = mission_command and
-            out_msg.ref  = automation_response_id
+            out_msg.ref  = automation_response_msg.id
         ) => (
-            O(in_msg.kind = automation_response and
-              in_msg.id   = automation_response_id)
-
-            and
-
-            out_msg.id > automation_response_id
+            O(in_msg = automation_response_msg)
         );
 
 
-    check "Automation Response messages reference prior Unique Automation
+    -- This property is gratuitous
+    check "P3. Automation Response messages reference prior Unique Automation
            Response messages."
         (
             out_msg.kind = automation_response and
-            out_msg.ref  = unique_automation_response_id
+            out_msg.ref  = unique_automation_response_msg.id
         ) => (
-            O(in_msg.kind = unique_automation_response and
-              in_msg.id   = unique_automation_response_id)
-
-            and
-
-            out_msg.id > unique_automation_response_id
+            O(in_msg = unique_automation_response_msg)
         );
 
 
     -- ===================================================================== --
     -- Compositional Properties of Interest
 
-    -- Note: requres Lemma 1.
-    check "Mission Command messages reference, transitively, prior Unique
+    check "C1. Mission Command messages reference, transitively, prior Unique
            Automation Response messages."
         (
             out_msg.kind = mission_command and
-            out_msg.ref  = automation_response_id and
+            out_msg.ref  = automation_response_msg.id and
 
-            O(in_msg.kind = automation_response and
-              in_msg.id   = automation_response_id and
-              in_msg.ref  = unique_automation_response_id)
-
-            and
-
-            out_msg.id > automation_response_id and
-            automation_response_id > unique_automation_response_id
+            automation_response_msg.id = unique_automation_response_msg.id
         ) => (
-            O(in_msg.kind = unique_automation_response and
-              in_msg.id   = unique_automation_response_id)
+            O(in_msg = automation_response_msg) and
+            O(in_msg = unique_automation_response_msg)
         );
+
+
+    -- This is the first step towards a composition proof of waypoint on first
+    -- statement of route. It fails because we cannot see the lemma about
+    -- pre_route from the Waypoint Manager (P5) at this scope. This needs
+    -- thought.
+    -- check "route 1"
+    --     (
+    --         out_msg.kind  = mission_command and
+    --         out_msg.ref   = automation_response_msg.id
+    --     ) => (
+    --         contains(automation_response_msg.route, out_msg.waypoint)
+    --     );    
+        
+        
+    -- check "route final"
+    --     (
+    --         out_msg.kind  = mission_command and
+    --         out_msg.ref   = automation_response_msg.id and
+
+    --         automation_response_msg.id = unique_automation_response_msg.id
+    --     ) => (
+    --         contains(unique_automation_response_msg.route, out_msg.waypoint)
+    --     );    
 tel;

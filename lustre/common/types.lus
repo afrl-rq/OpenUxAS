@@ -85,3 +85,10 @@ const no_message : message = message {
     route    = no_route;
     waypoint = no_waypoint;
 };
+
+
+-- A predicate that enforces IDs as unique designators for messages.
+function ids_imply_equality(msg1, msg2 : message) returns (r : bool);
+let
+    r = ((msg1.id = msg2.id) => (msg1 = msg2));
+tel;

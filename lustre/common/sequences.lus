@@ -473,8 +473,8 @@ let
             first_index_of(sequence, search_element) = any_index_of(sequence, search_element)
         );
 
-    -- Note: this doesn't prove because we currently have no constaint that
-    --       first_index_of(get(index)) isn't guaranteed to return index even 
+    -- Note: this doesn't prove because we currently have no constraint that
+    --       first_index_of(get(index)) is guaranteed to return index even 
     --       if is_unique(get(index)). This seems like it would be a bit of a
     --       tricky property to add, and of currently marginal value.
     --

@@ -1,6 +1,4 @@
 -- waypoint-manager.lus
---
--- 
 
 include "../common/types.lus"
 include "../common/pltl.lus"
@@ -18,13 +16,17 @@ let
     waypoint = get(route, index);
 tel;
 
+-- This constant represents a skolemized universally quantified variable 
+-- that we use to link details of a message appearing in the past with details
+-- of our output message.
+const  automation_response_msg : message;
 
 --
 -- The Waypoint Manager Service
 --
 node waypoint_manager(
     -- The message currently received by the service
-    in_msg: message;
+    in_msg : message;
 
     -- The ID to be used for ID generation
     in_id : id_type;
@@ -35,6 +37,40 @@ node waypoint_manager(
     -- The ID to be used for future ID generation
     out_id : id_type;
 );
+(*@contract
+    -- Not required for proof, but helpful for debugging inductive
+    -- counterexamples. Disable this and remove/disable environmental checks
+    -- as desired.
+
+    assume "A1. Environment Model." (
+        -- no message
+        (in_msg = no_message and 
+         in_id  = (0 -> pre(in_id)))
+         
+        or
+
+        -- the previously sent message (loop closure)
+        (in_msg = (no_message -> pre(out_msg)) and 
+         in_msg <> no_message and
+         in_id  = in_msg.id)
+        
+        or
+
+        -- a Unique Automation Request with a valid id
+        (in_msg.kind <> none and
+         in_msg.id = in_id and
+         in_id > (0 -> pre(in_id)))
+    );
+
+    guarantee "G1. Restatement of R1." 
+        (
+            out_msg.kind  = mission_command and
+            out_msg.ref   = automation_response_msg.id
+        ) => (
+            pre(O(in_msg = automation_response_msg)) and
+            contains(automation_response_msg.route, out_msg.waypoint)
+        );
+*)
 var
     -- ===================================================================== --
     -- Service state
@@ -54,26 +90,22 @@ var
     pre_route           : route_type;
     pre_route_msg_id    : id_type;
 
-    -- Property variables
-    waypoint_on_route                 : bool;
-    route_in_referenced_prior_message : bool;
-
-const 
-    -- These constants represent skolemized universally quantified variables 
-    -- that we use to link details of a message appearing the past with details
-    -- of our output message.
-    automation_response_id    : id_type;
-    automation_response_route : route_type;    
 let
+    -- Choice of the free constant automation_response_msg must satisfy our
+    -- identity predicate, in particular in relation to inputs. This doesn't
+    -- mean that automation_response_msg *must* be an input *unless* the ID is
+    -- so constrained.
+    assert (ids_imply_equality(in_msg, automation_response_msg));
+
     -- ===================================================================== --
     -- Bookkeeping
 
     -- Compute prior values of relevant state variables.
     --
     -- We group these here for convenience in setting their initial conditions.
-    pre_route           = no_route -> pre(route);
-    pre_route_msg_id    = no_id    -> pre(route_msg_id);
-    
+    pre_route        = no_route -> pre(route);
+    pre_route_msg_id = no_id    -> pre(route_msg_id);
+
 
     -- ===================================================================== --
     -- Service Behavior
@@ -86,17 +118,16 @@ let
     --  from the route."
     --
     -- Note that this happens "before" we determine if there is a new route.
-    waypoint =  if pre_route <> no_route then
-                    next_waypoint(pre_route)
-                else
-                    no_waypoint;
+    waypoint = if pre_route <> no_route then
+                   next_waypoint(pre_route)
+               else
+                   no_waypoint;
 
-    
     -- "The service shall increment the ID for new messages."
-    out_id =    if waypoint <> no_waypoint then
-                    in_id + 1
-                else
-                    in_id;
+    out_id = if waypoint <> no_waypoint then
+                 in_id + 1
+             else
+                 in_id;
 
 
     -- "If there is a next waypoint, the service shall send the next waypoint
@@ -109,11 +140,11 @@ let
     --     So the service will wait one time step before responding to a new
     --     route.
     --
-    --  2. we don't update the waypoint_msg_id state variable until "after" we
-    --     have determined if there's a new route (so that we can use the ID
-    --     of the message setting the route to reset the waypoint_msg_id). Thus
-    --     we manually increment the previous waypoint_msg_id here in building
-    --     the message.
+    --  2. we don't update the waypoint_in_msg_id state variable until "after"
+    --     we have determined if there's a new route (so that we can use the ID
+    --     of the message setting the route to reset the waypoint_in_msg_id).
+    --     Thus we manually increment the previous waypoint_in_msg_id here in
+    --     building the message.
     out_msg   = if waypoint <> no_waypoint then
                     message {
                         kind     = mission_command;
@@ -142,7 +173,7 @@ let
 
     -- "If the service receives an Automation Response message, the service
     --  shall store the ID of the Automation Response message."
-    route_msg_id = if in_msg.kind = automation_response and 
+    route_msg_id =  if in_msg.kind = automation_response and 
                        nonempty_sequence(in_msg.route)
                     then
                         in_msg.id
@@ -151,52 +182,54 @@ let
 
 
     -- ===================================================================== --
+    -- Environment Consistency Checks
+    
+    -- These aren't required for proof, but help with troubleshooting
+    -- failing properties (by making cleaner inductive counterexamples).
+
+    check "E1: input IDs are non-decreasing."
+        in_id >= (0 -> pre(in_id));
+
+    check "E2: input IDs are nonnegative."
+        in_id >= -1;
+
+    check "E3: in message IDs are increasing."
+        in_msg <> no_message => (
+            in_msg.id > (-1 -> pre(in_msg.id))
+        );
+
+    check "E4: in message IDs are nonnegative."
+        in_msg <> no_message => (
+            in_msg.id >= 0
+        );
+
+    check "E5: no_message has ID -1."
+        in_msg = no_message => (
+            in_msg.id = -1
+        );
+
+
+    -- ===================================================================== --
     -- Properties of Interest
     
-    check "The Waypoint Manager never sends 'no waypoint' as part of a Mission 
-           Command."
+    -- This property is a nice sanity check over our output.
+    check "P1. The Waypoint Manager never sends 'no waypoint' as part of a
+           Mission Command."
         (
             out_msg.kind = mission_command
         ) => (
             out_msg.waypoint <> no_waypoint
         );
-    
-    -- Here, we use these properties to build up to the service postcondition,
-    -- because it's easier to think about the property decomposed.
-
-    -- Since we send waypoints from the route *before* we update the route
-    -- stored based on any new message, the contains predicate checks against
-    -- pre_route.
-    waypoint_on_route = (
-        out_msg.kind = mission_command
-    ) => (
-        contains(pre_route, out_msg.waypoint)
-    );
-
-    check "When the Waypoint Manager sends a Mission Command, the waypoint sent
-           is contained in the stored route."
-        waypoint_on_route;
 
 
-    -- Again, the check in the antecedent here uses pre_route, because we send
-    -- Mission Commands prior to updating the stored route.
-    route_in_referenced_prior_message = (
-        out_msg.kind  = mission_command and
-        out_msg.ref   = automation_response_id and
-        pre_route = automation_response_route
-    ) => (
-        O(in_msg.kind  = automation_response and 
-          in_msg.id    = automation_response_id and 
-          in_msg.route = automation_response_route)
-    );
- 
-    check "When the Waypoint Manager sends a Mission Command, the stored route
-           belongs to the previously received Automation Response that is
-           referenced in the Mission Command."
-        route_in_referenced_prior_message;
+    -- This property is a nice sanity check on our stored route.
+    check "P2. Route is no_route xor a (valid) nonempty route."
+        route = no_route xor nonempty_sequence(route);
 
 
-    check "Correct ID handling."
+    -- Sanity check on the handling of output message ID and output ID.
+    check "P3. The Waypoint Manager correctly sets the ID of messages it sends
+           and correctly updates its output ID."
         if out_msg <> no_message then
             out_msg.id = out_id and
             out_id     = in_id + 1
@@ -204,11 +237,70 @@ let
             out_id = in_id;
 
 
+    -- This property, which is interesting in its own right, functions as a
+    -- lemma for proving our requirement.
+    check "P4. When the Waypoint Manager sends a Mission Command message, the 
+           referenced Automation Response message was previously received."
+        (
+            out_msg.kind  = mission_command and
+            out_msg.ref   = automation_response_msg.id
+        ) => (
+            pre(O(in_msg = automation_response_msg))
+        );
+
+
+    -- Since we send waypoints from the route *before* we update the route
+    -- stored based on any new message, the this checks pre_route rather than
+    -- route.
+    --
+    -- This is an essential lemma for P7, which is in turn essential for R1.
+    check "P5. When the Waypoint Manager sends a Mission Command message, the
+           stored route is contained in the referenced Automation Response
+           message."
+        (
+            out_msg.kind  = mission_command and
+            out_msg.ref   = automation_response_msg.id
+        ) => (
+            pre_route     = automation_response_msg.route
+        );
+
+
+    -- Since we send waypoints from the route *before* we update the route
+    -- stored based on any new message, the contains predicate checks against
+    -- pre_route.
+    check "P6. When the Waypoint Manager sends a Mission Command message, the
+           waypoint sent is contained in the stored route."
+        (
+            out_msg.kind = mission_command
+        ) => (
+            contains(pre_route, out_msg.waypoint)
+        );
+
+
+    check "P7. When the Waypoint Manager sends a Mission Command mssage, the
+           waypoint sent is contained in the referenced Automation Response
+           message."
+        (
+            out_msg.kind  = mission_command and
+            out_msg.ref   = automation_response_msg.id
+        ) => (
+            contains(automation_response_msg.route, out_msg.waypoint)
+        );
+
+
     -- ===================================================================== --
     -- Service Requirements
 
-    check "When the Waypoint Manager sends a Mission Command, the waypoint sent
-           is contained in the route that belongs to the previously received
-           Automation Response that is referenced in the Mission Command."
-        waypoint_on_route and route_in_referenced_prior_message;
+    -- The service requirement is simply the composition of two prior checks.
+    check "R1. When the Waypoint Manager sends a Mission Command message, the
+           waypoint sent is contained in the route that belongs to the
+           previously received Automation Response message that is referenced
+           in the Mission Command message."
+        (
+            out_msg.kind  = mission_command and
+            out_msg.ref   = automation_response_msg.id
+        ) => (
+            pre(O(in_msg = automation_response_msg)) and
+            contains(automation_response_msg.route, out_msg.waypoint)
+        );
 tel;
