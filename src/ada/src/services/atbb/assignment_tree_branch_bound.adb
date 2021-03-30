@@ -831,82 +831,126 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       TaskPlanOptions_Map    : Int64_TPO_Map;
       Summary                : out TaskAssignmentSummary)
    is
+
+      procedure Bubble_Sort (Arr : in out Children_Arr)
+      with
+        Pre    =>
+           Arr'Length > 0;
+
+      --  Sorts the array of assignments in the ascending order of cost.
+
+      procedure Bubble_Sort (Arr : in out Children_Arr) is
+         Switched : Boolean;
+      begin
+         loop
+            Switched := False;
+
+            for J in Arr'First .. Arr'Last - 1 loop
+               if Cost (Arr (J + 1), Data.Cost_Function) < Cost (Arr (J), Data.Cost_Function) then
+                  declare
+                     Tmp : Assignment_Info := Arr (J + 1);
+                  begin
+                     Arr (J + 1) := Arr (J);
+                     Arr (J) := Tmp;
+                     Switched := True;
+                  end;
+               end if;
+            end loop;
+
+            exit when not Switched;
+         end loop;
+      end Bubble_Sort;
+
+      type Min_Option (Found : Boolean := False) is record
+         case Found is
+            when True =>
+               Info : Assignment_Info;
+               Cost : Int64;
+            when False =>
+               null;
+         end case;
+      end record;
+
       Algebra         : Algebra_Tree;
-      Min             : Assignment_Info;
-      Min_Cost        : Int64;
+      Min             : Min_Option := (Found => False);
       Search_Stack    : Stack;
       Current_Element : Assignment_Info;
       Empty_TA_Seq    : TaskAssignment_Sequence;
       Nodes_Visited   : Int64 := 0;
    begin
       Initialize_Algebra (Automation_Request, TaskPlanOptions_Map, Algebra);
-      Min := Greedy_Solution (Data, Assignment_Cost_Matrix, TaskPlanOptions_Map, Algebra);
-      Min_Cost := Cost (Min, Data.Cost_Function);
       Put_Line ("Algebra Tree:");
       Print_Tree (Algebra);
 
       --  The first element is a null assignment
+
       Push (Search_Stack,
             (Empty_TA_Seq,
              Initialize_AssignmentVehicle (Assignment_Cost_Matrix)));
 
-      while Size (Search_Stack) /= 0 and Nodes_Visited < Data.Number_Nodes_Maximum loop
+      --  If the stack is empty, all solutions have been explored
 
-         pragma Loop_Invariant
-           (for all J in 1 .. Size (Search_Stack) =>
-                (for all TOC of Assignment_Cost_Matrix.CostMatrix =>
-                     Contains (Element (Search_Stack, J).Vehicle_Assignments, TOC.VehicleID)));
+      while Size (Search_Stack) /= 0
+
+      --  We continue at least until we find a solution
+
+        and then (if Min.Found then
+                     (Nodes_Visited in 1 .. Data.Number_Nodes_Maximum - 1))
+      loop
 
          --  The element at the top of the stack is popped
+
          Pop (Search_Stack, Current_Element);
-         pragma Assert
-           (for all TOC of Assignment_Cost_Matrix.CostMatrix =>
-              Contains (Current_Element.Vehicle_Assignments, TOC.VehicleID));
 
-         declare
-            Children_A   : constant Children_Arr :=
-              Children (Current_Element,
-                            Algebra,
-                            TaskPlanOptions_Map,
-                            Assignment_Cost_Matrix);
-            Current_Cost : constant Int64 := Cost (Current_Element, Data.Cost_Function);
-         begin
+         if not Min.Found or else Cost (Current_Element, Data.Cost_Function) < Min.Cost then
+            declare
+               Children_A   : Children_Arr :=
+                 Children (Current_Element,
+                           Algebra,
+                           TaskPlanOptions_Map,
+                           Assignment_Cost_Matrix);
+               Current_Cost : constant Int64 := Cost (Current_Element, Data.Cost_Function);
+            begin
 
-            --  If this element has no children, it means that this node
-            --  has assigned every task, so we compare it to the current
-            --  assignment that minimizes the cost.
-            if Children_A'Length = 0 then
-               if Current_Cost < Min_Cost then
-                  Min := Current_Element;
-                  Min_Cost := Current_Cost;
-               end if;
+               --  If this element has no children, it means that this node
+               --  has assigned every task, so we compare it to the current
+               --  assignment that minimizes the cost.
 
-            --  Else, we compute the cost for every child and push them into the
-            --  stack if their cost is lower than the current minimal cost.
-            else
-               for J in reverse Children_A'Range loop
+               if Children_A'Length = 0 then
+                  if not Min.Found or else Current_Cost < Min.Cost then
+                     Min := (Found => True, Info => Current_Element, Cost => Current_Cost);
 
-                  pragma Loop_Invariant
-                    (for all J in 1 .. Size (Search_Stack) =>
-                         (for all TOC of Assignment_Cost_Matrix.CostMatrix =>
-                              Contains (Element (Search_Stack, J).Vehicle_Assignments, TOC.VehicleID)));
+                     --  If the maximum number of nodes is 0, we return the first found
+                     --  solution, which is the greedy solution.
 
-                  declare
-                     Child : constant Assignment_Info := Children_A (J);
-                  begin
-                     if Cost (Child, Data.Cost_Function) < Min_Cost then
-                        pragma Assume (Size (Search_Stack) < Assignment_Stack.Capacity, "we have space for another child");
-                        Push (Search_Stack, Child);
+                     if Data.Number_Nodes_Maximum = 0 then
+                        exit;
                      end if;
-                  end;
-               end loop;
-            end if;
-         end;
-         Nodes_Visited := Nodes_Visited + 1;
+                  end if;
+
+                  --  Else, we compute the cost for every child and push them into the
+                  --  stack if their cost is lower than the current minimal cost.
+
+               else
+                  Bubble_Sort (Children_A);
+                  for J in reverse Children_A'Range loop
+                     declare
+                        Child : Assignment_Info := Children_A (J);
+                     begin
+                        if not Min.Found or else Cost (Child, Data.Cost_Function) < Min.Cost then
+                           pragma Assume (Size (Search_Stack) < Assignment_Stack.Capacity, "we have space for another child");
+                           Push (Search_Stack, Child);
+                        end if;
+                     end;
+                  end loop;
+               end if;
+            end;
+            Nodes_Visited := Nodes_Visited + 1;
+         end if;
       end loop;
       Summary.CorrespondingAutomationRequestID := Automation_Request.RequestID;
       Summary.OperatingRegion := Automation_Request.OperatingRegion;
-      Summary.TaskList := Min.Assignment_Sequence;
+      Summary.TaskList := Min.Info.Assignment_Sequence;
    end Run_Calculate_Assignment;
 
    ---------------------------------
