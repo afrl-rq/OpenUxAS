@@ -33,7 +33,6 @@ package body Algebra with SPARK_Mode is
             begin
                for J in Children'Range loop
                   Free_Tree (Children (J));
-
                   pragma Loop_Invariant (for all K in Children'First .. J => Children (K) = null);
                end loop;
             end;
