@@ -17,6 +17,31 @@ package body Algebra with SPARK_Mode is
       Result                 : out Int64_Seq;
       Encounter_Executed_Out : out Boolean);
 
+   ---------------
+   -- Free_Tree --
+   ---------------
+
+   procedure Free_Tree (X : in out Algebra_Tree)
+   is
+      procedure Internal_Free is new Ada.Unchecked_Deallocation
+        (Algebra_Tree_Cell, Algebra_Tree);
+   begin
+      if X /= null then
+         if X.all.Node_Kind = Operator then
+            declare
+               Children : Algebra_Tree_Array := Algebra_Tree_Array (X.all.Collection.Children);
+            begin
+               for J in Children'Range loop
+                  Free_Tree (Children (J));
+
+                  pragma Loop_Invariant (for all K in Children'First .. J => Children (K) = null);
+               end loop;
+            end;
+         end if;
+         Internal_Free (X);
+      end if;
+   end Free_Tree;
+
    -----------------------------
    -- Get_Next_Objectives_Ids --
    -----------------------------
@@ -174,6 +199,7 @@ package body Algebra with SPARK_Mode is
      (Formula : Unbounded_String;
       Algebra : out not null Algebra_Tree)
    is
+      pragma SPARK_Mode (Off);
       Kind          : Node_Kind_Type := Undefined;
       Operator_Kind : Operator_Kind_Type := Undefined;
       form          : Unbounded_String := Formula;

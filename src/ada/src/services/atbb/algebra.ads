@@ -1,5 +1,6 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Common;                use Common;
+with Ada.Unchecked_Deallocation;
 
 package Algebra with SPARK_Mode is
 
@@ -48,7 +49,13 @@ package Algebra with SPARK_Mode is
    function Is_Present
      (Algebra      : access constant Algebra_Tree_Cell;
       TaskOptionId : Int64)
-      return Boolean;
+      return Boolean
+   is
+      (case Algebra.Node_Kind is
+       when Action   => TaskOptionId = Algebra.TaskOptionId,
+       when Operator => (for some J in 1 .. Algebra.Collection.Num_Children => Is_Present (Algebra.Collection.Children (J), TaskOptionId)),
+       when Undefined => False);
+   pragma Annotate (GNATprove, Terminating, Is_Present);
 
    function Get_Next_Objectives_Ids
      (Assignment : Int64_Seq;
@@ -56,21 +63,16 @@ package Algebra with SPARK_Mode is
       return Int64_Seq
    with
      Post =>
-       (for all TaskOptionId of Get_Next_Objectives_Ids'Result =>
-          Is_Present (Algebra, TaskOptionId));
+       (for all ObjectiveId of Get_Next_Objectives_Ids'Result =>
+          (Is_Present (Algebra, ObjectiveId)
+             and then
+           not Contains (Assignment, Int64_Sequences.First, Last (Assignment), ObjectiveId)));
+   pragma Annotate (GNATprove, Terminating, Get_Next_Objectives_Ids);
    --  Returns a sequence of TaskOptionIds corresponding to the next possible
    --  actions considering Assignment.
 
-private
-
-   function Is_Present
-     (Algebra      : access constant Algebra_Tree_Cell;
-      TaskOptionId : Int64)
-      return Boolean
-   is
-      (case Algebra.Node_Kind is
-       when Action   => TaskOptionId = Algebra.TaskOptionId,
-       when Operator => (for some J in 1 .. Algebra.Collection.Num_Children => Is_Present (Algebra.Collection.Children (J), TaskOptionId)),
-       when Undefined => False);
+   procedure Free_Tree (X : in out Algebra_Tree) with
+     Depends => (X => X),
+     Post    => X = null;
 
 end Algebra;
