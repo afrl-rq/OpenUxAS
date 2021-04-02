@@ -1,0 +1,11 @@
+node foo2(a : int) returns (r : int);
+(*@contract
+    assume "nonnegative input"
+        a >= 0;
+
+    guarantee "nonnegative output"
+        r >= 0;
+*)
+let
+    r = a * 2;
+tel;

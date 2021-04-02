@@ -1,0 +1,21 @@
+include "foo1.lus"
+include "foo2.lus"
+
+node bar(a, b : int) returns (r : int);
+(*@contract
+    assume "nonegative inputs"
+        a >= 0 and b >= 0;
+
+    guarantee "nonnegative output"
+        r >= 0;
+*)
+var
+    t1, t2 : int;
+let
+    t1 = foo1(a,b);
+    t2 = foo2(t1);
+    r  = t2;
+
+    check "nonnegative r"
+        r >= 0;
+tel;
