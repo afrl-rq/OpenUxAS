@@ -1,0 +1,36 @@
+on: 
+    push:
+        paths:
+            - 'infrastructure/install-libexec/**'
+    pull_request:
+        paths:
+            - 'infrastructure/install-libexec/**'
+
+name: Check Infrastructure Install
+jobs:
+    test:
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-18.04, ubuntu-20.04]
+                python-version: [3.7, 3.8]
+        runs-on: ${{ matrix.os }}
+        steps:
+            - uses: actions/checkout@v2
+              with:
+                  path: OpenUxAS
+
+            - name: Set up python ${{ matrix.python-version }}
+              uses: actions/setup-python@v2
+              with:
+                  python-version: ${{ matrix.python-version }}
+
+            - name: Set up testing tools
+              run: |
+                  pip install --upgrade pip
+                  pip install tox
+
+            - name: Run testsuite and style checks
+              run: |
+                  cd OpenUxAS/infrastructure/install-libexec
+                  tox

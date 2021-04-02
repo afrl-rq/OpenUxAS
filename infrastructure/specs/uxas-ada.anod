@@ -1,0 +1,65 @@
+from e3.anod.spec import Anod
+from e3.anod.loader import spec
+from e3.fs import mkdir, cp
+import os
+
+
+class UxasAda(spec('common')):
+
+    @property
+    def build_space_name(self):
+        return 'uxas-ada-%s' % self.build_type
+
+    @property
+    def build_deps(self):
+        return [Anod.Dependency('compiler'),
+                Anod.Dependency('uxas', require='source_pkg'),
+                Anod.Dependency('uxas-lmcp', qualifier='lang=ada'),
+                Anod.Dependency('zeromq'),
+                Anod.Dependency('zeromqada')]
+
+    @property
+    def build_source_list(self):
+        return [Anod.Source(name='uxas-src',
+                            publish=True, dest='')]
+
+    @property
+    def build_type(self):
+        if 'debug' in self.parsed_qualifier:
+            return 'debug'
+        elif 'gcov' in self.parsed_qualifier:
+            return 'gcov'
+        else:
+            return 'release'
+
+    def build_setenv(self):
+        self.deps['zeromqada'].setenv()
+        self.deps['uxas-lmcp'].setenv()
+        self.deps['zeromq'].setenv()
+
+    def setenv(self):
+        self.env.add_path(os.path.join(self.build_space.install_dir, 'bin'))
+
+        # Expose directories related to UXAS so that the user can more readily
+        # work with the result of the build.
+        os.environ['UXAS_ADA_BUILD_DIR'] = self.build_space.build_dir
+        os.environ['UXAS_ADA_SOURCE_DIR'] = self.build_space.src_dir
+        os.environ['UXAS_ADA_INSTALL_DIR'] = self.build_space.install_dir
+
+        # Needed to run the executable, because of libraries.
+        self.deps['zeromq'].setenv()
+
+    @Anod.primitive()
+    def build(self):
+        self.build_setenv()
+        prj_file = os.path.join(self.build_space.src_dir,
+                                'src', 'ada',
+                                'afrl_ada_dev.gpr')
+
+        self.shell('gprbuild', '-j0', '-p', '-P', prj_file,
+                   '-XAPP_MODE=%s' % self.build_type,
+                   '--relocate-build-tree',
+                   cwd=self.build_space.build_dir)
+        mkdir(os.path.join(self.build_space.install_dir, 'bin'))
+        cp(os.path.join(self.build_space.build_dir, 'uxas-ada'),
+           os.path.join(self.build_space.install_dir, 'bin'))

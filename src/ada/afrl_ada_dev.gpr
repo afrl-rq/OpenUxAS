@@ -4,6 +4,8 @@ with "lmcp_generated_messages.gpr";
 
 project AFRL_Ada_Dev is
 
+   for Create_Missing_Dirs use "True";
+   
    for Languages use ("Ada");
 
    for Source_Dirs use

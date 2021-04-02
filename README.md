@@ -1,7 +1,7 @@
 # License
 
 *OpenUxAS* is developed by the Air Force Research Laboratory, Aerospace System Directorate, Power and Control Division.
-The LMCP specification and all source code for *OpenUxAS* is publicaly released under the Air Force Open Source Agreement Version 1.0. See LICENSE.md for complete details.
+The LMCP specification and all source code for *OpenUxAS* is publicly released under the Air Force Open Source Agreement Version 1.0. See LICENSE.md for complete details.
 The Air Force Open Source Agreement closely follows the NASA Open Source Agreement Verion 1.3.
 **NOTE the terms of the license include registering use of the software by emailing <a href="mailto:afrl.rq.opensource@us.af.mil?subject=OpenUxAS Registration&body=Please register me for use of OpenUxAS. Name: ____________">afrl.rq.opensource@us.af.mil</a>.**
 
@@ -37,161 +37,121 @@ We've organized this README into sections, to simplify navigation.
 *Table of Contents*
 
 1. [Quick Start](#quick-start)
-2. [Getting Started](#getting-started)
-3. [Building OpenUxAS](#build)
-4. [Running the Examples](#examples)
-5. [Running the Tests](#tests)
-6. [Building the Documentation](#docs)
-7. [Adding New Examples](#add-examples)
+2. [Using OpenUxAS](#using)
+3. [Developing OpenUxAS](#developing)
+4. [Building the Documentation](#docs)
 
+Throughout the remainder of the README, we will write commands that you should enter at your Linux command line like this:
+
+    OpenUxAS$ command argument
+
+This means that you have changed to the directory `OpenUxAS` and you are going to execute the command `command` with arguments `argument`.
+If you would like to copy-paste commands from this README, you should only copy the part that begins after the `$`.
 
 # 1. Quick Start<a name="quick-start" />
 
-The simplest approach to getting up and running with OpenUxAS is to use [OpenUxAS-bootstrap](https://github.com/afrl-rq/OpenUxAS-bootstrap), a supporting repository that we developed to simplify building, using and developing for OpenUxAS.
-A detailed description of what OpenUxAS-bootstrap is and what it provides is available at the [OpenUxAS-bootstrap](https://github.com/afrl-rq/OpenUxAS-bootstrap) repository.
-
-If you prefer to *not* use OpenUxAS bootstrap, you should skip this section and refer to the [next section](#getting-started) instead.
-
+We've tried to make getting started with OpenUxAS as simple as possible.
 Before you begin, you will need:
 
 1. Ubuntu 20.04
-2. curl
-3. git
-4. python 3.8
-
-Bootstrap your install by running this command:
-
-    ~$ curl -L https://github.com/afrl-rq/OpenUxAS-bootstrap/raw/develop/install/bootstrap | bash
-
-Configure your environment to run the build tool:
-
-    ~$ eval "$( cd ~/bootstrap && install/install-anod-venv --printenv )"
-
-Build OpenUxAS and OpenAMASE:
-
-    ~/bootstrap$ ./anod build uxas
-    ~/bootstrap$ ./anod build amase
-
-Now you can run the OpenUxAS examples:
-
-    ~/bootstrap$ ./run-example 02_Example_WaterwaySearch
-
-
-# 2. Getting Started<a name="getting-started" />
-
-Before you begin, you will need:
-
-1. Ubuntu 20.04 or 18.04
 2. git
-3. python 3.7 or 3.8
 
-Newer versions of Ubuntu may work, but will not have been tested.
-Python is used to provide testing support and to automate the running of examples.
+Use git to clone this repository:
 
-It is possible to build OpenUxAS on Mac, however this is not an explicitly supported configuration.
-Likewise, building OpenUxAS on Windows using WSL2 should work, but again, this is not an explicitly supported configuration.
+    $ git clone https://github.com/afrl-rq/OpenUxAS
 
-## 2.1. Third-Party Dependencies<a name="dependencies" />
+Then, use the provided `anod` command to fetch and build the dependencies for OpenUxAS and finally to build OpenUxAS:
 
-Before building OpenUxAS, you need to make sure you have properly installed the following third-party dependencies.
-Please note the version numbers, where listed; more recent versions may work but will not have been tested and should be avoided.
+    OpenUxAS$ ./anod build uxas
 
-Dependencies required to build OpenUxAS in C++:
-* [boost](boost_1_68_0.tar.bz2) 1.68.0
-* [czmq](https://github.com/zeromq/czmq.git) 4.0.2
-* [cppzmq](https://github.com/zeromq/cppzmq.git) 4.2.2
-* [libzmq](https://github.com/zeromq/libzmq.git) 4.3.1
-* [pugixml](https://github.com/zeux/pugixml.git) 1.2
-* [serial](https://github.com/wjwwood/serial.git) 1.2.1
-* [sqlite](sqlite-autoconf-3290000.tar.gz) 3.29.0
-* [sqlitecpp](https://github.com/SRombauts/SQLiteCpp.git) 1.3.1
-* [zyre](https://github.com/zeromq/zyre.git) 2.0.0
+Then, use anod to build OpenAMASE, which provides simulation capabilities for OpenUxAS:
 
-Dependencies required to build OpenUxAS in Ada:
-* [libzmq](https://github.com/zeromq/libzmq.git) 4.3.1
-* [zeromq-Ada](https://github.com/persan/zeromq-Ada.git) (master branch)
+    OpenUxAS$ ./anod build amase
 
-Additionally, to build the Ada code, you need an Ada compiler.
-The [GNAT Community Edition](https://www.adacore.com/download) provides a free, complete development environment for Ada, including a compiler.
+Now you can run OpenUxAS examples:
 
-## 2.2. LMCP and OpenAMASE<a name="lmcp" />
-
-The message set used by OpenUxAS is defined using LMCP.
-To work with these messages, you need to build [LmcpGen](https://github.com/afrl-rq/LmcpGen) and generate the C++ or Ada message sets.
-As part of this process, you will clone [OpenAMASE](https://github.com/afrl-rq/OpenAMASE).
-
-1. Clone [LmcpGen](https://github.com/afrl-rq/LmcpGen).
-   Place LmcpGen next to OpenUxAS in your filesystem.
-
-2. Clone [OpenAMASE](https://github.com/afrl-rq/OpenAMASE).
-   Place OpenAMASE next to OpenUxAS in your filesystem.
-
-3. Run the python script `resources/RunLmcpGen.py`:
-   
-        OpenUxAS$ python3 resources/RunLmcpGen.py
-   
-    This will build the OpenUxAS message sets for C++ and python, build the OpenAMASE message set, and build the documentation for the message sets.
-
-## 3. Building OpenUxAS<a name="build" />
-
-Once you have installed the required third-party dependencies and built the message set, you are ready to build OpenUxAS.
-
-For C++:
-
-    OpenUxAS$ make all
-
-For Ada:
-
-    OpenUxAS/src/ada$ gprbuild -p afrl_ada_dev.gpr
+    OpenUxAS$ ./run-example 02_Example_WaterwaySearch
 
 
-# 4. Running the Examples<a name="examples" />
+# 2. Using OpenUxAS<a name="using" />
 
-Once you have successfully built OpenUxAS, you can run examples.
+If your goal is to experiment with OpenUxAS, the best way to do that is to explore the examples that are provided as part of this repository.
 
-First, you need to put OpenUxAS on your path:
-
-    OpenUxAS$ export PATH=obj/cpp/uxas
+First, you will need to build OpenUxAS and OpenAMASE.
+You can follow the instructions in [Quick Start](#quick-start), above.
 
 The simplest example is the Hello World example.
 You can run the Hello World example like this:
 
-    OpenUxAS$ python3 run-example 01_HelloWorld
+    OpenUxAS$ ./run-example 01_HelloWorld
 
-Before you can run the more interesting examples, you need to make sure [OpenAMASE](https://github.com/afrl-rq/OpenAMASE) is available.
 Then, you can run other examples like this:
 
-    OpenUxAS$ python3 run-example 02_Example_WaterwaySearch
+    OpenUxAS$ ./run-example 02_Example_WaterwaySearch
 
 You can get a list of available examples by running:
 
-    OpenUxAS$ python3 run-example --list
+    OpenUxAS$ ./run-example --list
 
 
-# 5. Running the Tests<a name="tests" />
+# 3. Developing OpenUxAS<a name="developing" />
 
-Once you have build OpenUxAS, you can run the tests.
+If you wish to develop OpenUxAS, the easiest way to get started is to follow the [Quick Start](#quick-start) instructions, above.
+This step is essential because the provided `anod` command will get and install all third-party dependencies needed to build OpenUxAS.
+These dependencies are installed locally in the repository.
+The Makefile knows how to find them, so you will not have to do any additional configuration of your environment.
+
+Once you have cloned this repository and built OpenUxAS using anod, you can use `make` for incremental builds, like this:
+
+    OpenUxAS$ make -j all
+
+The `run-example` and `tests/run-tests` scripts will then select the binary built by `make`, allowing you to see the effects of and test your changes.
+
+## 3.1. IDE Support
+
+If you use [Visual Studio Code](https://code.visualstudio.com/) (VS Code) for development, search paths for IntelliSense have been set so that references to third-party dependencies can be resolved.
+Additionally, build and clean tasks have been set up that use the Makefile.
+
+If you use another IDE for development, you will need to configure the IDE so that references to third-party dependencies can be resolved.
+These details are out of scope for this README, but will be available on the OpenUxAS documentation site.
+
+## 3.2. Running the Tests
+
+Once you have built OpenUxAS, you can run the tests.
 Tests are found under the `tests` directory and are language specific.
 
-## 5.1. C++ Tests
+### 3.2.1. C++ Tests
 
 The C++ tests are found under `tests/cpp`.
 You can run these tests like this:
 
-    OpenUxAS/tests/cpp$ python3 run-tests
-
-If OpenUxAS is built with coverage information, the test suite will report coverage results.
+    OpenUxAS/tests/cpp$ ./run-tests
 
 More information about the C++ tests, including how to develop new tests, is provided in `tests/cpp/README.md`.
 
-## 5.2. SPARK Proofs
+### 3.2.2. SPARK Proofs
 
 The SPARK proofs can be replayed and compared to prior results using the script found under `tests/proof`, like this:
 
-    OpenUxAS/tests/proof$ python3 run-proofs
+    OpenUxAS/tests/proof$ ./run-proofs
+
+## 3.3. Modifying LmcpGen or OpenAMASE
+
+If you need to modify LmcpGen or OpenAMASE to support your OpenUxAS development, the provided `anod` command provides a command to help simplify project setup.
+Simply run:
+
+    OpenUxAS$ ./anod devel-setup lmcp
+
+or:
+
+    OpenUxAS$ ./anod devel-setup amase
+
+Anod will clone the requested repository and place the clone under a new directory named `develop`.
+Anod will then use the cloned LmcpGen and/or OpenAMASE repository when doing builds.
+Additionally, the `run-example` script will use the cloned OpenAMASE when running examples.
 
 
-# 6. Building the Documentation<a name="docs" />
+# 4. Building the Documentation<a name="docs" />
 
 There are two parts to the OpenUxAS documentation:
 1. a user manual;
@@ -204,154 +164,12 @@ Run it like this:
 
     OpenUxAS$ resources/build_documentation.sh
 
-## 6.1 Building the Documentation Manually
 
-If you'd like to do this process manually, then:
+# 5. Troubleshooting<a name="troubleshooting[" />
 
-1. The User Manual can be generated by running:
-   `pdflatex UxAS_UserManual.tex` in the folder `doc/reference/UserManual/`
-2. Create HTML Doxygen reference documenation:
-   * Open terminal in directory `doc/doxygen`
-   * `sh RunDoxygen.sh`
-   * In newly created `html` folder, open index.html
+If things seem to be going wrong, all of the scripts offer increased verbosity that might help diagnose problems.
+For example, passing `-vv` to the provided `anod` command will cause each command executed by anod to be printed:
 
+    OpenUxAS$ ./anod -vv build
 
-# 7. Adding New Examples<a name="add-examples" />
-
-As described [above](#examples), you can easily run OpenUxAS examples using the `run-example` script.
-You can also easily add new examples to OpenUxAS that will work with the `run-example` script.
-
-There are three essential parts of an example:
-
-1. the directory that contains the example;
-2. the input files that provide example data; and
-3. the YAML file that describes the details of how the example should be configured and run.
-
-## 7.1. Creating an Example Directory
-
-The `run-example` script will run examples from anywhere, provided you specify the path to the directory containing one or more examples by using the `--examples-dir` option.
-By default, `run-example` looks for examples under the `examples` directory in this repository.
-These instructions assume that you will put your new example in the root of `examples`.
-
-The examples provided in the `examples` directory follow a particular naming convention.
-While this convention makes finding and referring to examples simpler, it is not required: you may name your example however you like (although the repository maintainers may request that you follow a particular naming convention).
-
-We'll name our new example `20_NewExample`.
-Create the directory for the example:
-
-    OpenUxAS$ mkdir examples/20_NewExample
-
-## 7.2. Creating the Input Files
-
-The details of the input files required for OpenUxAS and OpenAMASE are beyond the scope of this README.
-The examples included in this repository offer insight and templates that can be copied and specialized for your new example.
-You can also find details in the User Manual, which you can build following the instructions [above](#docs).
-
-For the purposes of this README, we will simply copy the files in `02_Example_WaterwaySearch`.
-Copy the following to your new example:
-
-* `cfg_WaterwaySearch.xml`
-* `Scenario_WaterwaySearch.xml`
-* everything under `MessagesToSend`
-
-That is:
-
-    OpenUxAS/examples$ cp 02_Example_WaterwaySearch/cfg_WaterwaySearch.xml 20_NewExample
-    OpenUxAS/examples$ cp 02_Example_WaterwaySearch/Scenario_WaterwaySearch.xml 20_NewExample
-    OpenUxAS/examples$ cp -R 02_Example_WaterwaySearch/MessagesToSend 20_NewExample
-
-## 7.3. Creating the YAML File
-
-The YAML file, which must be named `config.yaml`, describes the details of how the example should be configured and run.
-Continuing the example from the two sections above, the YAML file would have the following contents:
-
-    amase:
-        scenario: Scenario_WaterwaySearch.xml
-
-    uxas:
-        config: cfg_WaterwaySearch.xml
-        rundir: RUNDIR_WaterwaySearch
-
-Broadly, there are two relevant sections to the YAML file:
-
-1. `amase`: an optional section that specifies that OpenAMASE should be run and that provides configuration parameters for OpenAMASE -- if unspecified, OpenAMASE will not be started and any OpenUxAS instances will not be connected to any display (as is the case for the `01_HelloWorld` example); and
-2. `uxas` or `uxases`: a required section that specifies that one or more instances of OpenUXAS should be run and that provides configuration parameters for each OpenUxAS instance.
-
-### 7.3.1. OpenAMASE Configuration
-
-If your example requires OpenAMASE, you must provide configuration parameters for OpenAMASE in the `amase` section of the YAML file.
-This section is specified as follows:
-
-    amase:
-        scenario: <scenario file>
-        delay: <delay in ms>
-
-The `scenario` parameter must always be specified and the scenario file must exist.
-The scenario file should be an OpenAMASE scenario, as shown above.
-
-The `delay` parameter is optional and is relatively brittle.
-If specified, the parameter is the number of milliseconds to wait after OpenAMASE is started before starting any OpenUxAS instances.
-You should instead include the `Test_SimulationTime` service in your OpenUxAS configuration so that your OpenUxAS instances will wait for OpenAMASE to start the simulation before starting their timers.
-The `cfg_WaterwaySearch.xml` includes this service.
-
-### 7.3.2. Single OpenUxAS Configuration
-
-A single instance of OpenUxAS can be specified using the `uxas` section of the YAML file.
-This section is specified as follows:
-
-    uxas:
-        config: <configuration file>
-        bin: <OpenUxAS binary>
-        rundir: <directory for instance outputs>
-
-The `config` parameter must always be specified and the configuration file must exist.
-The configuration file should be an OpenUxAS configuration, as shown above.
-The path to the configuration file is local to the directory containing the YAML file.
-
-The `bin` parameter is optional.
-You should use this parameter if you want to specify that a particular OpenUxAS binary should be used.
-This should be the binary filename, not a path.
-
-The expected use case for this parameter is to support running instances of OpenUxAS that are developed in languages other than C++ (which is the default language for OpenUxAS development).
-For example, if the Ada (partial) implementation of OpenUxAS should be included in an example, the `bin` parameter would be specified to be the binary built by the Ada build process: `uxas-ada`.
-`run-example` will then search for `uxas-ada` on your PATH.
-
-***Note: the `bin` parameter in the YAML file is always followed.***
-That is, if a binary is specified in the YAML file, none of the options provided to the user for controlling which binary is used will be respected.
-Unless there is a clear reason to specify a binary (as in the example above), it is always better to leave the binary unspecified in the YAML file.
-This way, the user has maximum flexibility in selecting the binary they wish for use in the example.
-
-If you do not use this parameter, `run-example` will attempt to find the OpenUxAS binary as follows:
-
-1. based on the command-line option `--uxas-bin` provided to `run-example`;
-2. by looking for `OpenUxAS/obj/cpp/uxas`, which is the output of running `make all`;
-3. by looking for `uxas` on your PATH.
-
-The `rundir` parameter is also optional.
-This is the directory that `run-example` will create and into which OpenUxAS will place files created during runtime, such as the database file containing messages created during execution.
-The path for `rundir` is relative to the folder containing the YAML file.
-If the `rundir` parameter is not used, `run-example` will create a directory named `RUNDIR` in the directory containing the YAML file.
-
-### 7.3.3. Multiple OpenUxAS Configuration
-
-OpenUxAS is a distributed platform, so we expect that multiple instance of OpenUxAS will be used for many examples.
-Multiple instances of OpenUxAS can be specified using the `uxases` section of the YAML file.
-The syntax of this section is nearly identical to that describe above:
-
-    uxases:
-      - config: <configuration file 1>
-        bin: <binary 1>
-        rundir: <rundir 1>
-
-      - config: <configuration file n>
-        bin: <binary n>
-        rundir: <rundir n>
-
-***Note: the `-` in front of `config` is important as is the whitespace/alignment of bin and rundir with config.** This is part of how YAML syntax for lists works.*
-
-You may specify as many instances as you need in this way.
-
-Each configuration file should be distinct, as it will specify the parameters particular to that instance of OpenUxAS.
-You should also consider specifying the rundir when using multiple instance of OpenUxAS so that you can be sure to identify which output is associated with which instance.
-
-The example `03_Example_DistributedCooperation` illustrates the use of multiple OpenUxAS instances.
+These commands can be entered manually, hopefully allowing problems to be identified and worked around.
