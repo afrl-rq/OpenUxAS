@@ -1,314 +1,175 @@
 -- uxas.lus
---
--- Note: jkind doesn't support include/import, so this is a monolithic model
--- of OpenUxAS.
 
--- Represent the kind of message sent with an enum.
-type message_kind = enum {
-    -- An empty message.
-    --
-    -- Relevant fields:
-    --  [none]
-    none,
+-- Driver for compositional reasoning about OpenUxAS.
 
-    -- Mission Command.
-    --
-    -- Relevant fields:
-    --  id
-    --  waypoint
-    mission_command,
+include "common/types.lus"
+include "common/pltl.lus"
+include "common/bus.lus"
 
-    -- Automation Response
-    --
-    -- Relevant fields:
-    --  id
-    --  route
-    automation_response,
-
-    -- Unique Automation Response
-    --
-    -- Relevant fields:
-    --  id
-    --  route
-    unique_automation_response
-};
-
-
--- Represent the ID of a message with an unconstrained integer.
-type message_id = int;
-
-
--- Represent a route with a boolean. 
---
--- Of course, this isn't realistic. But we don't actually want to reason about
--- routes more precisely in this model because to do so wouldn't match our
--- selected level of abstraction.
-type message_route = bool;
-
-
--- Represent a waypoint with a boolean
---
--- Of course, this isn't realistic. But we don't actually want to reason about
--- waypoints more precisely in this model because to do so wouldn't match our
--- selected level of abstraction.
-type message_waypoint = bool;
-
-
--- Represent a message.
---
--- A more realistic representation would use a discriminated record, but we
--- don't have support for that in Lustre.
-type message = struct {
-    -- The kind of message
-    kind     : message_kind;
-
-    -- The ID of this message
-    id       : message_id;
-
-    -- The ID of another message that is referenced by this message
-    ref      : message_id;
-
-    -- A route
-    route    : message_route;
-
-    -- A waypoint
-    waypoint : message_waypoint
-};
-
-
--- An empty message. This is interpreted as no message having been received.
-const empty_message : message = message { 
-    kind     = none;
-    id       = -1;
-    ref      = -1;
-    route    = false;
-    waypoint = false
-};
-
-
--- PLTL once operator.
-node once(in : bool) returns (out : bool);
-let
-	out = in or (false -> pre out);
-tel;
-
-
--- This predicate is a stub that's meant to represent the concept of checking
--- containment of a waypoint by a route.
-node contains(route : message_route; waypoint : message_waypoint) returns (r: bool);
-let
-    r = route and waypoint;
-tel;
+include "services/automation-request-validator.lus"
+include "services/waypoint-manager.lus"
 
 
 --
--- The Waypoint Manager Service
+-- The OpenUxAS Framework
 --
--- TODO: add an ordering postcondition.
-node waypoint_manager(
-    -- The message currently received by the service
-    msg: message;
-    
-    -- These inputs represent skolemized universally quantified variables that
-    -- we use to link details of a message appearing the past with details of
-    -- our output message.
-    automation_response_id    : int;
-    automation_response_route : bool
-) returns (
-    out : message
-);
+-- Note: output r is required for Lustre syntax but is not used.
+node uxas() returns (r : bool);
 var
-    post : bool;
-let
-    -- Constrain the skolemized inputs to be freely chosen constants.
-    assert (automation_response_id    = pre(automation_response_id));
-    assert (automation_response_route = pre(automation_response_route));
-
-    -- A model of service behavior that makes the postcondition true.
-    -- Implementations would do actual work and would not replicate this model.
-    out = if msg.kind = automation_response then
-              message {
-                  kind     = mission_command;
-                  id       = msg.id + 1;
-                  ref      = msg.id;
-                  route    = false;
-                  waypoint = msg.route 
-              }
-          else
-              empty_message;
-
-    -- Service postcondition
-    --
-    -- When we send a Mission Command, it references a previously received
-    -- Automation Response. Moreover, the waypoint in the Mission Command
-    -- is contained in the route of the referenced Automation Response.
-    post = (
-        out.kind = mission_command and 
-        out.ref  = automation_response_id and
-        contains(automation_response_route, out.waypoint)
-    ) => (
-        once(msg.kind  = automation_response and 
-             msg.id    = automation_response_id and 
-             msg.route = automation_response_route)
-    );
-    --%PROPERTY post;
-tel;
-
-
--- Automation Request Validator Service
---
--- TODO: other service behaviors could be added here.
-node automation_request_validator(
-    -- The message currently received by the service
-    msg : message;
-
-    -- These inputs represent skolemized universally quantified variables that
-    -- we use to link details of a message appearing the past with details of
-    -- our output message.
-    unique_automation_response_id    : int;
-    unique_automation_response_route : bool
-) returns (
-    out : message
-);
-var
-    post : bool;
-let
-    -- Constrain the skolemized inputs to be freely chosen constants.
-    assert (unique_automation_response_id    = pre(unique_automation_response_id));
-    assert (unique_automation_response_route = pre(unique_automation_response_route));
-
-    -- A model of service behavior that makes the postcondition true.
-    -- Implementations would do actual work and would not replicate this model.
-    out = if msg.kind = unique_automation_response then
-              message {
-                  kind     = automation_response;
-                  id       = msg.id + 1;
-                  ref      = msg.id;
-                  route    = msg.route;
-                  waypoint = false
-              }
-          else
-              empty_message;
-
-    -- Service postcondition
-    --
-    -- When we send an Automation Response, it references a previously received
-    -- Unique Automation Response. Moreover, the route contained in the
-    -- Automation Response is identical to the route in the referenced Unique
-    -- Automation Response.
-    post = (
-        out.kind  = automation_response and
-        out.ref   = unique_automation_response_id and
-        out.route = unique_automation_response_route
-    ) => (
-        once(msg.kind  = unique_automation_response and
-             msg.id    = unique_automation_response_id and
-             msg.route = unique_automation_response_route)
-    );
-    --%PROPERTY post;
-tel;
-
-
--- An incomplete model of OpenUxAS
-node uxas(
-    msg : message;
-
-    -- These inputs represent skolemized universally quantified variables that
-    -- we use to link details of a message appearing the past with details of
-    -- our output message.
-    automation_response_id           : int;
-    unique_automation_response_id    : int;
-    unique_automation_response_route : bool;
-
-    -- These inputs are skolemized inputs for subnodes, which we have to pass
-    -- from the top level, unfortunately. They are not used within this node
-    -- and thus are abbreviated.
-    wm_s1 : int;
-    wm_s2 : bool;
-
-    arv_s1 : int;
-    arv_s2 : bool
-) returns (
-    out : message
-);
-var
-    waypoint_manager_msg             : message;
-    automation_request_validator_msg : message;
-
-    last_valid_id : int;
-
-    valid_msgs : bool;
-
-    valid_mission_command: bool;
-let
-    -- Model how our input is allowed to evolve.
-    assert (
-        -- an empty message
-        msg = empty_message or
-
-        -- the previously sent message (loop closure)
-        msg = (empty_message -> pre(out)) or
-
-        -- a Unique Automation Request with a valid id
-        (msg.kind = unique_automation_response and msg.id > last_valid_id)
-    );
+    -- data exchanged over the bus.
+    in_msg, out_msg : message;
+    in_id : id_type;
     
-    -- Constrain the skolemized inputs to be freely chosen constants.
-    assert (automation_response_id           = pre(automation_response_id));
-    assert (unique_automation_response_id    = pre(unique_automation_response_id));
-    assert (unique_automation_response_route = pre(unique_automation_response_route));
-    
-    assert (wm_s1 = pre(wm_s1));
-    assert (wm_s2 = pre(wm_s2));
+    -- Variables for Automation Request Validator output
+    arv_msg : message;
 
-    assert (arv_s1 = pre(arv_s1));
-    assert (arv_s2 = pre(arv_s2));
+    -- Variables for Waypoint Manager output
+    wm_msg : message;
 
-    -- Call each of services with the input message, collecting the result from
-    -- each service. Pass skolemized inputs as needed.
-    waypoint_manager_msg             = waypoint_manager(msg, wm_s1, wm_s2);
-    automation_request_validator_msg = automation_request_validator(msg, arv_s1, arv_s2);
+const
+    -- These constants represent skolemized universally quantified variables 
+    -- that we use to link details of a message appearing the past with details
+    -- of our output messages in properties.
+    automation_response_msg        : message;
+    unique_automation_response_msg : message;
+ 
+let
+    -- Choice of the free messages must satisfy our identity predicate, in 
+    -- particular in relation to inputs. This doesn't mean that the free
+    -- messages *must* be an input *unless* the ID is so constrained.
+    assert (ids_imply_equality(in_msg, automation_response_msg));
+    assert (ids_imply_equality(in_msg, unique_automation_response_msg));
 
-    -- Ensure that we get at most one valid message returned from our set of
-    -- services.
-    valid_msgs = not (
-        waypoint_manager_msg.kind <> none and
-        automation_request_validator_msg.kind <> none
-    );
-    --%PROPERTY valid_msgs;
 
-    -- Select a single message for output. We are sure there will be at most
-    -- one valid message by the property above.
-    out = if waypoint_manager_msg.kind <> none then
-              waypoint_manager_msg
-          else if automation_request_validator_msg.kind <> none then
-              automation_request_validator_msg
-          else
-              empty_message;
+    -- ===================================================================== --
+    -- Environment Modeling
 
-    -- Record the last valid ID we have seen. We use this only in our model of
-    -- how our input is allowed to evolve.
-    last_valid_id = 0 -> if out.kind <> none then
-                            out.id
-                         else
-                            pre(last_valid_id);
-    
-    -- A valid Mission Command transitively references a previously sent Unique
-    -- Automation Response and has a waypoint that is contained by the route of
-    -- the Unique Automation Response.
-    valid_mission_command = (
-        out.kind = mission_command and
-        out.ref  = automation_response_id and
-        contains(unique_automation_response_route, out.waypoint) and
+    in_msg, in_id = bus(no_message -> pre(out_msg));
 
-        -- follow the reference chain to the expected source message
-        once(msg.id  = automation_response_id and
-             msg.ref = unique_automation_response_id)
-    ) => (
-        -- the expected source message exists and has the expected data
-        once(msg.kind  = unique_automation_response and
-             msg.id    = unique_automation_response_id and
-             msg.route = unique_automation_response_route)
-    );
-    --%PROPERTY valid_mission_command;
+
+    -- Constrain the model to sending one message per step. 
+    assert
+        not (
+            arv_msg <> no_message and
+            wm_msg  <> no_message
+        );
+
+
+    -- ===================================================================== --
+    -- Service Execution
+
+    arv_msg = automation_request_validator(in_msg, in_id);
+    wm_msg  = waypoint_manager(in_msg, in_id);
+
+
+    -- ===================================================================== --
+    -- Output Selection
+
+    -- Select the message for output; we know there will be only one, so order
+    -- doesn't matter. Conceptually, this is like a Simulink merge block.
+    out_msg   = if arv_msg <> no_message then
+                            arv_msg
+                        else if wm_msg <> no_message then
+                            wm_msg
+                        else
+                            no_message;
+
+
+    -- ===================================================================== --
+    -- Environment Consistency Checks
+
+    -- These aren't required for proof, but help with troubleshooting
+    -- failing properties (by making cleaner inductive counterexamples).
+
+    check "E1: input IDs are non-decreasing."
+        in_id >= (0 -> pre(in_id));
+
+    check "E2: input IDs are nonnegative."
+        in_id >= -1;
+
+    check "E3: in message IDs are increasing."
+        in_msg <> no_message => (
+            in_msg.id > (-1 -> pre(in_msg.id))
+        );
+
+    check "E4: in message IDs are nonnegative."
+        in_msg <> no_message => (
+            in_msg.id >= 0
+        );
+
+    check "E5: no_message has ID -1."
+        in_msg = no_message => (
+            in_msg.id = -1
+        );
+
+
+    -- ===================================================================== --
+    -- Properties of Interest
+
+    check "P1. All services correctly handle output ID and message ID."
+        out_msg <> no_message => (
+            out_msg.id = in_id + 1
+        );
+
+
+    -- This property is gratuitous
+    check "P2. Mission Command messages reference prior Automation Response
+           messages."
+        (
+            out_msg.kind = mission_command and
+            out_msg.ref  = automation_response_msg.id
+        ) => (
+            O(in_msg = automation_response_msg)
+        );
+
+
+    -- This property is gratuitous
+    check "P3. Automation Response messages reference prior Unique Automation
+           Response messages."
+        (
+            out_msg.kind = automation_response and
+            out_msg.ref  = unique_automation_response_msg.id
+        ) => (
+            O(in_msg = unique_automation_response_msg)
+        );
+
+
+    -- ===================================================================== --
+    -- Compositional Properties of Interest
+
+    check "C1. Mission Command messages reference, transitively, prior Unique
+           Automation Response messages."
+        (
+            out_msg.kind = mission_command and
+            out_msg.ref  = automation_response_msg.id and
+
+            automation_response_msg.id = unique_automation_response_msg.id
+        ) => (
+            O(in_msg = automation_response_msg) and
+            O(in_msg = unique_automation_response_msg)
+        );
+
+
+    -- This is the first step towards a composition proof of waypoint on first
+    -- statement of route. It fails because we cannot see the lemma about
+    -- pre_route from the Waypoint Manager (P5) at this scope. This needs
+    -- thought.
+    -- check "route 1"
+    --     (
+    --         out_msg.kind  = mission_command and
+    --         out_msg.ref   = automation_response_msg.id
+    --     ) => (
+    --         contains(automation_response_msg.route, out_msg.waypoint)
+    --     );    
+        
+        
+    -- check "route final"
+    --     (
+    --         out_msg.kind  = mission_command and
+    --         out_msg.ref   = automation_response_msg.id and
+
+    --         automation_response_msg.id = unique_automation_response_msg.id
+    --     ) => (
+    --         contains(unique_automation_response_msg.route, out_msg.waypoint)
+    --     );    
 tel;

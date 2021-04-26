@@ -2,6 +2,15 @@
 
 include "../common/types.lus"
 include "../common/pltl.lus"
+include "../common/bus.lus"
+
+
+-- This constant represents a skolemized universally quantified variable 
+-- that we use to link details of a message appearing the past with details
+-- of our output message in properties.
+--
+-- Placed here for use in our contract.
+const arv_unique_automation_response_msg : message;
 
 --
 -- The Automation Request Validator service
@@ -15,10 +24,24 @@ node automation_request_validator(
 ) returns (
     -- The message currently sent by the service
     out_msg : message;
-
-    -- The ID to be used for future ID generation
-    out_id : id_type;
 );
+(*@contract
+    -- Note: not required for proof, but helpful for debugging inductive
+    -- counterexamples. Disable this and remove/disable environmental checks
+    -- as desired.
+    assume "A1. Environment Model." (
+        (in_msg, in_id) = bus(no_message -> pre(out_msg))
+    );
+
+    guarantee "G1. Restatement of R1."
+        (
+            out_msg.kind  = automation_response and
+            out_msg.ref   = arv_unique_automation_response_msg.id
+        ) => (
+            pre(O(in_msg = arv_unique_automation_response_msg)) and
+            out_msg.route = arv_unique_automation_response_msg.route
+        );        
+*)
 var
     -- ===================================================================== --
     -- Service state
@@ -34,18 +57,12 @@ var
     pre_route           : route_type;
     pre_route_msg_id    : id_type;
 
-const
-    -- This constant represents a skolemized universally quantified variable 
-    -- that we use to link details of a message appearing the past with details
-    -- of our output message.
-    unique_automation_response_msg : message;
-
 let
-    -- Choice of the free constant unique_automation_response_msg must satisfy
-    -- out identity predicate, in particular in relation to inputs. This
-    -- doesn't mean that unique_automation_response_msg *must* be an input
-    -- *unless* the ID is so constrained.
-    assert (ids_imply_equality(in_msg, unique_automation_response_msg));
+    -- Choice of the free constant arv_unique_automation_response_msg must
+    -- satisfy our identity predicate, in particular in relation to inputs.
+    -- This doesn't mean that arv_unique_automation_response_msg *must* be an
+    -- input *unless* the ID is so constrained.
+    assert (ids_imply_equality(in_msg, arv_unique_automation_response_msg));
     
     
     -- ===================================================================== --
@@ -65,19 +82,13 @@ let
     -- behavior. Each is preceded by a natural-language description of the
     -- specification, set off in quotes for clarity.
 
-    -- "The service shall increment the ID for new messages."
-    out_id = if pre_route <> no_route then
-                 in_id + 1
-             else
-                 in_id;
-
 
     -- "If there is a stored route, the service shall send the stored route in
     --  an Automation Response message."
     out_msg   = if pre_route <> no_route then
                     message {
                         kind     = automation_response;
-                        id       = out_id;
+                        id       = in_id + 1;
                         ref      = pre_route_msg_id;
                         route    = pre_route;
                         waypoint = no_waypoint;
@@ -108,11 +119,9 @@ let
 
     check "P1. The Automation Request Validator correctly sets the ID of
            messages it sends and correctly updates its output ID."
-        if out_msg <> no_message then
-            out_msg.id = out_id and
-            out_id     = in_id + 1
-        else
-            out_id = in_id;
+        out_msg <> no_message => (
+            out_msg.id = in_id + 1
+        );
 
 
     -- ===================================================================== --
@@ -124,9 +133,9 @@ let
            Automation Response message."
         (
             out_msg.kind  = automation_response and
-            out_msg.ref   = unique_automation_response_msg.id
+            out_msg.ref   = arv_unique_automation_response_msg.id
         ) => (
-            pre(O(in_msg = unique_automation_response_msg)) and
-            out_msg.route = unique_automation_response_msg.route
+            pre(O(in_msg = arv_unique_automation_response_msg)) and
+            out_msg.route = arv_unique_automation_response_msg.route
         );
 tel;

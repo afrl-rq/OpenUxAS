@@ -2,6 +2,8 @@
 
 include "../common/types.lus"
 include "../common/pltl.lus"
+include "../common/bus.lus"
+
 
 -- Retrieve the next waypoint from a route.
 node next_waypoint(route : route_type) returns (waypoint : waypoint_type);
@@ -19,7 +21,8 @@ tel;
 -- This constant represents a skolemized universally quantified variable 
 -- that we use to link details of a message appearing in the past with details
 -- of our output message.
-const  automation_response_msg : message;
+const  wm_automation_response_msg : message;
+
 
 --
 -- The Waypoint Manager Service
@@ -33,42 +36,22 @@ node waypoint_manager(
 ) returns (
     -- The message currently sent by the service
     out_msg : message;
-
-    -- The ID to be used for future ID generation
-    out_id : id_type;
 );
 (*@contract
-    -- Not required for proof, but helpful for debugging inductive
+    -- Note: not required for proof, but helpful for debugging inductive
     -- counterexamples. Disable this and remove/disable environmental checks
     -- as desired.
-
     assume "A1. Environment Model." (
-        -- no message
-        (in_msg = no_message and 
-         in_id  = (0 -> pre(in_id)))
-         
-        or
-
-        -- the previously sent message (loop closure)
-        (in_msg = (no_message -> pre(out_msg)) and 
-         in_msg <> no_message and
-         in_id  = in_msg.id)
-        
-        or
-
-        -- a Unique Automation Request with a valid id
-        (in_msg.kind <> none and
-         in_msg.id = in_id and
-         in_id > (0 -> pre(in_id)))
+        (in_msg, in_id) = bus(no_message -> pre(out_msg))
     );
 
     guarantee "G1. Restatement of R1." 
         (
             out_msg.kind  = mission_command and
-            out_msg.ref   = automation_response_msg.id
+            out_msg.ref   = wm_automation_response_msg.id
         ) => (
-            pre(O(in_msg = automation_response_msg)) and
-            contains(automation_response_msg.route, out_msg.waypoint)
+            pre(O(in_msg = wm_automation_response_msg)) and
+            contains(wm_automation_response_msg.route, out_msg.waypoint)
         );
 *)
 var
@@ -91,11 +74,11 @@ var
     pre_route_msg_id    : id_type;
 
 let
-    -- Choice of the free constant automation_response_msg must satisfy our
+    -- Choice of the free constant wm_automation_response_msg must satisfy our
     -- identity predicate, in particular in relation to inputs. This doesn't
-    -- mean that automation_response_msg *must* be an input *unless* the ID is
-    -- so constrained.
-    assert (ids_imply_equality(in_msg, automation_response_msg));
+    -- mean that wm_automation_response_msg *must* be an input *unless* the ID
+    -- is so constrained.
+    assert (ids_imply_equality(in_msg, wm_automation_response_msg));
 
     -- ===================================================================== --
     -- Bookkeeping
@@ -123,12 +106,6 @@ let
                else
                    no_waypoint;
 
-    -- "The service shall increment the ID for new messages."
-    out_id = if waypoint <> no_waypoint then
-                 in_id + 1
-             else
-                 in_id;
-
 
     -- "If there is a next waypoint, the service shall send the next waypoint
     --  in a Mission Command message that references the ID of the Automation
@@ -148,7 +125,7 @@ let
     out_msg   = if waypoint <> no_waypoint then
                     message {
                         kind     = mission_command;
-                        id       = out_id;
+                        id       = in_id + 1;
                         ref      = pre_route_msg_id;
                         route    = no_route;
                         waypoint = waypoint;
@@ -230,12 +207,9 @@ let
     -- Sanity check on the handling of output message ID and output ID.
     check "P3. The Waypoint Manager correctly sets the ID of messages it sends
            and correctly updates its output ID."
-        if out_msg <> no_message then
-            out_msg.id = out_id and
-            out_id     = in_id + 1
-        else
-            out_id = in_id;
-
+        out_msg <> no_message => (
+            out_msg.id = in_id + 1
+        );
 
     -- This property, which is interesting in its own right, functions as a
     -- lemma for proving our requirement.
@@ -243,9 +217,9 @@ let
            referenced Automation Response message was previously received."
         (
             out_msg.kind  = mission_command and
-            out_msg.ref   = automation_response_msg.id
+            out_msg.ref   = wm_automation_response_msg.id
         ) => (
-            pre(O(in_msg = automation_response_msg))
+            pre(O(in_msg = wm_automation_response_msg))
         );
 
 
@@ -259,9 +233,9 @@ let
            message."
         (
             out_msg.kind  = mission_command and
-            out_msg.ref   = automation_response_msg.id
+            out_msg.ref   = wm_automation_response_msg.id
         ) => (
-            pre_route     = automation_response_msg.route
+            pre_route     = wm_automation_response_msg.route
         );
 
 
@@ -282,25 +256,25 @@ let
            message."
         (
             out_msg.kind  = mission_command and
-            out_msg.ref   = automation_response_msg.id
+            out_msg.ref   = wm_automation_response_msg.id
         ) => (
-            contains(automation_response_msg.route, out_msg.waypoint)
+            contains(wm_automation_response_msg.route, out_msg.waypoint)
         );
 
 
     -- ===================================================================== --
     -- Service Requirements
 
-    -- The service requirement is simply the composition of two prior checks.
+    -- The service requirement is simply the composition of P4 and P7.
     check "R1. When the Waypoint Manager sends a Mission Command message, the
            waypoint sent is contained in the route that belongs to the
            previously received Automation Response message that is referenced
            in the Mission Command message."
         (
             out_msg.kind  = mission_command and
-            out_msg.ref   = automation_response_msg.id
+            out_msg.ref   = wm_automation_response_msg.id
         ) => (
-            pre(O(in_msg = automation_response_msg)) and
-            contains(automation_response_msg.route, out_msg.waypoint)
+            pre(O(in_msg = wm_automation_response_msg)) and
+            contains(wm_automation_response_msg.route, out_msg.waypoint)
         );
 tel;
