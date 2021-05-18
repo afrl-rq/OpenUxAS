@@ -469,7 +469,7 @@ public:    //methods/functions
                 for(auto itVertex=m_viVerticies.begin();itVertex!=m_viVerticies.end();itVertex++)
                 {
                     dTotalNorth += vposVertexContainer[*itVertex].m_north_m;
-                    dTotalEast += vposVertexContainer[*itVertex].m_north_m;
+                    dTotalEast += vposVertexContainer[*itVertex].m_east_m;
                 }
                 assert(!viGetVerticies().empty());
                 posGetCentroid().m_north_m = dTotalNorth/viGetVerticies().size();
