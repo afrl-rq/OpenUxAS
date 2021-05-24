@@ -38,12 +38,34 @@ node waypoint_manager(
     out_msg : message;
 );
 (*@contract
-    -- Note: not required for proof, but helpful for debugging inductive
-    -- counterexamples. Disable this and remove/disable environmental checks
-    -- as desired.
-    assume "A1. Environment Model." (
-        (in_msg, in_id) = bus(no_message -> pre(out_msg))
-    );
+    -- This property is a nice sanity check over our output.
+    guarantee "L1. Restatement of P1. The Waypoint Manager never sends 'no
+               waypoint' as part of a Mission Command."
+        (
+            out_msg.kind = mission_command
+        ) => (
+            out_msg.waypoint <> no_waypoint
+        );
+
+    -- Sanity check on the handling of output message ID and output ID.
+    guarantee "L3. Restatement of P3. The Waypoint Manager correctly sets the
+               ID of messages it sends and correctly updates its output ID."
+        out_msg <> no_message => (
+            out_msg.id = in_id + 1
+        );
+
+    -- This property, which is interesting in its own right, functions as a
+    -- lemma for proving our requirement.
+    guarantee "L4. Restatement of P4. When the Waypoint Manager sends a Mission
+               Command message, the referenced Automation Response message was
+               previously received."
+        (
+            out_msg.kind  = mission_command and
+            out_msg.ref   = wm_automation_response_msg.id
+        ) => (
+            pre(O(in_msg = wm_automation_response_msg))
+        );
+
 
     guarantee "G1. Restatement of R1." 
         (
@@ -156,34 +178,6 @@ let
                         in_msg.id
                     else
                         pre_route_msg_id;
-
-
-    -- ===================================================================== --
-    -- Environment Consistency Checks
-    
-    -- These aren't required for proof, but help with troubleshooting
-    -- failing properties (by making cleaner inductive counterexamples).
-
-    check "E1: input IDs are non-decreasing."
-        in_id >= (0 -> pre(in_id));
-
-    check "E2: input IDs are nonnegative."
-        in_id >= -1;
-
-    check "E3: in message IDs are increasing."
-        in_msg <> no_message => (
-            in_msg.id > (-1 -> pre(in_msg.id))
-        );
-
-    check "E4: in message IDs are nonnegative."
-        in_msg <> no_message => (
-            in_msg.id >= 0
-        );
-
-    check "E5: no_message has ID -1."
-        in_msg = no_message => (
-            in_msg.id = -1
-        );
 
 
     -- ===================================================================== --

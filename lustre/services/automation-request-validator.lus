@@ -26,12 +26,13 @@ node automation_request_validator(
     out_msg : message;
 );
 (*@contract
-    -- Note: not required for proof, but helpful for debugging inductive
-    -- counterexamples. Disable this and remove/disable environmental checks
-    -- as desired.
-    assume "A1. Environment Model." (
-        (in_msg, in_id) = bus(no_message -> pre(out_msg))
-    );
+    guarantee "L1. Restatement of P1. The Automation Request Validator
+               correctly sets the ID of messages it sends and correctly updates
+               its output ID."
+        out_msg <> no_message => (
+            out_msg.id = in_id + 1
+        );
+
 
     guarantee "G1. Restatement of R1."
         (

@@ -130,7 +130,7 @@ let
             out_msg.kind = automation_response and
             out_msg.ref  = unique_automation_response_msg.id
         ) => (
-            O(in_msg = unique_automation_response_msg)
+            pre(O(in_msg = unique_automation_response_msg))
         );
 
 
@@ -163,7 +163,8 @@ let
     --     );    
         
         
-    -- check "route final"
+    -- check "C2. Mission Command message waypoints are contained, transitively,
+    --        in referenced Unique Automation Response messages."
     --     (
     --         out_msg.kind  = mission_command and
     --         out_msg.ref   = automation_response_msg.id and
