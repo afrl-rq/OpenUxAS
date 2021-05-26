@@ -14,16 +14,16 @@ class Boost(spec('common')):
 
     @property
     def build_source_list(self):
-        return [Anod.Source(name='boost_1_68_0.tar.bz2',
+        return [Anod.Source(name='boost_1_76_0.tar.bz2',
                             publish=True)]
 
     @property
     def source_pkg_build(self):
         return [
             self.HTTPSSourceBuilder(
-                name='boost_1_68_0.tar.bz2',
-                url='https://dl.bintray.com/boostorg/release/1.68.0/source/'
-                'boost_1_68_0.tar.bz2')]
+                name='boost_1_76_0.tar.bz2',
+                url='https://www.boost.org/users/download/'
+                'boost_1_76_0.tar.bz2')]
 
     @Anod.primitive()
     def build(self):
