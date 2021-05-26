@@ -5,6 +5,9 @@ on:
     pull_request:
         paths:
             - 'infrastructure/uxas/**'
+    workflow_dispatch:
+        paths:
+            - 'infrastructure/uxas/**'
 
 name: Check uxas Build-Automation Module
 jobs:
