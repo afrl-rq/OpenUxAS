@@ -14,6 +14,13 @@ on:
             - 'anod'
             - 'src/cpp/**'
             - 'tests/cpp/**'
+    workflow_dispatch:
+        paths:
+            - 'infrastructure/uxas/**'
+            - 'infrastructure/paths.sh'
+            - 'anod'
+            - 'src/cpp/**'
+            - 'tests/cpp/**'
 
 name: Build and Test UxAS C++
 jobs:
