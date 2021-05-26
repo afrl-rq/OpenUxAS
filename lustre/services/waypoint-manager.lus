@@ -21,7 +21,7 @@ tel;
 -- This constant represents a skolemized universally quantified variable
 -- that we use to link details of a message appearing in the past with details
 -- of our output message.
-const  wm_automation_response_msg : message;
+const  wm_future_out_msg : message;
 
 
 --
@@ -37,72 +37,72 @@ node waypoint_manager(
     -- The message currently sent by the service
     out_msg : message;
 );
-(*@contract
-    -- This property is a nice sanity check over our output.
-    guarantee "L1. Restatement of P1.
-      The Waypoint Manager never sends 'no waypoint' as part of a Mission
-      Command.\n  "
-    (
-        out_msg.kind = mission_command
-    ) => (
-        out_msg.waypoint <> no_waypoint
-    );
+-- (*@contract
+--     -- This property is a nice sanity check over our output.
+--     guarantee "L1. Restatement of P1.
+--       The Waypoint Manager never sends 'no waypoint' as part of a Mission
+--       Command.\n  "
+--     (
+--         out_msg.kind = mission_command
+--     ) => (
+--         out_msg.waypoint <> no_waypoint
+--     );
 
-    -- Sanity check on the handling of output message ID and output ID.
-    guarantee "L3. Restatement of P3.
-      The Waypoint Manager correctly sets the ID of messages it sends and
-      correctly updates its output ID.\n  "
-    (
-        out_msg <> no_message
-    ) => (
-        out_msg.id = in_id + 1
-    );
+--     -- Sanity check on the handling of output message ID and output ID.
+--     guarantee "L3. Restatement of P3.
+--       The Waypoint Manager correctly sets the ID of messages it sends and
+--       correctly updates its output ID.\n  "
+--     (
+--         out_msg <> no_message
+--     ) => (
+--         out_msg.id = in_id + 1
+--     );
 
-    -- This property, which is interesting in its own right, functions as a
-    -- lemma for proving our requirement.
-    guarantee "L4. Restatement of P4.
-      When the Waypoint Manager sends a Mission Command message, the referenced
-      Automation Response message was previously received.\n  "
-    (
-        out_msg.kind  = mission_command and
-        out_msg.ref   = wm_automation_response_msg.id
-    ) => (
-        pre(O(in_msg = wm_automation_response_msg))
-    );
+--     -- This property, which is interesting in its own right, functions as a
+--     -- lemma for proving our requirement.
+--     guarantee "L4. Restatement of P4.
+--       When the Waypoint Manager sends a Mission Command message, the referenced
+--       Automation Response message was previously received.\n  "
+--     (
+--         out_msg.kind  = mission_command and
+--         out_msg.ref   = wm_future_out_msg.id
+--     ) => (
+--         pre(O(in_msg = wm_future_out_msg))
+--     );
 
-    guarantee "G1. Restatement of R1.
-      When the Waypoint Manager sends a Mission Command message, the waypoint
-      sent is contained in the route that belongs to the previously received
-      Automation Response message that is referenced in the Mission Command
-      message.\n  "
-    (
-        out_msg.kind  = mission_command and
-        out_msg.ref   = wm_automation_response_msg.id
-    ) => (
-        pre(O(in_msg = wm_automation_response_msg)) and
-        contains(wm_automation_response_msg.route, out_msg.waypoint)
-    );
+--     guarantee "G1. Restatement of R1.
+--       When the Waypoint Manager sends a Mission Command message, the waypoint
+--       sent is contained in the route that belongs to the previously received
+--       Automation Response message that is referenced in the Mission Command
+--       message.\n  "
+--     (
+--         out_msg.kind  = mission_command and
+--         out_msg.ref   = wm_future_out_msg.id
+--     ) => (
+--         pre(O(in_msg = wm_future_out_msg)) and
+--         contains(wm_future_out_msg.route, out_msg.waypoint)
+--     );
 
-    guarantee "G2. Possible responses.\n  "
-    (
-        out_msg.kind = mission_command or
-        out_msg      = no_message
-    );
+--     guarantee "G2. Possible responses.\n  "
+--     (
+--         out_msg.kind = mission_command or
+--         out_msg      = no_message
+--     );
 
-    guarantee "G3. Output Trigger.
-      The Waypoint Manager only sends Mission Command messages in response to
-      Automation Response messages.\n  "
-    (
-        out_msg.kind = mission_command
-    ) => (
-        pre(O(in_msg.kind = automation_response))
-    );
+--     guarantee "G3. Output Trigger.
+--       The Waypoint Manager only sends Mission Command messages in response to
+--       Automation Response messages.\n  "
+--     (
+--         out_msg.kind = mission_command
+--     ) => (
+--         pre(O(in_msg.kind = automation_response))
+--     );
 
-    guarantee "IC.\n  "
-    (
-        O(out_msg = no_message)
-    );
-*)
+--     guarantee "IC.\n  "
+--     (
+--         O(out_msg = no_message)
+--     );
+-- *)
 var
     -- ===================================================================== --
     -- Service state
@@ -122,13 +122,11 @@ var
     pre_route           : route_type;
     pre_route_msg_id    : id_type;
 
-let
-    -- Choice of the free constant wm_automation_response_msg must satisfy our
-    -- identity predicate, in particular in relation to inputs. This doesn't
-    -- mean that wm_automation_response_msg *must* be an input *unless* the ID
-    -- is so constrained.
-    assert (ids_imply_equality(in_msg, wm_automation_response_msg));
+const
+    future_pre_route : route_type;
+    future_pre_route_msg_id : id_type;
 
+let
     -- ===================================================================== --
     -- Bookkeeping
 
@@ -210,6 +208,118 @@ let
     -- ===================================================================== --
     -- Properties of Interest
 
+    check "G2. Possible responses.\n  "
+    (
+        out_msg.kind = mission_command or
+        out_msg      = no_message
+    );
+
+    check "G3. Output Trigger.
+      The Waypoint Manager only sends Mission Command messages in response to
+      Automation Response messages.\n  "
+    (
+        out_msg.kind = mission_command
+    ) => (
+        O(in_msg.kind = automation_response)
+    );
+
+    check "IC.\n  "
+    (
+        O(out_msg = no_message)
+    );
+
+
+    check "L1.\n  "
+    (
+        out_msg.kind = mission_command
+    ) => (
+        out_msg.ref = pre_route_msg_id
+    );
+
+    check "L2.\n  "
+    (
+        route_msg_id = in_msg.id or
+        route_msg_id = pre_route_msg_id
+    );
+
+    check "L3.\n  "
+    (
+        out_msg.kind = mission_command
+    ) => (
+        O(route_msg_id = in_msg.id)
+    );
+
+    check "L4.\n  "
+    (
+        out_msg.kind = mission_command and
+
+        pre_route_msg_id = future_pre_route_msg_id
+    ) => (
+        O(in_msg.id = future_pre_route_msg_id)
+    );
+
+    check "L5.\n  "
+    (
+        out_msg.kind     = mission_command and
+
+        pre_route_msg_id = future_pre_route_msg_id
+    ) => (
+        O(in_msg.kind = automation_response and
+          in_msg.id   = future_pre_route_msg_id)
+    );
+
+    check "L6.\n  "
+    (
+        out_msg.kind = mission_command and
+        out_msg      = wm_future_out_msg and
+
+        pre_route_msg_id = future_pre_route_msg_id
+    ) => (
+        O(wm_future_out_msg.ref = future_pre_route_msg_id) and
+        O(in_msg.id = future_pre_route_msg_id)
+    );
+
+    check "L7.\n  "
+    (
+        out_msg.kind = mission_command and
+        out_msg      = wm_future_out_msg and
+
+        pre_route_msg_id = future_pre_route_msg_id
+    ) => (
+        O(wm_future_out_msg.ref = future_pre_route_msg_id) and
+        O(in_msg.kind = automation_response and
+          in_msg.id   = future_pre_route_msg_id)
+    );
+
+    check "L8\n  "
+    (
+        O(wm_future_out_msg.ref = future_pre_route_msg_id) and
+        O(future_pre_route_msg_id = in_msg.id)
+    ) => (
+        O(wm_future_out_msg.ref = in_msg.id)
+    );
+
+    check "L9.\n  "
+    (
+        O(wm_future_out_msg.ref = future_pre_route_msg_id) and
+        O(in_msg.kind = automation_response and
+          in_msg.id   = future_pre_route_msg_id)
+    ) => (
+        O(in_msg.kind = automation_response and
+          in_msg.id   = wm_future_out_msg.ref)
+    );
+
+    check "L10.\n  "
+    (
+        out_msg.kind = mission_command and
+        out_msg      = wm_future_out_msg and
+
+        pre_route_msg_id = future_pre_route_msg_id
+    ) => (
+        O(in_msg.id = wm_future_out_msg.ref)
+    );
+
+
     -- This property is a nice sanity check over our output.
     check "P1.
       The Waypoint Manager never sends 'no waypoint' as part of a Mission
@@ -255,38 +365,51 @@ let
       When the Waypoint Manager sends a Mission Command message, the referenced
       Automation Response message was previously received.\n  "
     (
-        out_msg.kind  = mission_command and
-        out_msg.ref   = wm_automation_response_msg.id
+        out_msg.kind = mission_command and
+        out_msg      = wm_future_out_msg and
+
+        -- Needed to trigger the lemmas above
+        pre_route_msg_id = future_pre_route_msg_id
     ) => (
-        pre(O(in_msg = wm_automation_response_msg))
+        O(in_msg.kind = automation_response and
+          in_msg.id   = wm_future_out_msg.ref)
     );
 
-    check "P4.A. Witness antecedent of P4."
-    not (
-        out_msg.kind  = mission_command and
-        out_msg.ref   = wm_automation_response_msg.id
-    );
+    -- check "P4.A. Witness antecedent of P4."
+    -- not (
+    --     out_msg.kind = mission_command and
+    --     out_msg      = wm_future_out_msg
+    -- );
 
     -- Since we send waypoints from the route *before* we update the route
-    -- stored based on any new message, the this checks pre_route rather than
+    -- stored based on any new message, this checks pre_route rather than
     -- route.
     --
     -- This is an essential lemma for P7, which is in turn essential for R1.
-    check "P5.
-      When the Waypoint Manager sends a Mission Command message, the stored
-      route is contained in the referenced Automation Response message.\n  "
-    (
-        out_msg.kind  = mission_command and
-        out_msg.ref   = wm_automation_response_msg.id
-    ) => (
-        pre_route     = wm_automation_response_msg.route
-    );
+    -- check "P5.
+    --   When the Waypoint Manager sends a Mission Command message, the stored
+    --   route is contained in the referenced Automation Response message.\n  "
+    -- (
+    --     out_msg.kind  = mission_command and
+    --     out_msg.ref   = wm_future_out_msg.id
+    -- ) => (
+    --     pre_route     = wm_future_out_msg.route
+    -- );
+    -- (
+    --     out_msg.kind  = mission_command and
+    --     out_msg       = wm_future_out_msg and
+    --     pre_route     = future_pre_route
+    -- ) => (
+    --     O(in_msg.kind  = automation_response and
+    --       in_msg.id    = wm_future_out_msg.ref and
+    --       in_msg.route = future_pre_route)
+    -- );
 
-    check "P5.A. Witness antecedent of P5."
-    not (
-        out_msg.kind  = mission_command and
-        out_msg.ref   = wm_automation_response_msg.id
-    );
+    -- check "P5.A. Witness antecedent of P5."
+    -- not (
+    --     out_msg.kind  = mission_command and
+    --     out_msg.ref   = wm_future_out_msg.id
+    -- );
 
     -- Since we send waypoints from the route *before* we update the route
     -- stored based on any new message, the contains predicate checks against
@@ -305,42 +428,43 @@ let
         out_msg.kind  = mission_command
     );
 
-    check "P7.
-      When the Waypoint Manager sends a Mission Command mssage, the waypoint
-      sent is contained in the referenced Automation Response message.\n  "
-    (
-        out_msg.kind  = mission_command and
-        out_msg.ref   = wm_automation_response_msg.id
-    ) => (
-        contains(wm_automation_response_msg.route, out_msg.waypoint)
-    );
+    -- check "P7.
+    --   When the Waypoint Manager sends a Mission Command mssage, the waypoint
+    --   sent is contained in the referenced Automation Response message.\n  "
+    -- (
+    --     out_msg.kind  = mission_command and
+    --     out_msg.ref   = wm_future_out_msg.id
+    -- ) => (
+    --     contains(wm_future_out_msg.route, out_msg.waypoint)
+    -- );
 
-    check "P7.A. Witness antecedent of P7."
-    not (
-        out_msg.kind  = mission_command and
-        out_msg.ref   = wm_automation_response_msg.id
-    );
+    -- check "P7.A. Witness antecedent of P7."
+    -- not (
+    --     out_msg.kind  = mission_command and
+    --     out_msg.ref   = wm_future_out_msg.id
+    -- );
 
     -- ===================================================================== --
     -- Service Requirements
 
     -- The service requirement is simply the composition of P4 and P7.
-    check "R1.
-      When the Waypoint Manager sends a Mission Command message, the waypoint
-      sent is contained in the route that belongs to the previously received
-      Automation Response message that is referenced in the Mission Command
-      message.\n  "
-    (
-        out_msg.kind  = mission_command and
-        out_msg.ref   = wm_automation_response_msg.id
-    ) => (
-        pre(O(in_msg = wm_automation_response_msg)) and
-        contains(wm_automation_response_msg.route, out_msg.waypoint)
-    );
+    -- check "R1.
+    --   When the Waypoint Manager sends a Mission Command message, the waypoint
+    --   sent is contained in the route that belongs to the previously received
+    --   Automation Response message that is referenced in the Mission Command
+    --   message.\n  "
+    -- (
+    --     out_msg.kind = mission_command and
+    --     out_msg      = wm_future_out_msg
+    -- ) => (
+    --     O(in_msg.kind = automation_response and
+    --       in_msg.id   = wm_future_out_msg.ref and
+    --       contains(in_msg.route, wm_future_out_msg.waypoint))
+    -- );
 
-    check "R1.A. Witness antecedent of R1."
-    not (
-        out_msg.kind  = mission_command and
-        out_msg.ref   = wm_automation_response_msg.id
-    );
+    -- check "R1.A. Witness antecedent of R1."
+    -- not (
+    --     out_msg.kind = mission_command and
+    --     out_msg      = wm_future_out_msg
+    -- );
 tel;
