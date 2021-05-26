@@ -22,7 +22,7 @@ class Boost(spec('common')):
         return [
             self.HTTPSSourceBuilder(
                 name='boost_1_76_0.tar.bz2',
-                url='https://www.boost.org/users/download/'
+                url='https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/'
                 'boost_1_76_0.tar.bz2')]
 
     @Anod.primitive()
