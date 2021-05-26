@@ -10,7 +10,7 @@ include "../common/bus.lus"
 -- of our output message in properties.
 --
 -- Placed here for use in our contract.
-const arv_unique_automation_response_msg : message;
+const arv_future_out_msg : message;
 
 --
 -- The Automation Request Validator service
@@ -41,26 +41,18 @@ node automation_request_validator(
       Automation Response message that is referenced in the Automation Response
       message.\n  "
     (
-        out_msg.kind  = automation_response and
-        out_msg.ref   = arv_unique_automation_response_msg.id
+        out_msg.kind = automation_response and
+        out_msg      = arv_future_out_msg
     ) => (
-        pre(O(in_msg = arv_unique_automation_response_msg)) and
-        out_msg.route = arv_unique_automation_response_msg.route
+        O(in_msg.kind  = unique_automation_response and
+          in_msg.id    = arv_future_out_msg.ref and
+          in_msg.route = arv_future_out_msg.route)
     );
 
     guarantee "G2. Possible responses.\n  "
     (
-        out_msg.kind = automation_response or
+        out_msg.kind = automation_response xor
         out_msg      = no_message
-    );
-
-    guarantee "G3. Output Trigger.
-      The Automation Request Validator only sends Mission Command messages in
-      response to Unique Automation Response messages.\n  "
-    (
-        out_msg.kind = automation_response
-    ) => (
-        pre(O(in_msg.kind = unique_automation_response))
     );
 
     guarantee "IC.\n  "
@@ -84,13 +76,6 @@ var
     pre_route_msg_id    : id_type;
 
 let
-    -- Choice of the free constant arv_unique_automation_response_msg must
-    -- satisfy our identity predicate, in particular in relation to inputs.
-    -- This doesn't mean that arv_unique_automation_response_msg *must* be an
-    -- input *unless* the ID is so constrained.
-    assert (ids_imply_equality(in_msg, arv_unique_automation_response_msg));
-
-
     -- ===================================================================== --
     -- Bookkeeping
 
@@ -166,16 +151,17 @@ let
       Automation Response message that is referenced in the Automation Response
       message.\n  "
     (
-        out_msg.kind  = automation_response and
-        out_msg.ref   = arv_unique_automation_response_msg.id
+        out_msg.kind = automation_response and
+        out_msg      = arv_future_out_msg
     ) => (
-        pre(O(in_msg = arv_unique_automation_response_msg)) and
-        out_msg.route = arv_unique_automation_response_msg.route
+        O(in_msg.kind  = unique_automation_response and
+          in_msg.id    = arv_future_out_msg.ref and
+          in_msg.route = arv_future_out_msg.route)
     );
 
     check "R1.A. Witness antecedent of R1."
     not (
-        out_msg.kind  = automation_response and
-        out_msg.ref   = arv_unique_automation_response_msg.id
+        out_msg.kind = automation_response and
+        out_msg      = arv_future_out_msg
     );
 tel;
