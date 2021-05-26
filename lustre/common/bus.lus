@@ -18,49 +18,26 @@ node bus(
     -- The ID to be used for future ID generation
     out_id : id_type;
 );
-(*@contract
-    guarantee "G1. Bus behavior."
-        -- The bus must send the message received; otherwise, it has a choice
-        -- in this model.
-        if in_msg <> no_message then
-            -- the previously sent message (loop closure)
-            out_msg = (no_message -> pre(in_msg)) and
-            out_msg <> no_message and
-            out_id  = out_msg.id
-        else
-            -- free choice: either no message or a new UAR with a valid ID.
-
-            -- no message
-            (out_msg = no_message and 
-             out_id  = (0 -> pre(out_id)))
-
-            or
-
-            -- a Unique Automation Request with a valid id
-            (out_msg.kind = unique_automation_response and 
-             out_msg.id = out_id and
-             out_id > (0 -> pre(out_id)));
-*)
 let
     assert(
         -- The bus must send the message received; otherwise, it has a choice
         -- in this model.
         if in_msg <> no_message then
-            -- the previously sent message (loop closure)
-            out_msg = (no_message -> pre(in_msg)) and
+            -- the input message (loop closure)
+            out_msg = in_msg and
             out_msg <> no_message and
             out_id  = out_msg.id
         else
             -- free choice: either no message or a new UAR with a valid ID.
 
             -- no message
-            (out_msg = no_message and 
+            (out_msg = no_message and
              out_id  = (0 -> pre(out_id)))
 
             or
 
             -- a Unique Automation Request with a valid id
-            (out_msg.kind = unique_automation_response and 
+            (out_msg.kind = unique_automation_response and
              out_msg.id = out_id and
              out_id > (0 -> pre(out_id)))
     );

@@ -5,7 +5,7 @@ include "../common/pltl.lus"
 include "../common/bus.lus"
 
 
--- This constant represents a skolemized universally quantified variable 
+-- This constant represents a skolemized universally quantified variable
 -- that we use to link details of a message appearing the past with details
 -- of our output message in properties.
 --
@@ -26,22 +26,47 @@ node automation_request_validator(
     out_msg : message;
 );
 (*@contract
-    guarantee "L1. Restatement of P1. The Automation Request Validator
-               correctly sets the ID of messages it sends and correctly updates
-               its output ID."
-        out_msg <> no_message => (
-            out_msg.id = in_id + 1
-        );
+    guarantee "L1. Restatement of P1.
+      The Automation Request Validator correctly sets the ID of messages it
+      sends and correctly updates its output ID.\n  "
+    (
+        out_msg <> no_message
+    ) => (
+        out_msg.id = in_id + 1
+    );
 
+    guarantee "G1. Restatement of R1.
+      When the Automation Request Validator sends an Automation Response
+      message, the route sent belongs to the previously received Unique
+      Automation Response message that is referenced in the Automation Response
+      message.\n  "
+    (
+        out_msg.kind  = automation_response and
+        out_msg.ref   = arv_unique_automation_response_msg.id
+    ) => (
+        pre(O(in_msg = arv_unique_automation_response_msg)) and
+        out_msg.route = arv_unique_automation_response_msg.route
+    );
 
-    guarantee "G1. Restatement of R1."
-        (
-            out_msg.kind  = automation_response and
-            out_msg.ref   = arv_unique_automation_response_msg.id
-        ) => (
-            pre(O(in_msg = arv_unique_automation_response_msg)) and
-            out_msg.route = arv_unique_automation_response_msg.route
-        );        
+    guarantee "G2. Possible responses.\n  "
+    (
+        out_msg.kind = automation_response or
+        out_msg      = no_message
+    );
+
+    guarantee "G3. Output Trigger.
+      The Automation Request Validator only sends Mission Command messages in
+      response to Unique Automation Response messages.\n  "
+    (
+        out_msg.kind = automation_response
+    ) => (
+        pre(O(in_msg.kind = unique_automation_response))
+    );
+
+    guarantee "IC.\n  "
+    (
+        O(out_msg = no_message)
+    );
 *)
 var
     -- ===================================================================== --
@@ -64,8 +89,8 @@ let
     -- This doesn't mean that arv_unique_automation_response_msg *must* be an
     -- input *unless* the ID is so constrained.
     assert (ids_imply_equality(in_msg, arv_unique_automation_response_msg));
-    
-    
+
+
     -- ===================================================================== --
     -- Bookkeeping
 
@@ -86,7 +111,7 @@ let
 
     -- "If there is a stored route, the service shall send the stored route in
     --  an Automation Response message."
-    out_msg   = if pre_route <> no_route then
+    out_msg =   if pre_route <> no_route then
                     message {
                         kind     = automation_response;
                         id       = in_id + 1;
@@ -109,34 +134,48 @@ let
 
     -- "If the service receives a Unique Automation Response message, the
     --  service shall store the ID of the Unique Automation Response message."
-    route_msg_id = if in_msg.kind = unique_automation_response then
-                       in_msg.id
-                   else
-                       pre_route_msg_id;
+    route_msg_id =  if in_msg.kind = unique_automation_response then
+                        in_msg.id
+                    else
+                        pre_route_msg_id;
 
 
     -- ===================================================================== --
     -- Properties of Interest
 
-    check "P1. The Automation Request Validator correctly sets the ID of
-           messages it sends and correctly updates its output ID."
-        out_msg <> no_message => (
-            out_msg.id = in_id + 1
-        );
+    check "P1.
+      The Automation Request Validator correctly sets the ID of messages it
+      sends and correctly updates its output ID.\n  "
+    (
+        out_msg <> no_message
+    ) => (
+        out_msg.id = in_id + 1
+    );
 
+    check "P1.A. Witness antecedent of P1."
+    not (
+        out_msg <> no_message
+    );
 
     -- ===================================================================== --
     -- Service Requirements
 
-    check "R1. When the Automation Request Validator sends an Automation
-           Response message, the route sent belongs to the previously received
-           Unique Automation Response message that is referenced in the
-           Automation Response message."
-        (
-            out_msg.kind  = automation_response and
-            out_msg.ref   = arv_unique_automation_response_msg.id
-        ) => (
-            pre(O(in_msg = arv_unique_automation_response_msg)) and
-            out_msg.route = arv_unique_automation_response_msg.route
-        );
+    check "R1.
+      When the Automation Request Validator sends an Automation Response
+      message, the route sent belongs to the previously received Unique
+      Automation Response message that is referenced in the Automation Response
+      message.\n  "
+    (
+        out_msg.kind  = automation_response and
+        out_msg.ref   = arv_unique_automation_response_msg.id
+    ) => (
+        pre(O(in_msg = arv_unique_automation_response_msg)) and
+        out_msg.route = arv_unique_automation_response_msg.route
+    );
+
+    check "R1.A. Witness antecedent of R1."
+    not (
+        out_msg.kind  = automation_response and
+        out_msg.ref   = arv_unique_automation_response_msg.id
+    );
 tel;

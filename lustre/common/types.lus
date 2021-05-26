@@ -78,7 +78,7 @@ type message = struct {
 
 
 -- An empty message. This is interpreted as no message having been received.
-const no_message : message = message { 
+const no_message : message = message {
     kind     = none;
     id       = no_id;
     ref      = no_id;
