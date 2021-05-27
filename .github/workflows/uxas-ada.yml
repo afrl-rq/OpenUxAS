@@ -14,6 +14,9 @@ on:
             - 'anod'
             - 'src/ada/**'
             - 'tests/proof/**'
+    workflow_dispatch:
+    schedule:
+        - cron: '35 3 * * 4'
 
 name: "Build and Prove UxAS Ada Services"
 jobs:
