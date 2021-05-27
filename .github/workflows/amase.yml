@@ -1,15 +1,19 @@
 on:
+    pull_request:
+        paths:
+            - 'infrastructure/uxas/**'
+            - 'infrastructure/paths.sh'
+            - 'infrastructure/specs/amase.anod'
+            - 'anod'
     push:
         paths:
             - 'infrastructure/uxas/**'
             - 'infrastructure/paths.sh'
             - 'infrastructure/specs/amase.anod'
             - 'anod'
-    pull_request:
-        paths:
-            - 'infrastructure/uxas/**'
-            - 'infrastructure/paths.sh'
-            - 'anod'
+    schedule:
+        - cron: '45 3 * * 4'
+    workflow_dispatch:
 
 name: Build OpenAMASE
 jobs:
