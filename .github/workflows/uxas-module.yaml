@@ -6,8 +6,8 @@ on:
         paths:
             - 'infrastructure/uxas/**'
     workflow_dispatch:
-        paths:
-            - 'infrastructure/uxas/**'
+    schedule:
+        - cron: '10 3 * * 4'
 
 name: Check uxas Build-Automation Module
 jobs:
