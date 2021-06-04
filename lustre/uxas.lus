@@ -32,25 +32,10 @@ var
 
     -- Variables for Waypoint Manager output
     wm_msg : message;
-
 const
-    -- These constants represent skolemized universally quantified variables
-    -- that we use to link details of a message appearing the past with details
-    -- of our output messages in properties.
-    -- automation_response_msg        : message;
-    -- unique_automation_response_msg : message;
-
-    captured_out_msg : message;
-
+    -- used to prove properties about messages in this model
+    free_msg1, free_msg2 : message;
 let
-    -- Choice of the free messages must satisfy our identity predicate, in
-    -- particular in relation to inputs. This doesn't mean that the free
-    -- messages *must* be an input *unless* the ID is so constrained.
-    assert (ids_imply_equality(in_msg, wm_automation_response_msg));
-    assert (ids_imply_equality(in_msg, arv_unique_automation_response_msg));
-
-    assert(ids_imply_equality(out_msg, captured_out_msg));
-
     -- ===================================================================== --
     -- Environment Modeling
 
@@ -116,6 +101,7 @@ let
         in_msg <> no_message
     );
 
+
     check "E4:
       in message IDs are nonnegative.\n  "
     (
@@ -128,6 +114,7 @@ let
     not (
         in_msg <> no_message
     );
+
 
     check "E5:
       no_message has ID -1.\n  "
@@ -142,6 +129,85 @@ let
         in_msg = no_message
     );
 
+
+    check "E6:
+      equal IDs imply equal messages for input messages\n  "
+    (
+        O(in_msg = free_msg1) and
+        O(in_msg = free_msg2)
+    ) => (
+        ids_imply_equality(free_msg1, free_msg2)
+    );
+
+    check "E6.A. Witness antecedent of E6."
+    not (
+        O(in_msg = free_msg1) and
+        O(in_msg = free_msg2)
+    );
+
+
+    check "E7:
+      equal IDs imply equal messages for output messages\n  "
+    (
+        O(out_msg = free_msg1) and
+        O(out_msg = free_msg2)
+    ) => (
+        ids_imply_equality(free_msg1, free_msg2)
+    );
+
+    check "E7.A. Witness antecedent of E7."
+    not (
+        O(out_msg = free_msg1) and
+        O(out_msg = free_msg2)
+    );
+
+
+    check "E8:
+      equal IDs imply equal messages for input and output messages\n  "
+    (
+        O(in_msg  = free_msg1) and
+        O(out_msg = free_msg2)
+    ) => (
+        ids_imply_equality(free_msg1, free_msg2)
+    );
+
+    check "E8.A. Witness antecedent of E8."
+    not (
+        O(in_msg  = free_msg1) and
+        O(out_msg = free_msg2)
+    );
+
+
+    check "E9.
+      Input mission command messages were always previously output.\n  "
+    (
+        in_msg.kind = mission_command and
+        in_msg      = free_msg1
+    ) => (
+        O(out_msg = free_msg1)
+    );
+
+    check "E9.A. Witness antecedent of E9."
+    not (
+        in_msg.kind = mission_command and
+        in_msg      = free_msg1
+    );
+
+
+    check "E10.
+      Input automation response messages were always previously output.\n  "
+    (
+        in_msg.kind = automation_response and
+        in_msg      = free_msg1
+    ) => (
+        O(out_msg = free_msg1)
+    );
+
+    check "E10.A. Witness antecedent of E10."
+    not (
+        in_msg.kind = automation_response and
+        in_msg      = free_msg1
+    );
 
     -- Environment witnesses - these build confidence that the model has
     -- behaviors we expect.
@@ -228,141 +294,73 @@ let
         out_msg <> no_message
     );
 
-    -- This property is gratuitous
+
     check "P2.
-      Mission Command messages reference prior Automation Response messages.\n  "
+      Reestablish Waypoint Manager R1.\n  "
     (
         out_msg.kind = mission_command and
-        out_msg.ref  = wm_automation_response_msg.id
+        out_msg      = wm_future_out_msg
     ) => (
-        O(in_msg = wm_automation_response_msg)
+        O(in_msg.kind = automation_response and
+          in_msg.id   = wm_future_out_msg.ref and
+          contains(in_msg.route, wm_future_out_msg.waypoint))
     );
 
     check "P2.A. Witness antecedent of P2."
     not (
         out_msg.kind = mission_command and
-        out_msg.ref  = wm_automation_response_msg.id
+        out_msg      = wm_future_out_msg
     );
 
-    check "P2.Guard.
-      We have previously seen any automation_response when we see a
-      mission_command.\n  "
-    (
-        out_msg.kind = mission_command
-    ) => (
-        O(out_msg.kind = automation_response)
-    );
-
-    -- This property is gratuitous
     check "P3.
-      Automation Response messages reference prior Unique Automation Response
-      messages.\n  "
+      Reestablish Automation Request Validator R1.\n  "
     (
         out_msg.kind = automation_response and
-        out_msg.ref  = arv_unique_automation_response_msg.id
+        out_msg      = arv_future_out_msg
     ) => (
-        O(in_msg = arv_unique_automation_response_msg)
+        O(in_msg.kind  = unique_automation_response and
+          in_msg.id    = arv_future_out_msg.ref and
+          in_msg.route = arv_future_out_msg.route)
     );
 
     check "P3.A. Witness antecedent of P3."
     not (
         out_msg.kind = automation_response and
-        out_msg.ref  = arv_unique_automation_response_msg.id
-    );
-
-    check "P4.
-      Mission Command messages on input were previously output.\n  "
-    (
-        in_msg.kind = mission_command and
-        in_msg.id   = captured_out_msg.id
-    ) => (
-        O(out_msg = captured_out_msg)
-    );
-
-    check "P4.A. Witness antecedent of P4."
-    not (
-        in_msg.kind = mission_command and
-        in_msg.id   = captured_out_msg.id
-    );
-
-    check "P5.
-      Automation Response messages on input were previously output.\n  "
-    (
-        in_msg.kind = automation_response and
-        in_msg.id   = captured_out_msg.id
-    ) => (
-        O(out_msg = captured_out_msg)
-    );
-
-    check "P5.A. Witness antecedent of P5."
-    not (
-        in_msg.kind = automation_response and
-        in_msg.id   = captured_out_msg.id
-    );
-
-    check "L1.
-      See if this works.\n  "
-    (
-        O(in_msg = wm_automation_response_msg) and
-        wm_automation_response_msg.kind = automation_response and
-        wm_automation_response_msg.ref = arv_unique_automation_response_msg.id
-    ) => (
-        O(in_msg = arv_unique_automation_response_msg)
-    );
-
-    check "L1.A. Witness antecedent of L1."
-    not (
-        O(in_msg = wm_automation_response_msg) and
-        wm_automation_response_msg.kind = automation_response and
-        wm_automation_response_msg.ref = arv_unique_automation_response_msg.id
+        out_msg      = arv_future_out_msg
     );
 
 
     -- ===================================================================== --
     -- Compositional Properties of Interest
 
-    check "C1.
-      Mission Command messages reference, transitively, prior Unique Automation
-      Response messages.\n  "
-    (
-        out_msg.kind = mission_command and
-        out_msg.ref  = wm_automation_response_msg.id and
-
-        wm_automation_response_msg.ref = arv_unique_automation_response_msg.id
-    ) => (
-        O(in_msg = wm_automation_response_msg) and
-        O(in_msg = arv_unique_automation_response_msg)
-    );
-
-    check "C1.A. Witness antecedent of C1."
-    not (
-        out_msg.kind = mission_command and
-        out_msg.ref  = wm_automation_response_msg.id and
-        wm_automation_response_msg.id = arv_unique_automation_response_msg.id
-    );
-
-    -- This is the first step towards a composition proof of waypoint on first
-    -- statement of route. It fails because we cannot see the lemma about
-    -- pre_route from the Waypoint Manager (P5) at this scope. This needs
-    -- thought.
-    -- check "route 1.\n  "
+    -- check "C1.
+    --   Mission Command messages reference, transitively, prior Unique Automation
+    --   Response messages.\n  "
     -- (
-    --     out_msg.kind  = mission_command and
-    --     out_msg.ref   = wm_automation_response_msg.id
+    --     out_msg.kind = mission_command and
+    --     out_msg      = wm_future_out_msg and
+
+    --     -- assume that the free constant wm_future_out_msg references the id
+    --     -- of the free constant arv_future_out_msg. This is necessary for the
+    --     -- transitive nature of the property.
+    --     arv_future_out_msg.id = wm_future_out_msg.ref and
+
+    --     -- assume that the free constant arv_future_out_msg is equal to a prior
+    --     -- output. This is like saying `out_msg = wm_future_out_msg` above, but
+    --     -- the equality isn't tied to the current time step. Again, necessary
+    --     -- for the transitive nature of the property.
+    --     O(out_msg = arv_future_out_msg)
     -- ) => (
-    --     contains(wm_automation_response_msg.route, out_msg.waypoint)
+    --     O(in_msg.kind = unique_automation_response and
+    --       in_msg.id   = arv_future_out_msg.ref)
     -- );
 
 
-    -- check "C2.
-    --   Mission Command message waypoints are contained, transitively, in
-    --   referenced Unique Automation Response messages.\n  "
-    -- (
-    --     out_msg.kind  = mission_command and
-    --     out_msg.ref   = wm_automation_response_msg.id and
-
-    --     wm_automation_response_msg.id = arv_unique_automation_response_msg.id
-    -- ) => (
-    --     contains(arv_unique_automation_response_msg.route, out_msg.waypoint)
+    -- check "C1.A. Witness antecedent of C1."
+    -- not (
+    --     out_msg.kind = mission_command and
+    --     out_msg      = wm_future_out_msg and
+    --     arv_future_out_msg.id = wm_future_out_msg.ref and
+    --     O(out_msg = arv_future_out_msg)
     -- );
 tel;

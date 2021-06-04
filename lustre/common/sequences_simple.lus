@@ -1,0 +1,582 @@
+-- sequences.lus
+--
+-- A partial theory of sequences realized in kind2's lustre. Consistency
+-- properties are proved for the theory.
+--
+-- Functions prefixed with `_` should be considered private to the theory and
+-- should not be used by clients.
+--
+-- The theory provides:
+--      [TODO]
+
+
+-- ------------------------------------------------------------------------- --
+-- Element Type
+
+-- Represent an element by an integer. This should be viewed as a reference to
+-- the actual element.
+type element_type  = int;
+
+
+-- Declare -1 to be an invalid element.
+const no_element : element_type = -1;
+
+
+-- ------------------------------------------------------------------------- --
+-- Index Type
+
+-- Represent an index. Valid indices are >= 0.
+type index_type    = int;
+
+
+-- Declare -1 to be an invalid index.
+const no_index : index_type = -1;
+
+
+-- ------------------------------------------------------------------------- --
+-- Sequence Type
+
+-- Represent a sequence by its first and last indices.
+type sequence_type = struct {
+    first_index : index_type;
+    last_index  : index_type;
+};
+
+
+-- Define an empty sequence to have no_index for both first and last indices.
+const empty_sequence : sequence_type = sequence_type {
+    first_index = no_index;
+    last_index  = no_index;
+};
+
+
+-- A predicate that defines a (valid) nonempty sequence to have positive
+-- indices such that first <= last.
+function nonempty_sequence(sequence : sequence_type) returns (r : bool);
+let
+    r = 0 <= sequence.first_index and
+             sequence.first_index <= sequence.last_index;
+tel;
+
+
+-- A predicate that defines a valid sequence to be empty or to have valid
+-- indices.
+function valid_sequence(sequence : sequence_type) returns (r : bool);
+let
+    r = sequence = empty_sequence or
+        nonempty_sequence(sequence);
+tel;
+
+
+-- A predicate that defines an index to be valid for a given sequence if it is
+-- in [first_index, last_index].
+function valid_index(sequence : sequence_type; index : index_type) returns (r : bool);
+let
+    r = sequence.first_index <= index and index <= sequence.last_index;
+tel;
+
+
+-- ------------------------------------------------------------------------- --
+-- get operation
+
+-- Get the element from the sequence at the given index. If the index is valid
+-- for the sequence, we are guaranteed to get an element that we can then
+-- successfully find using any_index_of. (This is proven, below.)
+function get(sequence : sequence_type; index : index_type) returns (element : element_type);
+let
+    element = if nonempty_sequence(sequence) and
+                 valid_index(sequence, index)
+              then
+                  index
+              else
+                  no_element;
+tel;
+
+
+-- ------------------------------------------------------------------------- --
+-- first_index_of operation
+
+-- Return the first index of the given element in the given sequence.
+--
+-- If the index is not no index, then get(sequence, index) returns the element
+-- sought. (This is proven, below.)
+--
+-- If the index is not no index, there is no other occurrence of the element
+-- at a smaller, valid index in the sequence. (This is proven, below.)
+function first_index_of(sequence : sequence_type; element : element_type) returns (index : index_type);
+let
+    index = if element <> no_element and
+               nonempty_sequence(sequence) and
+               valid_index(sequence, element)
+            then
+                element
+            else
+                no_index;
+tel;
+
+
+-- ------------------------------------------------------------------------- --
+-- last_index_of operation
+
+-- Return the last index of the given element in the given sequence.
+--
+-- If the index is not no index, then get(sequence, index) returns the element
+-- sought. (This is proven, below.)
+--
+-- If the index is not no index, there is no other occurrence of the element
+-- at a larger, valid index in the sequence. (This is proven, below.)
+function last_index_of(sequence : sequence_type; element : element_type) returns (index : index_type);
+let
+    index = if element <> no_element and
+               nonempty_sequence(sequence) and
+               valid_index(sequence, element)
+            then
+                element
+            else
+                no_index;
+tel;
+
+
+-- ------------------------------------------------------------------------- --
+-- predicates
+
+-- True if the sequence contains the given element.
+function contains(sequence : sequence_type; element : element_type) returns (r : bool);
+let
+    r = (first_index_of(sequence, element) <> no_index and
+         last_index_of(sequence, element) <> no_index);
+tel;
+
+
+-- True if the given element is the first element in the sequence.
+function is_first(sequence : sequence_type; element : element_type) returns (r : bool);
+let
+    r = (first_index_of(sequence, element) = sequence.first_index);
+tel;
+
+
+-- True if the given element is the last element in the sequence.
+function is_last(sequence : sequence_type; element : element_type) returns (r : bool);
+let
+    r = (first_index_of(sequence, element) = sequence.last_index);
+tel;
+
+
+-- True if the element appears exactly once in the sequence.
+function is_unique(sequence : sequence_type; element : element_type) returns (r : bool);
+let
+    r = (first_index_of(sequence, element) = last_index_of(sequence, element)) and
+        (first_index_of(sequence, element) <> no_index);
+tel;
+
+
+-- True if the first occurrence of element1 is prior to the first occurrence of
+-- element2 in the sequence.
+function before(sequence : sequence_type; element1, element2 : element_type) returns (r : bool);
+var
+    index1, index2 : index_type;
+let
+    index1 = first_index_of(sequence, element1);
+    index2 = first_index_of(sequence, element2);
+
+    r = if index1 <> no_index and index2 <> no_index and element1 <> element2 then
+            index1 < index2
+        else
+            false;
+tel;
+
+
+-- True if the last occurrence of element1 is prior to the last occurrence of
+-- element2 in the sequence.
+function after(sequence : sequence_type; element1, element2 : element_type) returns (r : bool);
+var
+    index1, index2 : index_type;
+let
+    index1 = last_index_of(sequence, element1);
+    index2 = last_index_of(sequence, element2);
+
+    r = if index1 <> no_index and index2 <> no_index and element1 <> element2 then
+            index1 > index2
+        else
+            false;
+tel;
+
+
+-- ------------------------------------------------------------------------- --
+-- Proofs
+--
+-- We prove properties over our theory of sequences to ensure the internal
+-- consistency of the theory.
+
+-- Driver for verification of consistency properties
+--
+-- Inputs are skolemized universally quantified variables. For some properties,
+-- we use the _free_<type> functions to get an existentially quantified
+-- instance - but since those are *functions*, we can only use them once per
+-- property to get a distinct instance.
+node consistency_checks_for_sequences(
+    sequence       : sequence_type;
+    search_index   : index_type;
+    search_element : element_type
+) returns (
+    r : bool
+);
+const
+    free_element : element_type;
+    free_length  : int;
+let
+    assert(free_length > 0);
+
+    -- --------------------------------------------------------------------- --
+    -- Guarantees
+    --
+    -- These are assertions in the model with uninterpreted functions.
+
+    check "get G1.\n  "
+    (
+        if nonempty_sequence(sequence) and
+           valid_index(sequence, search_index)
+        then
+            get(sequence, search_index) <> no_element and
+
+            (first_index_of(sequence, get(sequence, search_index)) = search_index or
+             last_index_of(sequence, get(sequence, search_index)) = search_index)
+        else
+            get(sequence, search_index) = no_element
+    );
+
+
+    check "first_index_of G1.\n  "
+    (
+        if first_index_of(sequence, search_element) <> no_index then
+            nonempty_sequence(sequence) and
+            valid_index(sequence, first_index_of(sequence, search_element)) and
+            get(sequence, first_index_of(sequence, search_element)) = search_element and
+            last_index_of(sequence, search_element) >= first_index_of(sequence, search_element)
+        else
+            last_index_of(sequence, search_element) = no_index
+    );
+
+
+    check "last_index_of G1.\n  "
+    (
+        if last_index_of(sequence, search_element) <> no_index then
+            nonempty_sequence(sequence) and
+            valid_index(sequence, last_index_of(sequence, search_element)) and
+            get(sequence, last_index_of(sequence, search_element)) = search_element and
+            first_index_of(sequence, search_element) <= last_index_of(sequence, search_element)
+        else
+            first_index_of(sequence, search_element) = no_index
+    );
+
+    -- --------------------------------------------------------------------- --
+    -- Structural checks
+
+    check "structure P1. sequence of length 1 has same element at first and last index\n  "
+    (
+        nonempty_sequence(sequence) and
+        sequence.first_index = sequence.last_index
+    ) => (
+        get(sequence, sequence.first_index) =
+        get(sequence, sequence.last_index)
+    );
+
+    check "structure P1.A. witness P1 antecedent"
+    not (
+        nonempty_sequence(sequence) and
+        sequence.first_index = sequence.last_index
+    );
+
+    check "structure P2. find_first implies find_last\n  "
+    (
+        first_index_of(sequence, search_element) <> no_index
+    ) => (
+        last_index_of(sequence, search_element) <> no_index
+    );
+
+    check "structure P2.A. witness P2 antecedent"
+    not (
+        first_index_of(sequence, search_element) <> no_index
+    );
+
+    check "structure P3. find_last implies find_first\n  "
+    (
+        last_index_of(sequence, search_element) <> no_index
+    ) => (
+        first_index_of(sequence, search_element) <> no_index
+    );
+
+    check "structure P3.A. witness P3 antecedent"
+    not (
+        last_index_of(sequence, search_element) <> no_index
+    );
+
+    check "structure P4. find_last >= find_first\n  "
+    (
+        first_index_of(sequence, search_element) = search_index and
+        search_index <> no_index
+    ) => (
+        last_index_of(sequence, search_element) >= search_index
+    );
+
+    check "structure P4.A. witness P4 antecedent"
+    not (
+        first_index_of(sequence, search_element) = search_index and
+        search_index <> no_index
+    );
+
+    check "structure P5. find_first <= find_last\n  "
+    (
+        last_index_of(sequence, search_element) = search_index and
+        search_index <> no_index
+    ) => (
+        first_index_of(sequence, search_element) <= search_index
+    );
+
+    check "structure P5.A. witness P5 antecedent"
+    not (
+        last_index_of(sequence, search_element) = search_index and
+        search_index <> no_index
+    );
+
+
+    -- --------------------------------------------------------------------- --
+    -- Consistency checks for get
+    --
+    -- Also tests the contains predicate
+
+    check "get P1. successful get implies containment\n  "
+    (
+        nonempty_sequence(sequence) and
+        valid_index(sequence, search_index)
+    ) => (
+        contains(sequence, get(sequence, search_index))
+    );
+
+    check "get P1.A. witness P1 antecedent"
+    not (
+        nonempty_sequence(sequence) and
+        valid_index(sequence, search_index)
+    );
+
+    check "get P2. unsuccessful get implies no containment\n  "
+    (
+        nonempty_sequence(sequence) and
+        get(sequence, search_index) = no_element
+    ) => (
+        not contains(sequence, get(sequence, search_index))
+    );
+
+    check "get P2.A. witness P2 antecedent"
+    not (
+        nonempty_sequence(sequence) and
+        get(sequence, search_index) = no_element
+    );
+
+
+    -- --------------------------------------------------------------------- --
+    -- Consistency checks for first_index_of
+
+    check "first_index_of P1. successful first_index_of implies get will return search element\n  "
+    (
+        nonempty_sequence(sequence) and
+        first_index_of(sequence, search_element) <> no_index
+    ) => (
+        get(sequence, first_index_of(sequence, search_element)) = search_element
+    );
+
+    check "first_index_of P1.A. witness P1 antecedent"
+    not (
+        nonempty_sequence(sequence) and
+        first_index_of(sequence, search_element) <> no_index
+    );
+
+    check "first_index_of P2. unsuccessful first_index_of implies get will not return search element\n  "
+    (
+        nonempty_sequence(sequence) and
+        first_index_of(sequence, search_element) = no_index and
+        search_element <> no_element
+    ) => (
+        get(sequence, first_index_of(sequence, search_element)) <> search_element
+    );
+
+    check "first_index_of P2.A. witness P2 antecedent"
+    not (
+        nonempty_sequence(sequence) and
+        first_index_of(sequence, search_element) = no_index and
+        search_element <> no_element
+    );
+
+    check "first_index_of P3. unsuccessful first_index_of implies get will return no element\n  "
+    (
+        nonempty_sequence(sequence) and
+        first_index_of(sequence, search_element) = no_index
+    ) => (
+        get(sequence, first_index_of(sequence, search_element)) = no_element
+    );
+
+    check "first_index_of P3.A. witness P3 antecedent"
+    not (
+        nonempty_sequence(sequence) and
+        first_index_of(sequence, search_element) = no_index
+    );
+
+
+    -- --------------------------------------------------------------------- --
+    -- Consistency checks for last_index_of
+
+    check "last_index_of P1. successful last_index_of implies get will return search element\n  "
+    (
+        nonempty_sequence(sequence) and
+        last_index_of(sequence, search_element) <> no_index
+    ) => (
+        get(sequence, last_index_of(sequence, search_element)) = search_element
+    );
+
+    check "last_index_of P1.A. witness P1 antecedent"
+    not (
+        nonempty_sequence(sequence) and
+        last_index_of(sequence, search_element) <> no_index
+    );
+
+    check "last_index_of P2. unsuccessful last_index_of implies get will not return search element\n  "
+    (
+        nonempty_sequence(sequence) and
+        last_index_of(sequence, search_element) = no_index and
+        search_element <> no_element
+    ) => (
+        get(sequence, last_index_of(sequence, search_element)) <> search_element
+    );
+
+    check "last_index_of P2.A. witness P2 antecedent"
+    not (
+        nonempty_sequence(sequence) and
+        last_index_of(sequence, search_element) = no_index and
+        search_element <> no_element
+    );
+
+    check "last_index_of P3. unsuccessful last_index_of implies get will return no element\n  "
+    (
+        nonempty_sequence(sequence) and
+        last_index_of(sequence, search_element) = no_index
+    ) => (
+        get(sequence, last_index_of(sequence, search_element)) = no_element
+    );
+
+    check "last_index_of P3.A. witness P3 antecedent"
+    not (
+        nonempty_sequence(sequence) and
+        last_index_of(sequence, search_element) = no_index
+    );
+
+
+    -- --------------------------------------------------------------------- --
+    -- Consistency checks for predicates
+
+    check "is_first P1. is_first implies not before\n  "
+    (
+        nonempty_sequence(sequence) and
+        free_element <> search_element and
+        is_first(sequence, search_element)
+    ) => (
+        not before(sequence, free_element, search_element)
+    );
+
+    check "is_first P1.A. witness P1 antecedent"
+    not (
+        nonempty_sequence(sequence) and
+        free_element <> search_element and
+        is_first(sequence, search_element)
+    );
+
+    check "is_last P1. is_last implies not after\n  "
+    (
+        nonempty_sequence(sequence) and
+        free_element <> search_element and
+        is_last(sequence, search_element)
+    ) => (
+        not after(sequence, free_element, search_element)
+    );
+
+    check "is_last P1.A. witness P1 antecedent"
+    not (
+        nonempty_sequence(sequence) and
+        free_element <> search_element and
+        is_last(sequence, search_element)
+    );
+
+    check "is_unique P1. is_unique implies first_index_of = last_index_of\n  "
+    (
+        nonempty_sequence(sequence) and
+        is_unique(sequence, search_element)
+    ) => (
+        first_index_of(sequence, search_element) = last_index_of(sequence, search_element)
+    );
+
+    check "is_unique P1.A. witness P1 antecedent"
+    not (
+        nonempty_sequence(sequence) and
+        is_unique(sequence, search_element)
+    );
+
+    -- Note: this doesn't prove because we currently have no constraint that
+    --       first_index_of(get(index)) is guaranteed to return index even
+    --       if is_unique(get(index)). This seems like it would be a bit of a
+    --       tricky property to add, and of currently marginal value.
+    --
+    --       It's important to note also that first_index_of(get(index))
+    --       *will not necessarily* return index if not is_unique(get(index)).
+    -- check "before works"
+    --     (
+    --         nonempty_sequence(sequence) and
+    --         valid_index(sequence, search_index) and
+    --         valid_index(sequence, search_index + 1) and
+    --         is_unique(sequence, get(sequence, search_index)) and
+    --         is_unique(sequence, get(sequence, search_index + 1))
+    --     ) => (
+    --         before(sequence, get(sequence, search_index), get(sequence, search_index + 1))
+    --     );
+
+
+    -- --------------------------------------------------------------------- --
+    -- Witnesses - these are interesting to enable, as they build confidence
+    -- in the formalism
+
+    check "witness 1: can generate a sequence with identical first and last indices"
+    (
+        nonempty_sequence(sequence)
+    ) => not (
+        sequence.first_index = sequence.last_index
+    );
+
+    check "witness 2: can generate a sequence with different first and last indices"
+    (
+        nonempty_sequence(sequence)
+    ) => not (
+        sequence.first_index <> sequence.last_index
+    );
+
+    check "witness 3: can generate a sequence of length n"
+    not (
+        nonempty_sequence(sequence) and
+        sequence.last_index - sequence.first_index = free_length
+    );
+
+    check "witness 4: sequence of length n can have different elements at first and last"
+    (
+        nonempty_sequence(sequence) and
+        sequence.last_index - sequence.first_index = free_length
+    ) => not (
+        get(sequence, sequence.first_index) <>
+        get(sequence, sequence.last_index)
+    );
+
+    check "witness 5: sequence of length n can have the same elements at first and last"
+    (
+        nonempty_sequence(sequence) and
+        sequence.last_index - sequence.first_index = free_length
+    ) => not (
+        get(sequence, sequence.first_index) =
+        get(sequence, sequence.last_index)
+    );
+tel;

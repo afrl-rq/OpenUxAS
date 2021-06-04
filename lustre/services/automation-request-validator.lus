@@ -72,8 +72,8 @@ var
 
     -- ===================================================================== --
     -- Convenience variables
-    pre_route           : route_type;
-    pre_route_msg_id    : id_type;
+    -- pre_route           : route_type;
+    -- pre_route_msg_id    : id_type;
 
 let
     -- ===================================================================== --
@@ -82,8 +82,8 @@ let
     -- Compute prior values of relevant state variables.
     --
     -- We group these here for convenience in setting their initial conditions.
-    pre_route           = no_route -> pre(route);
-    pre_route_msg_id    = no_id    -> pre(route_msg_id);
+    -- pre_route           = no_route -> pre(route);
+    -- pre_route_msg_id    = no_id    -> pre(route_msg_id);
 
 
     -- ===================================================================== --
@@ -96,12 +96,12 @@ let
 
     -- "If there is a stored route, the service shall send the stored route in
     --  an Automation Response message."
-    out_msg =   if pre_route <> no_route then
+    out_msg =   if (no_route -> pre(route)) <> no_route then
                     message {
                         kind     = automation_response;
                         id       = in_id + 1;
-                        ref      = pre_route_msg_id;
-                        route    = pre_route;
+                        ref      = no_id -> pre(route_msg_id);
+                        route    = no_route -> pre(route);
                         waypoint = no_waypoint;
                     }
                 else
@@ -122,7 +122,7 @@ let
     route_msg_id =  if in_msg.kind = unique_automation_response then
                         in_msg.id
                     else
-                        pre_route_msg_id;
+                        no_id;
 
 
     -- ===================================================================== --
