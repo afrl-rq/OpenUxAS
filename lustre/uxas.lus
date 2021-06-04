@@ -209,27 +209,50 @@ let
     -- ===================================================================== --
     -- Compositional Properties of Interest
 
-    -- check "C1.
-    --   Mission Command messages reference, transitively, prior Unique Automation
-    --   Response messages.\n  "
-    -- (
-    --     out_msg.kind = mission_command and
-    --     out_msg      = wm_future_out_msg and
+    check "C1.
+      Mission Command messages reference, transitively, prior Unique Automation
+      Response messages.\n  "
+    (
+        out_msg.kind = mission_command and
+        out_msg      = wm_future_out_msg and
 
-    --     -- assume that the free constant wm_future_out_msg references the id
-    --     -- of the free constant arv_future_out_msg. This is necessary for the
-    --     -- transitive nature of the property.
-    --     arv_future_out_msg.id = wm_future_out_msg.ref and
+        -- assume that the free constant wm_future_out_msg references the id
+        -- of the free constant arv_future_out_msg. This is necessary for the
+        -- transitive nature of the property.
+        arv_future_out_msg.id = wm_future_out_msg.ref and
 
-    --     -- assume that the free constant arv_future_out_msg is equal to a prior
-    --     -- output. This is like saying `out_msg = wm_future_out_msg` above, but
-    --     -- the equality isn't tied to the current time step. Again, necessary
-    --     -- for the transitive nature of the property.
-    --     O(out_msg = arv_future_out_msg)
-    -- ) => (
-    --     O(in_msg.kind = unique_automation_response and
-    --       in_msg.id   = arv_future_out_msg.ref)
-    -- );
+        -- assume that the free constant arv_future_out_msg is equal to a prior
+        -- output. This is like saying `out_msg = wm_future_out_msg` above, but
+        -- the equality isn't tied to the current time step. Again, necessary
+        -- for the transitive nature of the property.
+        O(out_msg = arv_future_out_msg)
+    ) => (
+        O(in_msg.kind = unique_automation_response and
+          in_msg.id   = arv_future_out_msg.ref)
+    );
+
+    check "C2.
+      Mission Command message waypoints are contained, transitively, on prior
+      received Unique Automation Response messages.\n  "
+    (
+        out_msg.kind = mission_command and
+        out_msg      = wm_future_out_msg and
+
+        -- assume that the free constant wm_future_out_msg references the id
+        -- of the free constant arv_future_out_msg. This is necessary for the
+        -- transitive nature of the property.
+        arv_future_out_msg.id = wm_future_out_msg.ref and
+
+        -- assume that the free constant arv_future_out_msg is equal to a prior
+        -- output. This is like saying `out_msg = wm_future_out_msg` above, but
+        -- the equality isn't tied to the current time step. Again, necessary
+        -- for the transitive nature of the property.
+        O(out_msg = arv_future_out_msg)
+    ) => (
+        O(in_msg.kind = unique_automation_response and
+          in_msg.id   = arv_future_out_msg.ref and
+          contains(in_msg.route, wm_future_out_msg.waypoint))
+    );
 
 
     -- ===================================================================== --
@@ -348,11 +371,11 @@ let
         out_msg      = arv_future_out_msg
     );
 
-    -- check "C1.A. Witness antecedent of C1."
-    -- not (
-    --     out_msg.kind = mission_command and
-    --     out_msg      = wm_future_out_msg and
-    --     arv_future_out_msg.id = wm_future_out_msg.ref and
-    --     O(out_msg = arv_future_out_msg)
-    -- );
+    check "C1.A. Witness antecedent of C1 and C2"
+    not (
+        out_msg.kind = mission_command and
+        out_msg      = wm_future_out_msg and
+        arv_future_out_msg.id = wm_future_out_msg.ref and
+        O(out_msg = arv_future_out_msg)
+    );
 tel;
