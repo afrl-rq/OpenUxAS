@@ -69,30 +69,13 @@ var
 
     -- The ID of the message that provided the route above
     route_msg_id : id_type;
-
-    -- ===================================================================== --
-    -- Convenience variables
-    -- pre_route           : route_type;
-    -- pre_route_msg_id    : id_type;
-
 let
-    -- ===================================================================== --
-    -- Bookkeeping
-
-    -- Compute prior values of relevant state variables.
-    --
-    -- We group these here for convenience in setting their initial conditions.
-    -- pre_route           = no_route -> pre(route);
-    -- pre_route_msg_id    = no_id    -> pre(route_msg_id);
-
-
     -- ===================================================================== --
     -- Service Behavior
 
     -- These expressions serve as high-level specifications of service
     -- behavior. Each is preceded by a natural-language description of the
     -- specification, set off in quotes for clarity.
-
 
     -- "If there is a stored route, the service shall send the stored route in
     --  an Automation Response message."
@@ -137,10 +120,6 @@ let
         out_msg.id = in_id + 1
     );
 
-    check "P1.A. Witness antecedent of P1."
-    not (
-        out_msg <> no_message
-    );
 
     -- ===================================================================== --
     -- Service Requirements
@@ -157,6 +136,19 @@ let
         O(in_msg.kind  = unique_automation_response and
           in_msg.id    = arv_future_out_msg.ref and
           in_msg.route = arv_future_out_msg.route)
+    );
+
+
+    -- ===================================================================== --
+    -- Antecedent Witnesses
+    --
+    -- These are grouped, rather than placed with their properties, so that
+    -- they can easily be enabled / disabled: they tend to pollute the output
+    -- when expected-true properties are falsified.
+
+    check "P1.A. Witness antecedent of P1."
+    not (
+        out_msg <> no_message
     );
 
     check "R1.A. Witness antecedent of R1."

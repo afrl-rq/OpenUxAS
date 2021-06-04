@@ -18,6 +18,7 @@ let
     waypoint = get(route, index);
 tel;
 
+
 -- This constant represents a skolemized universally quantified variable
 -- that we use to link details of a message appearing in the past with details
 -- of our output message.
@@ -166,22 +167,11 @@ let
         out_msg.route = (no_route -> pre(route))
     );
 
-    check "L1.A. Witness antecedent of L1."
-    not (
-        out_msg.kind = mission_command
-    );
-
-
     check "L2.\n  "
     (
         out_msg.kind = mission_command
     ) => (
         contains(out_msg.route, out_msg.waypoint)
-    );
-
-    check "L2.A. Witness antecedent of L2."
-    not (
-        out_msg.kind = mission_command
     );
 
 
@@ -193,11 +183,6 @@ let
         out_msg.kind = mission_command
     ) => (
         out_msg.waypoint <> no_waypoint
-    );
-
-    check "P1.A. Witness antecedent of P1."
-    not (
-        out_msg.kind = mission_command
     );
 
 
@@ -219,11 +204,6 @@ let
         out_msg.id = in_id + 1
     );
 
-    check "P3.A. Witness antecedent of P3."
-    not (
-        out_msg.kind = mission_command
-    );
-
 
     -- This property, which is interesting in its own right, functions as a
     -- lemma for proving our requirement.
@@ -236,12 +216,6 @@ let
     ) => (
         O(in_msg.kind = automation_response and
           in_msg.id   = wm_future_out_msg.ref)
-    );
-
-    check "P4.A. Witness antecedent of P4."
-    not (
-        out_msg.kind = mission_command and
-        out_msg      = wm_future_out_msg
     );
 
 
@@ -262,6 +236,42 @@ let
           in_msg.id   = wm_future_out_msg.ref and
           contains(in_msg.route, wm_future_out_msg.waypoint))
     );
+
+
+    -- ===================================================================== --
+    -- Antecedent Witnesses
+    --
+    -- These are grouped, rather than placed with their properties, so that
+    -- they can easily be enabled / disabled: they tend to pollute the output
+    -- when expected-true properties are falsified.
+
+    check "L1.A. Witness antecedent of L1."
+    not (
+        out_msg.kind = mission_command
+    );
+
+    check "L2.A. Witness antecedent of L2."
+    not (
+        out_msg.kind = mission_command
+    );
+
+
+    check "P1.A. Witness antecedent of P1."
+    not (
+        out_msg.kind = mission_command
+    );
+
+    check "P3.A. Witness antecedent of P3."
+    not (
+        out_msg.kind = mission_command
+    );
+
+    check "P4.A. Witness antecedent of P4."
+    not (
+        out_msg.kind = mission_command and
+        out_msg      = wm_future_out_msg
+    );
+
 
     check "R1.A. Witness antecedent of R1."
     not (

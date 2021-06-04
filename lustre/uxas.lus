@@ -10,13 +10,6 @@ include "services/automation-request-validator.lus"
 include "services/waypoint-manager.lus"
 
 
-node witness_p3_strong(in_msg, out_msg : message) returns (r : bool)
-let
-    r = (in_msg.id   = out_msg.ref and
-         in_msg.kind = unique_automation_response);
-tel;
-
-
 --
 -- The OpenUxAS Framework
 --
@@ -71,190 +64,6 @@ let
 
 
     -- ===================================================================== --
-    -- Environment Consistency Checks
-
-    -- These aren't required for proof, but help with troubleshooting
-    -- failing properties (by making cleaner inductive counterexamples).
-
-    check "E1:
-      input IDs are non-decreasing.\n  "
-    (
-        in_id >= (0 -> pre(in_id))
-    );
-
-    check "E2:
-      input IDs are nonnegative.\n  "
-    (
-        in_id >= -1
-    );
-
-    check "E3:
-      in message IDs are increasing.\n  "
-    (
-        in_msg <> no_message
-    ) => (
-        in_msg.id > (-1 -> pre(in_msg.id))
-    );
-
-    check "E3.A. Witness antecedent of E3."
-    not (
-        in_msg <> no_message
-    );
-
-
-    check "E4:
-      in message IDs are nonnegative.\n  "
-    (
-        in_msg <> no_message
-    ) => (
-        in_msg.id >= 0
-    );
-
-    check "E4.A. Witness antecedent of E4."
-    not (
-        in_msg <> no_message
-    );
-
-
-    check "E5:
-      no_message has ID -1.\n  "
-    (
-        in_msg = no_message
-    ) => (
-        in_msg.id = -1
-    );
-
-    check "E5.A. Witness antecedent of E5."
-    not (
-        in_msg = no_message
-    );
-
-
-    check "E6:
-      equal IDs imply equal messages for input messages\n  "
-    (
-        O(in_msg = free_msg1) and
-        O(in_msg = free_msg2)
-    ) => (
-        ids_imply_equality(free_msg1, free_msg2)
-    );
-
-    check "E6.A. Witness antecedent of E6."
-    not (
-        O(in_msg = free_msg1) and
-        O(in_msg = free_msg2)
-    );
-
-
-    check "E7:
-      equal IDs imply equal messages for output messages\n  "
-    (
-        O(out_msg = free_msg1) and
-        O(out_msg = free_msg2)
-    ) => (
-        ids_imply_equality(free_msg1, free_msg2)
-    );
-
-    check "E7.A. Witness antecedent of E7."
-    not (
-        O(out_msg = free_msg1) and
-        O(out_msg = free_msg2)
-    );
-
-
-    check "E8:
-      equal IDs imply equal messages for input and output messages\n  "
-    (
-        O(in_msg  = free_msg1) and
-        O(out_msg = free_msg2)
-    ) => (
-        ids_imply_equality(free_msg1, free_msg2)
-    );
-
-    check "E8.A. Witness antecedent of E8."
-    not (
-        O(in_msg  = free_msg1) and
-        O(out_msg = free_msg2)
-    );
-
-
-    check "E9.
-      Input mission command messages were always previously output.\n  "
-    (
-        in_msg.kind = mission_command and
-        in_msg      = free_msg1
-    ) => (
-        O(out_msg = free_msg1)
-    );
-
-    check "E9.A. Witness antecedent of E9."
-    not (
-        in_msg.kind = mission_command and
-        in_msg      = free_msg1
-    );
-
-
-    check "E10.
-      Input automation response messages were always previously output.\n  "
-    (
-        in_msg.kind = automation_response and
-        in_msg      = free_msg1
-    ) => (
-        O(out_msg = free_msg1)
-    );
-
-    check "E10.A. Witness antecedent of E10."
-    not (
-        in_msg.kind = automation_response and
-        in_msg      = free_msg1
-    );
-
-    -- Environment witnesses - these build confidence that the model has
-    -- behaviors we expect.
-
-    check "W1. Witness no_message from the bus."
-    not (
-        in_msg = no_message
-    );
-
-    check "W2. Witness unique_automation_response from the bus."
-    not (
-        in_msg.kind = unique_automation_response
-    );
-
-    check "W3. Witness automation_response from the bus."
-    not (
-        in_msg.kind = automation_response
-    );
-
-    check "W4. Witness mission_command from the bus."
-    not (
-        in_msg.kind = mission_command
-    );
-
-
-    check "W5. Witness arv_msg <> no_message."
-    not (
-        arv_msg <> no_message
-    );
-
-    check "W6. Witness arv_msg = no_message."
-    not (
-        arv_msg = no_message
-    );
-
-    check "W7. Witness wm_msg"
-    not (
-        wm_msg <> no_message
-    );
-
-    check "W8. Witness wm_msg = no_message."
-    not (
-        wm_msg = no_message
-    );
-
-
-    -- ===================================================================== --
     -- Initial Conditions of Interest
 
     check "Bus IC.\n  "
@@ -279,6 +88,91 @@ let
 
 
     -- ===================================================================== --
+    -- Environment Consistency Checks
+
+    check "E1:
+      input IDs are non-decreasing.\n  "
+    (
+        in_id >= (0 -> pre(in_id))
+    );
+
+    check "E2:
+      input IDs are nonnegative.\n  "
+    (
+        in_id >= -1
+    );
+
+    check "E3:
+      in message IDs are increasing.\n  "
+    (
+        in_msg <> no_message
+    ) => (
+        in_msg.id > (-1 -> pre(in_msg.id))
+    );
+
+    check "E4:
+      in message IDs are nonnegative.\n  "
+    (
+        in_msg <> no_message
+    ) => (
+        in_msg.id >= 0
+    );
+
+    check "E5:
+      no_message has ID -1.\n  "
+    (
+        in_msg = no_message
+    ) => (
+        in_msg.id = -1
+    );
+
+    check "E6:
+      equal IDs imply equal messages for input messages\n  "
+    (
+        O(in_msg = free_msg1) and
+        O(in_msg = free_msg2)
+    ) => (
+        ids_imply_equality(free_msg1, free_msg2)
+    );
+
+    check "E7:
+      equal IDs imply equal messages for output messages\n  "
+    (
+        O(out_msg = free_msg1) and
+        O(out_msg = free_msg2)
+    ) => (
+        ids_imply_equality(free_msg1, free_msg2)
+    );
+
+    check "E8:
+      equal IDs imply equal messages for input and output messages\n  "
+    (
+        O(in_msg  = free_msg1) and
+        O(out_msg = free_msg2)
+    ) => (
+        ids_imply_equality(free_msg1, free_msg2)
+    );
+
+    check "E9.
+      Input mission command messages were always previously output.\n  "
+    (
+        in_msg.kind = mission_command and
+        in_msg      = free_msg1
+    ) => (
+        O(out_msg = free_msg1)
+    );
+
+    check "E10.
+      Input automation response messages were always previously output.\n  "
+    (
+        in_msg.kind = automation_response and
+        in_msg      = free_msg1
+    ) => (
+        O(out_msg = free_msg1)
+    );
+
+
+    -- ===================================================================== --
     -- Properties of Interest
 
     check "P1.
@@ -288,12 +182,6 @@ let
     ) => (
         out_msg.id = in_id + 1
     );
-
-    check "P1.A. Witness antecedent of P1."
-    not (
-        out_msg <> no_message
-    );
-
 
     check "P2.
       Reestablish Waypoint Manager R1.\n  "
@@ -306,12 +194,6 @@ let
           contains(in_msg.route, wm_future_out_msg.waypoint))
     );
 
-    check "P2.A. Witness antecedent of P2."
-    not (
-        out_msg.kind = mission_command and
-        out_msg      = wm_future_out_msg
-    );
-
     check "P3.
       Reestablish Automation Request Validator R1.\n  "
     (
@@ -321,12 +203,6 @@ let
         O(in_msg.kind  = unique_automation_response and
           in_msg.id    = arv_future_out_msg.ref and
           in_msg.route = arv_future_out_msg.route)
-    );
-
-    check "P3.A. Witness antecedent of P3."
-    not (
-        out_msg.kind = automation_response and
-        out_msg      = arv_future_out_msg
     );
 
 
@@ -355,6 +231,122 @@ let
     --       in_msg.id   = arv_future_out_msg.ref)
     -- );
 
+
+    -- ===================================================================== --
+    -- Environment witnesses
+    --
+    -- These build confidence that the model has behaviors we expect.
+
+    check "W1. Witness no_message from the bus."
+    not (
+        in_msg = no_message
+    );
+
+    check "W2. Witness unique_automation_response from the bus."
+    not (
+        in_msg.kind = unique_automation_response
+    );
+
+    check "W3. Witness automation_response from the bus."
+    not (
+        in_msg.kind = automation_response
+    );
+
+    check "W4. Witness mission_command from the bus."
+    not (
+        in_msg.kind = mission_command
+    );
+
+    check "W5. Witness arv_msg <> no_message."
+    not (
+        arv_msg <> no_message
+    );
+
+    check "W6. Witness arv_msg = no_message."
+    not (
+        arv_msg = no_message
+    );
+
+    check "W7. Witness wm_msg"
+    not (
+        wm_msg <> no_message
+    );
+
+    check "W8. Witness wm_msg = no_message."
+    not (
+        wm_msg = no_message
+    );
+
+
+    -- ===================================================================== --
+    -- Antecedent Witnesses
+    --
+    -- These are grouped, rather than placed with their properties, so that
+    -- they can easily be enabled / disabled: they tend to pollute the output
+    -- when expected-true properties are falsified.
+
+    check "E3.A. Witness antecedent of E3."
+    not (
+        in_msg <> no_message
+    );
+
+    check "E4.A. Witness antecedent of E4."
+    not (
+        in_msg <> no_message
+    );
+
+    check "E5.A. Witness antecedent of E5."
+    not (
+        in_msg = no_message
+    );
+
+    check "E6.A. Witness antecedent of E6."
+    not (
+        O(in_msg = free_msg1) and
+        O(in_msg = free_msg2)
+    );
+
+    check "E7.A. Witness antecedent of E7."
+    not (
+        O(out_msg = free_msg1) and
+        O(out_msg = free_msg2)
+    );
+
+    check "E8.A. Witness antecedent of E8."
+    not (
+        O(in_msg  = free_msg1) and
+        O(out_msg = free_msg2)
+    );
+
+    check "E9.A. Witness antecedent of E9."
+    not (
+        in_msg.kind = mission_command and
+        in_msg      = free_msg1
+    );
+
+    check "E10.A. Witness antecedent of E10."
+    not (
+        in_msg.kind = automation_response and
+        in_msg      = free_msg1
+    );
+
+
+    check "P1.A. Witness antecedent of P1."
+    not (
+        out_msg <> no_message
+    );
+
+    check "P2.A. Witness antecedent of P2."
+    not (
+        out_msg.kind = mission_command and
+        out_msg      = wm_future_out_msg
+    );
+
+    check "P3.A. Witness antecedent of P3."
+    not (
+        out_msg.kind = automation_response and
+        out_msg      = arv_future_out_msg
+    );
 
     -- check "C1.A. Witness antecedent of C1."
     -- not (
