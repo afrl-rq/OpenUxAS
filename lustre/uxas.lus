@@ -371,7 +371,7 @@ let
         out_msg      = arv_future_out_msg
     );
 
-    check "C1.A. Witness antecedent of C1 and C2"
+    check "C1.A. Witness antecedent of C1."
     not (
         out_msg.kind = mission_command and
         out_msg      = wm_future_out_msg and

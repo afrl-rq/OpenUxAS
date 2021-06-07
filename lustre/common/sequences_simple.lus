@@ -1,13 +1,16 @@
--- sequences.lus
+-- sequences_simple.lus
 --
 -- A partial theory of sequences realized in kind2's lustre. Consistency
 -- properties are proved for the theory.
 --
--- Functions prefixed with `_` should be considered private to the theory and
--- should not be used by clients.
+-- This version of the theory eschews uninterpreted functions so that IC3 can
+-- still be used by theory clients. The sequence, rather than holding arbitrary
+-- values, holds values that equal the index. That is,
 --
--- The theory provides:
---      [TODO]
+--   get(s, i) = i if i is a valid index if sequence s
+--
+-- As a result, the witness that checks for repeated elements in a sequence of
+-- size > 1 fails: elements are, perforce, unique.
 
 
 -- ------------------------------------------------------------------------- --
@@ -518,24 +521,6 @@ let
         nonempty_sequence(sequence) and
         is_unique(sequence, search_element)
     );
-
-    -- Note: this doesn't prove because we currently have no constraint that
-    --       first_index_of(get(index)) is guaranteed to return index even
-    --       if is_unique(get(index)). This seems like it would be a bit of a
-    --       tricky property to add, and of currently marginal value.
-    --
-    --       It's important to note also that first_index_of(get(index))
-    --       *will not necessarily* return index if not is_unique(get(index)).
-    -- check "before works"
-    --     (
-    --         nonempty_sequence(sequence) and
-    --         valid_index(sequence, search_index) and
-    --         valid_index(sequence, search_index + 1) and
-    --         is_unique(sequence, get(sequence, search_index)) and
-    --         is_unique(sequence, get(sequence, search_index + 1))
-    --     ) => (
-    --         before(sequence, get(sequence, search_index), get(sequence, search_index + 1))
-    --     );
 
 
     -- --------------------------------------------------------------------- --
