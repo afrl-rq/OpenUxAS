@@ -65,7 +65,7 @@ Then, you can run `kind2` to reprove all properties on all nodes of the model, l
 
     OpenUxAS/lustre$ kind2 uxas.lus --modular true
 
-This will take multiple hours.
+This may take a long time (multiple hours).
 If you prefer to see output from the tool while it is working, you can add `-v` to the command, like this:
 
     OpenUxAS/lustre$ kind2 uxas.lus --modular true -v
@@ -136,14 +136,11 @@ The OpenUxAS model is described in the node `uxas`.
 The node takes no input and returns no output (there is a return value, `r`, that is required by Lustre syntax; it is unused).
 
 The `uxas` node relies on a bus abstraction for loop closure of messages.
-The bus takes the previous output message as its input and returns an input message, which may be empty.
-The bus also returns the ID of the last non-empty message; we use this ID for enforcing monotonicity and uniqueness of message IDs.
+The bus takes the previous message output from the services as its input and returns an input message, which may be empty.
 
-The `uxas` node then invokes both services.
-The model is currently configured so that only one of the two services may respond with a non-empty message; this is an opportunity for improvement: the bus could take in a vector of messages and select from the vector in a random order to sequence message outputs.
-This enhancement would certainly increase the complexity of the model; it may allow the model to exhibit more and more interesting behaviors.
+The `uxas` node memorizes the ID of the last non-empty message; we use this ID for enforcing monotonicity and uniqueness of message IDs.
 
-Once the services have executed, the non-empty message returned by the services, if any, becomes the output message to the bus for the next time step.
+The `uxas` node then invokes all services.
 
 The remainder of the `uxas` node expresses properties of interest.
 These are grouped by purpose:
@@ -189,8 +186,10 @@ The theory is documented and contains many properties and witnesses intended to 
 
 ### bus.lus ###
 
-The `bus` node is very simply defined.
-Because the `bus` node needs to be able to make a nondeterministic choice in its output, we describe the behavior using an assertion rather than explicitly defining the behavior useing equations.
+The `bus` node is used to down select the output from the services and to provide loop closure.
+In this model, the bus is only allowed to send a single message as output.
+We therefore introduce a constraint on the bus that says that only one service is allowed to send a nonempty message per step.
+Because the services are designed so that they do not have to send a nonempty message, even when they could send a nonempty message, this constraint does not preclude arbitrary interleavings of messages.
 
 ### pltl.lus ###
 
@@ -199,22 +198,29 @@ This implementation is adapted from https://github.com/lgwagner/pattern-observer
 
 ## Services ##
 
-Two services are implemented in the model and included in the `services` directory:
+Three services are implemented in the model and included in the `services` directory:
 
-  1. `automation-request-validator.lus`
-  2. `waypoint-manager.lus`
+  1. `plan-builder.lus`
+  2. `automation-request-validator.lus`
+  3. `waypoint-manager.lus`
 
-### automation_request_validator.lus ###
+### plan-builder.lus ###
+
+This simple service acts as a source for initiating events in the model.
+It nondeterministically sends either an empty message or a new Unique Automation Response message.
+
+### automation-request-validator.lus ###
 
 This simple service receives a Unique Automation Response message and sends an Automation Response message.
 Data and temporal relationships amongst the messages are stated as requirements and proved.
 A contact is provided for the service that is sufficient to allow successful contract-based proof of the properties in the `uxas` node.
 
-### waypoint_manager.lus ###
+### waypoint-manager.lus ###
 
 This service receives an Automation Response message and sends Mission Command messages containing the waypoints from the route in the Automation Response message, in order.
 Data and temporal relationships amongst the messages are stated as requirements and proved.
 A contact is provided for the service that is sufficient to allow successful contract-based proof of the properties in the `uxas` node.
+
 
 # Analysis #
 
@@ -224,7 +230,7 @@ You can use `kind2` to prove the properties at the top-level like this:
 
     OpenUxAS/lustre$ kind2 uxas.lus
 
-This will take multiple hours.
+This may take a long time (multiple hours).
 
 When complete, you should see that:
 
@@ -242,7 +248,7 @@ You can use `kind2` to prove the top-level node and all properties on all called
 
     OpenUxAS/lustre$ kind2 uxas.lus --modular true
 
-This will take multiple hours.
+This may take a long time (multiple hours).
 
 ## Contract-based Proof ##
 

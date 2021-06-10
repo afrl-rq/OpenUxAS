@@ -9,12 +9,50 @@ include "types.lus"
 --
 -- Note: not meant for implementation; only for environment modeling.
 node bus(
-    -- The message currently received by the system
-    in_msg : message;
+    -- message sent by the Plan Builder
+    pb_msg : message;
+
+    -- message sent by the Automation Request Validator
+    arv_msg : message;
+
+    -- message sent by the Waypoint Manager
+    wm_msg : message;
 ) returns (
-    -- The message currently sent by the system
+    -- The selected output message
     out_msg : message;
 );
 let
-    out_msg = in_msg;
+    -- Since the bus can only handle one message at a time, we need to prevent
+    -- more than one service from sending a message during the same step.
+    --
+    -- Because the services always have the option of sending no_message, this
+    -- constraint should nevertheless allow the model to exhibit all possible
+    -- interleavings of messages.
+    assert (
+        if pb_msg <> no_message then
+            arv_msg = no_message and
+            wm_msg  = no_message
+        else if arv_msg <> no_message then
+            pb_msg = no_message and
+            wm_msg = no_message
+        else if wm_msg <> no_message then
+            pb_msg  = no_message and
+            arv_msg = no_message
+        else
+            true
+    );
+
+    -- ===================================================================== --
+    -- Output Selection
+
+    -- Select the message for output; we know there will be only one, so order
+    -- doesn't matter. Conceptually, this is like a Simulink merge block.
+    out_msg   = if pb_msg <> no_message then
+                    pb_msg
+                else if arv_msg <> no_message then
+                    arv_msg
+                else if wm_msg <> no_message then
+                    wm_msg
+                else
+                    no_message;
 tel;

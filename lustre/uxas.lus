@@ -17,8 +17,8 @@ include "services/waypoint-manager.lus"
 -- Note: output r is required for Lustre syntax but is not used.
 node uxas() returns (r : bool);
 var
-    -- data exchanged over the bus.
-    in_msg, out_msg : message;
+    -- data received from the bus.
+    in_msg : message;
 
     -- the ID of the last nonempty message received on the bus
     last_nonempty_msg_id : id_type;
@@ -38,7 +38,9 @@ let
     -- ===================================================================== --
     -- Environment Modeling
 
-    in_msg = bus(no_message -> pre(out_msg));
+    in_msg = bus(no_message -> pre(pb_msg),
+                 no_message -> pre(arv_msg),
+                 no_message -> pre(wm_msg));
 
     -- Remember the ID of the last non-empty message seen. We use this to
     -- ensure monotonicity and uniqueness of message IDs.
@@ -48,47 +50,12 @@ let
                                 0 -> pre(last_nonempty_msg_id);
 
 
-    -- Since the bus can only handle one message at a time, we need to prevent
-    -- more than one service from sending a message during the same step.
-    --
-    -- Because the services always have the option of sending no_message, this
-    -- constraint should nevertheless allow the model to exhibit all possible
-    -- interleavings of messages.
-    assert (
-        if pb_msg <> no_message then
-            arv_msg = no_message and
-            wm_msg  = no_message
-        else if arv_msg <> no_message then
-            pb_msg = no_message and
-            wm_msg = no_message
-        else if wm_msg <> no_message then
-            pb_msg  = no_message and
-            arv_msg = no_message
-        else
-            true
-    );
-
     -- ===================================================================== --
     -- Service Execution
 
     pb_msg  = plan_builder(in_msg, last_nonempty_msg_id);
     arv_msg = automation_request_validator(in_msg, last_nonempty_msg_id);
     wm_msg  = waypoint_manager(in_msg, last_nonempty_msg_id);
-
-
-    -- ===================================================================== --
-    -- Output Selection
-
-    -- Select the message for output; we know there will be only one, so order
-    -- doesn't matter. Conceptually, this is like a Simulink merge block.
-    out_msg   = if pb_msg <> no_message then
-                    pb_msg
-                else if arv_msg <> no_message then
-                    arv_msg
-                else if wm_msg <> no_message then
-                    wm_msg
-                else
-                    no_message;
 
 
     -- ===================================================================== --
@@ -109,9 +76,9 @@ let
         O(wm_msg = no_message)
     );
 
-    check "Output IC.\n  "
+    check "PB IC.\n  "
     (
-        O(out_msg = no_message or out_msg.kind = unique_automation_response)
+        O(pb_msg = no_message or pb_msg.kind = unique_automation_response)
     );
 
 
@@ -164,39 +131,30 @@ let
     );
 
     check "E7:
-      equal IDs imply equal messages for output messages\n  "
+      input message source\n  "
     (
-        O(out_msg = free_msg1) and
-        O(out_msg = free_msg2)
-    ) => (
-        ids_imply_equality(free_msg1, free_msg2)
+        in_msg = (no_message -> pre(pb_msg))  or
+        in_msg = (no_message -> pre(arv_msg)) or
+        in_msg = (no_message -> pre(wm_msg))  or
+        in_msg = no_message
     );
 
-    check "E8:
-      equal IDs imply equal messages for input and output messages\n  "
-    (
-        O(in_msg  = free_msg1) and
-        O(out_msg = free_msg2)
-    ) => (
-        ids_imply_equality(free_msg1, free_msg2)
-    );
-
-    check "E9.
+    check "E8.
       Input mission command messages were always previously output.\n  "
     (
         in_msg.kind = mission_command and
         in_msg      = free_msg1
     ) => (
-        O(out_msg = free_msg1)
+        O(wm_msg = free_msg1)
     );
 
-    check "E10.
+    check "E9.
       Input automation response messages were always previously output.\n  "
     (
         in_msg.kind = automation_response and
         in_msg      = free_msg1
     ) => (
-        O(out_msg = free_msg1)
+        O(arv_msg = free_msg1)
     );
 
 
@@ -204,18 +162,18 @@ let
     -- Properties of Interest
 
     check "P1.
-      All services correctly handle output ID and message ID.\n  "
+      All services correctly handle input ID and message ID.\n  "
     (
-        out_msg <> no_message
+        in_msg <> no_message
     ) => (
-        out_msg.id > last_nonempty_msg_id
+        in_msg.id > (no_id -> pre(last_nonempty_msg_id))
     );
 
     check "P2.
       Reestablish Waypoint Manager R1.\n  "
     (
-        out_msg.kind = mission_command and
-        out_msg      = wm_future_out_msg
+        in_msg.kind = mission_command and
+        in_msg      = wm_future_out_msg
     ) => (
         O(in_msg.kind = automation_response and
           in_msg.id   = wm_future_out_msg.ref and
@@ -225,8 +183,8 @@ let
     check "P3.
       Reestablish Automation Request Validator R1.\n  "
     (
-        out_msg.kind = automation_response and
-        out_msg      = arv_future_out_msg
+        in_msg.kind = automation_response and
+        in_msg      = arv_future_out_msg
     ) => (
         O(in_msg.kind  = unique_automation_response and
           in_msg.id    = arv_future_out_msg.ref and
@@ -241,8 +199,8 @@ let
       Mission Command messages reference, transitively, prior Unique Automation
       Response messages.\n  "
     (
-        out_msg.kind = mission_command and
-        out_msg      = wm_future_out_msg and
+        in_msg.kind = mission_command and
+        in_msg      = wm_future_out_msg and
 
         -- assume that the free constant wm_future_out_msg references the id
         -- of the free constant arv_future_out_msg. This is necessary for the
@@ -253,7 +211,7 @@ let
         -- output. This is like saying `out_msg = wm_future_out_msg` above, but
         -- the equality isn't tied to the current time step. Again, necessary
         -- for the transitive nature of the property.
-        O(out_msg = arv_future_out_msg)
+        O(in_msg = arv_future_out_msg)
     ) => (
         O(in_msg.kind = unique_automation_response and
           in_msg.id   = arv_future_out_msg.ref)
@@ -263,8 +221,8 @@ let
       Mission Command message waypoints are contained, transitively, on prior
       received Unique Automation Response messages.\n  "
     (
-        out_msg.kind = mission_command and
-        out_msg      = wm_future_out_msg and
+        in_msg.kind = mission_command and
+        in_msg      = wm_future_out_msg and
 
         -- assume that the free constant wm_future_out_msg references the id
         -- of the free constant arv_future_out_msg. This is necessary for the
@@ -275,7 +233,7 @@ let
         -- output. This is like saying `out_msg = wm_future_out_msg` above, but
         -- the equality isn't tied to the current time step. Again, necessary
         -- for the transitive nature of the property.
-        O(out_msg = arv_future_out_msg)
+        O(in_msg = arv_future_out_msg)
     ) => (
         O(in_msg.kind = unique_automation_response and
           in_msg.id   = arv_future_out_msg.ref and
@@ -330,9 +288,9 @@ let
 
     check "W9. Witness return to no_message."
     (
-        O(out_msg.kind = mission_command)
+        O((none -> pre(in_msg.kind)) = mission_command)
     ) => not (
-        out_msg = no_message
+        in_msg = no_message
     );
 
 
@@ -364,25 +322,13 @@ let
         O(in_msg = free_msg2)
     );
 
-    check "E7.A. Witness antecedent of E7."
-    not (
-        O(out_msg = free_msg1) and
-        O(out_msg = free_msg2)
-    );
-
-    check "E8.A. Witness antecedent of E8."
-    not (
-        O(in_msg  = free_msg1) and
-        O(out_msg = free_msg2)
-    );
-
-    check "E9.A. Witness antecedent of E9."
+    check "E8.A. Witness antecedent of E9."
     not (
         in_msg.kind = mission_command and
         in_msg      = free_msg1
     );
 
-    check "E10.A. Witness antecedent of E10."
+    check "E9.A. Witness antecedent of E10."
     not (
         in_msg.kind = automation_response and
         in_msg      = free_msg1
@@ -391,26 +337,26 @@ let
 
     check "P1.A. Witness antecedent of P1."
     not (
-        out_msg <> no_message
+        in_msg <> no_message
     );
 
     check "P2.A. Witness antecedent of P2."
     not (
-        out_msg.kind = mission_command and
-        out_msg      = wm_future_out_msg
+        in_msg.kind = mission_command and
+        in_msg      = wm_future_out_msg
     );
 
     check "P3.A. Witness antecedent of P3."
     not (
-        out_msg.kind = automation_response and
-        out_msg      = arv_future_out_msg
+        in_msg.kind = automation_response and
+        in_msg      = arv_future_out_msg
     );
 
     check "C1.A. Witness antecedent of C1."
     not (
-        out_msg.kind = mission_command and
-        out_msg      = wm_future_out_msg and
+        in_msg.kind = mission_command and
+        in_msg      = wm_future_out_msg and
         arv_future_out_msg.id = wm_future_out_msg.ref and
-        O(out_msg = arv_future_out_msg)
+        O(in_msg = arv_future_out_msg)
     );
 tel;
