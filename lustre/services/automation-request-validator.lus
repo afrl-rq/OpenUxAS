@@ -2,7 +2,6 @@
 
 include "../common/types.lus"
 include "../common/pltl.lus"
-include "../common/bus.lus"
 
 
 -- This constant represents a skolemized universally quantified variable
@@ -79,16 +78,26 @@ let
 
     -- "If there is a stored route, the service shall send the stored route in
     --  an Automation Response message."
-    out_msg =   if (no_route -> pre(route)) <> no_route then
-                    message {
-                        kind     = automation_response;
-                        id       = in_id + 1;
-                        ref      = no_id -> pre(route_msg_id);
-                        route    = no_route -> pre(route);
-                        waypoint = no_waypoint;
-                    }
-                else
-                    no_message;
+    --
+    -- This element of the specification is stated using an assertion rather
+    -- than an equation to permit flexibility in the model: the services does
+    -- not have to respond with a non-empty message in this step.
+    assert(
+        out_msg = no_message
+
+        or
+
+        (
+            ((no_route -> pre(route)) <> no_route) and
+             out_msg =  message {
+                            kind     = automation_response;
+                            id       = in_id + 1;
+                            ref      = no_id -> pre(route_msg_id);
+                            route    = no_route -> pre(route);
+                            waypoint = no_waypoint;
+                        }
+        )
+    );
 
 
     -- "If the service receives a Unique Automation Response message, the

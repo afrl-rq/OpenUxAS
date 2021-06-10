@@ -6,6 +6,7 @@ include "common/types.lus"
 include "common/pltl.lus"
 include "common/bus.lus"
 
+include "services/plan-builder.lus"
 include "services/automation-request-validator.lus"
 include "services/waypoint-manager.lus"
 
@@ -18,12 +19,17 @@ node uxas() returns (r : bool);
 var
     -- data exchanged over the bus.
     in_msg, out_msg : message;
-    in_id : id_type;
 
-    -- Variables for Automation Request Validator output
+    -- the ID of the last nonempty message received on the bus
+    last_nonempty_msg_id : id_type;
+
+    -- message sent by the Plan Builder
+    pb_msg : message;
+
+    -- message sent by the Automation Request Validator
     arv_msg : message;
 
-    -- Variables for Waypoint Manager output
+    -- message sent by the Waypoint Manager
     wm_msg : message;
 const
     -- used to prove properties about messages in this model
@@ -32,22 +38,42 @@ let
     -- ===================================================================== --
     -- Environment Modeling
 
-    in_msg, in_id = bus(no_message -> pre(out_msg));
+    in_msg = bus(no_message -> pre(out_msg));
+
+    -- Remember the ID of the last non-empty message seen. We use this to
+    -- ensure monotonicity and uniqueness of message IDs.
+    last_nonempty_msg_id =  if in_msg <> no_message then
+                                in_msg.id
+                            else
+                                0 -> pre(last_nonempty_msg_id);
 
 
-    -- Constrain the model to sending one message per step.
-    assert
-        not (
-            arv_msg <> no_message and
-            wm_msg  <> no_message
-        );
-
+    -- Since the bus can only handle one message at a time, we need to prevent
+    -- more than one service from sending a message during the same step.
+    --
+    -- Because the services always have the option of sending no_message, this
+    -- constraint should nevertheless allow the model to exhibit all possible
+    -- interleavings of messages.
+    assert (
+        if pb_msg <> no_message then
+            arv_msg = no_message and
+            wm_msg  = no_message
+        else if arv_msg <> no_message then
+            pb_msg = no_message and
+            wm_msg = no_message
+        else if wm_msg <> no_message then
+            pb_msg  = no_message and
+            arv_msg = no_message
+        else
+            true
+    );
 
     -- ===================================================================== --
     -- Service Execution
 
-    arv_msg = automation_request_validator(in_msg, in_id);
-    wm_msg  = waypoint_manager(in_msg, in_id);
+    pb_msg  = plan_builder(in_msg, last_nonempty_msg_id);
+    arv_msg = automation_request_validator(in_msg, last_nonempty_msg_id);
+    wm_msg  = waypoint_manager(in_msg, last_nonempty_msg_id);
 
 
     -- ===================================================================== --
@@ -55,7 +81,9 @@ let
 
     -- Select the message for output; we know there will be only one, so order
     -- doesn't matter. Conceptually, this is like a Simulink merge block.
-    out_msg   = if arv_msg <> no_message then
+    out_msg   = if pb_msg <> no_message then
+                    pb_msg
+                else if arv_msg <> no_message then
                     arv_msg
                 else if wm_msg <> no_message then
                     wm_msg
@@ -68,7 +96,7 @@ let
 
     check "Bus IC.\n  "
     (
-        O(in_msg = no_message or in_msg.kind = unique_automation_response)
+        O(in_msg = no_message)
     );
 
     check "ARV IC.\n  "
@@ -83,7 +111,7 @@ let
 
     check "Output IC.\n  "
     (
-        O(out_msg = no_message)
+        O(out_msg = no_message or out_msg.kind = unique_automation_response)
     );
 
 
@@ -91,15 +119,15 @@ let
     -- Environment Consistency Checks
 
     check "E1:
-      input IDs are non-decreasing.\n  "
+      nonempty-message IDs are non-decreasing.\n  "
     (
-        in_id >= (0 -> pre(in_id))
+        last_nonempty_msg_id >= (0 -> pre(last_nonempty_msg_id))
     );
 
     check "E2:
       input IDs are nonnegative.\n  "
     (
-        in_id >= -1
+        last_nonempty_msg_id >= -1
     );
 
     check "E3:
@@ -180,7 +208,7 @@ let
     (
         out_msg <> no_message
     ) => (
-        out_msg.id = in_id + 1
+        out_msg.id > last_nonempty_msg_id
     );
 
     check "P2.
@@ -298,6 +326,13 @@ let
     check "W8. Witness wm_msg = no_message."
     not (
         wm_msg = no_message
+    );
+
+    check "W9. Witness return to no_message."
+    (
+        O(out_msg.kind = mission_command)
+    ) => not (
+        out_msg = no_message
     );
 
 

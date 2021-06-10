@@ -2,7 +2,6 @@
 
 include "../common/types.lus"
 include "../common/pltl.lus"
-include "../common/bus.lus"
 
 
 -- Retrieve the next waypoint from a route.
@@ -119,16 +118,26 @@ let
     --     of the message setting the route to reset the waypoint_in_msg_id).
     --     Thus we manually increment the previous waypoint_in_msg_id here in
     --     building the message.
-    out_msg   = if waypoint <> no_waypoint then
-                    message {
-                        kind     = mission_command;
-                        id       = in_id + 1;
-                        ref      = no_id -> pre(route_msg_id);
-                        route    = no_route -> pre(route);
-                        waypoint = waypoint;
-                    }
-                else
-                    no_message;
+    --
+    -- This element of the specification is stated using an assertion rather
+    -- than an equation to permit flexibility in the model: the services does
+    -- not have to respond with a non-empty message in this step.
+    assert(
+        out_msg = no_message
+
+        or
+
+        (
+            waypoint <> no_waypoint and
+            out_msg =   message {
+                            kind     = mission_command;
+                            id       = in_id + 1;
+                            ref      = no_id -> pre(route_msg_id);
+                            route    = no_route -> pre(route);
+                            waypoint = waypoint;
+                        }
+        )
+    );
 
 
     -- "If the service receives an Automation Response message, the service

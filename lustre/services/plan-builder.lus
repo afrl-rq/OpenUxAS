@@ -1,0 +1,35 @@
+-- plan-builder.lus
+
+include "../common/types.lus"
+include "../common/pltl.lus"
+
+
+--
+-- The Plan Builder service
+--
+-- Currently, this service exists only as a source of initial messages to start
+-- interesting behaviors in the model.
+node plan_builder(
+    -- The message currently received by the service
+    in_msg : message;
+
+    -- The ID to be used for ID generation
+    in_id : id_type;
+) returns (
+    -- The message currently sent by the service
+    out_msg : message;
+);
+let
+    -- The Plan Builder shall send either no message or shall send a new
+    -- Unique Automation Response message with a valid ID.
+    assert (
+        -- no message
+        out_msg = no_message
+
+        or
+
+        -- a Unique Automation Request with a valid id
+        (out_msg.kind = unique_automation_response and
+         out_msg.id   > in_id)
+    );
+tel;
