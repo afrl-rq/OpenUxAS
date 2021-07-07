@@ -1,0 +1,210 @@
+-- task.lus
+
+include "../common/types.lus"
+include "../common/pltl.lus"
+
+
+--
+-- An abstract Task
+--
+node task(
+    -- The message currently received by the service
+    in_msg : message;
+
+    -- The ID to be used for ID generation
+    in_id : id_type;
+) returns (
+    -- The message currently sent by the service
+    out_msg : message;
+);
+var
+    -- ===================================================================== --
+    -- Task state
+    --
+    -- The route that this task is monitoring for completion.
+    monitored_route : route_type;
+
+    -- The current index, for iterating over the route to match waypoints.
+    route_index : index_type;
+
+    -- The waypoint that is expected to be sent from the monitored route.
+    expected_waypoint : waypoint_type;
+
+    -- True if the received waypoint doesn't match the expected waypoint.
+    error : bool;
+const
+    -- This constant represents a skolemized universally quantified variable
+    -- that we use to link details of a message appearing the past with details
+    -- of our output message in properties.
+    task_future_out_msg : message;
+let
+    -- ===================================================================== --
+    -- Task Behavior
+
+    -- Store the incoming route or maintain the route previously stored
+    monitored_route =   if in_msg.kind = automation_response then
+                            in_msg.route
+                        else
+                            no_route -> pre(monitored_route);
+
+
+    -- Reset the route index if we get an automation response.
+    -- Increment if we get a mission command
+    -- Hold otherwise.
+    --
+    -- We don't use next_waypoint, because next_waypoint won't reset if we
+    -- happen to get the same route multiple times in a row. (This is an
+    -- error in waypoint manager, arguably, too, but we should demonstrate
+    -- that the compositional check will find this.)
+    route_index =   if in_msg.kind = automation_response then
+                        monitored_route.first_index
+                    else if in_msg.kind = mission_command then
+                        no_index -> (pre(route_index) + 1)
+                    else
+                        no_index -> pre(route_index);
+
+
+    -- expected_waypoint = if in_msg.kind = automation_response then
+    --                        in_msg.kind = mission_command
+    --                     then
+    --                         next_waypoint(monitored_route)
+    --                     else
+    --                         no_waypoint -> pre(expected_waypoint);
+
+    expected_waypoint = get(monitored_route, route_index);
+
+
+    -- Set an error flag if we see the wrong waypoint on a mission command.
+    -- This is reset if we get a new automation response.
+    error = if in_msg.kind = automation_response then
+                false
+            else if in_msg.kind = mission_command then
+                true -> (pre(expected_waypoint) <> in_msg.waypoint)
+            else
+                false -> pre(error);
+
+
+    assert (
+        -- Allow the task to send no message at all
+        out_msg = no_message
+
+        or
+
+        -- The task sends a task response, when preconditions are met
+        (
+            -- no error was raised (we saw all the waypoints we expected)
+            not error and
+
+            -- we are actually monitoring a sequence (otherwise the value of
+            -- route_index is undefined)
+            nonempty_sequence(monitored_route) and
+
+            -- we've run out of waypoints
+            expected_waypoint = no_waypoint and
+
+            -- we actually were looking for waypoints previous to running out
+            (false -> (pre(expected_waypoint) <> no_waypoint)) and
+
+            -- this is the message we send
+            out_msg = message {
+                kind     = task_response;
+                id       = in_id + 1;
+                ref      = no_id;
+                route    = monitored_route;
+                waypoint = no_waypoint;
+            }
+        )
+
+        or
+
+        -- The task sends an error response, when preconditions are met
+        (
+            -- we didn't see the waypoint we expected
+            error and
+
+            -- we didn't see an error immediately before this step - this makes
+            -- the error respones a rising-edge-triggered output
+            (false -> (not pre(error))) and
+
+            -- this is the message we send
+            out_msg = message {
+                kind     = error_response;
+                id       = in_id + 1;
+                ref      = no_id;
+                route    = monitored_route;
+                waypoint = no_waypoint;
+            }
+        )
+    );
+
+
+    -- ===================================================================== --
+    -- Properties of Interest
+
+    check "P1.
+      The Task correctly sets the ID of messages it sends and correctly updates
+      its output ID.\n  "
+    (
+        out_msg <> no_message
+    ) => (
+        out_msg.id = in_id + 1
+    );
+
+    -- This property is clearly weaker than we'd like it to be, but without
+    -- true universal quantification, it's unclear how to strengthen it.
+    --
+    -- Maybe a free constant representing a route index? bounded in the
+    -- antecedent to being within the sequence? Then a once in the consequent
+    -- for expected_waypoint to equal the get of that index? That would show
+    -- iteration over all waypoints.
+    check "P2.
+      When the Task sends a Task Response message, it has received the last
+      waypoint on the route it is monitoring.\n  "
+    (
+        out_msg.kind = task_response and
+        out_msg      = task_future_out_msg
+    ) => (
+        O(in_msg.kind = mission_command and
+          is_last(task_future_out_msg.route, in_msg.waypoint))
+    );
+
+    -- This property seems obvious, but is wrong: we actually want to look only
+    -- at containment in the part of the route that has been processed so far.
+    -- This property, as written, doesn't catch out-of-order waypoints.
+    --
+    -- check "P3.
+    --   When the Task sends an Error Response message, it has received a waypoint
+    --   that does not belong to the route it is monitoring.\n  "
+    -- (
+    --     out_msg.kind = error_response and
+    --     out_msg      = task_future_out_msg
+    -- ) => (
+    --     O(in_msg.kind = mission_command and
+    --       not contains(task_future_out_msg.route, in_msg.waypoint))
+    -- );
+
+
+    -- ===================================================================== --
+    -- Antecedent Witnesses
+    --
+    -- These are grouped, rather than placed with their properties, so that
+    -- they can easily be enabled / disabled: they tend to pollute the output
+    -- when expected-true properties are falsified.
+
+    check "P1.A. Witness antecedent of P1."
+    not (
+        out_msg <> no_message
+    );
+
+    check "P2.A. Witness antecedent of P2."
+    not (
+        out_msg.kind = task_response and
+        out_msg      = task_future_out_msg
+    );
+
+    check "P3.A. Witness antecedent of P3."
+    not (
+        out_msg.kind = error_response and
+        out_msg      = task_future_out_msg
+    );
+tel;
