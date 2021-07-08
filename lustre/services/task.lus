@@ -137,7 +137,7 @@ let
                 id       = in_id + 1;
                 ref      = no_id;
                 route    = monitored_route;
-                waypoint = no_waypoint;
+                waypoint = no_waypoint -> pre(expected_waypoint);
             }
         )
     );
@@ -155,49 +155,12 @@ let
         out_msg.id = in_id + 1
     );
 
-    -- This property is clearly weaker than we'd like it to be, but without
-    -- true universal quantification, it's unclear how to strengthen it.
+    -- This property is nice, but it's still weaker than desired. It doesn't
+    -- say anything about the order in which the waypoints were received - only
+    -- that all of the waypoints were received.
     --
-    -- Maybe a free constant representing a route index? bounded in the
-    -- antecedent to being within the sequence? Then a once in the consequent
-    -- for expected_waypoint to equal the get of that index? That would show
-    -- iteration over all waypoints.
+    -- I can't think of any way to reason about the order of events in time.
     check "P2.
-      When the Task sends a Task Response message, it has received the last
-      waypoint on the route it is monitoring.\n  "
-    (
-        out_msg.kind = task_response and
-        out_msg      = task_future_out_msg
-    ) => (
-        O(in_msg.kind = mission_command and
-          is_last(task_future_out_msg.route, in_msg.waypoint))
-    );
-
-    check "P2.1.
-      The Task has expected to receive all waypoints on the route up to the
-      current index.\n"
-    (
-        monitored_route.first_index <= free_route_index and
-                                       free_route_index <= route_index
-    ) => (
-        O(expected_waypoint = get(monitored_route, free_route_index))
-    );
-
-    check "P2.2.
-      The Task has received all waypoints on the route up to the current
-      index.\n"
-    (
-        not error and
-        nonempty_sequence(monitored_route) and
-
-        monitored_route.first_index <= free_route_index and
-                                       free_route_index < route_index
-    ) => (
-        O(in_msg.kind     = mission_command and
-          in_msg.waypoint = get(monitored_route, free_route_index))
-    );
-
-    check "P2.Final.
       When the Task sends a Task Response message, it has received every
       waypoint on the route it was monitoring.\n"
     (
@@ -210,20 +173,50 @@ let
           in_msg.waypoint = get(task_future_out_msg.route, free_route_index))
     );
 
-    -- This property seems obvious, but is wrong: we actually want to look only
-    -- at containment in the part of the route that has been processed so far.
-    -- This property, as written, doesn't catch out-of-order waypoints.
-    --
-    -- check "P3.
-    --   When the Task sends an Error Response message, it has received a waypoint
-    --   that does not belong to the route it is monitoring.\n  "
-    -- (
-    --     out_msg.kind = error_response and
-    --     out_msg      = task_future_out_msg
-    -- ) => (
-    --     O(in_msg.kind = mission_command and
-    --       not contains(task_future_out_msg.route, in_msg.waypoint))
-    -- );
+    check "P2.1.
+      When the Task sends a Task Response message, the monitored route was
+      contained in a previously received Automation Response message.\n  "
+    (
+        out_msg.kind = task_response and
+        out_msg      = task_future_out_msg
+    ) => (
+        O(in_msg.kind  = automation_response and
+          in_msg.route = task_future_out_msg.route)
+    );
+
+    check "P3.
+      When the Task sends an Error Response message, it has received a waypoint
+      that does not match the expected waypoint.\n  "
+    (
+        out_msg.kind = error_response and
+        out_msg      = task_future_out_msg
+    ) => (
+        false -> O(in_msg.kind     = mission_command and
+                   in_msg.waypoint <> task_future_out_msg.waypoint)
+    );
+
+    check "P3.1.
+      When the Task sends an Error Response message, the monitored route
+      is no_route or was contained in a previously received Automation Response
+      message.\n  "
+    (
+        out_msg.kind = error_response and
+        out_msg      = task_future_out_msg
+    ) => (
+        out_msg.route = no_route or
+        O(in_msg.kind  = automation_response and
+          in_msg.route = task_future_out_msg.route)
+    );
+
+    check "P3.2.
+      When the Task sends an Error Response message, the expected waypoint is
+      either no_waypoint or is on the monitored route.\n  "
+    (
+        out_msg.kind = error_response
+    ) => (
+        out_msg.waypoint = no_waypoint or
+        contains(out_msg.route, out_msg.waypoint)
+    );
 
 
     -- ===================================================================== --
@@ -233,33 +226,18 @@ let
     -- they can easily be enabled / disabled: they tend to pollute the output
     -- when expected-true properties are falsified.
 
-    check "P1.A. Witness antecedent of P1."
-    not (
-        out_msg <> no_message
-    );
-
-    check "P2.A. Witness antecedent of P2."
-    not (
-        out_msg.kind = task_response and
-        out_msg      = task_future_out_msg
-    );
-
-    check "P2.1.A. Witness antecedent of P2.1."
+    -- DO NOT COMMENT THIS OUT.
+    --
+    -- This witness (which is falsified) appears to serve as a trigger / lemma
+    -- for P2. I don't understand why.
+    check "P2.1.A. Lemma for P2?"
     not (
         monitored_route.first_index <= free_route_index and
                                        free_route_index <= route_index
     );
 
-    check "P2.2.A. Witness antecedent of P2.2."
-    not (
-        not error and
-        nonempty_sequence(monitored_route) and
 
-        monitored_route.first_index <= free_route_index and
-                                       free_route_index < route_index
-    );
-
-    check "P2.Final. Witness antecedent of P2.Final."
+    check "P2.A. Witness antecedent of P2."
     not (
         out_msg.kind = task_response and
         out_msg      = task_future_out_msg and
@@ -271,5 +249,16 @@ let
     not (
         out_msg.kind = error_response and
         out_msg      = task_future_out_msg
+    );
+
+    check "P3.1.A. Witness antecedent of P3.1."
+    not (
+        out_msg.kind = error_response and
+        out_msg      = task_future_out_msg
+    );
+
+    check "P3.2.A. Witness antecedent of P3.2."
+    (
+        out_msg.kind = error_response
     );
 tel;
