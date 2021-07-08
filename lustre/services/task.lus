@@ -37,6 +37,8 @@ const
     -- that we use to link details of a message appearing the past with details
     -- of our output message in properties.
     task_future_out_msg : message;
+
+    free_route_index : index_type;
 let
     -- ===================================================================== --
     -- Task Behavior
@@ -76,10 +78,13 @@ let
 
     -- Set an error flag if we see the wrong waypoint on a mission command.
     -- This is reset if we get a new automation response.
+    --
+    -- TODO: clean up the logic here
     error = if in_msg.kind = automation_response then
                 false
             else if in_msg.kind = mission_command then
-                true -> (pre(expected_waypoint) <> in_msg.waypoint)
+                (false -> pre(error)) or
+                (true -> (pre(expected_waypoint) <> in_msg.waypoint))
             else
                 false -> pre(error);
 
@@ -168,6 +173,43 @@ let
           is_last(task_future_out_msg.route, in_msg.waypoint))
     );
 
+    check "P2.1.
+      The Task has expected to receive all waypoints on the route up to the
+      current index.\n"
+    (
+        monitored_route.first_index <= free_route_index and
+                                       free_route_index <= route_index
+    ) => (
+        O(expected_waypoint = get(monitored_route, free_route_index))
+    );
+
+    check "P2.2.
+      The Task has received all waypoints on the route up to the current
+      index.\n"
+    (
+        not error and
+        nonempty_sequence(monitored_route) and
+
+        monitored_route.first_index <= free_route_index and
+                                       free_route_index < route_index
+    ) => (
+        O(in_msg.kind     = mission_command and
+          in_msg.waypoint = get(monitored_route, free_route_index))
+    );
+
+    check "P2.Final.
+      When the Task sends a Task Response message, it has received every
+      waypoint on the route it was monitoring.\n"
+    (
+        out_msg.kind = task_response and
+        out_msg      = task_future_out_msg and
+
+        valid_index(out_msg.route, free_route_index)
+    ) => (
+        O(in_msg.kind     = mission_command and
+          in_msg.waypoint = get(task_future_out_msg.route, free_route_index))
+    );
+
     -- This property seems obvious, but is wrong: we actually want to look only
     -- at containment in the part of the route that has been processed so far.
     -- This property, as written, doesn't catch out-of-order waypoints.
@@ -200,6 +242,29 @@ let
     not (
         out_msg.kind = task_response and
         out_msg      = task_future_out_msg
+    );
+
+    check "P2.1.A. Witness antecedent of P2.1."
+    not (
+        monitored_route.first_index <= free_route_index and
+                                       free_route_index <= route_index
+    );
+
+    check "P2.2.A. Witness antecedent of P2.2."
+    not (
+        not error and
+        nonempty_sequence(monitored_route) and
+
+        monitored_route.first_index <= free_route_index and
+                                       free_route_index < route_index
+    );
+
+    check "P2.Final. Witness antecedent of P2.Final."
+    not (
+        out_msg.kind = task_response and
+        out_msg      = task_future_out_msg and
+
+        valid_index(out_msg.route, free_route_index)
     );
 
     check "P3.A. Witness antecedent of P3."
