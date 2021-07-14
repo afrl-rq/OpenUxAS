@@ -17,6 +17,28 @@ node task(
     -- The message currently sent by the service
     out_msg : message;
 );
+(* @contract
+    guarantee "L1. Restatement of P1.
+      The Task sets the ID of messages it sends and correctly
+      updates its output ID.\n  "
+    (
+        out_msg <> no_message
+    ) => (
+        out_msg.id = in_id + 1
+    );
+
+    guarantee "G2. Possible responses.\n  "
+    (
+        out_msg.kind = task_response  xor
+        out_msg.kind = error_response xor
+        out_msg      = no_message
+    );
+
+    guarantee "IC.\n  "
+    (
+        O(out_msg = no_message)
+    );
+*)
 var
     -- ===================================================================== --
     -- Task state
@@ -184,6 +206,30 @@ let
           in_msg.route = task_future_out_msg.route)
     );
 
+    check "P2.2.
+      The Task has expected to receive all waypoints on the route up to the
+      current index.\n"
+    (
+        monitored_route.first_index <= free_route_index and
+                                       free_route_index <= route_index
+    ) => (
+        O(expected_waypoint = get(monitored_route, free_route_index))
+    );
+
+    check "P2.3.
+      The Task has received all waypoints on the route up to the current
+      index.\n"
+    (
+        not error and
+        nonempty_sequence(monitored_route) and
+
+        monitored_route.first_index <= free_route_index and
+                                       free_route_index < route_index
+    ) => (
+        O(in_msg.kind     = mission_command and
+          in_msg.waypoint = get(monitored_route, free_route_index))
+    );
+
     check "P3.
       When the Task sends an Error Response message, it has received a waypoint
       that does not match the expected waypoint.\n  "
@@ -230,12 +276,20 @@ let
     --
     -- This witness (which is falsified) appears to serve as a trigger / lemma
     -- for P2. I don't understand why.
-    check "P2.1.A. Lemma for P2?"
+    check "P2.2.A. Lemma for P2?"
     not (
         monitored_route.first_index <= free_route_index and
                                        free_route_index <= route_index
     );
 
+    check "P2.3.A. Witness antecedent of P2.3."
+    not (
+        not error and
+        nonempty_sequence(monitored_route) and
+
+        monitored_route.first_index <= free_route_index and
+                                       free_route_index < route_index
+    );
 
     check "P2.A. Witness antecedent of P2."
     not (

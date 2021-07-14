@@ -16,6 +16,7 @@ type message_kind = enum {
     --
     -- Relevant fields:
     --  id
+    --  ref
     --  waypoint
     mission_command,
 
@@ -23,6 +24,7 @@ type message_kind = enum {
     --
     -- Relevant fields:
     --  id
+    --  ref
     --  route
     automation_response,
 
@@ -31,7 +33,20 @@ type message_kind = enum {
     -- Relevant fields:
     --  id
     --  route
-    unique_automation_response
+    unique_automation_response,
+
+    -- Task Response
+    --
+    -- Relevant fields:
+    --  id
+    --  route
+    task_response,
+
+    -- Task Response
+    --
+    -- Relevant fields:
+    --  id
+    error_response
 };
 
 

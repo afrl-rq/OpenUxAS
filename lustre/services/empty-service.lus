@@ -1,0 +1,28 @@
+-- empty-service.lus
+
+include "../common/types.lus"
+include "../common/pltl.lus"
+
+
+--
+-- An empty service. Use this to (temporarily) disable a service in the model.
+--
+node empty_service(
+    -- The message currently received by the service
+    in_msg : message;
+
+    -- The ID to be used for ID generation
+    in_id : id_type;
+) returns (
+    -- The message currently sent by the service
+    out_msg : message;
+);
+(*@contract
+    guarantee "G1. Possible responses.\n  "
+    (
+        H(out_msg = no_message)
+    );
+*)
+let
+    out_msg = no_message;
+tel;

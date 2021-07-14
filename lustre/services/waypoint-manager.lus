@@ -2,20 +2,7 @@
 
 include "../common/types.lus"
 include "../common/pltl.lus"
-
-
--- Retrieve the next waypoint from a route.
-node next_waypoint(route : route_type) returns (waypoint : waypoint_type);
-var
-    index : index_type;
-let
-    index = no_index -> if route = pre(route) then
-                            pre(index) + 1
-                        else
-                            route.first_index;
-
-    waypoint = get(route, index);
-tel;
+include "../common/route-utils.lus"
 
 
 -- This constant represents a skolemized universally quantified variable

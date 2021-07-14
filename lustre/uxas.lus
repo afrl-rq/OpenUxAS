@@ -9,15 +9,68 @@ include "common/bus.lus"
 include "services/plan-builder.lus"
 include "services/automation-request-validator.lus"
 include "services/waypoint-manager.lus"
+include "services/task.lus"
+include "services/empty-service.lus"
 
 
 --
 -- The OpenUxAS Framework
 --
--- Note: output r is required for Lustre syntax but is not used.
-node uxas() returns (r : bool);
+node uxas() returns (
+    -- The outputs of uxas are internal state variables that we have chosen to
+    -- expose as outputs so that we can select sets of properties more easily
+    -- by grouping them into observers.
+
+    -- data received from the bus
+    in_msg : message;
+    -- the ID of the last nonempty message received on the bus
+    last_nonempty_msg_id : id_type;
+
+    -- message sent by the Plan Builder
+    pb_msg : message;
+
+    -- message sent by the Automation Request Validator
+    arv_msg : message;
+
+    -- message sent by the Waypoint Manager
+    wm_msg : message;
+
+    -- message sent by the Task
+    task_msg : message;
+);
+let
+    -- ===================================================================== --
+    -- Environment Modeling
+
+    in_msg = bus(no_message -> pre(pb_msg),
+                 no_message -> pre(arv_msg),
+                 no_message -> pre(wm_msg),
+                 no_message -> pre(task_msg));
+
+    -- Remember the ID of the last non-empty message seen. We use this to
+    -- ensure monotonicity and uniqueness of message IDs.
+    last_nonempty_msg_id =  if in_msg <> no_message then
+                                in_msg.id
+                            else
+                                0 -> pre(last_nonempty_msg_id);
+
+
+    -- ===================================================================== --
+    -- Service Execution
+
+    pb_msg   = plan_builder(in_msg, last_nonempty_msg_id);
+    arv_msg  = automation_request_validator(in_msg, last_nonempty_msg_id);
+    wm_msg   = waypoint_manager(in_msg, last_nonempty_msg_id);
+    task_msg = empty_service(in_msg, last_nonempty_msg_id);
+tel;
+
+
+--
+-- This observer checks the initial conditions of uxas.
+--
+node uxas_ics() returns ();
 var
-    -- data received from the bus.
+    -- data received from the bus
     in_msg : message;
 
     -- the ID of the last nonempty message received on the bus
@@ -31,35 +84,17 @@ var
 
     -- message sent by the Waypoint Manager
     wm_msg : message;
-const
-    -- used to prove properties about messages in this model
-    free_msg1, free_msg2 : message;
+
+    -- message sent by the Task
+    task_msg : message;
 let
-    -- ===================================================================== --
-    -- Environment Modeling
+    (in_msg,
+     last_nonempty_msg_id,
+     pb_msg,
+     arv_msg,
+     wm_msg,
+     task_msg) = uxas();
 
-    in_msg = bus(no_message -> pre(pb_msg),
-                 no_message -> pre(arv_msg),
-                 no_message -> pre(wm_msg));
-
-    -- Remember the ID of the last non-empty message seen. We use this to
-    -- ensure monotonicity and uniqueness of message IDs.
-    last_nonempty_msg_id =  if in_msg <> no_message then
-                                in_msg.id
-                            else
-                                0 -> pre(last_nonempty_msg_id);
-
-
-    -- ===================================================================== --
-    -- Service Execution
-
-    pb_msg  = plan_builder(in_msg, last_nonempty_msg_id);
-    arv_msg = automation_request_validator(in_msg, last_nonempty_msg_id);
-    wm_msg  = waypoint_manager(in_msg, last_nonempty_msg_id);
-
-
-    -- ===================================================================== --
-    -- Initial Conditions of Interest
 
     check "Bus IC.\n  "
     (
@@ -80,10 +115,51 @@ let
     (
         O(pb_msg = no_message or pb_msg.kind = unique_automation_response)
     );
+tel;
 
 
-    -- ===================================================================== --
-    -- Environment Consistency Checks
+--
+-- This observer checks "environment" properties - relationships amongst
+-- messages and their IDs.
+--
+node uxas_env() returns ();
+var
+    -- data received from the bus
+    in_msg : message;
+
+    -- the ID of the last nonempty message received on the bus
+    last_nonempty_msg_id : id_type;
+
+    -- message sent by the Plan Builder
+    pb_msg : message;
+
+    -- message sent by the Automation Request Validator
+    arv_msg : message;
+
+    -- message sent by the Waypoint Manager
+    wm_msg : message;
+
+    -- message sent by the Task
+    task_msg : message;
+const
+    -- used to prove properties about messages in this model
+    free_msg1, free_msg2 : message;
+let
+    (in_msg,
+     last_nonempty_msg_id,
+     pb_msg,
+     arv_msg,
+     wm_msg,
+     task_msg) = uxas();
+
+
+    check "P1.
+      All services correctly handle input ID and message ID.\n  "
+    (
+        in_msg <> no_message
+    ) => (
+        in_msg.id > (no_id -> pre(last_nonempty_msg_id))
+    );
 
     check "E1:
       nonempty-message IDs are non-decreasing.\n  "
@@ -133,9 +209,10 @@ let
     check "E7:
       input message source\n  "
     (
-        in_msg = (no_message -> pre(pb_msg))  or
-        in_msg = (no_message -> pre(arv_msg)) or
-        in_msg = (no_message -> pre(wm_msg))  or
+        in_msg = (no_message -> pre(pb_msg))   or
+        in_msg = (no_message -> pre(arv_msg))  or
+        in_msg = (no_message -> pre(wm_msg))   or
+        in_msg = (no_message -> pre(task_msg)) or
         in_msg = no_message
     );
 
@@ -156,6 +233,187 @@ let
     ) => (
         O(arv_msg = free_msg1)
     );
+tel;
+
+
+--
+-- This observer checks the antecedents of uxas_env
+--
+node uxas_env_antecedents() returns ();
+var
+    -- data received from the bus
+    in_msg : message;
+
+    -- the ID of the last nonempty message received on the bus
+    last_nonempty_msg_id : id_type;
+
+    -- message sent by the Plan Builder
+    pb_msg : message;
+
+    -- message sent by the Automation Request Validator
+    arv_msg : message;
+
+    -- message sent by the Waypoint Manager
+    wm_msg : message;
+
+    -- message sent by the Task
+    task_msg : message;
+const
+    -- used to prove properties about messages in this model
+    free_msg1, free_msg2 : message;
+let
+    (in_msg,
+     last_nonempty_msg_id,
+     pb_msg,
+     arv_msg,
+     wm_msg,
+     task_msg) = uxas();
+
+
+    check "E3.A. Witness antecedent of E3."
+    not (
+        in_msg <> no_message
+    );
+
+    check "E4.A. Witness antecedent of E4."
+    not (
+        in_msg <> no_message
+    );
+
+    check "E5.A. Witness antecedent of E5."
+    not (
+        in_msg = no_message
+    );
+
+    check "E6.A. Witness antecedent of E6."
+    not (
+        O(in_msg = free_msg1) and
+        O(in_msg = free_msg2)
+    );
+
+    check "E8.A. Witness antecedent of E9."
+    not (
+        in_msg.kind = mission_command and
+        in_msg      = free_msg1
+    );
+
+    check "E9.A. Witness antecedent of E10."
+    not (
+        in_msg.kind = automation_response and
+        in_msg      = free_msg1
+    );
+tel;
+
+
+--
+-- This observer poses witnesses for interesting behaviors in the model.
+--
+node uxas_env_witnesses() returns ();
+var
+    -- data received from the bus
+    in_msg : message;
+
+    -- the ID of the last nonempty message received on the bus
+    last_nonempty_msg_id : id_type;
+
+    -- message sent by the Plan Builder
+    pb_msg : message;
+
+    -- message sent by the Automation Request Validator
+    arv_msg : message;
+
+    -- message sent by the Waypoint Manager
+    wm_msg : message;
+
+    -- message sent by the Task
+    task_msg : message;
+let
+    (in_msg,
+     last_nonempty_msg_id,
+     pb_msg,
+     arv_msg,
+     wm_msg,
+     task_msg) = uxas();
+
+
+    check "W1. Witness no_message from the bus."
+    not (
+        in_msg = no_message
+    );
+
+    check "W2. Witness unique_automation_response from the bus."
+    not (
+        in_msg.kind = unique_automation_response
+    );
+
+    check "W3. Witness automation_response from the bus."
+    not (
+        in_msg.kind = automation_response
+    );
+
+    check "W4. Witness mission_command from the bus."
+    not (
+        in_msg.kind = mission_command
+    );
+
+    check "W5. Witness arv_msg <> no_message."
+    not (
+        arv_msg <> no_message
+    );
+
+    check "W6. Witness arv_msg = no_message."
+    not (
+        arv_msg = no_message
+    );
+
+    check "W7. Witness wm_msg"
+    not (
+        wm_msg <> no_message
+    );
+
+    check "W8. Witness wm_msg = no_message."
+    not (
+        wm_msg = no_message
+    );
+
+    check "W9. Witness return to no_message."
+    (
+        O((none -> pre(in_msg.kind)) = mission_command)
+    ) => not (
+        in_msg = no_message
+    );
+tel;
+
+
+--
+-- This observer checks properties on the model.
+--
+node uxas_props() returns ();
+var
+    -- data received from the bus
+    in_msg : message;
+
+    -- the ID of the last nonempty message received on the bus
+    last_nonempty_msg_id : id_type;
+
+    -- message sent by the Plan Builder
+    pb_msg : message;
+
+    -- message sent by the Automation Request Validator
+    arv_msg : message;
+
+    -- message sent by the Waypoint Manager
+    wm_msg : message;
+
+    -- message sent by the Task
+    task_msg : message;
+let
+    (in_msg,
+     last_nonempty_msg_id,
+     pb_msg,
+     arv_msg,
+     wm_msg,
+     task_msg) = uxas();
 
 
     -- ===================================================================== --
@@ -239,100 +497,38 @@ let
           in_msg.id   = arv_future_out_msg.ref and
           contains(in_msg.route, wm_future_out_msg.waypoint))
     );
+tel;
 
 
-    -- ===================================================================== --
-    -- Environment witnesses
-    --
-    -- These build confidence that the model has behaviors we expect.
+--
+-- This observer checks property antecedents
+--
+node uxas_props_antecedents() returns ();
+var
+    -- data received from the bus
+    in_msg : message;
 
-    check "W1. Witness no_message from the bus."
-    not (
-        in_msg = no_message
-    );
+    -- the ID of the last nonempty message received on the bus
+    last_nonempty_msg_id : id_type;
 
-    check "W2. Witness unique_automation_response from the bus."
-    not (
-        in_msg.kind = unique_automation_response
-    );
+    -- message sent by the Plan Builder
+    pb_msg : message;
 
-    check "W3. Witness automation_response from the bus."
-    not (
-        in_msg.kind = automation_response
-    );
+    -- message sent by the Automation Request Validator
+    arv_msg : message;
 
-    check "W4. Witness mission_command from the bus."
-    not (
-        in_msg.kind = mission_command
-    );
+    -- message sent by the Waypoint Manager
+    wm_msg : message;
 
-    check "W5. Witness arv_msg <> no_message."
-    not (
-        arv_msg <> no_message
-    );
-
-    check "W6. Witness arv_msg = no_message."
-    not (
-        arv_msg = no_message
-    );
-
-    check "W7. Witness wm_msg"
-    not (
-        wm_msg <> no_message
-    );
-
-    check "W8. Witness wm_msg = no_message."
-    not (
-        wm_msg = no_message
-    );
-
-    check "W9. Witness return to no_message."
-    (
-        O((none -> pre(in_msg.kind)) = mission_command)
-    ) => not (
-        in_msg = no_message
-    );
-
-
-    -- ===================================================================== --
-    -- Antecedent Witnesses
-    --
-    -- These are grouped, rather than placed with their properties, so that
-    -- they can easily be enabled / disabled: they tend to pollute the output
-    -- when expected-true properties are falsified.
-
-    check "E3.A. Witness antecedent of E3."
-    not (
-        in_msg <> no_message
-    );
-
-    check "E4.A. Witness antecedent of E4."
-    not (
-        in_msg <> no_message
-    );
-
-    check "E5.A. Witness antecedent of E5."
-    not (
-        in_msg = no_message
-    );
-
-    check "E6.A. Witness antecedent of E6."
-    not (
-        O(in_msg = free_msg1) and
-        O(in_msg = free_msg2)
-    );
-
-    check "E8.A. Witness antecedent of E9."
-    not (
-        in_msg.kind = mission_command and
-        in_msg      = free_msg1
-    );
-
-    check "E9.A. Witness antecedent of E10."
-    not (
-        in_msg.kind = automation_response and
-        in_msg      = free_msg1
-    );
+    -- message sent by the Task
+    task_msg : message;
+let
+    (in_msg,
+     last_nonempty_msg_id,
+     pb_msg,
+     arv_msg,
+     wm_msg,
+     task_msg) = uxas();
 
 
     check "P1.A. Witness antecedent of P1."
