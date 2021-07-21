@@ -4,12 +4,7 @@ include "../common/types.lus"
 include "../common/pltl.lus"
 
 
---
--- The Plan Builder service
---
--- Currently, this service exists only as a source of initial messages to start
--- interesting behaviors in the model.
-node plan_builder(
+contract pb_contract(
     -- The message currently received by the service
     in_msg : message;
 
@@ -20,16 +15,36 @@ node plan_builder(
     out_msg : message;
 );
 let
-    -- The Plan Builder shall send either no message or shall send a new
-    -- Unique Automation Response message with a valid ID.
-    assert (
-        -- no message
-        out_msg = no_message
+    guarantee "Plan Builder R1. Message IDs.
+      The Plan Builder correctly computes output message IDs.\n  "
+    (
+        out_msg <> no_message
+    ) => (
+        out_msg.id > in_id
+    );
 
-        or
-
-        -- a Unique Automation Request with a valid id
-        (out_msg.kind = unique_automation_response and
-         out_msg.id   > in_id)
+    guarantee "Plan Builder R2. Possible responses.
+      The Plan Builder responds only with specific messages.\n  "
+    (
+        out_msg.kind = unique_automation_response xor
+        out_msg      = no_message
     );
 tel;
+
+
+--
+-- The Plan Builder service
+--
+-- Currently, this service exists only as a source of initial messages to start
+-- interesting behaviors in the model.
+node imported plan_builder(
+    -- The message currently received by the service
+    in_msg : message;
+
+    -- The ID to be used for ID generation
+    in_id : id_type;
+) returns (
+    -- The message currently sent by the service
+    out_msg : message;
+);
+(*@contract import pb_contract(in_msg, in_id) returns (out_msg); *)

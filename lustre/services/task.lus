@@ -4,6 +4,41 @@ include "../common/types.lus"
 include "../common/pltl.lus"
 
 
+contract task_contract(
+    -- The message currently received by the service
+    in_msg : message;
+
+    -- The ID to be used for ID generation
+    in_id : id_type;
+) returns (
+    -- The message currently sent by the service
+    out_msg : message;
+);
+let
+    guarantee "Task R1. Message IDs.
+      The Task correctly computes output message IDs.\n  "
+    (
+        out_msg <> no_message
+    ) => (
+        out_msg.id = in_id + 1
+    );
+
+    guarantee "Task R2. Possible responses.
+      The Task responds only with specific messages.\n  "
+    (
+        out_msg.kind = task_complete  xor
+        out_msg.kind = error_response xor
+        out_msg      = no_message
+    );
+
+    guarantee "Task R3. IC.
+      The Task initial condition is to send no message.\n  "
+    (
+        O(out_msg = no_message)
+    );
+tel;
+
+
 --
 -- An abstract Task
 --
@@ -17,28 +52,7 @@ node task(
     -- The message currently sent by the service
     out_msg : message;
 );
-(* @contract
-    guarantee "L1. Restatement of P1.
-      The Task sets the ID of messages it sends and correctly
-      updates its output ID.\n  "
-    (
-        out_msg <> no_message
-    ) => (
-        out_msg.id = in_id + 1
-    );
-
-    guarantee "G2. Possible responses.\n  "
-    (
-        out_msg.kind = task_response  xor
-        out_msg.kind = error_response xor
-        out_msg      = no_message
-    );
-
-    guarantee "IC.\n  "
-    (
-        O(out_msg = no_message)
-    );
-*)
+(*@contract import task_contract(in_msg, in_id) returns (out_msg); *)
 var
     -- ===================================================================== --
     -- Task state
@@ -117,7 +131,7 @@ let
 
         or
 
-        -- The task sends a task response, when preconditions are met
+        -- The task sends a task complete, when preconditions are met
         (
             -- no error was raised (we saw all the waypoints we expected)
             not error and
@@ -134,7 +148,7 @@ let
 
             -- this is the message we send
             out_msg = message {
-                kind     = task_response;
+                kind     = task_complete;
                 id       = in_id + 1;
                 ref      = no_id;
                 route    = monitored_route;
@@ -168,25 +182,16 @@ let
     -- ===================================================================== --
     -- Properties of Interest
 
-    check "P1.
-      The Task correctly sets the ID of messages it sends and correctly updates
-      its output ID.\n  "
-    (
-        out_msg <> no_message
-    ) => (
-        out_msg.id = in_id + 1
-    );
-
     -- This property is nice, but it's still weaker than desired. It doesn't
     -- say anything about the order in which the waypoints were received - only
     -- that all of the waypoints were received.
     --
     -- I can't think of any way to reason about the order of events in time.
     check "P2.
-      When the Task sends a Task Response message, it has received every
+      When the Task sends a Task Complete message, it has received every
       waypoint on the route it was monitoring.\n"
     (
-        out_msg.kind = task_response and
+        out_msg.kind = task_complete and
         out_msg      = task_future_out_msg and
 
         valid_index(out_msg.route, free_route_index)
@@ -196,39 +201,16 @@ let
     );
 
     check "P2.1.
-      When the Task sends a Task Response message, the monitored route was
+      When the Task sends a Task Complete message, the monitored route was
       contained in a previously received Automation Response message.\n  "
     (
-        out_msg.kind = task_response and
+        out_msg.kind = task_complete and
         out_msg      = task_future_out_msg
     ) => (
         O(in_msg.kind  = automation_response and
           in_msg.route = task_future_out_msg.route)
     );
 
-    check "P2.2.
-      The Task has expected to receive all waypoints on the route up to the
-      current index.\n"
-    (
-        monitored_route.first_index <= free_route_index and
-                                       free_route_index <= route_index
-    ) => (
-        O(expected_waypoint = get(monitored_route, free_route_index))
-    );
-
-    check "P2.3.
-      The Task has received all waypoints on the route up to the current
-      index.\n"
-    (
-        not error and
-        nonempty_sequence(monitored_route) and
-
-        monitored_route.first_index <= free_route_index and
-                                       free_route_index < route_index
-    ) => (
-        O(in_msg.kind     = mission_command and
-          in_msg.waypoint = get(monitored_route, free_route_index))
-    );
 
     check "P3.
       When the Task sends an Error Response message, it has received a waypoint
@@ -265,6 +247,28 @@ let
     );
 
 
+    check "L1.
+      Lemma (from IC3).\n  "
+    (
+        not error
+        and
+        expected_waypoint <> no_element
+        and
+        expected_waypoint <> free_route_index
+        and
+        task_future_out_msg.route.first_index = monitored_route.first_index
+        and
+        free_route_index > task_future_out_msg.route.first_index
+        and
+        free_route_index <= task_future_out_msg.route.last_index
+        and
+        free_route_index <= route_index
+    ) => (
+        O(in_msg.kind     = mission_command and
+          in_msg.waypoint = get(task_future_out_msg.route, free_route_index))
+    );
+
+
     -- ===================================================================== --
     -- Antecedent Witnesses
     --
@@ -272,47 +276,34 @@ let
     -- they can easily be enabled / disabled: they tend to pollute the output
     -- when expected-true properties are falsified.
 
-    -- DO NOT COMMENT THIS OUT.
-    --
-    -- This witness (which is falsified) appears to serve as a trigger / lemma
-    -- for P2. I don't understand why.
-    check "P2.2.A. Lemma for P2?"
-    not (
-        monitored_route.first_index <= free_route_index and
-                                       free_route_index <= route_index
-    );
+    -- check "P2.A. Witness antecedent of P2."
+    -- not (
+    --     out_msg.kind = task_complete and
+    --     out_msg      = task_future_out_msg and
 
-    check "P2.3.A. Witness antecedent of P2.3."
-    not (
-        not error and
-        nonempty_sequence(monitored_route) and
+    --     valid_index(out_msg.route, free_route_index)
+    -- );
 
-        monitored_route.first_index <= free_route_index and
-                                       free_route_index < route_index
-    );
+    -- check "P2.1.A. Witness antecedent of P2.1."
+    -- not (
+    --     out_msg.kind = task_complete and
+    --     out_msg      = task_future_out_msg
+    -- );
 
-    check "P2.A. Witness antecedent of P2."
-    not (
-        out_msg.kind = task_response and
-        out_msg      = task_future_out_msg and
+    -- check "P3.A. Witness antecedent of P3."
+    -- not (
+    --     out_msg.kind = error_response and
+    --     out_msg      = task_future_out_msg
+    -- );
 
-        valid_index(out_msg.route, free_route_index)
-    );
+    -- check "P3.1.A. Witness antecedent of P3.1."
+    -- not (
+    --     out_msg.kind = error_response and
+    --     out_msg      = task_future_out_msg
+    -- );
 
-    check "P3.A. Witness antecedent of P3."
-    not (
-        out_msg.kind = error_response and
-        out_msg      = task_future_out_msg
-    );
-
-    check "P3.1.A. Witness antecedent of P3.1."
-    not (
-        out_msg.kind = error_response and
-        out_msg      = task_future_out_msg
-    );
-
-    check "P3.2.A. Witness antecedent of P3.2."
-    (
-        out_msg.kind = error_response
-    );
+    -- check "P3.2.A. Witness antecedent of P3.2."
+    -- (
+    --     out_msg.kind = error_response
+    -- );
 tel;

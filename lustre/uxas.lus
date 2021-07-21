@@ -23,6 +23,7 @@ node uxas() returns (
 
     -- data received from the bus
     in_msg : message;
+
     -- the ID of the last nonempty message received on the bus
     last_nonempty_msg_id : id_type;
 
@@ -61,7 +62,7 @@ let
     pb_msg   = plan_builder(in_msg, last_nonempty_msg_id);
     arv_msg  = automation_request_validator(in_msg, last_nonempty_msg_id);
     wm_msg   = waypoint_manager(in_msg, last_nonempty_msg_id);
-    task_msg = empty_service(in_msg, last_nonempty_msg_id);
+    task_msg = task(in_msg, last_nonempty_msg_id);
 tel;
 
 
@@ -115,6 +116,11 @@ let
     (
         O(pb_msg = no_message or pb_msg.kind = unique_automation_response)
     );
+
+    check "Task IC.\n  "
+    (
+        O(task_msg = no_message)
+    );
 tel;
 
 
@@ -153,14 +159,6 @@ let
      task_msg) = uxas();
 
 
-    check "P1.
-      All services correctly handle input ID and message ID.\n  "
-    (
-        in_msg <> no_message
-    ) => (
-        in_msg.id > (no_id -> pre(last_nonempty_msg_id))
-    );
-
     check "E1:
       nonempty-message IDs are non-decreasing.\n  "
     (
@@ -197,14 +195,16 @@ let
         in_msg.id = -1
     );
 
-    check "E6:
-      equal IDs imply equal messages for input messages\n  "
-    (
-        O(in_msg = free_msg1) and
-        O(in_msg = free_msg2)
-    ) => (
-        ids_imply_equality(free_msg1, free_msg2)
-    );
+    -- Note: this property has been lost and needs to be reinvestigated. It's
+    -- not required for any proof, but seems interesting.
+    -- check "E6:
+    --   equal IDs imply equal messages for input messages\n  "
+    -- (
+    --     O(in_msg = free_msg1) and
+    --     O(in_msg = free_msg2)
+    -- ) => (
+    --     ids_imply_equality(free_msg1, free_msg2)
+    -- );
 
     check "E7:
       input message source\n  "

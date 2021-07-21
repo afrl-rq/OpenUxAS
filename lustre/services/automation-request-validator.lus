@@ -11,6 +11,58 @@ include "../common/pltl.lus"
 -- Placed here for use in our contract.
 const arv_future_out_msg : message;
 
+
+contract arv_contract(
+    -- The message currently received by the service
+    in_msg : message;
+
+    -- The ID to be used for ID generation
+    in_id : id_type;
+) returns (
+    -- The message currently sent by the service
+    out_msg : message;
+);
+let
+    guarantee "Automation Request Validator R1. Message IDs.
+      The Automation Request Validator correctly computes output message
+      IDs.\n  "
+    (
+        out_msg <> no_message
+    ) => (
+        out_msg.id = in_id + 1
+    );
+
+    guarantee "Automation Request Validator R2. Possible responses.
+      The Automation Request Validator responds only with specific
+      messages.\n  "
+    (
+        out_msg.kind = automation_response xor
+        out_msg      = no_message
+    );
+
+    guarantee "Automation Request Validator R3. IC.
+      The Automation Request Validator initial condition is to send no
+      message.\n  "
+    (
+        O(out_msg = no_message)
+    );
+
+    guarantee "Automation Request Validator R4.
+      When the Automation Request Validator sends an Automation Response
+      message, the route sent belongs to the previously received Unique
+      Automation Response message that is referenced in the Automation Response
+      message.\n  "
+    (
+        out_msg.kind = automation_response and
+        out_msg      = arv_future_out_msg
+    ) => (
+        O(in_msg.kind  = unique_automation_response and
+          in_msg.id    = arv_future_out_msg.ref and
+          in_msg.route = arv_future_out_msg.route)
+    );
+tel;
+
+
 --
 -- The Automation Request Validator service
 --
@@ -24,41 +76,7 @@ node automation_request_validator(
     -- The message currently sent by the service
     out_msg : message;
 );
-(*@contract
-    guarantee "L1. Restatement of P1.
-      The Automation Request Validator correctly sets the ID of messages it
-      sends and correctly updates its output ID.\n  "
-    (
-        out_msg <> no_message
-    ) => (
-        out_msg.id = in_id + 1
-    );
-
-    guarantee "G1. Restatement of R1.
-      When the Automation Request Validator sends an Automation Response
-      message, the route sent belongs to the previously received Unique
-      Automation Response message that is referenced in the Automation Response
-      message.\n  "
-    (
-        out_msg.kind = automation_response and
-        out_msg      = arv_future_out_msg
-    ) => (
-        O(in_msg.kind  = unique_automation_response and
-          in_msg.id    = arv_future_out_msg.ref and
-          in_msg.route = arv_future_out_msg.route)
-    );
-
-    guarantee "G2. Possible responses.\n  "
-    (
-        out_msg.kind = automation_response xor
-        out_msg      = no_message
-    );
-
-    guarantee "IC.\n  "
-    (
-        O(out_msg = no_message)
-    );
-*)
+(*@contract import arv_contract(in_msg, in_id) returns (out_msg); *)
 var
     -- ===================================================================== --
     -- Service state
@@ -118,51 +136,20 @@ let
 
 
     -- ===================================================================== --
-    -- Properties of Interest
-
-    check "P1.
-      The Automation Request Validator correctly sets the ID of messages it
-      sends and correctly updates its output ID.\n  "
-    (
-        out_msg <> no_message
-    ) => (
-        out_msg.id = in_id + 1
-    );
-
-
-    -- ===================================================================== --
-    -- Service Requirements
-
-    check "R1.
-      When the Automation Request Validator sends an Automation Response
-      message, the route sent belongs to the previously received Unique
-      Automation Response message that is referenced in the Automation Response
-      message.\n  "
-    (
-        out_msg.kind = automation_response and
-        out_msg      = arv_future_out_msg
-    ) => (
-        O(in_msg.kind  = unique_automation_response and
-          in_msg.id    = arv_future_out_msg.ref and
-          in_msg.route = arv_future_out_msg.route)
-    );
-
-
-    -- ===================================================================== --
     -- Antecedent Witnesses
     --
     -- These are grouped, rather than placed with their properties, so that
     -- they can easily be enabled / disabled: they tend to pollute the output
     -- when expected-true properties are falsified.
 
-    check "P1.A. Witness antecedent of P1."
-    not (
-        out_msg <> no_message
-    );
+    -- check "P1.A. Witness antecedent of P1."
+    -- not (
+    --     out_msg <> no_message
+    -- );
 
-    check "R1.A. Witness antecedent of R1."
-    not (
-        out_msg.kind = automation_response and
-        out_msg      = arv_future_out_msg
-    );
+    -- check "R1.A. Witness antecedent of R1."
+    -- not (
+    --     out_msg.kind = automation_response and
+    --     out_msg      = arv_future_out_msg
+    -- );
 tel;
