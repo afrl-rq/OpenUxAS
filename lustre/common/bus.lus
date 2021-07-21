@@ -4,11 +4,8 @@
 
 include "types.lus"
 
---
--- Abstraction of a bus.
---
--- Note: not meant for implementation; only for environment modeling.
-node bus(
+
+contract bus_contract (
     -- message sent by the Plan Builder
     pb_msg : message;
 
@@ -25,46 +22,63 @@ node bus(
     out_msg : message;
 );
 let
-    -- Since the bus can only handle one message at a time, we need to prevent
-    -- more than one service from sending a message during the same step.
-    --
-    -- Because the services always have the option of sending no_message, this
-    -- constraint should nevertheless allow the model to exhibit all possible
-    -- interleavings of messages.
-    assert (
-        if pb_msg <> no_message then
+    assume "Bus A1. Unique input message.
+      At most one input is not no_message.\n  "
+    (
+        (
+            pb_msg   <> no_message xor
+            arv_msg  <> no_message xor
+            wm_msg   <> no_message xor
+            task_msg <> no_message
+        ) or (
+            pb_msg   = no_message and
             arv_msg  = no_message and
             wm_msg   = no_message and
             task_msg = no_message
-        else if arv_msg <> no_message then
-            pb_msg = no_message and
-            wm_msg = no_message and
-            task_msg = no_message
-        else if wm_msg <> no_message then
-            pb_msg  = no_message and
-            arv_msg = no_message and
-            task_msg = no_message
-        else if task_msg <> no_message then
-            pb_msg = no_message and
-            arv_msg  = no_message and
-            wm_msg   = no_message
-        else
-            true
+        )
     );
 
-    -- ===================================================================== --
-    -- Output Selection
-
-    -- Select the message for output; we know there will be only one, so order
-    -- doesn't matter. Conceptually, this is like a Simulink merge block.
-    out_msg   = if pb_msg <> no_message then
-                    pb_msg
-                else if arv_msg <> no_message then
-                    arv_msg
-                else if wm_msg <> no_message then
-                    wm_msg
-                else if task_msg <> no_message then
-                    task_msg
-                else
-                    no_message;
+    guarantee "Bus G1. Output is merged inputs.
+      The bus outpus the non-empty input message, if it exists.\n  "
+    (
+        if pb_msg <> no_message then
+            out_msg = pb_msg
+        else if arv_msg <> no_message then
+            out_msg = arv_msg
+        else if wm_msg <> no_message then
+            out_msg = wm_msg
+        else if task_msg <> no_message then
+            out_msg = task_msg
+        else
+            out_msg = no_message
+    );
 tel;
+
+
+--
+-- Abstraction of a bus.
+--
+-- Note: not meant for implementation; only for environment modeling.
+node imported bus(
+    -- message sent by the Plan Builder
+    pb_msg : message;
+
+    -- message sent by the Automation Request Validator
+    arv_msg : message;
+
+    -- message sent by the Waypoint Manager
+    wm_msg : message;
+
+    -- message sent by the Task
+    task_msg : message;
+) returns (
+    -- The selected output message
+    out_msg : message;
+
+    -- Free choice: a token representing the service permitted to transmit on
+    -- the bus.
+    token_holder: token_holder_type;
+);
+(*@contract
+    import bus_contract(pb_msg, arv_msg, wm_msg, task_msg) returns (out_msg);
+*)

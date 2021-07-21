@@ -7,12 +7,15 @@ include "../common/pltl.lus"
 --
 -- An empty service. Use this to (temporarily) disable a service in the model.
 --
-node empty_service(
+node imported empty_service(
     -- The message currently received by the service
     in_msg : message;
 
     -- The ID to be used for ID generation
     in_id : id_type;
+
+    -- True if the service is permitted to send a message.
+    can_send_message : bool;
 ) returns (
     -- The message currently sent by the service
     out_msg : message;
@@ -23,6 +26,3 @@ node empty_service(
         H(out_msg = no_message)
     );
 *)
-let
-    out_msg = no_message;
-tel;

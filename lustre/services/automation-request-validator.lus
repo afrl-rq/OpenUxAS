@@ -18,12 +18,32 @@ contract arv_contract(
 
     -- The ID to be used for ID generation
     in_id : id_type;
+
+    -- True if the service is permitted to send a message.
+    can_send_message : bool;
 ) returns (
     -- The message currently sent by the service
     out_msg : message;
 );
 let
-    guarantee "Automation Request Validator R1. Message IDs.
+
+    guarantee "Automation Request Validator R1. IC.
+      The Automation Request Validator initial condition is to send no
+      message.\n  "
+    (
+        O(out_msg = no_message)
+    );
+
+    guarantee "Automation Request Validator R2. Respects bus access.
+      The Automation Request Validator does not send a message when instructed
+      not to.\n  "
+    (
+        not can_send_message
+    ) => (
+        out_msg = no_message
+    );
+
+    guarantee "Automation Request Validator R3. Message IDs.
       The Automation Request Validator correctly computes output message
       IDs.\n  "
     (
@@ -32,7 +52,7 @@ let
         out_msg.id = in_id + 1
     );
 
-    guarantee "Automation Request Validator R2. Possible responses.
+    guarantee "Automation Request Validator R4. Possible responses.
       The Automation Request Validator responds only with specific
       messages.\n  "
     (
@@ -40,14 +60,7 @@ let
         out_msg      = no_message
     );
 
-    guarantee "Automation Request Validator R3. IC.
-      The Automation Request Validator initial condition is to send no
-      message.\n  "
-    (
-        O(out_msg = no_message)
-    );
-
-    guarantee "Automation Request Validator R4.
+    guarantee "Automation Request Validator R5.
       When the Automation Request Validator sends an Automation Response
       message, the route sent belongs to the previously received Unique
       Automation Response message that is referenced in the Automation Response
@@ -72,11 +85,16 @@ node automation_request_validator(
 
     -- The ID to be used for ID generation
     in_id : id_type;
+
+    -- True if the service is permitted to send a message.
+    can_send_message : bool;
 ) returns (
     -- The message currently sent by the service
     out_msg : message;
 );
-(*@contract import arv_contract(in_msg, in_id) returns (out_msg); *)
+(*@contract
+    import arv_contract(in_msg, in_id, can_send_message) returns (out_msg);
+*)
 var
     -- ===================================================================== --
     -- Service state
@@ -94,28 +112,21 @@ let
     -- behavior. Each is preceded by a natural-language description of the
     -- specification, set off in quotes for clarity.
 
-    -- "If there is a stored route, the service shall send the stored route in
-    --  an Automation Response message."
-    --
-    -- This element of the specification is stated using an assertion rather
-    -- than an equation to permit flexibility in the model: the services does
-    -- not have to respond with a non-empty message in this step.
-    assert(
-        out_msg = no_message
-
-        or
-
-        (
-            ((no_route -> pre(route)) <> no_route) and
-             out_msg =  message {
-                            kind     = automation_response;
-                            id       = in_id + 1;
-                            ref      = no_id -> pre(route_msg_id);
-                            route    = no_route -> pre(route);
-                            waypoint = no_waypoint;
-                        }
-        )
-    );
+    -- "If there is a stored route and the service is permitted to transmit on
+    --  the bus, the service shall send the stored route in an Automation
+    --  Response message."
+    out_msg =   if (no_route -> pre(route)) <> no_route and
+                   can_send_message
+                then
+                    message {
+                        kind     = automation_response;
+                        id       = in_id + 1;
+                        ref      = no_id -> pre(route_msg_id);
+                        route    = no_route -> pre(route);
+                        waypoint = no_waypoint;
+                    }
+                else
+                    no_message;
 
 
     -- "If the service receives a Unique Automation Response message, the

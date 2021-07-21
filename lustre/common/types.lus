@@ -107,3 +107,22 @@ function ids_imply_equality(msg1, msg2 : message) returns (r : bool);
 let
     r = ((msg1.id = msg2.id) => (msg1 = msg2));
 tel;
+
+
+-- Represent the holder of a token granting permission to transmit on the bus.
+type token_holder_type = enum {
+    -- no service holds the token
+    no_holder,
+
+    -- the Plan Builder holds the token
+    plan_builder,
+
+    -- the Waypoint Manager holds the token
+    waypoint_manager,
+
+    -- the Automation Request Validator holds the token
+    automation_request_validator,
+
+    -- the Task holds the token.
+    task
+};

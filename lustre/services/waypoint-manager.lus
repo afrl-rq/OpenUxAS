@@ -17,12 +17,29 @@ contract wm_contract(
 
     -- The ID to be used for ID generation
     in_id : id_type;
+
+    -- True if the service is permitted to send a message.
+    can_send_message : bool;
 ) returns (
     -- The message currently sent by the service
     out_msg : message;
 );
 let
-    guarantee "Waypoint Manager R1. Message IDs.
+    guarantee "Waypoint Manager R1. IC.
+      The Waypoint Manager initial condition is to send no message.\n  "
+    (
+        O(out_msg = no_message)
+    );
+
+    guarantee "Waypoint Manager R2. Respects bus access.
+      The Waypoint Manager does not send a message when instructed not to.\n  "
+    (
+        not can_send_message
+    ) => (
+        out_msg = no_message
+    );
+
+    guarantee "Waypoint Manager R3. Message IDs.
       The Waypoint Manager correctly computes output message IDs.\n  "
     (
         out_msg <> no_message
@@ -30,20 +47,14 @@ let
         out_msg.id = in_id + 1
     );
 
-    guarantee "Waypoint Manager R2. Possible responses.
+    guarantee "Waypoint Manager R4. Possible responses.
       The Waypoint Manager responds only with specific messages.\n  "
     (
         out_msg.kind = mission_command xor
         out_msg      = no_message
     );
 
-    guarantee "Waypoint Manager R3. IC.
-      The Waypoint Manager initial condition is to send no message.\n  "
-    (
-        O(out_msg = no_message)
-    );
-
-    guarantee "Waypoint Manager R4.
+    guarantee "Waypoint Manager R5.
       When the Waypoint Manager sends a Mission Command message, the waypoint
       sent is contained in the route that belongs to the previously received
       Automation Response message that is referenced in the Mission Command
@@ -68,11 +79,16 @@ node waypoint_manager(
 
     -- The ID to be used for ID generation
     in_id : id_type;
+
+    -- True if the service is permitted to send a message.
+    can_send_message : bool;
 ) returns (
     -- The message currently sent by the service
     out_msg : message;
 );
-(*@contract import wm_contract(in_msg, in_id) returns (out_msg); *)
+(*@contract
+    import wm_contract(in_msg, in_id, can_send_message) returns (out_msg);
+*)
 var
     -- ===================================================================== --
     -- Service state
@@ -119,26 +135,16 @@ let
     --     of the message setting the route to reset the waypoint_in_msg_id).
     --     Thus we manually increment the previous waypoint_in_msg_id here in
     --     building the message.
-    --
-    -- This element of the specification is stated using an assertion rather
-    -- than an equation to permit flexibility in the model: the services does
-    -- not have to respond with a non-empty message in this step.
-    assert(
-        out_msg = no_message
-
-        or
-
-        (
-            waypoint <> no_waypoint and
-            out_msg =   message {
-                            kind     = mission_command;
-                            id       = in_id + 1;
-                            ref      = no_id -> pre(route_msg_id);
-                            route    = no_route -> pre(route);
-                            waypoint = waypoint;
+    out_msg =   if waypoint <> no_waypoint and can_send_message then
+                    message {
+                        kind     = mission_command;
+                        id       = in_id + 1;
+                        ref      = no_id -> pre(route_msg_id);
+                        route    = no_route -> pre(route);
+                        waypoint = waypoint;
                         }
-        )
-    );
+                else
+                    no_message;
 
 
     -- "If the service receives an Automation Response message, the service

@@ -10,12 +10,29 @@ contract task_contract(
 
     -- The ID to be used for ID generation
     in_id : id_type;
+
+    -- True if the service is permitted to send a message.
+    can_send_message : bool;
 ) returns (
     -- The message currently sent by the service
     out_msg : message;
 );
 let
-    guarantee "Task R1. Message IDs.
+    guarantee "Task R1. IC.
+      The Task initial condition is to send no message.\n  "
+    (
+        O(out_msg = no_message)
+    );
+
+    guarantee "Task R2. Respects bus access.
+      The Task does not send a message when instructed not to.\n  "
+    (
+        not can_send_message
+    ) => (
+        out_msg = no_message
+    );
+
+    guarantee "Task R3. Message IDs.
       The Task correctly computes output message IDs.\n  "
     (
         out_msg <> no_message
@@ -23,18 +40,12 @@ let
         out_msg.id = in_id + 1
     );
 
-    guarantee "Task R2. Possible responses.
+    guarantee "Task R4. Possible responses.
       The Task responds only with specific messages.\n  "
     (
         out_msg.kind = task_complete  xor
         out_msg.kind = error_response xor
         out_msg      = no_message
-    );
-
-    guarantee "Task R3. IC.
-      The Task initial condition is to send no message.\n  "
-    (
-        O(out_msg = no_message)
     );
 tel;
 
@@ -48,11 +59,16 @@ node task(
 
     -- The ID to be used for ID generation
     in_id : id_type;
+
+    -- True if the service is permitted to send a message.
+    can_send_message : bool;
 ) returns (
     -- The message currently sent by the service
     out_msg : message;
 );
-(*@contract import task_contract(in_msg, in_id) returns (out_msg); *)
+(*@contract
+    import task_contract(in_msg, in_id, can_send_message) returns (out_msg);
+*)
 var
     -- ===================================================================== --
     -- Task state
@@ -125,58 +141,50 @@ let
                 false -> pre(error);
 
 
-    assert (
-        -- Allow the task to send no message at all
-        out_msg = no_message
+    out_msg =   if -- no error was raised (we saw all waypoints expected)
+                   not error and
 
-        or
+                   -- we are actually monitoring a sequence (otherwise the
+                    -- value of route_index is undefined)
+                   nonempty_sequence(monitored_route) and
 
-        -- The task sends a task complete, when preconditions are met
-        (
-            -- no error was raised (we saw all the waypoints we expected)
-            not error and
+                   -- we've run out of waypoints to expect
+                   expected_waypoint = no_waypoint and
 
-            -- we are actually monitoring a sequence (otherwise the value of
-            -- route_index is undefined)
-            nonempty_sequence(monitored_route) and
+                   -- we actually were looking for waypoints prior to running
+                   -- out of waypoints to expect
+                   (false -> (pre(expected_waypoint) <> no_waypoint)) and
 
-            -- we've run out of waypoints
-            expected_waypoint = no_waypoint and
+                   -- we are permitted to send a message
+                   can_send_message
+                then
+                    message {
+                        kind     = task_complete;
+                        id       = in_id + 1;
+                        ref      = no_id;
+                        route    = monitored_route;
+                        waypoint = no_waypoint;
+                    }
+                else if -- we didn't see the waypoint we expected
+                        error and
 
-            -- we actually were looking for waypoints previous to running out
-            (false -> (pre(expected_waypoint) <> no_waypoint)) and
+                        -- we didn't see an error immediately before this step
+                        -- - this makes the error responses a
+                        -- rising-edge-triggered output
+                        (false -> (not pre(error))) and
 
-            -- this is the message we send
-            out_msg = message {
-                kind     = task_complete;
-                id       = in_id + 1;
-                ref      = no_id;
-                route    = monitored_route;
-                waypoint = no_waypoint;
-            }
-        )
-
-        or
-
-        -- The task sends an error response, when preconditions are met
-        (
-            -- we didn't see the waypoint we expected
-            error and
-
-            -- we didn't see an error immediately before this step - this makes
-            -- the error respones a rising-edge-triggered output
-            (false -> (not pre(error))) and
-
-            -- this is the message we send
-            out_msg = message {
-                kind     = error_response;
-                id       = in_id + 1;
-                ref      = no_id;
-                route    = monitored_route;
-                waypoint = no_waypoint -> pre(expected_waypoint);
-            }
-        )
-    );
+                        -- we are permitted to send a message
+                        can_send_message
+                then
+                    message {
+                        kind     = error_response;
+                        id       = in_id + 1;
+                        ref      = no_id;
+                        route    = monitored_route;
+                        waypoint = no_waypoint -> pre(expected_waypoint);
+                    }
+                else
+                    no_message;
 
 
     -- ===================================================================== --

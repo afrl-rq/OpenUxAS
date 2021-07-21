@@ -38,15 +38,18 @@ node uxas() returns (
 
     -- message sent by the Task
     task_msg : message;
+
 );
+var
+    token_holder : token_holder_type;
 let
     -- ===================================================================== --
     -- Environment Modeling
 
-    in_msg = bus(no_message -> pre(pb_msg),
-                 no_message -> pre(arv_msg),
-                 no_message -> pre(wm_msg),
-                 no_message -> pre(task_msg));
+    in_msg, token_holder = bus(no_message -> pre(pb_msg),
+                               no_message -> pre(arv_msg),
+                               no_message -> pre(wm_msg),
+                               no_message -> pre(task_msg));
 
     -- Remember the ID of the last non-empty message seen. We use this to
     -- ensure monotonicity and uniqueness of message IDs.
@@ -59,10 +62,14 @@ let
     -- ===================================================================== --
     -- Service Execution
 
-    pb_msg   = plan_builder(in_msg, last_nonempty_msg_id);
-    arv_msg  = automation_request_validator(in_msg, last_nonempty_msg_id);
-    wm_msg   = waypoint_manager(in_msg, last_nonempty_msg_id);
-    task_msg = task(in_msg, last_nonempty_msg_id);
+    pb_msg   = plan_builder(in_msg, last_nonempty_msg_id,
+                            token_holder = plan_builder);
+    arv_msg  = automation_request_validator(in_msg, last_nonempty_msg_id,
+                                   token_holder = automation_request_validator);
+    wm_msg   = waypoint_manager(in_msg, last_nonempty_msg_id,
+                                token_holder = waypoint_manager);
+    task_msg = task(in_msg, last_nonempty_msg_id,
+                    token_holder = task);
 tel;
 
 

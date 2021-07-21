@@ -10,6 +10,9 @@ contract pb_contract(
 
     -- The ID to be used for ID generation
     in_id : id_type;
+
+    -- True if the service is permitted to send a message.
+    can_send_message : bool;
 ) returns (
     -- The message currently sent by the service
     out_msg : message;
@@ -26,8 +29,10 @@ let
     guarantee "Plan Builder R2. Possible responses.
       The Plan Builder responds only with specific messages.\n  "
     (
-        out_msg.kind = unique_automation_response xor
-        out_msg      = no_message
+        if can_send_message then
+            out_msg.kind = unique_automation_response
+        else
+            out_msg = no_message
     );
 tel;
 
@@ -43,8 +48,13 @@ node imported plan_builder(
 
     -- The ID to be used for ID generation
     in_id : id_type;
+
+    -- True if the service is permitted to send a message.
+    can_send_message : bool;
 ) returns (
     -- The message currently sent by the service
     out_msg : message;
 );
-(*@contract import pb_contract(in_msg, in_id) returns (out_msg); *)
+(*@contract
+    import pb_contract(in_msg, in_id, can_send_message) returns (out_msg);
+*)
