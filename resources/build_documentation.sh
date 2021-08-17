@@ -5,9 +5,11 @@
 # https://github.com/afrl-rq/OpenUxAS
 # Additional copyright may be held by others, as reflected in the commit history.
 
-ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-OPENUXAS_ROOT="$( realpath "${ROOT_DIR}/.." )"
+# Script location
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+# Load global paths
+source "${SCRIPT_DIR}/../infrastructure/paths.sh"
 
 echo "Installing dependencies ..."
 
@@ -29,21 +31,19 @@ fi
 
 echo "Generating User Manual..."
 # run this at: OpenUxAS/doc/reference/UserManual
-cd "${OPENUXAS_ROOT}/doc/reference/UserManual"
-pdflatex UxAS_UserManual.tex
+( cd "${DOC_DIR}/reference/UserManual" && pdflatex UxAS_UserManual.tex )
 
 echo "Creating HTML Doxygen reference documentation..."
 # run this at: OpenUxAS/doc/doxygen
-cd "${OPENUXAS_ROOT}/doc/doxygen"
-sh RunDoxygen.sh
+( cd "${DOC_DIR}/doc/doxygen" && sh RunDoxygen.sh )
 
 echo "...Congratulations! You're done with building the documentation!"
 echo " "
 echo "To view the user manual, load "
-echo "  \"${OPENUXAS_ROOT}/doc/reference/UserManual/UxAS_UserManual.pdf\""
+echo "  \"${DOC_DIR}/reference/UserManual/UxAS_UserManual.pdf\""
 echo " "
 echo "To view the Doxygen reference document, load "
-echo "  \"${OPENUXAS_ROOT}/doc/doxygen/html/index.html\""
+echo "  \"${DOC_DIR}/doxygen/html/index.html\""
 echo "in your browser. E.g.:"
-echo "  firefox \"${OPENUXAS_ROOT}/doc/doxygen/html/index.html\" &"
+echo "  firefox \"${DOC_DIR}/doxygen/html/index.html\" &"
 echo " "

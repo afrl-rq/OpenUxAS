@@ -1,17 +1,24 @@
 # Platform
-PLATFORM:=$(shell python -c "import sys; print(sys.platform)")
+PLATFORM:=$(shell python3 -c "import sys; print(sys.platform)")
 
-# Anod search path
-ANOD_PATH:=$(HOME)/daidalus
+# Path to the makefile and containing directory
+mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+current_dir := $(dir $(mkfile_path))
 
-# Anod binary
-ANOD_BIN:=$(ANOD_PATH)/anod
+# Don't autoconfigure the build environment if this Makefile is invoked by anod
+ifneq ($(SKIP_ANOD_SETUP),true)
+	# Anod search path
+	ANOD_PATH:=$(current_dir)
 
-# Check if anod is available and export the uxas build environment if so
-ifneq (,$(wildcard $(ANOD_BIN)))
-    ANODENV:=$(shell $(ANOD_BIN) printenv uxas --build-env --inline)
-else
-    ANODENV:=
+	# Anod binary
+	ANOD_BIN:=$(ANOD_PATH)/anod
+
+	# Check if anod is available and export the uxas build environment if so
+	ifneq (,$(wildcard $(ANOD_BIN)))
+		ANODENV:=$(shell NO_INSTALL_VENV=1 $(ANOD_BIN) printenv uxas --build-env --inline)
+	else
+		ANODENV:=
+	endif
 endif
 
 # Control whether full command line should be displayed during compilation
@@ -52,13 +59,15 @@ endif
 
 # Linker flags
 ifeq ($(PLATFORM),linux)
-    LINKER_FLAGS:=-std=c++11 -ldaidalus -llmcp -lzyre -lpugixml -lboost_filesystem \
+    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
 -lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
--lczmq -luuid -lserial -lzmq -ldl -lpthread -static-libstdc++ -static-libgcc
+-lczmq -luuid -lserial -lzmq -ldl -lpthread -static-libstdc++ -static-libgcc \
+-ldaidalus
 else
-    LINKER_FLAGS:=-std=c++11 -ldaidalus -llmcp -lzyre -lpugixml -lboost_filesystem \
+    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
 -lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
--lczmq -lserial -lzmq -ldl -lpthread
+-lczmq -lserial -lzmq -ldl -lpthread \
+-ldaidalus
 endif
 
 # Include flags
@@ -99,7 +108,7 @@ endef
 #
 define GENERATE_COMPILE_RULE
 
-$(OBJECT_DIR)/$1: $2 
+$(OBJECT_DIR)/$1: $2
 	$$(call COMPILE_CXX,$$@,$$<)
 
 endef
@@ -126,6 +135,7 @@ help:
 clean:
 	@echo "[Remove objects]"
 	rm -f $(OBJECTS)
+	rm -rf $(OBJECT_DIR)/uxas
 	@echo "[Remove makefile fragments (dependencies)]"
 	rm -f $(DEPS)
 

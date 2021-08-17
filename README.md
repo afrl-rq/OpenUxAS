@@ -1,7 +1,7 @@
 # License
 
 *OpenUxAS* is developed by the Air Force Research Laboratory, Aerospace System Directorate, Power and Control Division.
-The LMCP specification and all source code for *OpenUxAS* is publicaly released under the Air Force Open Source Agreement Version 1.0. See LICENSE.md for complete details.
+The LMCP specification and all source code for *OpenUxAS* is publicly released under the Air Force Open Source Agreement Version 1.0. See LICENSE.md for complete details.
 The Air Force Open Source Agreement closely follows the NASA Open Source Agreement Verion 1.3.
 **NOTE the terms of the license include registering use of the software by emailing <a href="mailto:afrl.rq.opensource@us.af.mil?subject=OpenUxAS Registration&body=Please register me for use of OpenUxAS. Name: ____________">afrl.rq.opensource@us.af.mil</a>.**
 
@@ -11,7 +11,7 @@ OpenUxAS
 [![Build Status](https://github.com/afrl-rq/OpenUxAS/workflows/Build/badge.svg)](https://github.com/afrl-rq/OpenUxAS/actions)
 
 > ***This branch is intended to facilitate in-progress efforts to integrate DAIDALUS into OpenUxAS.***
-> Most users should instead use the main development branch [here](http://github.com/afrl-rq/OpenUxAS-bootstrap).
+> Most users should instead use the main development branch [here](http://github.com/afrl-rq/OpenUxAS).
 
 UxAS is a collection of modular services that interact via a common message-passing architecture.
 Similar in design to Robot Operating System (ROS), each service subscribes to messages in the system and responds to queries.
@@ -40,160 +40,132 @@ We've organized this README into sections, to simplify navigation.
 *Table of Contents*
 
 1. [Quick Start](#quick-start)
-2. [Getting Started](#getting-started)
-3. [Building OpenUxAS](#build)
-4. [Running the Examples](#examples)
-5. [Running the Tests](#tests)
-6. [Building the Documentation](#docs)
+2. [Using OpenUxAS](#using)
+3. [Developing OpenUxAS](#developing)
+4. [Building the Documentation](#docs)
+5. [Troubleshooting](#troubleshooting)
 
+Throughout the remainder of the README, we will write commands that you should enter at your Linux command line like this:
+
+    OpenUxAS$ command argument
+
+This means that you have changed to the directory `OpenUxAS` and you are going to execute the command `command` with arguments `argument`.
+If you would like to copy-paste commands from this README, you should only copy the part that begins after the `$`.
 
 # 1. Quick Start<a name="quick-start" />
 
-The simplest approach to getting up and running with OpenUxAS is to use [OpenUxAS-bootstrap](https://github.com/afrl-rq/OpenUxAS-bootstrap), a supporting repository that we developed to simplify building, using and developing for OpenUxAS.
-A detailed description of what OpenUxAS-bootstrap is and what it provides is available at the [OpenUxAS-bootstrap](https://github.com/afrl-rq/OpenUxAS-bootstrap) repository.
-
-If you prefer to *not* use OpenUxAS bootstrap, you should skip this section and refer to the [next section](#getting-started) instead.
-
+We've tried to make getting started with OpenUxAS as simple as possible.
 Before you begin, you will need:
 
 1. Ubuntu 20.04
-2. curl
-3. git
-4. python 3.8
-
-Bootstrap your install by running this command:
-
-    ~$ curl -L https://github.com/afrl-rq/OpenUxAS-bootstrap/raw/daidalus_integration/install/bootstrap | BOOTSTRAP_ROOT=~/daidalus BOOTSTRAP_REF=daidalus_integration bash
-
-Configure your environment to run the build tool:
-
-    ~$ eval "$( cd ~/daidalus && install/install-anod-venv --printenv )"
-
-Build OpenUxAS and OpenAMASE:
-
-    ~/daidalus$ ./anod build uxas
-    ~/daidalus$ ./anod build amase
-
-Now you can run the OpenUxAS examples:
-
-    ~/daidalus$ ./run-example 02_Example_WaterwaySearch
-
-
-# 2. Getting Started<a name="getting-started" />
-
-Before you begin, you will need:
-
-1. Ubuntu 20.04 or 18.04
 2. git
-3. python 3.7 or 3.8
 
-Newer versions of Ubuntu may work, but will not have been tested.
-Python is used to provide testing support and to automate the running of examples.
+Use git to clone this repository:
 
-It is possible to build OpenUxAS on Mac, however this is not an explicitly supported configuration.
-Likewise, building OpenUxAS on Windows using WSL2 should work, but again, this is not an explicitly supported configuration.
+    $ git clone https://github.com/afrl-rq/OpenUxAS
 
-## 2.1. Third-Party Dependencies<a name="dependencies" />
+Then, check out the DAIDALUS branch:
 
-Before building OpenUxAS, you need to make sure you have properly installed the following third-party dependencies.
-Please note the version numbers, where listed; more recent versions may work but will not have been tested and should be avoided.
+    OpenUxAS$ git checkout daidalus_integration
 
-Dependencies required to build OpenUxAS in C++:
-* [boost](boost_1_68_0.tar.bz2) 1.68.0
-* [czmq](https://github.com/zeromq/czmq.git) 4.0.2
-* [cppzmq](https://github.com/zeromq/cppzmq.git) 4.2.2
-* [libzmq](https://github.com/zeromq/libzmq.git) 4.3.1
-* [pugixml](https://github.com/zeux/pugixml.git) 1.2
-* [serial](https://github.com/wjwwood/serial.git) 1.2.1
-* [sqlite](sqlite-autoconf-3290000.tar.gz) 3.29.0
-* [sqlitecpp](https://github.com/SRombauts/SQLiteCpp.git) 1.3.1
-* [zyre](https://github.com/zeromq/zyre.git) 2.0.0
+Then, use the provided `anod` command to fetch and build the dependencies for OpenUxAS and finally to build OpenUxAS:
 
-Dependencies required to build OpenUxAS in Ada:
-* [libzmq](https://github.com/zeromq/libzmq.git) 4.3.1
-* [zeromq-Ada](https://github.com/persan/zeromq-Ada.git) (master branch)
+    OpenUxAS$ ./anod build uxas
 
-Additionally, to build the Ada code, you need an Ada compiler.
-The [GNAT Community Edition](https://www.adacore.com/download) provides a free, complete development environment for Ada, including a compiler.
+Then, use anod to build OpenAMASE, which provides simulation capabilities for OpenUxAS:
 
-## 2.2. LMCP and OpenAMASE<a name="lmcp" />
+    OpenUxAS$ ./anod build amase
 
-The message set used by OpenUxAS is defined using LMCP.
-To work with these messages, you need to build [LmcpGen](https://github.com/afrl-rq/LmcpGen) and generate the C++ or Ada message sets.
-As part of this process, you will clone [OpenAMASE](https://github.com/afrl-rq/OpenAMASE).
+Now you can run OpenUxAS examples:
 
-1. Clone [LmcpGen](https://github.com/afrl-rq/LmcpGen).
-   Place LmcpGen next to OpenUxAS in your filesystem.
+    OpenUxAS$ ./run-example 02_Example_WaterwaySearch
 
-2. Clone [OpenAMASE](https://github.com/afrl-rq/OpenAMASE).
-   Place OpenAMASE next to OpenUxAS in your filesystem.
+You can run OpenUxAS DAIDALUS-specific examples like this:
 
-3. Run the python script `resources/RunLmcpGen.py`:
-   
-        OpenUxAS$ python3 resources/RunLmcpGen.py
-   
-    This will build the OpenUxAS message sets for C++ and python, build the OpenAMASE message set, and build the documentation for the message sets.
+    OpenUxAS$ ./run-example 09_Collision
 
-## 3. Building OpenUxAS<a name="build" />
-
-Once you have installed the required third-party dependencies and built the message set, you are ready to build OpenUxAS.
-
-For C++:
-
-    OpenUxAS$ make all
-
-For Ada:
-
-    OpenUxAS/src/ada$ gprbuild -p afrl_ada_dev.gpr
+***Note:** DAIDALUS examples currently freeze after several seconds due to an issue with the ZeroMQ-TCP bridge used to connect OpenUxAS with OpenAMASE.*
 
 
-# 4. Running the Examples<a name="examples" />
+# 2. Using OpenUxAS<a name="using" />
 
-Once you have successfully built OpenUxAS, you can run examples.
+If your goal is to experiment with OpenUxAS, the best way to do that is to explore the examples that are provided as part of this repository.
 
-First, you need to put OpenUxAS on your path:
-
-    OpenUxAS$ export PATH=obj/cpp/uxas
+First, you will need to build OpenUxAS and OpenAMASE.
+You can follow the instructions in [Quick Start](#quick-start), above.
 
 The simplest example is the Hello World example.
 You can run the Hello World example like this:
 
-    OpenUxAS$ python3 run-example 01_HelloWorld
+    OpenUxAS$ ./run-example 01_HelloWorld
 
-Before you can run the more interesting examples, you need to make sure [OpenAMASE](https://github.com/afrl-rq/OpenAMASE) is available.
 Then, you can run other examples like this:
 
-    OpenUxAS$ python3 run-example 02_Example_WaterwaySearch
+    OpenUxAS$ ./run-example 02_Example_WaterwaySearch
 
 You can get a list of available examples by running:
 
-    OpenUxAS$ python3 run-example --list
+    OpenUxAS$ ./run-example --list
 
 
-# 5. Running the Tests<a name="tests" />
+# 3. Developing OpenUxAS<a name="developing" />
 
-Once you have build OpenUxAS, you can run the tests.
+If you wish to develop OpenUxAS, the easiest way to get started is to follow the [Quick Start](#quick-start) instructions, above.
+This step is essential because the provided `anod` command will get and install all third-party dependencies needed to build OpenUxAS.
+These dependencies are installed locally in the repository.
+The Makefile knows how to find them, so you will not have to do any additional configuration of your environment.
+
+Once you have cloned this repository and built OpenUxAS using anod, you can use `make` for incremental builds, like this:
+
+    OpenUxAS$ make -j all
+
+The `run-example` and `tests/run-tests` scripts will then select the binary built by `make`, allowing you to see the effects of and test your changes.
+
+## 3.1. IDE Support
+
+If you use [Visual Studio Code](https://code.visualstudio.com/) (VS Code) for development, search paths for IntelliSense have been set so that references to third-party dependencies can be resolved.
+Additionally, build and clean tasks have been set up that use the Makefile.
+
+If you use another IDE for development, you will need to configure the IDE so that references to third-party dependencies can be resolved.
+These details are out of scope for this README, but will be available on the OpenUxAS documentation site.
+
+## 3.2. Running the Tests
+
+Once you have built OpenUxAS, you can run the tests.
 Tests are found under the `tests` directory and are language specific.
 
-## 5.1. C++ Tests
+### 3.2.1. C++ Tests
 
 The C++ tests are found under `tests/cpp`.
 You can run these tests like this:
 
-    OpenUxAS/tests/cpp$ python3 run-tests
-
-If OpenUxAS is built with coverage information, the test suite will report coverage results.
+    OpenUxAS/tests/cpp$ ./run-tests
 
 More information about the C++ tests, including how to develop new tests, is provided in `tests/cpp/README.md`.
 
-## 5.2. SPARK Proofs
+### 3.2.2. SPARK Proofs
 
 The SPARK proofs can be replayed and compared to prior results using the script found under `tests/proof`, like this:
 
-    OpenUxAS/tests/proof$ python3 run-proofs
+    OpenUxAS/tests/proof$ ./run-proofs
+
+## 3.3. Modifying LmcpGen or OpenAMASE
+
+If you need to modify LmcpGen or OpenAMASE to support your OpenUxAS development, the provided `anod` command provides a command to help simplify project setup.
+Simply run:
+
+    OpenUxAS$ ./anod devel-setup lmcp
+
+or:
+
+    OpenUxAS$ ./anod devel-setup amase
+
+Anod will clone the requested repository and place the clone under a new directory named `develop`.
+Anod will then use the cloned LmcpGen and/or OpenAMASE repository when doing builds.
+Additionally, the `run-example` script will use the cloned OpenAMASE when running examples.
 
 
-# 6. Building the Documentation<a name="docs" />
+# 4. Building the Documentation<a name="docs" />
 
 There are two parts to the OpenUxAS documentation:
 1. a user manual;
@@ -206,13 +178,12 @@ Run it like this:
 
     OpenUxAS$ resources/build_documentation.sh
 
-## 6.1 Building the Documentation Manually
 
-If you'd like to do this process manually, then:
+# 5. Troubleshooting<a name="troubleshooting" />
 
-1. The User Manual can be generated by running:
-   `pdflatex UxAS_UserManual.tex` in the folder `doc/reference/UserManual/`
-2. Create HTML Doxygen reference documenation:
-   * Open terminal in directory `doc/doxygen`
-   * `sh RunDoxygen.sh`
-   * In newly created `html` folder, open index.html
+If things seem to be going wrong, all of the scripts offer increased verbosity that might help diagnose problems.
+For example, passing `-vv` to the provided `anod` command will cause each command executed by anod to be printed:
+
+    OpenUxAS$ ./anod -vv build
+
+These commands can be entered manually, hopefully allowing problems to be identified and worked around.
