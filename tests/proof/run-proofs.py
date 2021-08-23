@@ -11,6 +11,8 @@ class GnatproveDriver(DiffTestDriver):
 
     def run(self):
         filenames = self.test_env.get ("filenames")
+        gnatprove_level = self.test_env.get ("level")
+        gnatprove_timeout = self.test_env.get ("timeout")
 
         if filenames != None:
             with open(self.working_dir("test.gpr"), 'w') as f_prj:
@@ -29,13 +31,21 @@ class GnatproveDriver(DiffTestDriver):
                 f_prj.write('      for Default_Switches ("ada") use ("-O2", "-gnatn", "-gnatp", "-fdata-sections","-ffunction-sections");\n')
                 f_prj.write('   end Compiler;\n')
                 f_prj.write('   package Prove is\n')
-                f_prj.write('      for Proof_Switches ("Ada") use ("--no-counterexample", "-q", "--replay", "-u");\n')
+                f_prj.write('      for Proof_Switches ("Ada") use ("--no-counterexample", "-q", "-u");\n')
                 f_prj.write('      for Proof_Dir use "../../..'+self.test_env["test_dir"]+'/../../../../src/ada/proof";\n')
                 f_prj.write('   end Prove;\n')
                 f_prj.write('end Test;\n')
 
+            if self.env.options.no_replay:
+                proof_switches = []
+                if gnatprove_level != None:
+                    proof_switches+= ["--level="+str(gnatprove_level)]
+                if gnatprove_timeout != None:
+                    proof_switches+=["--timeout="+str(gnatprove_timeout)]
+            else:
+                proof_switches=["--replay"]
 
-            self.shell(["gnatprove", "-P", self.working_dir("test.gpr"), "-j"+str(self.env.options.gnatprove_jobs)] + filenames ,timeout=self.env.options.timeout)
+            self.shell(["gnatprove", "-P", self.working_dir("test.gpr"), "-j"+str(self.env.options.gnatprove_jobs)] + filenames + proof_switches,timeout=self.env.options.timeout)
 
 
 class GnatproveTestsuite(Testsuite):
@@ -68,7 +78,13 @@ class GnatproveTestsuite(Testsuite):
             type=int,
             metavar="N",
             default=1,
-            help="Specify the number of jobs to run simultaneously on a gnatprove instance",
+            help="Specify the number of jobs to run simultaneously on a gnatprove instance"
+        )
+        self.main.argument_parser.add_argument(
+            "--no-replay",
+            action="store_true",
+            dest="no_replay",
+            help="Do not use replay mode when running the testsuite to generate new session files"
         )
 
     # Before running the testsuite, keep track in the environment of our
