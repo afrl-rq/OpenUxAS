@@ -12,6 +12,16 @@ import sys
 
 from typing import TYPE_CHECKING
 
+from uxas.paths import (
+    OPENUXAS_ROOT,
+    ANOD_BIN,
+    MDMS_DIR,
+    LMCP_DIR,
+    AMASE_DIR,
+    CPP_DIR,
+    DOC_DIR,
+)
+
 if TYPE_CHECKING:
     from argparse import Namespace
     from typing import List
@@ -23,31 +33,22 @@ This script will build LMCPgen and generate cpp, docs, and python from all
 MDMs in the OpenUxAS repository.
 """
 
-# Directory in which this script is executing.
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Path variables. The assumption is that these should be read from the
+# environment, but we provide fallbacks just in case.
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Anod search path
-ANOD_PATH = os.path.join(os.environ.get("HOME", ""), "daidalus")
-
-# Anod binary
-ANOD_BIN = os.path.join(ANOD_PATH, "anod")
-
-OPENUXAS_DIR = os.path.abspath(os.path.join(ROOT_DIR, ".."))
-
-MDM_DIR = os.path.join(OPENUXAS_DIR, "mdms")
-
-LMCP_DIR = os.path.abspath(os.path.join(OPENUXAS_DIR, "..", "LmcpGen"))
-AMASE_DIR = os.path.abspath(os.path.join(OPENUXAS_DIR, "..", "OpenAMASE"))
 AMASE_LMCP_DIR = os.path.join(AMASE_DIR, "OpenAMASE", "lib", "LMCP")
 
 ANT_CMD = ["ant", "-q", "jar"]
 
 LMCP_JAR = os.path.join(LMCP_DIR, "dist", "LmcpGen.jar")
-LMCP_CMD = ["java", "-Xmx2048m", "-jar", LMCP_JAR, "-mdmdir", MDM_DIR]
+LMCP_CMD = ["java", "-Xmx2048m", "-jar", LMCP_JAR, "-mdmdir", MDMS_DIR]
 
-SRC_CPP_LMCP = os.path.join(OPENUXAS_DIR, "src", "cpp", "LMCP")
-DOC_LMCP = os.path.join(OPENUXAS_DIR, "doc", "LMCP")
-PY_LMCP = os.path.join(OPENUXAS_DIR, "src", "cpp", "LMCP", "py")
+SRC_CPP_LMCP = os.path.join(CPP_DIR, "LMCP")
+
+DOC_LMCP = os.path.join(DOC_DIR, "LMCP")
+
+PY_LMCP = os.path.join(SRC_CPP_LMCP, "py")
 
 # For log consistency with our other usages.
 STREAM_FMT = "%(levelname)-8s %(message)s"
@@ -163,6 +164,7 @@ if __name__ == "__main__":
     configure_logging(args)
 
     if not os.path.isdir(LMCP_DIR):
+        print(LMCP_DIR)
         logging.critical(
             "LmcpGen must be present and located adjacent to OpenUxAS"
         )
@@ -175,19 +177,19 @@ if __name__ == "__main__":
     logging.info("Done building LmcpGen")
 
     logging.info("Processing MDMs")
-    log_call(LMCP_CMD + ["-cpp", "-dir", SRC_CPP_LMCP], OPENUXAS_DIR, env)
+    log_call(LMCP_CMD + ["-cpp", "-dir", SRC_CPP_LMCP], OPENUXAS_ROOT, env)
 
     if os.path.isdir(AMASE_DIR):
         log_call(
-            LMCP_CMD + ["-java", "-dir", AMASE_LMCP_DIR], OPENUXAS_DIR, env
+            LMCP_CMD + ["-java", "-dir", AMASE_LMCP_DIR], OPENUXAS_ROOT, env
         )
     else:
         logging.warning(
             "OpenAMASE is expected to be present and located adjacent to OpenUxAS"
         )
 
-    log_call(LMCP_CMD + ["-doc", "-dir", DOC_LMCP], OPENUXAS_DIR, env)
-    log_call(LMCP_CMD + ["-py", "-dir", PY_LMCP], OPENUXAS_DIR, env)
+    log_call(LMCP_CMD + ["-doc", "-dir", DOC_LMCP], OPENUXAS_ROOT, env)
+    log_call(LMCP_CMD + ["-py", "-dir", PY_LMCP], OPENUXAS_ROOT, env)
     logging.info("Done processing MDMs")
 
     if args.build_amase:

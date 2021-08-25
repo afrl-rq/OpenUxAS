@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<UxAS FormatVersion="1.0" EntityID="100" EntityType="Aircraft">
+
+  <!-- Bridge used to send messages to AMASE -->
+  <Bridge Type="LmcpObjectNetworkTcpBridge" TcpAddress="tcp://127.0.0.1:5555" Server="FALSE">
+    <!-- Necessary: sending MissionCommand and VehicleActionCommand messages to AMASE allows UxAS 
+         to control vehicles -->
+    <SubscribeToMessage MessageType="afrl.cmasi.MissionCommand"/>
+    <SubscribeToMessage MessageType="afrl.cmasi.VehicleActionCommand"/>
+    <!-- Optional: Sending certain other commands to AMASE does nothing except allow AMASE to draw 
+         visualizations -->
+    <SubscribeToMessage MessageType="afrl.cmasi.AreaSearchTask"/>
+    <SubscribeToMessage MessageType="afrl.cmasi.LineSearchTask"/>
+    <SubscribeToMessage MessageType="afrl.cmasi.PointSearchTask"/>
+    <SubscribeToMessage MessageType="afrl.cmasi.KeepInZone"/>
+    <SubscribeToMessage MessageType="afrl.cmasi.KeepOutZone"/>
+  </Bridge>
+  
+  <!-- Service that causes UxAS to use timestamps from AMASE to set the time. Causes UxAS to wait 
+       for an AMASE simulation to start running. Recommended when using UxAS with AMASE. -->
+  <Service Type="Test_SimulationTime"/>
+  
+  <!-- Necessary services for the standard UxAS configuration -->
+  <Service Type="WaypointPlanManagerService" VehicleID="3" NumberWaypointsToServe="15" 
+           NumberWaypointsOverlap="5" DefaultLoiterRadius_m="250" param.turnType="FlyOver" 
+           AddLoiterToEndOfSegments="FALSE" AddLoiterToEndOfMission="FALSE" 
+           LoopBackToFirstTask="FALSE" GimbalPayloadId="103"/>
+  <Service Type="WaypointPlanManagerService" VehicleID="4" NumberWaypointsToServe="15" 
+           NumberWaypointsOverlap="5" DefaultLoiterRadius_m="250" param.turnType="FlyOver" 
+           AddLoiterToEndOfSegments="FALSE" AddLoiterToEndOfMission="FALSE" 
+           LoopBackToFirstTask="FALSE" GimbalPayloadId="104"/>
+  <Service Type="WaypointPlanManagerService" VehicleID="5" NumberWaypointsToServe="15" 
+           NumberWaypointsOverlap="5" DefaultLoiterRadius_m="250" param.turnType="FlyOver" 
+           AddLoiterToEndOfSegments="FALSE" AddLoiterToEndOfMission="FALSE" 
+           LoopBackToFirstTask="FALSE" GimbalPayloadId="105"/>
+  <Service Type="WaypointPlanManagerService" VehicleID="6" NumberWaypointsToServe="15" 
+           NumberWaypointsOverlap="5" DefaultLoiterRadius_m="250" param.turnType="FlyOver" 
+           AddLoiterToEndOfSegments="FALSE" AddLoiterToEndOfMission="FALSE" 
+           LoopBackToFirstTask="FALSE" GimbalPayloadId="106"/>
+  <Service Type="SensorManagerService"/>
+  <Service Type="TaskManagerService"/>
+  <Service Type="AutomationRequestValidatorService" MaxResponseTime_ms="10000"/>
+  <Service Type="RoutePlannerVisibilityService" TurnRadiusOffset_m="0.0" 
+           MinimumWaypointSeparation_m="50.0"/>
+  <Service Type="RouteAggregatorService"/>
+  <Service Type="AssignmentTreeBranchBoundService" NumberNodesMaximum="0" CostFunction="MINMAX"/>
+  <Service Type="PlanBuilderService" AssignmentStartPointLead_m="0.0"/>
+  
+  <!-- Useful services to log or visualize data from UxAS -->
+  <Service Type="MessageLoggerDataService" LogFileMessageCountLimit="1000" 
+           FilesPerSubDirectory="1000">
+    <LogMessage MessageType="uxas" NumberMessagesToSkip="0"/>
+    <LogMessage MessageType="afrl" NumberMessagesToSkip="0"/>
+  </Service>
+  <Service Type="AutomationDiagramDataService"/>
+  
+  <!-- Service to inject messages into UxAS -->
+  <Service Type="SendMessagesService" PathToMessageFiles="../MessagesToSend/">
+    <Message MessageFileName="AirVehicleConfiguration_3.xml" SendTime_ms="200"/>
+    <Message MessageFileName="AirVehicleConfiguration_4.xml" SendTime_ms="200"/>
+    <Message MessageFileName="AirVehicleConfiguration_5.xml" SendTime_ms="200"/>
+    <Message MessageFileName="AirVehicleConfiguration_6.xml" SendTime_ms="200"/>
+    <Message MessageFileName="AirVehicleState_3.xml" SendTime_ms="250"/>
+    <Message MessageFileName="AirVehicleState_4.xml" SendTime_ms="250"/>
+    <Message MessageFileName="AirVehicleState_5.xml" SendTime_ms="250"/>
+    <Message MessageFileName="AirVehicleState_6.xml" SendTime_ms="250"/>
+    <Message MessageFileName="KeepInZone_11.xml" SendTime_ms="300"/>
+    <Message MessageFileName="KeepInZone_12.xml" SendTime_ms="300"/>
+    <Message MessageFileName="KeepInZone_13.xml" SendTime_ms="300"/>
+    <Message MessageFileName="KeepOutZone_14.xml" SendTime_ms="300"/>
+    <Message MessageFileName="KeepOutZone_15.xml" SendTime_ms="300"/>
+    <Message MessageFileName="KeepOutZone_16.xml" SendTime_ms="300"/>
+    <Message MessageFileName="OperatingRegion_17.xml" SendTime_ms="350"/>
+    <Message MessageFileName="AreaSearchTask_21.xml" SendTime_ms="400"/>
+    <Message MessageFileName="AreaSearchTask_22.xml" SendTime_ms="400"/>
+    <Message MessageFileName="AreaSearchTask_23.xml" SendTime_ms="400"/>
+    <Message MessageFileName="LineSearchTask_27.xml" SendTime_ms="400"/>
+    <Message MessageFileName="LineSearchTask_28.xml" SendTime_ms="400"/>
+    <Message MessageFileName="PointSearchTask_31.xml" SendTime_ms="400"/>
+    <Message MessageFileName="PointSearchTask_32.xml" SendTime_ms="400"/>
+    <Message MessageFileName="AutomationRequest_a.xml" SendTime_ms="5000"/>
+    <Message MessageFileName="AutomationRequest_b.xml" SendTime_ms="10000"/>
+  </Service>
+  
+  <!-- Service to send messages to other programs using TCP on port 9999 -->
+  <!-- <Bridge Type="LmcpObjectNetworkTcpBridge" TcpAddress="tcp://*:9999" Server="TRUE">
+    <SubscribeToMessage MessageType="a"/>
+    <SubscribeToMessage MessageType="b"/>
+    <SubscribeToMessage MessageType="c"/>
+    <SubscribeToMessage MessageType="d"/>
+    <SubscribeToMessage MessageType="e"/>
+    <SubscribeToMessage MessageType="f"/>
+    <SubscribeToMessage MessageType="g"/>
+    <SubscribeToMessage MessageType="h"/>
+    <SubscribeToMessage MessageType="i"/>
+    <SubscribeToMessage MessageType="j"/>
+    <SubscribeToMessage MessageType="k"/>
+    <SubscribeToMessage MessageType="l"/>
+    <SubscribeToMessage MessageType="m"/>
+    <SubscribeToMessage MessageType="n"/>
+    <SubscribeToMessage MessageType="o"/>
+    <SubscribeToMessage MessageType="p"/>
+    <SubscribeToMessage MessageType="q"/>
+    <SubscribeToMessage MessageType="r"/>
+    <SubscribeToMessage MessageType="s"/>
+    <SubscribeToMessage MessageType="t"/>
+    <SubscribeToMessage MessageType="u"/>
+    <SubscribeToMessage MessageType="v"/>
+    <SubscribeToMessage MessageType="w"/>
+    <SubscribeToMessage MessageType="x"/>
+    <SubscribeToMessage MessageType="y"/>
+    <SubscribeToMessage MessageType="z"/>
+    <SubscribeToMessage MessageType="A"/>
+    <SubscribeToMessage MessageType="B"/>
+    <SubscribeToMessage MessageType="C"/>
+    <SubscribeToMessage MessageType="D"/>
+    <SubscribeToMessage MessageType="E"/>
+    <SubscribeToMessage MessageType="F"/>
+    <SubscribeToMessage MessageType="G"/>
+    <SubscribeToMessage MessageType="H"/>
+    <SubscribeToMessage MessageType="I"/>
+    <SubscribeToMessage MessageType="J"/>
+    <SubscribeToMessage MessageType="K"/>
+    <SubscribeToMessage MessageType="L"/>
+    <SubscribeToMessage MessageType="M"/>
+    <SubscribeToMessage MessageType="N"/>
+    <SubscribeToMessage MessageType="O"/>
+    <SubscribeToMessage MessageType="P"/>
+    <SubscribeToMessage MessageType="Q"/>
+    <SubscribeToMessage MessageType="R"/>
+    <SubscribeToMessage MessageType="S"/>
+    <SubscribeToMessage MessageType="T"/>
+    <SubscribeToMessage MessageType="U"/>
+    <SubscribeToMessage MessageType="V"/>
+    <SubscribeToMessage MessageType="W"/>
+    <SubscribeToMessage MessageType="X"/>
+    <SubscribeToMessage MessageType="Y"/>
+    <SubscribeToMessage MessageType="Z"/>
+  </Bridge> -->
+  
+  <!-- Service to send messages from ZeroMQ bus to an external program. Note: external program must 
+       'connect' using a SUB socket (for receive) and 'connect' with a separate PUSH socket (for 
+       send).  -->
+  <!-- <Bridge Type="LmcpObjectNetworkPublishPullBridge" AddressPUB="tcp://*:5560" 
+          AddressPULL="tcp://*:5561">
+    <SubscribeToMessage MessageType="a"/>
+    <SubscribeToMessage MessageType="b"/>
+    <SubscribeToMessage MessageType="c"/>
+    <SubscribeToMessage MessageType="d"/>
+    <SubscribeToMessage MessageType="e"/>
+    <SubscribeToMessage MessageType="f"/>
+    <SubscribeToMessage MessageType="g"/>
+    <SubscribeToMessage MessageType="h"/>
+    <SubscribeToMessage MessageType="i"/>
+    <SubscribeToMessage MessageType="j"/>
+    <SubscribeToMessage MessageType="k"/>
+    <SubscribeToMessage MessageType="l"/>
+    <SubscribeToMessage MessageType="m"/>
+    <SubscribeToMessage MessageType="n"/>
+    <SubscribeToMessage MessageType="o"/>
+    <SubscribeToMessage MessageType="p"/>
+    <SubscribeToMessage MessageType="q"/>
+    <SubscribeToMessage MessageType="r"/>
+    <SubscribeToMessage MessageType="s"/>
+    <SubscribeToMessage MessageType="t"/>
+    <SubscribeToMessage MessageType="u"/>
+    <SubscribeToMessage MessageType="v"/>
+    <SubscribeToMessage MessageType="w"/>
+    <SubscribeToMessage MessageType="x"/>
+    <SubscribeToMessage MessageType="y"/>
+    <SubscribeToMessage MessageType="z"/>
+    <SubscribeToMessage MessageType="A"/>
+    <SubscribeToMessage MessageType="B"/>
+    <SubscribeToMessage MessageType="C"/>
+    <SubscribeToMessage MessageType="D"/>
+    <SubscribeToMessage MessageType="E"/>
+    <SubscribeToMessage MessageType="F"/>
+    <SubscribeToMessage MessageType="G"/>
+    <SubscribeToMessage MessageType="H"/>
+    <SubscribeToMessage MessageType="I"/>
+    <SubscribeToMessage MessageType="J"/>
+    <SubscribeToMessage MessageType="K"/>
+    <SubscribeToMessage MessageType="L"/>
+    <SubscribeToMessage MessageType="M"/>
+    <SubscribeToMessage MessageType="N"/>
+    <SubscribeToMessage MessageType="O"/>
+    <SubscribeToMessage MessageType="P"/>
+    <SubscribeToMessage MessageType="Q"/>
+    <SubscribeToMessage MessageType="R"/>
+    <SubscribeToMessage MessageType="S"/>
+    <SubscribeToMessage MessageType="T"/>
+    <SubscribeToMessage MessageType="U"/>
+    <SubscribeToMessage MessageType="V"/>
+    <SubscribeToMessage MessageType="W"/>
+    <SubscribeToMessage MessageType="X"/>
+    <SubscribeToMessage MessageType="Y"/>
+    <SubscribeToMessage MessageType="Z"/>
+  </Bridge> -->
+</UxAS>
