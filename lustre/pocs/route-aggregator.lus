@@ -1,0 +1,363 @@
+-- route-aggregator.lus
+--
+-- WARNING: this service is INCOMPLETE and INCOMPATIBLE with the broader
+-- OpenUxAS model in its current form. The purpose of this model is to
+-- illustrate how the route aggregator could be modeled for OpenUxAS.
+--
+-- There are two key weakenesses to this model:
+--
+--  1. append overconstrains the model. Because of the way in which
+--     sequences_simple is built, calling append(s, e) forces e to be equal to
+--     s.last_index + 1. Obviously, this is not desirable, as potentially
+--     interesting behaviors may be precluded by this constraint.
+--
+--     For this model of the route aggregator, since it's isolated from the
+--     broader OpenUxAS model, I content that this constraint is okay: we still
+--     verify that the functionality satisfies the requirement we've posed.
+--
+--  2. only a single route request message is allowed. The route aggregator
+--     needs to be able to handle multiple route request messages, either
+--     when a new route request message supersedes the current route request
+--     message being processed or after a route response has been sent.
+--
+--     Supporting these behaviors would dramatically complicate the logic of
+--     the service. For this proof of concept, they are ignored. The model is
+--     constrained so that it may only send a single route request message.
+--
+-- The first weakness probably cannot be overcome unless we get a complete and
+-- precise theory of sequences -or- a theory of sets. We need to be able to
+-- reason precisely about the elements contained in the sequences/sets to be
+-- able to prove our property - or at least I think this is the case.
+--
+-- The second weakness is probably not too difficult to overcome, but would
+-- require a lot of additional machinery for the reset logic.
+
+include "../common/pltl.lus"
+
+-- ============================================================================
+-- types
+--
+-- Copied from types.lus so that things can be customized and simplified as
+-- needed
+include "../common/sequences_simple.lus"
+
+-- Represent the kind of message sent with an enum.
+type message_kind = enum {
+    -- An empty message.
+    --
+    -- Relevant fields:
+    --  [none]
+    none,
+
+    route_request,
+    route_response,
+
+    route_plan_request,
+    route_plan_response
+};
+
+
+-- Represent the ID of a message with an unconstrained integer.
+type id_type = int;
+
+const no_id : id_type = -1;
+
+-- A sequence of IDs
+type ids_type = sequence_type;
+
+const no_ids : ids_type = empty_sequence;
+
+-- A vehicle ID type
+type vehicle_type = element_type;
+
+const no_vehicle : vehicle_type = no_element;
+
+-- A sequence of vehicle IDs
+type vehicles_type = sequence_type;
+
+const no_vehicles : vehicles_type = empty_sequence;
+
+
+-- Represent a message.
+--
+-- A more realistic representation would use a discriminated record, but we
+-- don't have support for that in Lustre.
+type message = struct {
+    -- The kind of message
+    kind     : message_kind;
+
+    -- The ID of this message
+    id       : id_type;
+
+    -- The ID of another message that is referenced by this message
+    ref      : id_type;
+
+    vehicles : vehicles_type;
+    vehicle  : vehicle_type;
+};
+
+
+-- An empty message. This is interpreted as no message having been received.
+const no_message : message = message {
+    kind     = none;
+    id       = no_id;
+    ref      = no_id;
+    vehicles = no_vehicles;
+    vehicle  = no_vehicle;
+};
+
+
+-- ============================================================================
+-- sequence extensions
+--
+-- required new operations for the route aggregator
+--
+-- These are extremely constraining, as noted above.
+
+
+--
+-- subsequence
+--
+function subsequence(
+    putative_subsequence : sequence_type;
+    sequence : sequence_type;
+) returns (
+    r : bool
+);
+let
+    r = if putative_subsequence = empty_sequence then
+            true
+        else
+            sequence.first_index <= putative_subsequence.first_index and
+            putative_subsequence.last_index <= sequence.last_index;
+
+            -- tempting, but doesn't work: we can only check one free constant
+            -- per path (or one free variable per step) - we don't have enough
+            -- "time" to use skolemization to check for subsequence.
+            --
+            -- contains(putative_subsequence, free_element) =>
+            -- contains(sequence, free_element);
+tel;
+
+
+--
+-- length - for convenience
+--
+function length(sequence : sequence_type) returns (r : int);
+let
+    r = if sequence = empty_sequence then
+            0
+        else if not valid_sequence(sequence) then
+            -1
+        else
+            sequence.last_index - sequence.first_index + 1;
+tel;
+
+
+--
+-- contract for append
+--
+-- This is a good contract, but because of the way the predicates on which this
+-- depends are build, the result is that this contract massively overconstrains
+-- append. As noted above, the model can only call append if e = s.last_index+1
+contract append_contract(
+    sequence : sequence_type;
+    element : element_type;
+) returns (
+    result : sequence_type
+);
+let
+    guarantee nonempty_sequence(result);
+    guarantee subsequence(sequence, result);
+    guarantee nonempty_sequence(sequence) => result.first_index = sequence.first_index;
+    guarantee get(result, result.last_index) = element;
+    guarantee "correct length"
+        if sequence = empty_sequence then
+            length(result) = 1
+        else
+            length(result) = length(sequence) + 1;
+tel;
+
+
+--
+-- append
+--
+node imported append(
+    sequence : sequence_type;
+    element : element_type;
+) returns (
+    result : sequence_type
+);
+(*@contract
+    import append_contract(sequence, element) returns (result);
+*)
+
+
+--
+-- same_elements - determine if two sequences have the same elements
+--
+function same_elements(sequence1, sequence2 : sequence_type) returns (r: bool);
+let
+    r = if not nonempty_sequence(sequence1) or not nonempty_sequence(sequence2) then
+            false
+        else
+            -- because of the way in which the simple sequences are defined,
+            -- two sequences have the same elements iff they are identical.
+            sequence1 = sequence2;
+
+            -- This is tempting, but we have the same problem as with
+            -- subsequences: we don't have "time" for this skolemization
+            --contains(sequence1, free_element) = contains(sequence2, free_element);
+tel;
+
+
+--
+-- next_vehicle - retrieve the next vehicle from a sequence of vehicles
+--
+node next_vehicle(vehicles : vehicles_type) returns (vehicle : vehicle_type);
+var
+    index : index_type;
+let
+    index = no_index -> if vehicles = pre(vehicles) then
+                            pre(index) + 1
+                        else
+                            vehicles.first_index;
+
+    vehicle = get(vehicles, index);
+tel;
+
+
+--
+-- route_aggregator
+--
+node route_aggregator(
+    -- The message currently received by the service
+    in_msg : message;
+
+    -- The ID to be used for ID generation
+    in_id : id_type;
+
+    -- True if the service is permitted to send a message.
+    can_send_message : bool;
+) returns (
+    -- The message currently sent by the service
+    out_msg : message;
+);
+var
+    -- The list of vehicles for which we should send route_plan_requests
+    vehicles : vehicles_type;
+
+    -- The current vehicle for which we should send a route_plan_request
+    vehicle : vehicle_type;
+
+    -- The ID of the route_request message that provided the list of vehicles
+    route_request_id : id_type;
+
+    -- The list of route_plan_request message IDs we've sent
+    sent_plan_request_ids : ids_type;
+
+    -- The list of route_plan_request message IDs we've received via
+    -- route_plan_response messages
+    recv_plan_response_ids : ids_type;
+const
+    prev_msg : message;
+let
+    -- So we can read the CEXs.
+    assert (
+        if in_msg <> no_message then
+            in_id > (1 -> pre(in_id))
+        else
+            in_id = (1 -> pre(in_id))
+    );
+
+    -- Note: this section follows the logic of the waypoint manager service
+    vehicle = next_vehicle(no_vehicles -> pre(vehicles));
+
+    vehicles =  if in_msg.kind = route_request and
+                   nonempty_sequence(in_msg.vehicles)
+                then
+                    in_msg.vehicles
+                else if vehicle <> no_vehicle then
+                    no_vehicles -> pre(vehicles)
+                else
+                    no_vehicles;
+
+    route_request_id =  if in_msg.kind = route_request and
+                           nonempty_sequence(in_msg.vehicles)
+                        then
+                            in_msg.id
+                        else if vehicle <> no_vehicle then
+                            no_id -> pre(route_request_id)
+                        else
+                            no_id;
+
+
+    -- TODO: handle reset
+    sent_plan_request_ids = if vehicle <> no_vehicle and can_send_message then
+                                append(no_ids -> pre(sent_plan_request_ids), in_id + 1)
+                            else
+                                no_ids -> pre(sent_plan_request_ids);
+
+    recv_plan_response_ids= if in_msg.kind = route_plan_response and
+                               contains(sent_plan_request_ids, in_msg.ref)
+                            then
+                                append(no_ids -> pre(recv_plan_response_ids), in_msg.ref)
+                            else
+                                no_ids -> pre(recv_plan_response_ids);
+
+
+    -- Output logic
+    out_msg =   if vehicle <> no_vehicle and can_send_message then
+                    message {
+                        kind = route_plan_request;
+                        id = in_id + 1;
+                        ref = no_id -> pre(route_request_id);
+                        vehicles = no_vehicles;
+                        vehicle = vehicle;
+                    }
+                else if vehicle = no_vehicle and
+                        same_elements(sent_plan_request_ids,
+                                      recv_plan_response_ids) and
+                        can_send_message
+                then
+                    message {
+                        kind = route_response;
+                        id = in_id + 1;
+                        ref = route_request_id;
+                        vehicles = no_vehicles;
+                        vehicle = no_vehicle;
+                    }
+                else
+                    no_message;
+
+
+    -- Constrain the model so that we have at most one route_request message
+    -- per path.
+    assert((false -> pre(O(in_msg.kind = route_request))) => in_msg.kind <> route_request);
+
+    check "R1. If the message sent is a Route Response, then all Route Plan
+           Request messages previously sent have a matching Route Plan Response
+           message previously received.\n  "
+    (
+        out_msg.kind  = route_response and
+        prev_msg.kind = route_plan_request and
+        O(out_msg = prev_msg)
+    ) => (
+        O(in_msg.kind = route_plan_response and in_msg.ref = prev_msg.id)
+    );
+
+    -- Lemmas from IC3 - needed with the witness is disabled (for some reason)
+    check "L1.\n  " (not (((-1 * sent_plan_request_ids.last_index) + (1 * recv_plan_response_ids.last_index) + -1) = 0));
+
+    check "L2.\n  " (not (((-1 * in_id) + (1 * recv_plan_response_ids.last_index) + -2) > 0));
+
+    check "L3.\n  " ((not (((1 * recv_plan_response_ids.first_index) + 1) > 0)) or
+                        (not (((1 * sent_plan_request_ids.last_index) + 1) = 0)));
+
+    -- check "R1.A. Witness antecedent of R1."
+    -- not (
+    --     out_msg.kind = route_response and
+    --     prev_msg.kind = route_plan_request and
+    --     O(out_msg = prev_msg)
+    -- );
+tel;
