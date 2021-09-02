@@ -113,10 +113,6 @@ let
     --  from the route."
     --
     -- Note that this happens "before" we determine if there is a new route.
-    -- waypoint = if pre_route <> no_route then
-    --                next_waypoint(pre_route)
-    --            else
-    --                no_waypoint;
     waypoint = next_waypoint(no_route -> pre(route));
 
 
