@@ -9,17 +9,10 @@ import os
 # aren't set. I'm not sure how I feel about that.
 __ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-FALLBACK_REPO_DIR = os.path.realpath(
-    os.path.join(
-        __ROOT_DIR,
-        "..",
-        "..",
-        "..",
-        "..",
-        "..",
-        "..",
-    )
-)
+# Fall back by splitting our path on .vpython and taking the front part. This
+# should dump us at the root of the OpenUxAS repo and is hopefully more robust
+# than walking a relative path a fixed number of steps.
+FALLBACK_REPO_DIR = os.path.realpath(__ROOT_DIR.split(".vpython")[0])
 
 # Now we read the environment and fall back on rebuilding the paths manually.
 OPENUXAS_ROOT = os.environ.get("OPENUXAS_ROOT", FALLBACK_REPO_DIR)

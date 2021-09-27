@@ -137,8 +137,9 @@ def compute_env() -> _Environ:
             ).strip(),
         )
 
-        for i in range(0, len(a), 2):
-            base_env[a[i]] = a[i + 1]
+        if len(a) % 2 == 0:
+            for i in range(0, len(a), 2):
+                base_env[a[i]] = a[i + 1]
 
     return base_env
 
