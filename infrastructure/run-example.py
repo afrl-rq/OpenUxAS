@@ -225,7 +225,9 @@ def resolve_amase_dir(args: Namespace) -> str:
         if check_amase_dir(AMASE_DIR):
             return AMASE_DIR
         else:
-            logging.warning(UNBUILT_LOCAL_AMASE.format(path=AMASE_DIR, anod=ANOD_CMD))
+            logging.warning(
+                UNBUILT_LOCAL_AMASE.format(path=AMASE_DIR, anod=ANOD_CMD)
+            )
 
     anod_amase_dir = os.path.join(SBX_DIR, "x86_64-linux", "amase", "src")
     if os.path.exists(anod_amase_dir) and check_amase_dir(anod_amase_dir):

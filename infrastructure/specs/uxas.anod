@@ -77,7 +77,6 @@ class Uxas(spec('common')):
         if self.scenario == 'gcov':
             make.set_var('ENABLE_COVERAGE', 'true')
             make.set_var('DEBUG_BUILD', 'true')
-
         # We don't want the Makefile to autoconfigure the build environment
         # using anod when the Makefile is invoked by anod.
         make.set_var('SKIP_ANOD_SETUP', 'true')
