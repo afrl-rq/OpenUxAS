@@ -315,6 +315,7 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
         else
         {
             guaranteed_flag = false;
+            m_DivertState.heading_deg = std::fmod((m_CurrentState.heading_deg + 180.0) + 360.0, 360.0); //fallback action: turn right 180deg
             // std::cout << "No resolution found. Divert heading is " << m_DivertState.heading_deg << std::endl;
             // std::cout << std::endl;
         }
