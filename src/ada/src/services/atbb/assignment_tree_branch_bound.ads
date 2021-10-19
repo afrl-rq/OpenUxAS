@@ -1,9 +1,11 @@
 with Ada.Containers.Formal_Hashed_Maps;
 with Ada.Containers.Functional_Maps;
+with Ada.Containers;                             use Ada.Containers;
+with Ada.Strings.Unbounded;                      use Ada.Strings.Unbounded;
 with Assignment_Tree_Branch_Bound_Communication; use Assignment_Tree_Branch_Bound_Communication;
 with Common;                                     use Common;
 with LMCP_Messages;                              use LMCP_Messages;
-with Ada.Containers; use Ada.Containers;
+
 package Assignment_Tree_Branch_Bound with SPARK_Mode is
 
    type Cost_Function_Kind is (Minmax, Cumulative);
@@ -194,7 +196,9 @@ package Assignment_Tree_Branch_Bound with SPARK_Mode is
       Automation_Request     : UniqueAutomationRequest;
       Assignment_Cost_Matrix : AssignmentCostMatrix;
       TaskPlanOptions_Map    : Int64_TPO_Map;
-      Summary                : out TaskAssignmentSummary)
+      Summary                : out TaskAssignmentSummary;
+      Error                  : out Boolean;
+      Message                : out Unbounded_String)
    with
      Pre =>
        Valid_AssignmentCostMatrix (Assignment_Cost_Matrix)
@@ -219,10 +223,13 @@ private
       return Boolean
    is
       (for all TaskId of TaskPlanOptions_Map =>
-         (TaskId = Get (TaskPlanOptions_Map, TaskId).TaskID
+         (TaskId in 0 .. 99_999
+            and then
+          TaskId = Get (TaskPlanOptions_Map, TaskId).TaskID
             and then
           (for all TaskOption of Get (TaskPlanOptions_Map, TaskId).Options =>
                   (TaskId = TaskOption.TaskID
+                     and then TaskOption.OptionID in 0 .. 99_999
                      and then TaskOption.Cost >= 0))));
 
    function Valid_AssignmentCostMatrix

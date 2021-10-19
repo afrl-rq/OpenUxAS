@@ -48,4 +48,22 @@ package body Assignment_Tree_Branch_Bound_Communication is
       This.Message_Sender_Pipe.Send_Shared_Broadcast_Message (As_Object_Any (Msg));
    end sendBroadcastMessage;
 
+   ----------------------
+   -- sendErrorMessage --
+   ----------------------
+
+   procedure sendErrorMessage
+     (This         : in out Assignment_Tree_Branch_Bound_Mailbox;
+      Error_String : Unbounded_String)
+   is
+      KVP     : KeyValuePair := (Key   => To_Unbounded_String ("No UniqueAutomationResponse"),
+                                 Value => Error_String);
+      Message : ServiceStatus;
+   begin
+      Message.StatusType := Error;
+      Message.Info := Add (Message.Info, KVP);
+      This.Unique_Entity_Send_Message_Id := This.Unique_Entity_Send_Message_Id + 1;
+      This.Message_Sender_Pipe.Send_Shared_Broadcast_Message (As_Object_Any (Message));
+   end sendErrorMessage;
+
 end Assignment_Tree_Branch_Bound_Communication;

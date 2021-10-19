@@ -41,13 +41,18 @@ package Algebra with SPARK_Mode is
 
    procedure Parse_Formula
      (Formula : Unbounded_String;
-      Algebra : out not null Algebra_Tree);
+      Algebra : out Algebra_Tree;
+      Error   : in out Boolean;
+      Message : in out Unbounded_String)
+   with
+     Pre  => Length (Formula) > 1,
+     Post => (if not Error then Algebra /= null);
 
    procedure Print_Tree
-     (Algebra : access constant Algebra_Tree_Cell);
+     (Algebra : not null access constant Algebra_Tree_Cell);
 
    function Is_Present
-     (Algebra      : access constant Algebra_Tree_Cell;
+     (Algebra      : not null access constant Algebra_Tree_Cell;
       TaskOptionId : Int64)
       return Boolean
    is
@@ -59,7 +64,7 @@ package Algebra with SPARK_Mode is
 
    function Get_Next_Objectives_Ids
      (Assignment : Int64_Seq;
-      Algebra    : access constant Algebra_Tree_Cell)
+      Algebra    : not null access constant Algebra_Tree_Cell)
       return Int64_Seq
    with
      Post =>
