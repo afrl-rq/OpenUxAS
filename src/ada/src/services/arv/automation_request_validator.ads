@@ -158,17 +158,21 @@ package Automation_Request_Validator with SPARK_Mode is
      (Config  : Automation_Request_Validator_Configuration_Data;
       State   : in out Automation_Request_Validator_State;
       Mailbox : in out Automation_Request_Validator_Mailbox;
-      Request : ImpactAutomationRequest);
+      Request : ImpactAutomationRequest)
+   with
+     Pre => not Contains (State.Sandbox, Request.RequestID);
 
    procedure Handle_Task_Automation_Request
      (Config  : Automation_Request_Validator_Configuration_Data;
       State   : in out Automation_Request_Validator_State;
       Mailbox : in out Automation_Request_Validator_Mailbox;
-      Request : TaskAutomationRequest);
+      Request : TaskAutomationRequest)
+   with
+     Pre => not Contains (State.Sandbox, Request.RequestID);
 
    procedure Handle_Automation_Response
-   (State    : in out Automation_Request_Validator_State;
-       Mailbox  : in out Automation_Request_Validator_Mailbox;
+     (State    : in out Automation_Request_Validator_State;
+      Mailbox  : in out Automation_Request_Validator_Mailbox;
        Response : UniqueAutomationResponse);
 
    procedure Check_Tasks_Initialized
@@ -194,14 +198,14 @@ private
      (All_Elements_In (Entity_Ids, Configurations)
        and then
         (for all E of Entity_Ids =>
-             (Contains (States, E)
-              or else
-                (not Is_Empty (States)
-                 and then (for some Planning_State of Planning_States =>
-                             E = Planning_State.EntityID)))
-      and then
-        (if Length (Entity_Ids) = 0 then
-             (for some Id of Configurations => Contains (States, Id)))))
+           (Contains (States, E)
+            or else
+              (not Is_Empty (States)
+               and then (for some Planning_State of Planning_States =>
+                           E = Planning_State.EntityID))))
+       and then
+        (if Length (Entity_Ids) = 0
+         then (for some Id of Configurations => Contains (States, Id))))
    with Ghost;
 
    function Check_For_Required_Operating_Region_And_Keepin_Keepout_Zones

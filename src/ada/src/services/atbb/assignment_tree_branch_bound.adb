@@ -24,7 +24,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
      (Key_Type        => Int64,
       Element_Type    => VehicleAssignmentCost);
    use Int64_VehicleAssignmentCost_Maps;
-   subtype Int64_VAC_Map is Int64_VehicleAssignmentCost_Maps.Map (200);
+   subtype Int64_VAC_Map is Int64_VehicleAssignmentCost_Maps.Map (10);
 
    type Assignment_Info is record
       Assignment_Sequence : TaskAssignment_Sequence;
@@ -915,7 +915,6 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
                --  If this element has no children, it means that this node
                --  has assigned every task, so we compare it to the current
                --  assignment that minimizes the cost.
-
                if Children_A'Length = 0 then
                   if not Min.Found or else Current_Cost < Min.Cost then
                      Min := (Found => True, Info => Current_Element, Cost => Current_Cost);
