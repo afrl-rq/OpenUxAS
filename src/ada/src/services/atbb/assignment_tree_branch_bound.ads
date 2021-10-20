@@ -13,7 +13,7 @@ package Assignment_Tree_Branch_Bound with SPARK_Mode is
         Element_Type => UniqueAutomationRequest,
         Hash         => Int64_Hash);
    subtype Int64_UniqueAutomationRequest_Map is
-     Int64_UAR_Maps.Map (200, Int64_UAR_Maps.Default_Modulus (200));
+     Int64_UAR_Maps.Map (10, Int64_UAR_Maps.Default_Modulus (10));
    use Int64_UAR_Maps;
 
    package Int64_TaskPlanOptions_Maps is new Ada.Containers.Functional_Maps
@@ -26,7 +26,7 @@ package Assignment_Tree_Branch_Bound with SPARK_Mode is
       Element_Type => Int64_TPO_Map,
       Hash  => Int64_Hash);
    subtype Int64_TaskPlanOptions_Map_Map is
-     Int64_TPO_Map_Maps.Map (200, Int64_TPO_Map_Maps.Default_Modulus (200));
+     Int64_TPO_Map_Maps.Map (10, Int64_TPO_Map_Maps.Default_Modulus (10));
    use Int64_TPO_Map_Maps;
 
    package Int64_ACM_Maps is new Ada.Containers.Formal_Hashed_Maps
@@ -34,7 +34,7 @@ package Assignment_Tree_Branch_Bound with SPARK_Mode is
         Element_Type => AssignmentCostMatrix,
         Hash         => Int64_Hash);
    subtype Int64_AssignmentCostMatrix_Map is
-     Int64_ACM_Maps.Map (200, Int64_ACM_Maps.Default_Modulus (200));
+     Int64_ACM_Maps.Map (10, Int64_ACM_Maps.Default_Modulus (10));
    use Int64_ACM_Maps;
 
    ----------------------------

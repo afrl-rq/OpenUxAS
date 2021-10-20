@@ -31,7 +31,7 @@ class GnatproveDriver(DiffTestDriver):
                 f_prj.write('      for Default_Switches ("ada") use ("-O2", "-gnatn", "-gnatp", "-fdata-sections","-ffunction-sections");\n')
                 f_prj.write('   end Compiler;\n')
                 f_prj.write('   package Prove is\n')
-                f_prj.write('      for Proof_Switches ("Ada") use ("--no-counterexample", "-q", "-u");\n')
+                f_prj.write('      for Proof_Switches ("Ada") use ("--counterexamples=off", "-q", "-u", "--output=brief");\n')
                 f_prj.write('      for Proof_Dir use "../../..'+self.test_env["test_dir"]+'/../../../../src/ada/proof";\n')
                 f_prj.write('   end Prove;\n')
                 f_prj.write('end Test;\n')

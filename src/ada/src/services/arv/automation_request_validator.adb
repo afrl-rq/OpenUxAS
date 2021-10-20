@@ -210,7 +210,6 @@ package body Automation_Request_Validator with SPARK_Mode is
                   end if;
                end;
             end loop;
-
          else
             Append_To_Msg (Msg  => ReasonForFailure,
                            Tail => "- No EntityStates available.");
@@ -415,7 +414,6 @@ package body Automation_Request_Validator with SPARK_Mode is
      (Config  : Automation_Request_Validator_Configuration_Data;
       State   : in out Automation_Request_Validator_State;
       Mailbox : in out Automation_Request_Validator_Mailbox)
-   with SPARK_Mode => Off
    is
       areAllTasksReady    : Boolean := True;
       isNewPendingRequest : Boolean := False;
@@ -428,6 +426,8 @@ package body Automation_Request_Validator with SPARK_Mode is
               (for all TaskId of Req.TaskList => Contains (Config.Available_Initialized_Tasks, TaskId));
             if areAllTasksReady then
                isNewPendingRequest := True;
+
+               pragma Assume (Length (State.Pending_Requests) < State.Pending_Requests.Capacity, "we have enough space for another request");
                Append (State.Pending_Requests, Req);
                Delete_First (State.Requests_Waiting_For_Tasks);
             end if;
@@ -458,7 +458,6 @@ package body Automation_Request_Validator with SPARK_Mode is
       State   : in out Automation_Request_Validator_State;
       Mailbox : in out Automation_Request_Validator_Mailbox;
       Request : AutomationRequest)
-   with SPARK_Mode => Off
    is
       Unique_Automation_Request : UniqueAutomationRequest;
       ReqId                     : Int64;
@@ -467,6 +466,7 @@ package body Automation_Request_Validator with SPARK_Mode is
    begin
 
       Get_Unique_Request_Id (ReqId);
+      pragma Assume (not Contains (State.Sandbox, ReqId), "returned Id is actually unique");
 
       Unique_Automation_Request.RequestID := ReqId;
       Unique_Automation_Request.EntityList := Request.EntityList;
@@ -474,6 +474,7 @@ package body Automation_Request_Validator with SPARK_Mode is
       Unique_Automation_Request.TaskList := Request.TaskList;
       Unique_Automation_Request.TaskRelationships := Request.TaskRelationships;
 
+      pragma Assume (Length (State.Sandbox) < State.Sandbox.Capacity, "we have enough space for another request");
       Insert (State.Sandbox, ReqId, Details);
 
       Check_Automation_Request_Requirements
@@ -484,6 +485,7 @@ package body Automation_Request_Validator with SPARK_Mode is
          isReady);
 
       if isReady then
+         pragma Assume (Length (State.Requests_Waiting_For_Tasks) < State.Requests_Waiting_For_Tasks.Capacity, "we have enough space for another request");
          Append (State.Requests_Waiting_For_Tasks, Unique_Automation_Request);
          Check_Tasks_Initialized (Config, State, Mailbox);
       end if;
@@ -497,7 +499,6 @@ package body Automation_Request_Validator with SPARK_Mode is
       (State    : in out Automation_Request_Validator_State;
        Mailbox  : in out Automation_Request_Validator_Mailbox;
        Response : UniqueAutomationResponse)
-   with SPARK_Mode => Off
    is
    begin
       if Length (State.Pending_Requests) = 0 then
@@ -527,7 +528,6 @@ package body Automation_Request_Validator with SPARK_Mode is
       State   : in out Automation_Request_Validator_State;
       Mailbox : in out Automation_Request_Validator_Mailbox;
       Request : ImpactAutomationRequest)
-   with SPARK_Mode => Off
    is
       Unique_Automation_Request : UniqueAutomationRequest;
       ReqId                     : Int64;
@@ -546,6 +546,7 @@ package body Automation_Request_Validator with SPARK_Mode is
 
       Details.Play_Id := Request.PlayID;
       Details.Soln_Id := Request.SolutionID;
+      pragma Assume (Length (State.Sandbox) < State.Sandbox.Capacity, "we have enough space for another request");
       Insert (State.Sandbox, ReqId, Details);
 
       Check_Automation_Request_Requirements
@@ -556,6 +557,7 @@ package body Automation_Request_Validator with SPARK_Mode is
          isReady);
 
       if isReady then
+         pragma Assume (Length (State.Requests_Waiting_For_Tasks) < State.Requests_Waiting_For_Tasks.Capacity, "we have enough space for another request");
          Append (State.Requests_Waiting_For_Tasks, Unique_Automation_Request);
          Check_Tasks_Initialized (Config, State, Mailbox);
       end if;
@@ -570,7 +572,6 @@ package body Automation_Request_Validator with SPARK_Mode is
       State   : in out Automation_Request_Validator_State;
       Mailbox : in out Automation_Request_Validator_Mailbox;
       Request : TaskAutomationRequest)
-   with SPARK_Mode => Off
    is
       Unique_Automation_Request : UniqueAutomationRequest;
       ReqId                     : Int64;
@@ -589,6 +590,7 @@ package body Automation_Request_Validator with SPARK_Mode is
       Unique_Automation_Request.PlanningStates := Request.PlanningStates;
 
       Details.Task_Request_Id := ReqId;
+      pragma Assume (Length (State.Sandbox) < State.Sandbox.Capacity, "we have enough space for another request");
       Insert (State.Sandbox, ReqId, Details);
 
       Check_Automation_Request_Requirements
@@ -599,6 +601,7 @@ package body Automation_Request_Validator with SPARK_Mode is
          isReady);
 
       if isReady then
+         pragma Assume (Length (State.Requests_Waiting_For_Tasks) < State.Requests_Waiting_For_Tasks.Capacity, "we have enough space for another request");
          Append (State.Requests_Waiting_For_Tasks, Unique_Automation_Request);
          Check_Tasks_Initialized (Config, State, Mailbox);
       end if;
@@ -611,7 +614,6 @@ package body Automation_Request_Validator with SPARK_Mode is
    procedure Send_Next_Request
      (Mailbox          : in out Automation_Request_Validator_Mailbox;
       Pending_Requests : UniqueAutomationRequest_Ref_Deque)
-   with SPARK_Mode => Off
    is
    begin
       if Length (Pending_Requests) = 0 then
@@ -640,7 +642,6 @@ package body Automation_Request_Validator with SPARK_Mode is
      (Mailbox  : in out Automation_Request_Validator_Mailbox;
       Sandbox  : Request_Details_Map;
       Response : UniqueAutomationResponse)
-   with SPARK_Mode => Off
    is
    begin
       if not Contains (Sandbox, Response.ResponseID)

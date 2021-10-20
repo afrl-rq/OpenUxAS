@@ -5,7 +5,7 @@ with "lmcp_generated_messages.gpr";
 project AFRL_Ada_Dev is
 
    for Create_Missing_Dirs use "True";
-   
+
    for Languages use ("Ada");
 
    for Source_Dirs use
@@ -92,7 +92,7 @@ project AFRL_Ada_Dev is
    end Pretty_Printer;
 
    package Prove is
-      for Proof_Switches ("Ada") use ("-j0", "--no-counterexample", "-u");
+      for Proof_Switches ("Ada") use ("-j0", "--counterexamples=off", "-u", "--output=brief");
       for Proof_Dir use "proof";
    end Prove;
 
