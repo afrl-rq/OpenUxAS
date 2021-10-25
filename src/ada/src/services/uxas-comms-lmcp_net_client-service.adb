@@ -140,7 +140,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service is
       Doc := Get_Tree (Reader);
 
       Configure_Service
-        (This,
+        (Service_Base'Class (This),
          Parent_Of_Work_Directory,
          Documents.Get_Element (Doc),
          This.Is_Configured);
