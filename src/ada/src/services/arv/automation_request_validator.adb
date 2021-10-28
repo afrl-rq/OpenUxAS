@@ -1,4 +1,4 @@
-with Ada.Strings.Unbounded;      use Ada.Strings.Unbounded;
+with Ada.Containers;             use Ada.Containers;
 with AVTAS.LMCP.Types;
 with UxAS.Comms.LMCP_Net_Client; use UxAS.Comms.LMCP_Net_Client;
 
@@ -14,7 +14,8 @@ package body Automation_Request_Validator with SPARK_Mode is
       States           : Int64_Set;
       Planning_States  : PlanningState_Seq;
       ReasonForFailure : in out Unbounded_String;
-      IsReady          : in out Boolean)
+      IsReady          : in out Boolean;
+      EntityList       : in out Int64_Seq)
    with Post =>
      IsReady = (IsReady'Old and
                   Check_For_Required_Entity_Configurations
@@ -74,13 +75,14 @@ package body Automation_Request_Validator with SPARK_Mode is
      (Config    : Automation_Request_Validator_Configuration_Data;
       Sandbox : in out Request_Details_Map;
       Mailbox : in out Automation_Request_Validator_Mailbox;
-      Request : UniqueAutomationRequest;
+      Request : in out UniqueAutomationRequest;
       IsReady : out Boolean)
    is
       ReasonForFailure : Unbounded_String :=
         To_Unbounded_String
           ("Automation Request ID["
            & Int64'Image (Request.RequestID) & "] Not Ready ::");
+      EntityList : Int64_Seq;
    begin
       IsReady := True;
 
@@ -90,7 +92,8 @@ package body Automation_Request_Validator with SPARK_Mode is
          States           => Config.Available_State_Entity_Ids,
          Planning_States  => Request.PlanningStates,
          ReasonForFailure => ReasonForFailure,
-         IsReady          => IsReady);
+         IsReady          => IsReady,
+         EntityList       => EntityList);
 
       Check_Required_Operating_Region_And_Keepin_Keepout_Zones
         (Operating_Region  => Request.OperatingRegion,
@@ -108,6 +111,10 @@ package body Automation_Request_Validator with SPARK_Mode is
          TaskIds                         => Request.TaskList,
          ReasonForFailure                => ReasonForFailure,
          IsReady                         => IsReady);
+
+      if Length (Request.EntityList) = 0 then
+         Request.EntityList := EntityList;
+      end if;
 
       if not IsReady then
          declare
@@ -134,7 +141,8 @@ package body Automation_Request_Validator with SPARK_Mode is
       States           : Int64_Set;
       Planning_States  : PlanningState_Seq;
       ReasonForFailure : in out Unbounded_String;
-      IsReady          : in out Boolean)
+      IsReady          : in out Boolean;
+      EntityList       : in out Int64_Seq)
    is
    begin
       if Length (Entity_Ids) /= 0 then
@@ -237,6 +245,14 @@ package body Automation_Request_Validator with SPARK_Mode is
                                  Tail => "- No EntityStates that match EntityConfigurations"
                                  & " are available.");
                   IsReady := False;
+               else
+                  for Id of Configurations loop
+                     if Contains (States, Id) then
+                        pragma Assume (Length (EntityList) < Count_Type'Last, "we have less than Count_Type'Last vehicles");
+                        EntityList := Add (EntityList, Id);
+                     end if;
+                     pragma Loop_Invariant (IsReady = IsReady'Loop_Entry);
+                  end loop;
                end if;
             end;
          else

@@ -2,8 +2,8 @@
 <!DOCTYPE why3session PUBLIC "-//Why3//proof session v5//EN"
 "http://why3.lri.fr/why3session.dtd">
 <why3session shape_version="6">
-<prover id="0" name="Z3" version="4.5.1-gnatprove" timelimit="5" steplimit="0" memlimit="1000"/>
-<prover id="1" name="CVC4" version="1.6-gnatprove" timelimit="5" steplimit="0" memlimit="1000"/>
+<prover id="0" name="Z3" version="4.5.1-gnatprove" timelimit="1" steplimit="0" memlimit="1000"/>
+<prover id="1" name="CVC4" version="1.6-gnatprove" timelimit="1" steplimit="0" memlimit="1000"/>
 <file format="gnat-json" proved="true">
 <path name=".."/><path name=".."/><path name=".."/><path name="objs"/>
 <path name="release"/><path name="gnatprove"/><path name="route_aggregator__plan_to_route.gnat-json"/>
@@ -738,11 +738,12 @@
   <proof prover="1"><result status="valid" steps="1820"/></proof>
   </goal>
   <goal name="def&#39;vc.205" proved="true">
-  <proof prover="1"><result status="valid" steps="25170"/></proof>
+  <proof prover="0"><result status="valid" steps="176840"/></proof>
+  <proof prover="1" obsolete="true"><result status="timeout"/></proof>
   </goal>
   <goal name="def&#39;vc.206" proved="true">
   <proof prover="0"><result status="valid" steps="177654"/></proof>
-  <proof prover="1"><result status="timeout"/></proof>
+  <proof prover="1" obsolete="true"><result status="timeout"/></proof>
   </goal>
   <goal name="def&#39;vc.207" proved="true">
   <proof prover="1"><result status="valid" steps="4913"/></proof>
@@ -752,7 +753,7 @@
   </goal>
   <goal name="def&#39;vc.209" proved="true">
   <proof prover="0"><result status="valid" steps="194949"/></proof>
-  <proof prover="1"><result status="timeout"/></proof>
+  <proof prover="1" obsolete="true"><result status="timeout"/></proof>
   </goal>
   <goal name="def&#39;vc.210" proved="true">
   <proof prover="1"><result status="valid" steps="5055"/></proof>
@@ -929,22 +930,24 @@
   <proof prover="1"><result status="valid" steps="1921"/></proof>
   </goal>
   <goal name="def&#39;vc.259" proved="true">
-  <proof prover="1"><result status="valid" steps="18120"/></proof>
+  <proof prover="0"><result status="valid" steps="190360"/></proof>
+  <proof prover="1" obsolete="true"><result status="timeout"/></proof>
   </goal>
   <goal name="def&#39;vc.260" proved="true">
-  <proof prover="1"><result status="valid" steps="18061"/></proof>
+  <proof prover="0"><result status="valid" steps="194130"/></proof>
+  <proof prover="1" obsolete="true"><result status="timeout"/></proof>
   </goal>
   <goal name="def&#39;vc.261" proved="true">
   <proof prover="0"><result status="valid" steps="428571"/></proof>
-  <proof prover="1"><result status="timeout"/></proof>
+  <proof prover="1" obsolete="true"><result status="timeout"/></proof>
   </goal>
   <goal name="def&#39;vc.262" proved="true">
   <proof prover="0"><result status="valid" steps="728715"/></proof>
-  <proof prover="1"><result status="timeout"/></proof>
+  <proof prover="1" obsolete="true"><result status="timeout"/></proof>
   </goal>
   <goal name="def&#39;vc.263" proved="true">
   <proof prover="0"><result status="valid" steps="205738"/></proof>
-  <proof prover="1"><result status="timeout"/></proof>
+  <proof prover="1" obsolete="true"><result status="timeout"/></proof>
   </goal>
   <goal name="def&#39;vc.264" proved="true">
   <transf name="trivial_true" proved="true" >
@@ -1019,19 +1022,19 @@
   </goal>
   <goal name="def&#39;vc.283" proved="true">
   <proof prover="0"><result status="valid" steps="376535"/></proof>
-  <proof prover="1"><result status="timeout"/></proof>
+  <proof prover="1" obsolete="true"><result status="timeout"/></proof>
   </goal>
   <goal name="def&#39;vc.284" proved="true">
   <proof prover="0"><result status="valid" steps="324243"/></proof>
-  <proof prover="1"><result status="timeout"/></proof>
+  <proof prover="1" obsolete="true"><result status="timeout"/></proof>
   </goal>
   <goal name="def&#39;vc.285" proved="true">
   <proof prover="0"><result status="valid" steps="176562"/></proof>
-  <proof prover="1"><result status="timeout"/></proof>
+  <proof prover="1" obsolete="true"><result status="timeout"/></proof>
   </goal>
   <goal name="def&#39;vc.286" proved="true">
   <proof prover="0"><result status="valid" steps="184830"/></proof>
-  <proof prover="1"><result status="timeout"/></proof>
+  <proof prover="1" obsolete="true"><result status="timeout"/></proof>
   </goal>
  </transf>
  </goal>

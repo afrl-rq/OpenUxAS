@@ -2,6 +2,7 @@ with Ada.Containers;    use Ada.Containers;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Strings;       use Ada.Strings;
 with Ada.Text_IO;       use Ada.Text_IO;
+with Int64_Parsing;     use Int64_Parsing;
 
 package body Algebra with SPARK_Mode is
 
@@ -17,15 +18,41 @@ package body Algebra with SPARK_Mode is
       Result                 : out Int64_Seq;
       Encounter_Executed_Out : out Boolean);
 
+   ---------------
+   -- Free_Tree --
+   ---------------
+
+   procedure Free_Tree (X : in out Algebra_Tree)
+   is
+      pragma SPARK_Mode (Off);
+      procedure Internal_Free is new Ada.Unchecked_Deallocation
+        (Algebra_Tree_Cell, Algebra_Tree);
+   begin
+      if X /= null then
+         if X.all.Node_Kind = Operator then
+            declare
+               Children : Algebra_Tree_Array := Algebra_Tree_Array (X.all.Collection.Children);
+            begin
+               for J in Children'Range loop
+                  Free_Tree (Children (J));
+                  pragma Loop_Invariant (for all K in Children'First .. J => Children (K) = null);
+               end loop;
+            end;
+         end if;
+         Internal_Free (X);
+      end if;
+   end Free_Tree;
+
    -----------------------------
    -- Get_Next_Objectives_Ids --
    -----------------------------
 
    function Get_Next_Objectives_Ids
      (Assignment : Int64_Seq;
-      Algebra    : access constant Algebra_Tree_Cell)
+      Algebra    : not null access constant Algebra_Tree_Cell)
       return Int64_Seq
    is
+      pragma SPARK_Mode (Off);
       Encounter_Executed : Boolean;
       Result             : Int64_Seq;
    begin
@@ -43,6 +70,7 @@ package body Algebra with SPARK_Mode is
       Result                 : out Int64_Seq;
       Encounter_Executed_Out : out Boolean)
    is
+      pragma SPARK_Mode (Off);
       ResultThis : Int64_Seq;
    begin
       case Algebra.Node_Kind is
@@ -132,6 +160,7 @@ package body Algebra with SPARK_Mode is
                   if not Encounter_Executed_Out then
                      for J in 1 .. Num_Children loop
                         for TaskOptionId of Children_Results (J) loop
+                           pragma Assume (Length (ResultThis) < Count_Type'Last);
                            ResultThis := Add (ResultThis, TaskOptionId);
                         end loop;
                      end loop;
@@ -147,6 +176,7 @@ package body Algebra with SPARK_Mode is
 
                      --  All actions are candidate in a parallel assignment
                      for TaskOptionId of Children_Results (J) loop
+                        pragma Assume (Length (ResultThis) < Count_Type'Last);
                         ResultThis := Add (ResultThis, TaskOptionId);
                      end loop;
 
@@ -172,51 +202,82 @@ package body Algebra with SPARK_Mode is
 
    procedure Parse_Formula
      (Formula : Unbounded_String;
-      Algebra : out not null Algebra_Tree)
+      Algebra : out Algebra_Tree;
+      Error   : in out Boolean;
+      Message : in out Unbounded_String)
    is
+      package Unb renames Common.Unbounded_Strings_Subprograms;
       Kind          : Node_Kind_Type := Undefined;
       Operator_Kind : Operator_Kind_Type := Undefined;
       form          : Unbounded_String := Formula;
    begin
-      for J in 1 .. Length (form) loop
-
-         if Element (form, J) = '.' then
-            Kind := Operator;
-            Operator_Kind := Sequential;
-            form := To_Unbounded_String (Slice (form, J + 2, Index (form, ")", Backward) - 1));
-            exit;
-
-         elsif Element (form, J) = '+' then
-            Kind := Operator;
-            Operator_Kind := Alternative;
-            form := To_Unbounded_String (Slice (form, J + 2, Index (form, ")", Backward) - 1));
-            exit;
-
-         elsif Element (form, J) = '|' then
-            Kind := Operator;
-            Operator_Kind := Parallel;
-            form := To_Unbounded_String (Slice (form, J + 2, Index (form, ")", Backward) - 1));
-            exit;
-
-         elsif Element (form, J) = 'p' then
-            Kind := Action;
-
-            if Index (form, ")", Backward) = 0 then
-               form := To_Unbounded_String (Slice (form, J + 1, Length (form)));
-            else
-               form := To_Unbounded_String (Slice (form, J + 1, Index (form, ")", Backward) - 1));
-            end if;
-
-            exit;
-
+      Algebra := null;
+      if Element (form, 1) in '.' | '|' | '+' then
+         if Element (form, 2) /= '(' or else Element (form, Length (form)) /= ')' then
+            Append_To_Msg (Message, "Substring " & '"');
+            Append_To_Msg (Message, form);
+            Append_To_Msg (Message, '"' & ": character '" & Element (form, 1) & "should be followed by '(' and substring should end with ')'. ");
+            Error := True;
+            return;
          end if;
-      end loop;
+      elsif Element (form, 1) /= 'p' then
+         Append_To_Msg (Message, "Substring " & '"');
+         Append_To_Msg (Message, form);
+         Append_To_Msg (Message, '"' & ": substring should begin with '.', '|', '+', or 'p'. ");
+         Error := True;
+         return;
+      end if;
+
+      if Element (form, 1) = '.' then
+         Kind := Operator;
+         Operator_Kind := Sequential;
+         form := Unb.To_Unbounded_String (Unb.Slice (form, 3, Unb.Index (form, ")", Backward) - 1));
+
+      elsif Element (form, 1) = '+' then
+         Kind := Operator;
+         Operator_Kind := Alternative;
+         form := Unb.To_Unbounded_String (Unb.Slice (form, 3, Unb.Index (form, ")", Backward) - 1));
+
+      elsif Element (form, 1) = '|' then
+         Kind := Operator;
+         Operator_Kind := Parallel;
+         form := Unb.To_Unbounded_String (Unb.Slice (form, 3, Unb.Index (form, ")", Backward) - 1));
+
+      elsif Element (form, 1) = 'p' then
+         Kind := Action;
+
+         if Index (form, ")", Backward) = 0 then
+            form := To_Unbounded_String (Slice (form, 2, Length (form)));
+            pragma Assert (Length (form) <= Length (Formula) and then Length (form) < Natural'Last);
+         else
+            form := Unb.To_Unbounded_String (Unb.Slice (form, 2, Unb.Index (form, ")", Backward) - 1));
+         end if;
+      end if;
 
       if Kind = Action then
          declare
-            ActionID : constant Int64 :=
-              Int64'Value (To_String (form));
+            Str           : constant String := To_String (form);
+            ActionID      : Int64;
+            Parsing_Error : Boolean;
          begin
+            if Str'Last = Integer'Last then
+               Append_To_Msg (Message, "Substring " & '"');
+               Append_To_Msg (Message, Str);
+               Append_To_Msg (Message, '"' & ": substring is too long. ");
+               Error := True;
+               return;
+            end if;
+
+            Parse_Int64 (Str, ActionID, Parsing_Error);
+
+            if Parsing_Error then
+               Append_To_Msg (Message, "Substring " & '"');
+               Append_To_Msg (Message, Str);
+               Append_To_Msg (Message, '"' & ": does not correspond to an Int64. ");
+               Error := True;
+               return;
+            end if;
+
             Algebra := new Algebra_Tree_Cell'(Node_Kind     => Action,
                                               TaskOptionId  => ActionID);
          end;
@@ -227,7 +288,7 @@ package body Algebra with SPARK_Mode is
             Children_Arr   : Algebra_Tree_Array (1 .. Max_Children);
             numChildren    : Children_Number := 0;
          begin
-            for J in 1 .. Length (form) loop
+            for J in 1 .. Length (form) - 1 loop
 
                if Element (form, J) in '+' | '.' | '|' then
 
@@ -236,20 +297,61 @@ package body Algebra with SPARK_Mode is
                         iEnd              : Natural := J + 1;
                         numParenthesisTmp : Natural := 0;
                      begin
-                        while iEnd <= Length (form) loop
-                           if Element (form, iEnd) = '(' then
-                              numParenthesisTmp := numParenthesisTmp + 1;
-                           elsif Element (form, iEnd) = ')' then
-                              numParenthesisTmp := numParenthesisTmp - 1;
+                        if Element (form, iEnd) /= '(' then
+                           Append_To_Msg (Message, "Substring " & '"');
+                           Append_To_Msg (Message, Slice (form, J, Length (form)));
+                           Append_To_Msg (Message, '"' & ": character '" & Element (form, 1) & "should be followed by '('. ");
+                           Error := True;
+                        else
+                           while iEnd <= Length (form) loop
+                              if Element (form, iEnd) = '(' then
+                                 if numParenthesisTmp = Natural'Last then
+                                    Append_To_Msg (Message, "Substring " & '"');
+                                    Append_To_Msg (Message, form);
+                                    Append_To_Msg (Message, '"' & ": substring has too many opening parentheses. ");
+                                    Error := True;
+                                    exit;
+                                 else
+                                    numParenthesisTmp := numParenthesisTmp + 1;
+                                 end if;
+
+                              elsif Element (form, iEnd) = ')' then
+                                 numParenthesisTmp := numParenthesisTmp - 1;
+                              end if;
+
+                              if numParenthesisTmp = 0 then
+                                 exit;
+                              end if;
+
+                              pragma Loop_Invariant (iEnd in J + 1 .. Length (form));
+                              pragma Loop_Invariant (numParenthesisTmp >= 1);
+                              iEnd := iEnd + 1;
+                           end loop;
+                           if not Error then
+                              if numParenthesisTmp /= 0 then
+                                 Append_To_Msg (Message, "Substring " & '"');
+                                 Append_To_Msg (Message, Slice (form, J, Length (form)));
+                                 Append_To_Msg (Message, '"' & ": substring is missing one or several closing parentheses. ");
+                                 Error := True;
+                              else
+                                 if numChildren = Children_Number'Last then
+                                    Append_To_Msg (Message, "Substring " & '"');
+                                    Append_To_Msg (Message, form);
+                                    Append_To_Msg (Message, '"' & ": substring defines too many children. ");
+                                    Error := True;
+                                 else
+                                    numChildren := numChildren + 1;
+                                    Parse_Formula (To_Unbounded_String (Slice (form, J, iEnd)),
+                                                   Children_Arr (numChildren),
+                                                   Error,
+                                                   Message);
+                                    if Error then
+                                       exit;
+                                    end if;
+                                 end if;
+                              end if;
                            end if;
-                           if numParenthesisTmp = 0 then
-                              exit;
-                           end if;
-                           iEnd := iEnd + 1;
-                        end loop;
-                        numChildren := numChildren + 1;
-                        Parse_Formula (To_Unbounded_String (Slice (form, J, iEnd)),
-                                       Children_Arr (numChildren));
+                        end if;
                      end;
                   end if;
 
@@ -259,35 +361,70 @@ package body Algebra with SPARK_Mode is
                         iEnd : Natural := J + 2;
                      begin
                         while iEnd <= Length (form) loop
+                           pragma Loop_Invariant (iEnd in J + 2 .. Length (form));
                            if Element (form, iEnd) in ')' | ' ' then
                               exit;
                            end if;
                            iEnd := iEnd + 1;
                         end loop;
-
-                        numChildren := numChildren + 1;
-                        Parse_Formula (To_Unbounded_String (Slice (form, J, iEnd)),
-                                       Children_Arr (numChildren));
+                        if numChildren = Children_Number'Last then
+                           Append_To_Msg (Message, "Substring " & '"');
+                           Append_To_Msg (Message, form);
+                           Append_To_Msg (Message, '"' & ": substring defines too many children. ");
+                           Error := True;
+                        else
+                           numChildren := numChildren + 1;
+                           Parse_Formula (To_Unbounded_String (Slice (form, J, iEnd - 1)),
+                                          Children_Arr (numChildren),
+                                          Error,
+                                          Message);
+                           if Error then
+                              exit;
+                           end if;
+                        end if;
                      end;
                   end if;
 
                elsif Element (form, J) = '(' then
-                  numParenthesis := numParenthesis + 1;
+                  if numParenthesis = Natural'Last then
+                     Append_To_Msg (Message, "Substring " & '"');
+                     Append_To_Msg (Message, form);
+                     Append_To_Msg (Message, '"' & ": substring has too many opening parentheses. ");
+                     Error := True;
+                  else
+                     numParenthesis := numParenthesis + 1;
+                  end if;
 
                elsif Element (form, J) = ')' then
-                  numParenthesis := numParenthesis - 1;
+                  if numParenthesis = 0 then
+                     Append_To_Msg (Message, "Substring " & '"');
+                     Append_To_Msg (Message, form);
+                     Append_To_Msg (Message, '"' & ": substring has too many closing parentheses. ");
+                     Error := True;
+                  else
+                     numParenthesis := numParenthesis - 1;
+                  end if;
                end if;
+               pragma Loop_Invariant (for all K in 1 .. numChildren => Children_Arr (K) /= null);
+               pragma Loop_Invariant (for all K in numChildren + 1 .. Children_Arr'Last => Children_Arr (K) = null);
             end loop;
-            declare
-               Nb_Children : constant Children_Number := numChildren;
-               Children    : Children_Collection (Nb_Children)
-                 := (Num_Children => Nb_Children,
-                     Children     => Children_Array (Children_Arr (1 .. Nb_Children)));
-            begin
-               Algebra := new Algebra_Tree_Cell'(Node_Kind     => Operator,
-                                                 Operator_Kind => Operator_Kind,
-                                                 Collection    => Children);
-            end;
+            if not Error then
+               declare
+                  Nb_Children : constant Children_Number := numChildren;
+                  Children    : Children_Collection (Nb_Children)
+                    := (Num_Children => Nb_Children,
+                        Children     => Children_Array (Children_Arr (1 .. Nb_Children)));
+               begin
+                  Algebra := new Algebra_Tree_Cell'(Node_Kind     => Operator,
+                                                    Operator_Kind => Operator_Kind,
+                                                    Collection    => Children);
+               end;
+            else
+               for J in 1 .. numChildren loop
+                  Free_Tree (Children_Arr (J));
+                  pragma Loop_Invariant (for all K in 1 .. J => Children_Arr (K) = null);
+               end loop;
+            end if;
          end;
       end if;
    end Parse_Formula;
@@ -296,10 +433,11 @@ package body Algebra with SPARK_Mode is
    -- Print_Tree --
    ----------------
 
-   procedure Print_Tree (Algebra : access constant Algebra_Tree_Cell) is
-      procedure Print_Tree_Aux (Node : access constant Algebra_Tree_Cell; I : Natural);
+   procedure Print_Tree (Algebra : not null access constant Algebra_Tree_Cell) is
+      pragma SPARK_Mode (Off);
+      procedure Print_Tree_Aux (Node : not null access constant Algebra_Tree_Cell; I : Natural);
 
-      procedure Print_Tree_Aux (Node : access constant Algebra_Tree_Cell; I : Natural) is
+      procedure Print_Tree_Aux (Node : not null access constant Algebra_Tree_Cell; I : Natural) is
          Prefix : constant String := I * " | ";
       begin
          if Node.Node_Kind = Action then
