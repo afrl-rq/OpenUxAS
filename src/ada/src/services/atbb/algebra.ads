@@ -1,5 +1,6 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Common;                use Common;
+with Ada.Unchecked_Deallocation;
 
 package Algebra with SPARK_Mode is
 
@@ -40,31 +41,18 @@ package Algebra with SPARK_Mode is
 
    procedure Parse_Formula
      (Formula : Unbounded_String;
-      Algebra : out not null Algebra_Tree);
+      Algebra : out Algebra_Tree;
+      Error   : in out Boolean;
+      Message : in out Unbounded_String)
+   with
+     Pre  => Length (Formula) > 1,
+     Post => (if not Error then Algebra /= null);
 
    procedure Print_Tree
-     (Algebra : access constant Algebra_Tree_Cell);
+     (Algebra : not null access constant Algebra_Tree_Cell);
 
    function Is_Present
-     (Algebra      : access constant Algebra_Tree_Cell;
-      TaskOptionId : Int64)
-      return Boolean;
-
-   function Get_Next_Objectives_Ids
-     (Assignment : Int64_Seq;
-      Algebra    : access constant Algebra_Tree_Cell)
-      return Int64_Seq
-   with
-     Post =>
-       (for all TaskOptionId of Get_Next_Objectives_Ids'Result =>
-          Is_Present (Algebra, TaskOptionId));
-   --  Returns a sequence of TaskOptionIds corresponding to the next possible
-   --  actions considering Assignment.
-
-private
-
-   function Is_Present
-     (Algebra      : access constant Algebra_Tree_Cell;
+     (Algebra      : not null access constant Algebra_Tree_Cell;
       TaskOptionId : Int64)
       return Boolean
    is
@@ -72,5 +60,24 @@ private
        when Action   => TaskOptionId = Algebra.TaskOptionId,
        when Operator => (for some J in 1 .. Algebra.Collection.Num_Children => Is_Present (Algebra.Collection.Children (J), TaskOptionId)),
        when Undefined => False);
+   pragma Annotate (GNATprove, Terminating, Is_Present);
+
+   function Get_Next_Objectives_Ids
+     (Assignment : Int64_Seq;
+      Algebra    : not null access constant Algebra_Tree_Cell)
+      return Int64_Seq
+   with
+     Post =>
+       (for all ObjectiveId of Get_Next_Objectives_Ids'Result =>
+          (Is_Present (Algebra, ObjectiveId)
+             and then
+           not Contains (Assignment, Int64_Sequences.First, Last (Assignment), ObjectiveId)));
+   pragma Annotate (GNATprove, Terminating, Get_Next_Objectives_Ids);
+   --  Returns a sequence of TaskOptionIds corresponding to the next possible
+   --  actions considering Assignment.
+
+   procedure Free_Tree (X : in out Algebra_Tree) with
+     Depends => (X => X),
+     Post    => X = null;
 
 end Algebra;
