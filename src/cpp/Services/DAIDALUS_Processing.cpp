@@ -254,7 +254,7 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
         }
         if (m_DivertState.heading_deg < m_heading_min_deg)  //check for angle wrap if candidate divert heading is less than the minimum
         {
-            for (int i = bands.size(); i >=0; i--)
+            for (int i = bands.size()-1; i >=0; i--)
             {
                 if (isInRange(bands[i].lower, bands[i].upper, std::fmod(m_DivertState.heading_deg + 360.0, 360.0)))
                 {
@@ -300,7 +300,7 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
 
             if (!isRecoveryFound)
             {
-                for (int i = r_bands.size(); i >= 0; i--)
+                for (int i = r_bands.size()-1; i >= 0; i--)
                     if ((r_bands[i].lower < m_CurrentState.heading_deg) && (r_bands[i].upper < m_CurrentState.heading_deg))
                     {
                         m_DivertState.heading_deg = r_bands[i].upper - m_heading_interval_buffer_deg / 2.0;
@@ -315,6 +315,7 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
         else
         {
             guaranteed_flag = false;
+            m_DivertState.heading_deg = std::fmod((m_CurrentState.heading_deg + 180.0) + 360.0, 360.0); //fallback action: turn right 180deg
             // std::cout << "No resolution found. Divert heading is " << m_DivertState.heading_deg << std::endl;
             // std::cout << std::endl;
         }
@@ -394,7 +395,7 @@ bool DAIDALUS_Processing::foundWCVGroundSpeedResolution(const std::shared_ptr<la
                 r_bands.push_back(temp);
             }
 
-            for (int i = r_bands.size(); i >= 0; i--)
+            for (int i = r_bands.size()-1; i >= 0; i--)
             {
                 //Find the first recovery interval that is at a lower speed than current speed
                 if ((r_bands[i].lower < m_CurrentState.horizontal_speed_mps) && (r_bands[i].upper < m_CurrentState.horizontal_speed_mps))
@@ -508,7 +509,7 @@ bool DAIDALUS_Processing::foundWCVVerticalSpeedResolution(const std::shared_ptr<
             if (!isRecoveryFound)
             {
                 //if no faster recovery found, check lower recovery
-                for (int i = r_bands.size(); i >= 0; i--)
+                for (int i = r_bands.size()-1; i >= 0; i--)
                     if ((r_bands[i].lower < m_CurrentState.vertical_speed_mps) && (r_bands[i].upper < m_CurrentState.vertical_speed_mps))
                     {
                         m_DivertState.vertical_speed_mps = r_bands[i].upper - m_verticalspeed_interval_buffer_mps / 2.0;
@@ -604,7 +605,7 @@ bool DAIDALUS_Processing::foundWCVAltitudeResolution(const std::shared_ptr<larcf
             //under the maximum of that recovery interval
             if (!isRecoveryFound)
             {
-                for (int i = r_bands.size(); i >= 0; i--)
+                for (int i = r_bands.size()-1; i >= 0; i--)
                     if ((r_bands[i].lower < m_CurrentState.altitude_m) && (r_bands[i].upper < m_CurrentState.altitude_m))
                     {
                         m_DivertState.altitude_m = r_bands[i].upper - m_altitude_interval_buffer_m / 2.0;
@@ -1133,7 +1134,7 @@ bool DAIDALUS_Processing::configure(const pugi::xml_node& ndComponent)
     if (!ndComponent.attribute(STRING_XML_AUTOMATICRESPONSESTATUS).empty())
     {
         std::string local_automatic_response_status = ndComponent.attribute(STRING_XML_AUTOMATICRESPONSESTATUS).as_string();
-        if (local_automatic_response_status == "ON" || local_automatic_response_status == "on")
+        if (local_automatic_response_status == "ON" || local_automatic_response_status == "on" || local_automatic_response_status == "On")
         {
             m_AutomaticResponseStatus = "ON";
         }

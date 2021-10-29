@@ -7,7 +7,7 @@ generic
    type Element_Type is private;
 package Bounded_Stack with SPARK_Mode is
 
-   Capacity : constant Integer := 200;
+   Capacity : constant Integer := 250;
    Empty    : constant Integer := 0;
 
    subtype Extent is Integer range Empty .. Capacity;

@@ -1,7 +1,7 @@
-with Common;        use Common;
-with LMCP_Messages; use LMCP_Messages;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Common;                use Common;
+with LMCP_Messages;         use LMCP_Messages;
 
-private with Ada.Strings.Unbounded;
 private with UxAS.Comms.LMCP_Object_Message_Sender_Pipes;
 
 --  Package only concerned with message passing. It defines its own state,
@@ -22,6 +22,9 @@ package Assignment_Tree_Branch_Bound_Communication with SPARK_Mode is
      (This : in out Assignment_Tree_Branch_Bound_Mailbox;
       Msg   : Message_Root'Class);
 
+   procedure sendErrorMessage
+     (This         : in out Assignment_Tree_Branch_Bound_Mailbox;
+      Error_String : Unbounded_String);
 private
    pragma SPARK_Mode (Off);
 
