@@ -2,6 +2,7 @@ with Ada.Containers.Formal_Doubly_Linked_Lists;
 with Ada.Containers.Formal_Hashed_Maps;
 with Ada.Containers.Functional_Maps;
 with Ada.Containers;                             use all type Ada.Containers.Count_Type;
+with Ada.Strings.Unbounded;                      use Ada.Strings.Unbounded;
 with Automation_Request_Validator_Communication; use Automation_Request_Validator_Communication;
 with Common;                                     use Common;
 with LMCP_Messages;                              use LMCP_Messages;
@@ -131,7 +132,7 @@ package Automation_Request_Validator with SPARK_Mode is
      (Config  : Automation_Request_Validator_Configuration_Data;
       Sandbox : in out Request_Details_Map;
       Mailbox : in out Automation_Request_Validator_Mailbox;
-      Request : UniqueAutomationRequest;
+      Request : in out UniqueAutomationRequest;
       IsReady : out Boolean)
      with Pre => Contains (Sandbox, Request.RequestID),
      Post =>
@@ -146,7 +147,13 @@ package Automation_Request_Validator with SPARK_Mode is
 
      --  IsReady is true if the automation request is valid
 
-     and then IsReady = Valid_Automation_Request (Config, Request);
+     and then IsReady = Valid_Automation_Request (Config, Request'Old)
+     and then Request.OperatingRegion'Old = Request.OperatingRegion
+     and then Request.TaskList'Old = Request.TaskList
+     and then Request.RedoAllTasks'Old = Request.RedoAllTasks
+     and then Request.RequestID'Old = Request.RequestID
+     and then Request.PlanningStates'Old = Request.PlanningStates
+     and then Request.SandboxRequest'Old = Request.SandboxRequest;
 
    procedure Handle_Automation_Request
      (Config  : Automation_Request_Validator_Configuration_Data;
@@ -158,17 +165,21 @@ package Automation_Request_Validator with SPARK_Mode is
      (Config  : Automation_Request_Validator_Configuration_Data;
       State   : in out Automation_Request_Validator_State;
       Mailbox : in out Automation_Request_Validator_Mailbox;
-      Request : ImpactAutomationRequest);
+      Request : ImpactAutomationRequest)
+   with
+     Pre => not Contains (State.Sandbox, Request.RequestID);
 
    procedure Handle_Task_Automation_Request
      (Config  : Automation_Request_Validator_Configuration_Data;
       State   : in out Automation_Request_Validator_State;
       Mailbox : in out Automation_Request_Validator_Mailbox;
-      Request : TaskAutomationRequest);
+      Request : TaskAutomationRequest)
+   with
+     Pre => not Contains (State.Sandbox, Request.RequestID);
 
    procedure Handle_Automation_Response
-   (State    : in out Automation_Request_Validator_State;
-       Mailbox  : in out Automation_Request_Validator_Mailbox;
+     (State    : in out Automation_Request_Validator_State;
+      Mailbox  : in out Automation_Request_Validator_Mailbox;
        Response : UniqueAutomationResponse);
 
    procedure Check_Tasks_Initialized
@@ -194,14 +205,14 @@ private
      (All_Elements_In (Entity_Ids, Configurations)
        and then
         (for all E of Entity_Ids =>
-             (Contains (States, E)
+           (Contains (States, E)
               or else
                 (not Is_Empty (States)
                  and then (for some Planning_State of Planning_States =>
-                             E = Planning_State.EntityID)))
+                             E = Planning_State.EntityID))))
       and then
         (if Length (Entity_Ids) = 0 then
-             (for some Id of Configurations => Contains (States, Id)))))
+             (for some Id of Configurations => Contains (States, Id))))
    with Ghost;
 
    function Check_For_Required_Operating_Region_And_Keepin_Keepout_Zones
