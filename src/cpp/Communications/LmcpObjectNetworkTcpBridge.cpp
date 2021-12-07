@@ -129,7 +129,8 @@ bool
 LmcpObjectNetworkTcpBridge::initialize()
 {
     UXAS_LOG_INFORM(s_typeName(), "::initialize - START");
-    m_externalLmcpObjectMessageTcpReceiverSenderPipe.initializeStream(m_entityId, m_networkId, m_tcpReceiveSendAddress, m_isServer);
+    // m_externalLmcpObjectMessageTcpReceiverSenderPipe.initializeStream(m_entityId, m_networkId, m_tcpReceiveSendAddress, m_isServer);
+    m_externalLmcpObjectMessageTcpReceiverSenderPipe.initialize(m_tcpReceiveSendAddress, m_isServer);
     UXAS_LOG_INFORM(s_typeName(), "::initialize succeeded");
     return (true);
 };
@@ -183,7 +184,8 @@ LmcpObjectNetworkTcpBridge::processReceivedSerializedLmcpMessage(std::unique_ptr
         UXAS_LOG_INFORM(s_typeName(), "::processReceivedSerializedLmcpMessage processing message with source entity ID ", receivedLmcpMessage->getMessageAttributesReference()->getSourceEntityId());
         try
         {
-            m_externalLmcpObjectMessageTcpReceiverSenderPipe.sendSerializedMessage(std::move(receivedLmcpMessage));
+            // m_externalLmcpObjectMessageTcpReceiverSenderPipe.sendSerializedMessage(std::move(receivedLmcpMessage));
+            m_externalLmcpObjectMessageTcpReceiverSenderPipe.send(*receivedLmcpMessage);
         }
         catch (std::exception& ex)
         {
@@ -206,8 +208,11 @@ LmcpObjectNetworkTcpBridge::executeTcpReceiveProcessing()
         while (!m_isTerminate)
         {
             UXAS_LOG_DEBUG_VERBOSE_BRIDGE("LmcpObjectNetworkTcpBridge::executeTcpReceiveProcessing BEFORE calling receivedTcpMessage");
-            std::unique_ptr<uxas::communications::data::AddressedAttributedMessage> receivedTcpMessage 
-                    = m_externalLmcpObjectMessageTcpReceiverSenderPipe.getNextSerializedMessage();
+            // std::unique_ptr<uxas::communications::data::AddressedAttributedMessage> receivedTcpMessage 
+            //         = m_externalLmcpObjectMessageTcpReceiverSenderPipe.getNextSerializedMessage();
+            std::unique_ptr<uxas::communications::data::AddressedAttributedMessage> receivedTcpMessage =
+                stduxas::make_unique<data::AddressedAttributedMessage>(
+                    m_externalLmcpObjectMessageTcpReceiverSenderPipe.receive());
 
             UXAS_LOG_DEBUG_VERBOSE_BRIDGE("LmcpObjectNetworkTcpBridge::executeTcpReceiveProcessing RECEIVED EXTERNAL serialized message");
             UXAS_LOG_DEBUG_VERBOSE_BRIDGE("Address:          [", receivedTcpMessage->getAddress(), "]");
