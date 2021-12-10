@@ -12,7 +12,7 @@
 
 #include "LmcpObjectNetworkClientBase.h"
 #include "LmcpObjectMessageTcpReceiverSenderPipe.h"
-#include "ZeroMqAttributedMessageSenderReceiver.h"
+#include "ZmqAttributedMsgSenderReceiver.h"
 
 #include <atomic>
 #include <cstdint>
@@ -126,7 +126,7 @@ private:
     std::string m_remoteConfigurationString;
 
     // uxas::communications::LmcpObjectMessageTcpReceiverSenderPipe m_externalLmcpObjectMessageTcpReceiverSenderPipe;
-    transport::ZeroMqAttributedMsgSenderReceiver m_externalLmcpObjectMessageTcpReceiverSenderPipe;
+    ZmqAttributedMsgSenderReceiver m_externalLmcpObjectMessageTcpReceiverSenderPipe;
 
     std::set<std::string> m_nonImportForwardAddresses;
     std::set<std::string> m_nonExportForwardAddresses;

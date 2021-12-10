@@ -7,27 +7,26 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef UXAS_ZERO_MQ_PUSH_SENDER_H
-#define UXAS_ZERO_MQ_PUSH_SENDER_H
+#ifndef COMMUNICATIONS_ZMQ_PUSH_SENDER_H
+#define COMMUNICATIONS_ZMQ_PUSH_SENDER_H
 
-#include "ZeroMqSocketBase.h"
-#include "ZeroMqSender.h"
-#include "ZeroMqSocketInitializer.h"
+#include "ZmqSocketBase.h"
+#include "ZmqSender.h"
+#include "ZmqSocketInitializer.h"
 #include "UxAS_Log.h"
 
 #include <string>
 
 namespace uxas {
 namespace communications {
-namespace transport {
 
-class ZeroMqPushSender : public ZeroMqSender<std::string&>, public ISocket<const std::string&, bool> {
+class ZmqPushSender : public ZmqSender<std::string&>, public ISocket<const std::string&, bool> {
 public:
-    ZeroMqPushSender() 
-    : ZeroMqSender{std::make_shared<ZeroMqSocketBase>(std::make_shared<ZeroMqSocketInitializer>(), zmq::socket_type::push)}
+    ZmqPushSender() 
+    : ZmqSender{std::make_shared<ZmqSocketBase>(std::make_shared<ZmqSocketInitializer>(), zmq::socket_type::push)}
     {}
 
-    ~ZeroMqPushSender() override = default;
+    ~ZmqPushSender() override = default;
 
     // Initialize our socket!
     bool initialize(const std::string& address, bool isServer) override {
@@ -35,7 +34,6 @@ public:
     }
 };
 
-}
 }
 }
 

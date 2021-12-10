@@ -7,23 +7,21 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef UXAS_ZERO_MQ_TCP_SOCKET_H
-#define UXAS_ZERO_MQ_TCP_SOCKET_H
+#ifndef COMMUNICATIONS_ZMQ_TCP_SOCKET_H
+#define COMMUNICATIONS_ZMQ_TCP_SOCKET_H
 
-#include "ZeroMqSocketBase.h"
+#include "ZmqSocketBase.h"
 
 namespace uxas {
 namespace communications {
-namespace transport {
 
 // Add some additional destructor functionality from the base class
 
-class ZeroMqTcpSocket : public ZeroMqSocketBase {
+class ZmqTcpSocket : public ZmqSocketBase {
 public:
-    ZeroMqTcpSocket(InitializerPtr initializer)
-    : ZeroMqSocketBase{initializer, zmq::socket_type::stream} {}
+    ZmqTcpSocket(InitializerPtr initializer) : ZmqSocketBase{initializer, zmq::socket_type::stream} {}
 
-    ~ZeroMqTcpSocket() override {
+    ~ZmqTcpSocket() override {
         if (m_socket) {
             //TODO possibly need to add disconnection logic for clients as well?
             // Send routing ID followed by an empty message to close connection prior to
@@ -35,7 +33,6 @@ public:
     };
 };
 
-}
 }
 }
 

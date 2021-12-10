@@ -7,12 +7,11 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef UXAS_I_MSG_RECEIVER_H
-#define UXAS_I_MSG_RECEIVER_H
+#ifndef COMMUNICATION_I_MSG_RECEIVER_H
+#define COMMUNICATION_I_MSG_RECEIVER_H
 
 namespace uxas {
 namespace communications {
-namespace transport {
 
 template<typename Msg>
 class IMsgReceiver {
@@ -23,7 +22,6 @@ public:
     virtual Msg receive() = 0;
 };
 
-}
 }
 }
 

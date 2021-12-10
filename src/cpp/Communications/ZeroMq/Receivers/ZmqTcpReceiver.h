@@ -7,11 +7,11 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef UXAS_ZERO_MQ_TCP_RECEIVER_H
-#define UXAS_ZERO_MQ_TCP_RECEIVER_H
+#ifndef COMMUNICATIONS_ZMQ_TCP_RECEIVER_H
+#define COMMUNICATIONS_ZMQ_TCP_RECEIVER_H
 
-#include "ZeroMqReceiver.h"
-#include "ZeroMqTcpSocket.h"
+#include "ZmqReceiver.h"
+#include "ZmqTcpSocket.h"
 #include "IClientList.h"
 #include "UxAS_Log.h"
 
@@ -20,16 +20,15 @@
 
 namespace uxas {
 namespace communications {
-namespace transport {
 
-class ZeroMqTcpReceiver : public ZeroMqReceiver<std::string> {
+class ZmqTcpReceiver : public ZmqReceiver<std::string> {
 public:
-    ZeroMqTcpReceiver(std::shared_ptr<ZeroMqTcpSocket> socket,
+    ZmqTcpReceiver(std::shared_ptr<ZmqTcpSocket> socket,
         std::shared_ptr<IClientList<std::array<uint8_t,256>>> clients) 
-        : ZeroMqReceiver{socket}, m_clients{std::move(clients)}
+        : ZmqReceiver{socket}, m_clients{std::move(clients)}
         {}
 
-    ~ZeroMqTcpReceiver() override = default;
+    ~ZmqTcpReceiver() override = default;
 
     std::string receive() override {
         // NOTE: Logic here does not poll socket for possible messages and will block!
@@ -73,7 +72,6 @@ private:
     std::shared_ptr<IClientList<std::array<uint8_t,256>>> m_clients;  // List of client IDs received over socket.
 };
 
-}
 }
 }
 

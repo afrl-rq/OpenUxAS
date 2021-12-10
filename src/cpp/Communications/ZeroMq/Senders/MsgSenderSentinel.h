@@ -7,15 +7,14 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef UXAS_MSG_SENDER_SENTINEL_H
-#define UXAS_MSG_SENDER_SENTINEL_H
+#ifndef COMMUNICATIONS_MSG_SENDER_SENTINEL_H
+#define COMMUNICATIONS_MSG_SENDER_SENTINEL_H
 
 #include "IMsgSender.h"
 #include "UxAS_SentinelSerialBuffer.h"
 
 namespace uxas {
 namespace communications {
-namespace transport {
 
 /**
  * @brief Class that decorates an IMsgSender<std::string> type with sentinels
@@ -23,12 +22,26 @@ namespace transport {
 
 class MsgSenderSentinel : public IMsgSender<std::string&> {
 public:
-    MsgSenderSentinel(std::shared_ptr<IMsgSender<std::string&>> sender) 
+    /**
+     * @brief Constructor with decorated object passed as a parameter
+     * 
+     * @param sender - Decorated object
+     */
+    explicit MsgSenderSentinel(std::shared_ptr<IMsgSender<std::string&>> sender) 
     : m_sender{std::move(sender)} {}
 
+    /**
+     * @brief Default destructor
+     * 
+     */
     virtual ~MsgSenderSentinel() override = default;
 
-    // Send message 
+    /**
+     * @brief Modify message string by adding sentinels and then forwarding on to the 
+     * owned object for sending.
+     * 
+     * @param msg - message to be "sentinelized"
+     */
     void send(std::string& msg) {
         msg = common::SentinelSerialBuffer::createSentinelizedString( msg );
         m_sender->send(msg);
@@ -38,7 +51,6 @@ private:
     std::shared_ptr<IMsgSender<std::string&>> m_sender;
 };
 
-}
 }
 }
 

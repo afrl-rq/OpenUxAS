@@ -7,12 +7,17 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef UXAS_I_SOCKET_H
-#define UXAS_I_SOCKET_H
+#ifndef COMMUNICATIONS_I_SOCKET_H
+#define COMMUNICATIONS_I_SOCKET_H
 
 namespace uxas {
 namespace communications {
-namespace transport {
+
+/**
+ * @brief This class provides a templated interface for any socket type class that needs initialization.
+ * 
+ * @tparam Ts - Variadic template parameters to allow for different interface specifications.
+ */
 
 template<typename... Ts>
 class ISocket {
@@ -23,7 +28,6 @@ public:
     virtual bool initialize(Ts...) = 0;
 };
 
-}
 }
 }
 

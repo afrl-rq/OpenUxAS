@@ -7,8 +7,8 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef UXAS_SET_ARRAY_CLIENT_H
-#define UXAS_SET_ARRAY_CLIENT_H
+#ifndef COMMUNICATIONS_SET_ARRAY_CLIENT_H
+#define COMMUNICATIONS_SET_ARRAY_CLIENT_H
 
 #include "IClientList.h"
 #include <array>
@@ -16,7 +16,6 @@
 
 namespace uxas {
 namespace communications {
-namespace transport {
 
 class SetArrayClientList : public IClientList<std::array<uint8_t,256>> {
 public:
@@ -40,7 +39,6 @@ private:
     CList m_clients;
 };
 
-}
 }
 }
 

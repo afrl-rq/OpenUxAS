@@ -7,14 +7,13 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef UXAS_I_CLIENT_LIST_H
-#define UXAS_I_CLIENT_LIST_H
+#ifndef COMMUNICATIONS_I_CLIENT_LIST_H
+#define COMMUNICATIONS_I_CLIENT_LIST_H
 
 #include <set>
 
 namespace uxas {
 namespace communications {
-namespace transport {
 
 template<typename T, typename Container = std::set<T>>
 class IClientList {
@@ -31,7 +30,6 @@ public:
     virtual bool removeClient(T) = 0;
 };
 
-}
 }
 }
 

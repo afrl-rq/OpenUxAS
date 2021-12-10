@@ -7,8 +7,8 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef UXAS_ZERO_MQ_SOCKET_BASE_H
-#define UXAS_ZERO_MQ_SOCKET_BASE_H
+#ifndef COMMUNICATIONS_ZMQ_SOCKET_BASE_H
+#define COMMUNICATIONS_ZMQ_SOCKET_BASE_H
 
 #include "ISocket.h"
 #include "zmq.hpp"
@@ -16,22 +16,21 @@
 
 namespace uxas {
 namespace communications {
-namespace transport {
 
 // This class allows for different socket types to be created via constructor arguments.  For
 // additional constructor/destructor setup should extend this class.
 
-class ZeroMqSocketBase : public ISocket<const std::string&, bool> {
+class ZmqSocketBase : public ISocket<const std::string&, bool> {
 protected:
     // Initializer provides uncoupled method of instantiating socket.
     typedef std::shared_ptr<ISocket<std::shared_ptr<zmq::socket_t>, const std::string&, int32_t, bool>>
         InitializerPtr;  
 
 public:
-    ZeroMqSocketBase(InitializerPtr initializer, zmq::socket_type socketType) 
+    ZmqSocketBase(InitializerPtr initializer, zmq::socket_type socketType) 
     : m_socketType{static_cast<int32_t>(socketType)}, m_initializer{initializer} {}
 
-    virtual ~ZeroMqSocketBase() override {
+    virtual ~ZmqSocketBase() override {
         if (m_socket) {
             m_socket->setsockopt<uint32_t>(ZMQ_LINGER,0);
             m_socket->close();
@@ -64,7 +63,6 @@ protected:
     std::array<uint8_t,256> m_routingId{};
 };
 
-}
 }
 }
 

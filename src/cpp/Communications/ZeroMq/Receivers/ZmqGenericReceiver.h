@@ -7,22 +7,21 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef UXAS_ZERO_MQ_GENERIC_RECEIVER_H
-#define UXAS_ZERO_MQ_GENERIC_RECEIVER_H
+#ifndef COMMUNICATIONS_ZMQ_GENERIC_RECEIVER_H
+#define COMMUNICATIONS_ZMQ_GENERIC_RECEIVER_H
 
-#include "ZeroMqReceiver.h"
+#include "ZmqReceiver.h"
 #include "UxAS_Log.h"
 
 #include <string>
 
 namespace uxas {
 namespace communications {
-namespace transport {
 
-class ZeroMqGenericReceiver : public ZeroMqReceiver<std::string> {
+class ZmqGenericReceiver : public ZmqReceiver<std::string> {
 public:
-    ZeroMqGenericReceiver(std::shared_ptr<ZeroMqSocketBase> socket) : ZeroMqReceiver{socket} {}
-    ~ZeroMqGenericReceiver() override = default;
+    ZmqGenericReceiver(std::shared_ptr<ZmqSocketBase> socket) : ZmqReceiver{socket} {}
+    ~ZmqGenericReceiver() override = default;
 
     std::string receive() override {
         // NOTE: Logic here does not poll socket for possible messages and will block!
@@ -42,7 +41,6 @@ public:
     }
 };
 
-}
 }
 }
 

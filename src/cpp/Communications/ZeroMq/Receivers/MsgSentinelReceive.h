@@ -7,8 +7,8 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef UXAS_MSG_SENTINEL_RECEIVE_H
-#define UXAS_MSG_SENTINEL_RECEIVE_H
+#ifndef COMMUNICATIONS_MSG_SENTINEL_RECEIVE_H
+#define COMMUNICATIONS_MSG_SENTINEL_RECEIVE_H
 
 #include "IMsgReceiver.h"
 #include "AddressedAttributedMessage.h"
@@ -16,7 +16,6 @@
 
 namespace uxas {
 namespace communications {
-namespace transport {
 
 /**
  * @brief Class that decorates an IMsgReceiver<std::string> type with sentinels
@@ -24,13 +23,13 @@ namespace transport {
 
 class MsgSentinelReceive : public IMsgReceiver<std::string> {
 public:
-    MsgSentinelReceive(std::unique_ptr<IMsgReceiver<std::string>> sender) 
-    : m_sender{std::move(sender)} {}
+    MsgSentinelReceive(std::unique_ptr<IMsgReceiver<std::string>> receiver) 
+    : m_receiver{std::move(receiver)} {}
 
     virtual ~MsgSentinelReceive() override = default;
 
     std::string receive() {
-        return receivedData = m_serialBuffer.getNextPayloadString(m_receiver->receive());
+        return m_serialBuffer.getNextPayloadString(m_receiver->receive());
     }
 
 private:
@@ -38,7 +37,6 @@ private:
     common::SentinelSerialBuffer m_serialBuffer;
 };
 
-}
 }
 }
 

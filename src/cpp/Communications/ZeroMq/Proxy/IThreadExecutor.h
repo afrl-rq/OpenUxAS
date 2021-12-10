@@ -7,12 +7,11 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef UXAS_I_THREAD_EXECUTOR_H
-#define UXAS_I_THREAD_EXECUTOR_H
+#ifndef COMMUNICATIONS_I_THREAD_EXECUTOR_H
+#define COMMUNICATIONS_I_THREAD_EXECUTOR_H
 
 namespace uxas {
 namespace communications {
-namespace transport {
 
 template<typename... Ts>
 class IThreadExecutor {
@@ -23,7 +22,6 @@ public:
     virtual void executeOnThread(Ts...) = 0;
 };
 
-}
 }
 }
 

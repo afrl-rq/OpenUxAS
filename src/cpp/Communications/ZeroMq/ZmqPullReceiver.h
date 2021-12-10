@@ -7,28 +7,27 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef UXAS_ZERO_MQ_PULL_RECEIVER_H
-#define UXAS_ZERO_MQ_PULL_RECEIVER_H
+#ifndef COMMUNICATIONS_ZMQ_PULL_RECEIVER_H
+#define COMMUNICATIONS_ZMQ_PULL_RECEIVER_H
 
-#include "ZeroMqGenericReceiver.h"
-#include "ZeroMqSocketBase.h"
-#include "ZeroMqSocketInitializer.h"
+#include "ZmqGenericReceiver.h"
+#include "ZmqSocketBase.h"
+#include "ZmqSocketInitializer.h"
 #include "UxAS_Log.h"
 
 #include <string>
 
 namespace uxas {
 namespace communications {
-namespace transport {
 
-class ZeroMqPullReceiver : public ZeroMqReceiver<std::string>, public ISocket<const std::string&, bool> {
+class ZmqPullReceiver : public ZmqReceiver<std::string>, public ISocket<const std::string&, bool> {
 public:
-    ZeroMqPullReceiver()
-    : ZeroMqReceiver{std::make_shared<ZeroMqSocketBase>(std::make_shared<ZeroMqSocketInitializer>(), zmq::socket_type::pull)},
-      m_receiver{stduxas::make_unique<ZeroMqGenericReceiver>(m_socket)}
+    ZmqPullReceiver()
+    : ZmqReceiver{std::make_shared<ZmqSocketBase>(std::make_shared<ZmqSocketInitializer>(), zmq::socket_type::pull)},
+      m_receiver{stduxas::make_unique<ZmqGenericReceiver>(m_socket)}
     {}
 
-    ~ZeroMqPullReceiver() override = default;
+    ~ZmqPullReceiver() override = default;
 
     // Initialize our socket!
     bool initialize(const std::string& address, bool isServer) override {
@@ -44,7 +43,6 @@ private:
     std::unique_ptr<IMsgReceiver<std::string>> m_receiver;
 };
 
-}
 }
 }
 

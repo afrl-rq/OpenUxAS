@@ -7,8 +7,8 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef UXAS_MESSAGE_TRANSPORT_IZEROMQ_PROXY_H
-#define UXAS_MESSAGE_TRANSPORT_IZEROMQ_PROXY_H
+#ifndef COMMUNICATIONS_THREAD_RUNNER_BASE_H
+#define COMMUNICATIONS_THREAD_RUNNER_BASE_H
 
 #include "IThreadExecutor.h"
 #include "stdUniquePtr.h"
@@ -17,7 +17,6 @@
 
 namespace uxas {
 namespace communications {
-namespace transport {
 
 class ThreadRunnerBase : public IThreadExecutor<> {
 public:
@@ -44,7 +43,6 @@ private:
     std::unique_ptr<std::thread> m_thread;
 };
 
-}
 }
 }
 

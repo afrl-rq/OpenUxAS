@@ -7,39 +7,32 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef UXAS_ZERO_MQ_SENDER_BASE_H
-#define UXAS_ZERO_MQ_SENDER_BASE_H
+#ifndef COMMUNICATIONS_ZMQ_RECEIVER_BASE_H
+#define COMMUNICATIONS_ZMQ_RECEIVER_BASE_H
 
-#include "IMsgSender.h"
-#include "ZeroMqSocketBase.h"
+#include "IMsgReceiver.h"
+#include "ZmqSocketBase.h"
 #include <memory>
 
 namespace uxas {
 namespace communications {
-namespace transport {
 
 // This class adds data members to the pure interface base class
 
 template<typename Msg>
-class ZeroMqSender : public IMsgSender<Msg> {
+class ZmqReceiver : public IMsgReceiver<Msg> {
 public:
-    ZeroMqSender(std::shared_ptr<ZeroMqSocketBase> socket) : m_socket{socket} {}
-    virtual ~ZeroMqSender() override = default;
+    ZmqReceiver() : m_socket{nullptr} {}
+    ZmqReceiver(std::shared_ptr<ZmqSocketBase> socket) : m_socket{socket} {}
+    virtual ~ZmqReceiver() = default;
 
-    // Send messages on the socket
-    void send(Msg msg) override {
-        if (m_socket && m_socket->getSocket()) {
-            m_socket->getSocket()->send(msg.begin(), msg.end(), 0);
-        }
-    }
-
-    std::shared_ptr<ZeroMqSocketBase> getSocket() { return m_socket; }
+    std::shared_ptr<ZmqSocketBase> getSocket() { return m_socket; }
+    void setSocket(std::shared_ptr<ZmqSocketBase> socket) { m_socket = std::move(socket); } 
 
 protected:
-    std::shared_ptr<ZeroMqSocketBase> m_socket;
+    std::shared_ptr<ZmqSocketBase> m_socket;
 };
 
-}
 }
 }
 
