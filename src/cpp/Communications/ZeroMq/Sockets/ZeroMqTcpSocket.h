@@ -28,8 +28,9 @@ public:
             //TODO possibly need to add disconnection logic for clients as well?
             // Send routing ID followed by an empty message to close connection prior to
             // closing socket on this end.
-            m_socket->send(m_routingId.begin(), m_routingId.end(), ZMQ_SNDMORE);
-            m_socket->send(0,0,0);
+            m_socket->send(m_routingId.begin(), m_routingId.size(), ZMQ_SNDMORE);
+            std::string tmp;
+            m_socket->send(tmp.data(),0,0);
         }
     };
 };

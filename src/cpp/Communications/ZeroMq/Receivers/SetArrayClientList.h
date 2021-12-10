@@ -28,12 +28,12 @@ public:
 
     // Add to client list
     bool addClient(Client c) override {
-        m_clients.emplace(c);
+        return m_clients.emplace(c).second;
     };
 
     // Remove a client from list
     bool removeClient(Client c) override {
-        m_clients.erase(c);
+        return m_clients.erase(c) > 0 ? true : false;
     };
 
 private:

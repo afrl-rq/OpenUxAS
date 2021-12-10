@@ -39,7 +39,7 @@ public:
     };
 
     // Initialize the socket
-    bool initialize(const std::string& address, bool isServer) override {
+    virtual bool initialize(const std::string& address, bool isServer) override {
         m_isServer = isServer;
         if (m_initializer->initialize(m_socket, address, m_socketType, m_isServer)) {
             m_routingId = std::move(m_socket->getsockopt<std::array<uint8_t,256>>(ZMQ_ROUTING_ID));

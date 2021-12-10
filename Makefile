@@ -32,6 +32,11 @@ SOURCE_DIR=src/cpp
 
 # Source directories for the uxas project
 SOURCE_DIRS:=$(SOURCE_DIR)/Communications \
+			 $(SOURCE_DIR)/Communications/ZeroMq/Proxy \
+			 $(SOURCE_DIR)/Communications/ZeroMq/Receivers \
+			 $(SOURCE_DIR)/Communications/ZeroMq/Senders \
+			 $(SOURCE_DIR)/Communications/ZeroMq/Sockets \
+			 $(SOURCE_DIR)/Communications/ZeroMq \
              $(SOURCE_DIR)/Includes \
 	     	 $(SOURCE_DIR)/Services \
 	     	 $(SOURCE_DIR)/Tasks \

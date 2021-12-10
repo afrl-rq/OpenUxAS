@@ -33,7 +33,8 @@ public:
 
     // Execute a new thread 
     bool run() {
-        m_thread = uxas::stduxas::make_unique<std::thread>(&executeOnThread, this);
+        m_thread = uxas::stduxas::make_unique<std::thread>(&IThreadExecutor<>::executeOnThread, this);
+        return true;
     }
 
 protected:

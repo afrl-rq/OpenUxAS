@@ -23,10 +23,12 @@ namespace transport {
 template<typename Msg>
 class ZeroMqReceiver : public IMsgReceiver<Msg> {
 public:
+    ZeroMqReceiver() : m_socket{nullptr} {}
     ZeroMqReceiver(std::shared_ptr<ZeroMqSocketBase> socket) : m_socket{socket} {}
     virtual ~ZeroMqReceiver() = default;
 
     std::shared_ptr<ZeroMqSocketBase> getSocket() { return m_socket; }
+    void setSocket(std::shared_ptr<ZeroMqSocketBase> socket) { m_socket = std::move(socket); } 
 
 protected:
     std::shared_ptr<ZeroMqSocketBase> m_socket;

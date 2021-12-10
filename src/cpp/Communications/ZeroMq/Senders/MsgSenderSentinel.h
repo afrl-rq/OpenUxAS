@@ -23,7 +23,7 @@ namespace transport {
 
 class MsgSenderSentinel : public IMsgSender<std::string&> {
 public:
-    MsgSenderSentinel(std::unique_ptr<IMsgSender<std::string&>> sender) 
+    MsgSenderSentinel(std::shared_ptr<IMsgSender<std::string&>> sender) 
     : m_sender{std::move(sender)} {}
 
     virtual ~MsgSenderSentinel() override = default;
@@ -35,7 +35,7 @@ public:
     }
 
 private:
-    std::unique_ptr<IMsgSender<std::string&>> m_sender;
+    std::shared_ptr<IMsgSender<std::string&>> m_sender;
 };
 
 }

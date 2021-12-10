@@ -26,15 +26,17 @@ namespace transport {
 
 // This class instantiates a TCP sender/receiver, this IS NOT thread-safe and should not be shared across threads!
 
-class ZeroMqTcpSenderReceiver : public IMsgSender<std::string&>, public IMsgReceiver<std::string>,
+class ZeroMqTcpSenderReceiver : public ZeroMqSender<std::string&>, public ZeroMqReceiver<std::string>,
     public ISocket<const std::string&, bool> {
 public:
     ZeroMqTcpSenderReceiver() 
-    : m_socket{std::make_shared<ZeroMqTcpSocket>(std::make_shared<ZeroMqSocketInitializer>())},
-      m_clients{std::make_shared<SetArrayClientList>()},
-      m_sender{stduxas::make_unique<ZeroMqTcpSender>(m_socket,m_clients)},
-      m_receiver{stduxas::make_unique<ZeroMqTcpReceiver>(m_socket,m_clients)}
-    {}
+    : m_clients{std::make_shared<SetArrayClientList>()}
+    {
+        auto socket = std::make_shared<ZeroMqTcpSocket>(std::make_shared<ZeroMqSocketInitializer>());
+        m_socket = socket;
+        m_sender = stduxas::make_unique<ZeroMqTcpSender>(socket,m_clients);
+        m_receiver = stduxas::make_unique<ZeroMqTcpReceiver>(socket,m_clients);
+    }
 
     ~ZeroMqTcpSenderReceiver() override = default;
 
