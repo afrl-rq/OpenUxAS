@@ -39,7 +39,7 @@ bool ZmqAttributedMsgSenderReceiver::initialize(const std::string& address, bool
     auto receiver = std::make_shared<ZmqPullReceiver>();
     auto sender = std::make_shared<ZmqPushSender>();
     auto tcpSenderReceiver = std::make_shared<ZmqTcpSenderReceiver>();
-
+    
     receiver->initialize(sendAddress, true);
     sender->initialize(recvAddress, false);
     tcpSenderReceiver->initialize(address, isServer);
