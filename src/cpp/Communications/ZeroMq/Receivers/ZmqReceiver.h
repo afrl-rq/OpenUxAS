@@ -12,6 +12,7 @@
 
 #include "IMsgReceiver.h"
 #include "ZmqSocketBase.h"
+
 #include <memory>
 
 namespace uxas {
@@ -26,7 +27,7 @@ public:
     ZmqReceiver(std::shared_ptr<ZmqSocketBase> socket) : m_socket{socket} {}
     virtual ~ZmqReceiver() = default;
 
-    std::shared_ptr<ZmqSocketBase> getSocket() { return m_socket; }
+    virtual std::shared_ptr<ZmqSocketBase> getSocket() { return m_socket; }
     void setSocket(std::shared_ptr<ZmqSocketBase> socket) { m_socket = std::move(socket); } 
 
 protected:

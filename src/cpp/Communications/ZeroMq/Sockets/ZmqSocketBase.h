@@ -12,6 +12,7 @@
 
 #include "ISocket.h"
 #include "zmq.hpp"
+
 #include <memory>
 
 namespace uxas {
@@ -23,10 +24,11 @@ namespace communications {
 class ZmqSocketBase : public ISocket<const std::string&, bool> {
 protected:
     // Initializer provides uncoupled method of instantiating socket.
-    typedef std::shared_ptr<ISocket<std::shared_ptr<zmq::socket_t>, const std::string&, int32_t, bool>>
+    typedef std::shared_ptr<ISocket<std::shared_ptr<zmq::socket_t>&, const std::string&, int32_t, bool>>
         InitializerPtr;  
 
 public:
+    ZmqSocketBase() = default;
     ZmqSocketBase(InitializerPtr initializer, zmq::socket_type socketType) 
     : m_socketType{static_cast<int32_t>(socketType)}, m_initializer{initializer} {}
 
@@ -43,8 +45,9 @@ public:
         if (m_initializer->initialize(m_socket, address, m_socketType, m_isServer)) {
             m_routingId = std::move(m_socket->getsockopt<std::array<uint8_t,256>>(ZMQ_ROUTING_ID));
             return true;
+        } else {
+            return false;
         }
-        return false;
     }
 
     // Get pointer to the socket
@@ -57,7 +60,7 @@ public:
 
 protected: 
     bool m_isServer{false};
-    std::shared_ptr<zmq::socket_t> m_socket;
+    std::shared_ptr<zmq::socket_t> m_socket{nullptr};
     InitializerPtr m_initializer;
     int32_t m_socketType;
     std::array<uint8_t,256> m_routingId{};

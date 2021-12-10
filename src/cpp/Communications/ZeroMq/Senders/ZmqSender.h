@@ -62,7 +62,7 @@ public:
      * 
      * @return std::shared_ptr<ZmqSocketBase> 
      */
-    std::shared_ptr<ZmqSocketBase> getSocket() { return m_socket; }
+    virtual std::shared_ptr<ZmqSocketBase> getSocket() { return m_socket; }
 
     /**
      * @brief Set the socket for this sender.

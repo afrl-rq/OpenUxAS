@@ -25,8 +25,8 @@ namespace communications {
 
 // This class instantiates a TCP sender/receiver, this IS NOT thread-safe and should not be shared across threads!
 
-class ZmqTcpSenderReceiver : public ZmqSender<std::string&>, public ZmqReceiver<std::string>,
-    public ISocket<const std::string&, bool> {
+class ZmqTcpSenderReceiver : public IMsgSender<std::string&>, public IMsgReceiver<std::string>,
+    public ZmqSocketBase {
 public:
     ZmqTcpSenderReceiver() 
     : m_clients{std::make_shared<SetArrayClientList>()}
@@ -56,8 +56,11 @@ public:
         return retVal;
     }
 
+    // Get underlying ZeroMqSocket
+    std::shared_ptr<ZmqSocketBase> getSocket() { return m_socket; }
+
 private:
-    std::shared_ptr<ISocket<const std::string&, bool>> m_socket;
+    std::shared_ptr<ZmqSocketBase> m_socket;
     std::shared_ptr<IClientList<std::array<uint8_t,256>>> m_clients;
     std::unique_ptr<IMsgSender<std::string&>> m_sender;
     std::unique_ptr<IMsgReceiver<std::string>> m_receiver;

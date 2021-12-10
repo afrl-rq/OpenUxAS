@@ -13,6 +13,7 @@
 #include "ZeroMqFabric.h"
 #include "TransportBase.h"
 #include "ISocket.h"
+#include "UxAS_Log.h"
 
 #include <memory>
 
@@ -21,18 +22,18 @@ namespace communications {
 
 // This class provides a means of creating the ZeroMq socket! 
 
-class ZmqSocketInitializer : public ISocket<std::shared_ptr<zmq::socket_t>, const std::string&, int32_t, bool> {
+class ZmqSocketInitializer : public ISocket<std::shared_ptr<zmq::socket_t>&, const std::string&, int32_t, bool> {
 public:
     ~ZmqSocketInitializer() override = default;
 
     // Initialize the socket
-    bool initialize(std::shared_ptr<zmq::socket_t> socketPtr, 
+    bool initialize(std::shared_ptr<zmq::socket_t>& socketPtr, 
         const std::string& address, int32_t type, bool isServer) override
     {
         transport::ZeroMqSocketConfiguration config(uxas::communications::transport::NETWORK_NAME::zmqLmcpNetwork(),
             address, type, isServer, false, 10000, 10000);
         socketPtr = std::move(transport::ZeroMqFabric::getInstance().createSocket(config));
-        return true;
+        return (socketPtr) ? true : false;
     }
 };
 

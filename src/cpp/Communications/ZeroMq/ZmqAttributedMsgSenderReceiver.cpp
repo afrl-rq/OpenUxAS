@@ -36,14 +36,20 @@ bool ZmqAttributedMsgSenderReceiver::initialize(const std::string& address, bool
     m_receiveSocket->initialize(recvAddress, true);
 
     // Setup TCP proxy, initialize, and begin thread
-    auto receiveSocket = std::make_shared<ZmqPullReceiver>();
-    auto sendSocket = std::make_shared<ZmqPushSender>();
-    auto tcpSocket = std::make_shared<ZmqTcpSenderReceiver>();
-    receiveSocket->initialize(sendAddress, true);
-    sendSocket->initialize(recvAddress, false);
-    tcpSocket->initialize(address, isServer);
-    m_tcpProxy = std::make_shared<ZmqProxy>(std::move(receiveSocket), std::move(tcpSocket), 
-        std::move(tcpSocket), std::move(sendSocket));
+    auto receiver = std::make_shared<ZmqPullReceiver>();
+    auto sender = std::make_shared<ZmqPushSender>();
+    auto tcpSenderReceiver = std::make_shared<ZmqTcpSenderReceiver>();
+
+    receiver->initialize(sendAddress, true);
+    sender->initialize(recvAddress, false);
+    tcpSenderReceiver->initialize(address, isServer);
+
+    auto receiverPair = std::make_pair(receiver, receiver->getSocket());
+    auto senderPair = std::make_pair(sender, sender->getSocket());
+    auto tcpSenderReceiverPair = std::make_pair(tcpSenderReceiver, tcpSenderReceiver->getSocket());
+
+    m_tcpProxy = std::make_shared<ZmqProxy>(receiverPair, tcpSenderReceiverPair, 
+        tcpSenderReceiverPair, senderPair);
     return m_tcpProxy->run();
 }
 

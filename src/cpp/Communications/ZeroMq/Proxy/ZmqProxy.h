@@ -11,19 +11,23 @@
 #define COMMUNICATIONS_ZMQ_PROXY_H
 
 #include "ThreadRunnerBase.h"
-#include "ZmqReceiver.h"
-#include "ZmqSender.h"
+#include "IMsgReceiver.h"
+#include "IMsgSender.h"
+#include "ZmqSocketBase.h"
 
 namespace uxas {
 namespace communications {
 
 class ZmqProxy : public ThreadRunnerBase {
 private:
-    typedef std::shared_ptr<ZmqReceiver<std::string>> ReceiverPtr;
-    typedef std::shared_ptr<ZmqSender<std::string&>> SenderPtr;
+    typedef std::shared_ptr<IMsgReceiver<std::string>> ReceiverPtr;
+    typedef std::shared_ptr<IMsgSender<std::string&>> SenderPtr;
+    typedef std::shared_ptr<ZmqSocketBase> SocketPtr;
+    typedef std::pair<SenderPtr, SocketPtr> SenderType;
+    typedef std::pair<ReceiverPtr, SocketPtr> ReceiverType;
 
 public:
-    ZmqProxy( ReceiverPtr inRecv, SenderPtr outSend, ReceiverPtr outRecv, SenderPtr inSend );
+    ZmqProxy( ReceiverType inRecv, SenderType outSend, ReceiverType outRecv, SenderType inSend );
     ~ZmqProxy() override = default;
 
 protected:
@@ -31,10 +35,10 @@ protected:
     void executeOnThread() override;
 
 private:
-    ReceiverPtr m_internalReceiver;  // Socket for (internal UxAS) -> (Proxy)
-    SenderPtr m_externalSender;  // Socket for (Proxy) -> (external app)
-    ReceiverPtr m_externalReceiver;  // Socket for (external app) -> (Proxy)
-    SenderPtr m_internalSender;  // Socket for (Proxy) -> (internal UxAS)
+    ReceiverType m_internalReceiver;  // Socket for (internal UxAS) -> (Proxy)
+    SenderType m_externalSender;  // Socket for (Proxy) -> (external app)
+    ReceiverType m_externalReceiver;  // Socket for (external app) -> (Proxy)
+    SenderType m_internalSender;  // Socket for (Proxy) -> (internal UxAS)
 };
 
 }
