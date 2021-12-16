@@ -12,6 +12,7 @@
 
 #include "ISocket.h"
 #include "zmq.hpp"
+#include "UxAS_Log.h"
 
 #include <memory>
 
@@ -43,9 +44,14 @@ public:
     virtual bool initialize(const std::string& address, bool isServer) override {
         m_isServer = isServer;
         if (m_initializer->initialize(m_socket, address, m_socketType, m_isServer)) {
-            m_routingId = std::move(m_socket->getsockopt<std::array<uint8_t,256>>(ZMQ_ROUTING_ID));
+            uint8_t buffer[256];
+            std::size_t bufferSize{256};
+            m_socket->getsockopt(ZMQ_ROUTING_ID, buffer, &bufferSize);
+            m_routingId = std::vector<uint8_t>{buffer, buffer + bufferSize};
+            UXAS_LOG_WARN("*** CPW: ZmqSocketBase - Initialized socket with address: ", address, " ***");
             return true;
         } else {
+            UXAS_LOG_WARN("*** CPW: ZmqSocketBase - Failed to initialize socket ***");
             return false;
         }
     }
@@ -56,14 +62,14 @@ public:
     // Return server status of this socket
     bool isServer() const { return m_isServer; }
 
-    const std::array<uint8_t,256>& getRoutingId() const { return m_routingId; }
+    const std::vector<uint8_t>& getRoutingId() const { return m_routingId; }
 
 protected: 
     bool m_isServer{false};
     std::shared_ptr<zmq::socket_t> m_socket{nullptr};
     InitializerPtr m_initializer;
     int32_t m_socketType;
-    std::array<uint8_t,256> m_routingId{};
+    std::vector<uint8_t> m_routingId;
 };
 
 }

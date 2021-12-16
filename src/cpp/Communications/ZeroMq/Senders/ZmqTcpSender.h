@@ -36,7 +36,7 @@ public:
      * @param clients - Pointer to 
      */
     ZmqTcpSender(std::shared_ptr<ZmqTcpSocket> socket, 
-        std::shared_ptr<IClientList<std::array<uint8_t,256>>> clients);
+        std::shared_ptr<IClientList<std::vector<uint8_t>>> clients);
 
     /**
      * @brief Default destructor
@@ -51,7 +51,7 @@ public:
     void send(std::string& msg) override;
 
 private:
-    std::shared_ptr<IClientList<std::array<uint8_t,256>>> m_clients;
+    std::shared_ptr<IClientList<std::vector<uint8_t>>> m_clients;
 };
 
 }

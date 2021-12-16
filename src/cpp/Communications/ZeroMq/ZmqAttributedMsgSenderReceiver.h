@@ -11,6 +11,7 @@
 #define COMMUNICATIONS_ZMQ_ATTRIBUTED_MESSAGE_SENDER_RECEIVER_H
 
 #include "MsgSenderSentinel.h"
+#include "MsgReceiverSentinel.h"
 #include "ZmqPushSender.h"
 #include "ZmqPullReceiver.h"
 #include "ZmqProxy.h"
@@ -19,7 +20,6 @@
 
 #include <string>
 #include <thread>
-#include <deque>
 
 namespace uxas {
 namespace communications {
@@ -43,14 +43,19 @@ public:
     // Receive messages from the local socket (received from the proxy)
     data::AddressedAttributedMessage receive() override;
 
+    // Set Proxy Send/Recv Addresses
+    void setProxySend(std::string address) { m_proxySendAddress = std::move(address); }
+    void setProxyRecv(std::string address) { m_proxyReceiveAddress = std::move(address); }
+
 private:
     std::shared_ptr<ISocket<const std::string&, bool>> m_sendSocket;
     std::shared_ptr<ISocket<const std::string&, bool>> m_receiveSocket;
     std::shared_ptr<IMsgSender<std::string&>> m_sender;
-    std::shared_ptr<IMsgReceiver<std::string>> m_receiver;
+    std::shared_ptr<IMsgReceiver<data::AddressedAttributedMessage>> m_receiver;
     std::shared_ptr<ZmqProxy> m_tcpProxy;
     common::SentinelSerialBuffer m_serialBuffer;
-    std::deque<data::AddressedAttributedMessage> m_receivedMsgs;
+    std::string m_proxySendAddress;   // This is sending to the Proxy from UxAS
+    std::string m_proxyReceiveAddress;  // This is receiving from the Proxy
 };
 
 }

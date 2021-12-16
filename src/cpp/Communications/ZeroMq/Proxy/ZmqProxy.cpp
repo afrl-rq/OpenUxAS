@@ -30,13 +30,19 @@ void ZmqProxy::executeOnThread() {
         // blocking call for receiving data!
         zmq::poll(pollItems);
         if (pollItems[0].revents & ZMQ_POLLIN) {
+            UXAS_LOG_WARN("*** CPW: ZmqProxy - internalReceiver has received...");
             std::string msg = m_internalReceiver.first->receive();
+            UXAS_LOG_WARN("*** CPW: ZmqProxy - externalSender now forwards message...");
             m_externalSender.first->send(msg);
         }
 
         if (pollItems[1].revents & ZMQ_POLLIN) {
+            UXAS_LOG_WARN("*** CPW: ZmqProxy - externalReceiver has received...");
             std::string msg = m_externalReceiver.first->receive();
-            m_internalSender.first->send(msg);
+            if (!msg.empty()) {
+                UXAS_LOG_WARN("*** CPW: ZmqProxy - internalSender now forwards message...");
+                m_internalSender.first->send(msg);
+            }  // else do nothing since no valid message received.
         }
     }
 }

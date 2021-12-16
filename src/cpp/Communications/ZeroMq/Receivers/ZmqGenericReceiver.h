@@ -28,14 +28,14 @@ public:
         std::string retVal{""};
         bool firstMessagePart = true;
         int more = 1;
+        UXAS_LOG_WARN("*** CPW: ZmqGenericReceiver - Getting ready to start receive loop...");
         while (more) {
             zmq::message_t msg;
-            int more;
  
             m_socket->getSocket()->recv(&msg);
             size_t moreSize = sizeof(more);
             m_socket->getSocket()->getsockopt(ZMQ_RCVMORE, &more, &moreSize);
-            retVal += std::string(msg.data<std::string>()->c_str());
+            retVal += std::string{static_cast<const char*>(msg.data()), msg.size()};
         }
         return retVal;
     }

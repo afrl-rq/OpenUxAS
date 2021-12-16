@@ -43,8 +43,8 @@ public:
      * @param msg - message to be "sentinelized"
      */
     void send(std::string& msg) {
-        msg = common::SentinelSerialBuffer::createSentinelizedString( msg );
-        m_sender->send(msg);
+        std::string msgToSend = common::SentinelSerialBuffer::createSentinelizedString( msg );
+        m_sender->send(msgToSend);
     }
 
 private:

@@ -31,11 +31,13 @@ public:
 
     // Initialize our socket!
     bool initialize(const std::string& address, bool isServer) override {
+        UXAS_LOG_WARN("*** CPW: ZmqPullReceiver - initializing socket ***");
         return getSocket()->initialize(address, isServer);
     }
 
     // Receive message!
     std::string receive() override {
+        UXAS_LOG_WARN("*** CPW: ZmqPullReceiver - receiving a message...");
         return m_receiver->receive();
     }
 

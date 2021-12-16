@@ -14,12 +14,14 @@
 #include <array>
 #include <mutex>
 
+#include "UxAS_Log.h"
+
 namespace uxas {
 namespace communications {
 
-class SetArrayClientList : public IClientList<std::array<uint8_t,256>> {
+class SetArrayClientList : public IClientList<std::vector<uint8_t>> {
 public:
-    typedef std::array<uint8_t,256> Client;
+    typedef std::vector<uint8_t> Client;
     typedef std::set<Client> CList;
 
     // Get client list

@@ -51,6 +51,7 @@ public:
 
     // Receive message
     std::string receive() override {
+        UXAS_LOG_WARN("*** CPW: ZmqTcpSenderReceiver - received a message on TCP...");
         std::string retVal = m_receiver->receive();
         
         return retVal;
@@ -61,7 +62,7 @@ public:
 
 private:
     std::shared_ptr<ZmqSocketBase> m_socket;
-    std::shared_ptr<IClientList<std::array<uint8_t,256>>> m_clients;
+    std::shared_ptr<IClientList<std::vector<uint8_t>>> m_clients;
     std::unique_ptr<IMsgSender<std::string&>> m_sender;
     std::unique_ptr<IMsgReceiver<std::string>> m_receiver;
 };
