@@ -12,7 +12,6 @@
 
 #include "ISocket.h"
 #include "zmq.hpp"
-#include "UxAS_Log.h"
 
 #include <memory>
 
@@ -30,39 +29,20 @@ protected:
 
 public:
     ZmqSocketBase() = default;
-    ZmqSocketBase(InitializerPtr initializer, zmq::socket_type socketType) 
-    : m_socketType{static_cast<int32_t>(socketType)}, m_initializer{initializer} {}
+    ZmqSocketBase(InitializerPtr initializer, zmq::socket_type socketType);
 
-    virtual ~ZmqSocketBase() override {
-        if (m_socket) {
-            m_socket->setsockopt<uint32_t>(ZMQ_LINGER,0);
-            m_socket->close();
-        }
-    };
+    virtual ~ZmqSocketBase() override;
 
     // Initialize the socket
-    virtual bool initialize(const std::string& address, bool isServer) override {
-        m_isServer = isServer;
-        if (m_initializer->initialize(m_socket, address, m_socketType, m_isServer)) {
-            uint8_t buffer[256];
-            std::size_t bufferSize{256};
-            m_socket->getsockopt(ZMQ_ROUTING_ID, buffer, &bufferSize);
-            m_routingId = std::vector<uint8_t>{buffer, buffer + bufferSize};
-            UXAS_LOG_WARN("*** CPW: ZmqSocketBase - Initialized socket with address: ", address, " ***");
-            return true;
-        } else {
-            UXAS_LOG_WARN("*** CPW: ZmqSocketBase - Failed to initialize socket ***");
-            return false;
-        }
-    }
+    virtual bool initialize(const std::string& address, bool isServer) override;
 
     // Get pointer to the socket
-    std::shared_ptr<zmq::socket_t> getSocket() { return m_socket; }
+    std::shared_ptr<zmq::socket_t> getSocket();
 
     // Return server status of this socket
-    bool isServer() const { return m_isServer; }
+    bool isServer() const;
 
-    const std::vector<uint8_t>& getRoutingId() const { return m_routingId; }
+    const std::vector<uint8_t>& getRoutingId() const;
 
 protected: 
     bool m_isServer{false};

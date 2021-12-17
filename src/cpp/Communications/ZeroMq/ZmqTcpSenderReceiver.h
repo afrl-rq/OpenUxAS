@@ -15,7 +15,6 @@
 #include "ZmqTcpReceiver.h"
 #include "SetArrayClientList.h"
 #include "ZmqSocketInitializer.h"
-#include "UxAS_Log.h"
 
 #include <string>
 #include <set>
@@ -28,37 +27,21 @@ namespace communications {
 class ZmqTcpSenderReceiver : public IMsgSender<std::string&>, public IMsgReceiver<std::string>,
     public ZmqSocketBase {
 public:
-    ZmqTcpSenderReceiver() 
-    : m_clients{std::make_shared<SetArrayClientList>()}
-    {
-        auto socket = std::make_shared<ZmqTcpSocket>(std::make_shared<ZmqSocketInitializer>());
-        m_socket = socket;
-        m_sender = stduxas::make_unique<ZmqTcpSender>(socket,m_clients);
-        m_receiver = stduxas::make_unique<ZmqTcpReceiver>(socket,m_clients);
-    }
+    ZmqTcpSenderReceiver();
 
     ~ZmqTcpSenderReceiver() override = default;
 
     // Initialize our socket!
-    bool initialize(const std::string& address, bool isServer) override {
-        return m_socket->initialize(address, isServer);
-    }
+    bool initialize(const std::string& address, bool isServer);
 
     // Send message
-    void send(std::string& msg) override {
-        m_sender->send(msg);
-    }
+    void send(std::string& msg) override;
 
     // Receive message
-    std::string receive() override {
-        UXAS_LOG_WARN("*** CPW: ZmqTcpSenderReceiver - received a message on TCP...");
-        std::string retVal = m_receiver->receive();
-        
-        return retVal;
-    }
+    std::string receive() override ;
 
     // Get underlying ZeroMqSocket
-    std::shared_ptr<ZmqSocketBase> getSocket() { return m_socket; }
+    std::shared_ptr<ZmqSocketBase> getSocket();
 
 private:
     std::shared_ptr<ZmqSocketBase> m_socket;

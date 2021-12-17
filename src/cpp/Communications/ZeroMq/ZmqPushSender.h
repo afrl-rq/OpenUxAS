@@ -10,10 +10,8 @@
 #ifndef COMMUNICATIONS_ZMQ_PUSH_SENDER_H
 #define COMMUNICATIONS_ZMQ_PUSH_SENDER_H
 
-#include "ZmqSocketBase.h"
+#include "ISocket.h"
 #include "ZmqSender.h"
-#include "ZmqSocketInitializer.h"
-#include "UxAS_Log.h"
 
 #include <string>
 
@@ -22,16 +20,12 @@ namespace communications {
 
 class ZmqPushSender : public ZmqSender<std::string&>, public ISocket<const std::string&, bool> {
 public:
-    ZmqPushSender() 
-    : ZmqSender{std::make_shared<ZmqSocketBase>(std::make_shared<ZmqSocketInitializer>(), zmq::socket_type::push)}
-    {}
+    ZmqPushSender();
 
     ~ZmqPushSender() override = default;
 
     // Initialize our socket!
-    bool initialize(const std::string& address, bool isServer) override {
-        return getSocket()->initialize(address, isServer);
-    }
+    bool initialize(const std::string& address, bool isServer) override;
 };
 
 }

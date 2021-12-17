@@ -44,8 +44,8 @@ public:
     data::AddressedAttributedMessage receive() override;
 
     // Set Proxy Send/Recv Addresses
-    void setProxySend(std::string address) { m_proxySendAddress = std::move(address); }
-    void setProxyRecv(std::string address) { m_proxyReceiveAddress = std::move(address); }
+    void setProxySend(std::string address);
+    void setProxyRecv(std::string address);
 
 private:
     std::shared_ptr<ISocket<const std::string&, bool>> m_sendSocket;

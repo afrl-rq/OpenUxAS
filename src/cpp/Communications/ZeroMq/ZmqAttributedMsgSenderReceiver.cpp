@@ -13,6 +13,7 @@ namespace uxas {
 namespace communications {
 
 ZmqAttributedMsgSenderReceiver::ZmqAttributedMsgSenderReceiver() {
+    UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
     // Setup sender backend
     auto sendSocket = std::make_shared<ZmqPushSender>();
     m_sendSocket = sendSocket;
@@ -26,6 +27,7 @@ ZmqAttributedMsgSenderReceiver::ZmqAttributedMsgSenderReceiver() {
 
 // Initialize and start Proxy
 bool ZmqAttributedMsgSenderReceiver::initialize(const std::string& address, bool isServer) {
+    UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
     // Initialize the sender backend
     m_sendSocket->initialize(m_proxySendAddress, false);
 
@@ -52,15 +54,25 @@ bool ZmqAttributedMsgSenderReceiver::initialize(const std::string& address, bool
 
 // Send messages to the local socket (will be forwarded to proxy)
 void ZmqAttributedMsgSenderReceiver::send(data::AddressedAttributedMessage& msg) {
-    UXAS_LOG_WARN("*** Sending LMCP message to Proxy! ***");
+    UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
     std::string msgCopy = msg.getString();
     m_sender->send(msgCopy);
 }
 
 // Receive messages from the local socket (received from the proxy)
 data::AddressedAttributedMessage ZmqAttributedMsgSenderReceiver::receive() {
-    UXAS_LOG_WARN("*** CPW: ZmqAttributedMsgSenderReceiver - receive next Message ***");
+    UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
     return m_receiver->receive();
+}
+
+void ZmqAttributedMsgSenderReceiver::setProxySend(std::string address) { 
+    UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
+    m_proxySendAddress = std::move(address); 
+}
+
+void ZmqAttributedMsgSenderReceiver::setProxyRecv(std::string address) { 
+    UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
+    m_proxyReceiveAddress = std::move(address);
 }
 
 }

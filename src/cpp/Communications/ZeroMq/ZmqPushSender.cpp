@@ -7,24 +7,22 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef COMMUNICATIONS_ZMQ_TCP_SOCKET_H
-#define COMMUNICATIONS_ZMQ_TCP_SOCKET_H
-
 #include "ZmqSocketBase.h"
+#include "ZmqPushSender.h"
+#include "ZmqSocketInitializer.h"
+#include "UxAS_Log.h"
 
 namespace uxas {
 namespace communications {
 
-// Add some additional destructor functionality from the base class
+ZmqPushSender::ZmqPushSender() 
+    : ZmqSender{std::make_shared<ZmqSocketBase>(std::make_shared<ZmqSocketInitializer>(), zmq::socket_type::push)}
+    {}
 
-class ZmqTcpSocket : public ZmqSocketBase {
-public:
-    ZmqTcpSocket(InitializerPtr initializer) : ZmqSocketBase{initializer, zmq::socket_type::stream} {}
-
-    ~ZmqTcpSocket() override;
-};
+bool ZmqPushSender::initialize(const std::string& address, bool isServer) {
+    UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
+    return getSocket()->initialize(address, isServer);
+}
 
 }
 }
-
-#endif
