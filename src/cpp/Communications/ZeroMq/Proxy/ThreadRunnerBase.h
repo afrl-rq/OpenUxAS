@@ -18,26 +18,30 @@
 namespace uxas {
 namespace communications {
 
+/**
+ * @brief This abstract class provides basic management of a thread execution.
+ */
+
 class ThreadRunnerBase : public IThreadExecutor<> {
 public:
-    ThreadRunnerBase() : m_shutdown{false} {}
+    /**
+     * @brief Default construction of a new ThreadRunnerBase object
+     */
+    ThreadRunnerBase();
 
-    // Shutdown proxy execution thread
-    virtual ~ThreadRunnerBase() {
-        if (m_thread && m_thread->joinable()) {
-            m_shutdown = true;
-            m_thread->join();
-        }
-    };
+    /**
+     * @brief Destroy the ThreadRunnerBase object and appropriately shutdown the thread
+     */
+    virtual ~ThreadRunnerBase() override;
 
-    // Execute a new thread 
-    bool run() {
-        m_thread = uxas::stduxas::make_unique<std::thread>(&IThreadExecutor<>::executeOnThread, this);
-        return true;
-    }
+    /**
+     * @brief Start thread execution.
+     * @return true if thread was successfully created
+     */
+    bool run();
 
 protected:
-    bool m_shutdown;
+    bool m_shutdown;  // Derived classes should use this variable to identify when to shutdown the thread processing.
 
 private:
     std::unique_ptr<std::thread> m_thread;

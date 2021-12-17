@@ -7,28 +7,27 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef COMMUNICATIONS_ZMQ_GENERIC_RECEIVER_H
-#define COMMUNICATIONS_ZMQ_GENERIC_RECEIVER_H
-
-#include "ZmqReceiver.h"
+#include "ThreadRunnerBase.h"
 #include "UxAS_Log.h"
-
-#include <string>
 
 namespace uxas {
 namespace communications {
 
-class ZmqGenericReceiver : public ZmqReceiver<std::string> {
-public:
-    ZmqGenericReceiver(std::shared_ptr<ZmqSocketBase> socket);
+ThreadRunnerBase::ThreadRunnerBase() : m_shutdown{false} {}
 
-    ~ZmqGenericReceiver() override = default;
+ThreadRunnerBase::~ThreadRunnerBase() {
+    UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
+    if (m_thread && m_thread->joinable()) {
+        m_shutdown = true;
+        m_thread->join();
+    }
+}
 
-    // Generic message receive which will handle multi-part messages and assume that all message content is data.
-    std::string receive() override;
-};
+bool ThreadRunnerBase::run() {
+    UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
+    m_thread = uxas::stduxas::make_unique<std::thread>(&IThreadExecutor<>::executeOnThread, this);
+    return true;
+}
 
 }
 }
-
-#endif

@@ -10,7 +10,6 @@
 #include "ZmqProxy.h"
 #include "UxAS_Log.h"
 
-#include "zmq.hpp"
 #include <vector>
 
 namespace uxas {
@@ -22,6 +21,7 @@ ZmqProxy::ZmqProxy( ReceiverType inRecv, SenderType outSend, ReceiverType outRec
     {}
 
 void ZmqProxy::executeOnThread() {
+    UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
     std::vector<zmq_pollitem_t> pollItems;
     pollItems.push_back( {*m_internalReceiver.second->getSocket(), 0, ZMQ_POLLIN, 0} );
     pollItems.push_back( {*m_externalReceiver.second->getSocket(), 0, ZMQ_POLLIN, 0} );
@@ -30,17 +30,13 @@ void ZmqProxy::executeOnThread() {
         // blocking call for receiving data!
         zmq::poll(pollItems);
         if (pollItems[0].revents & ZMQ_POLLIN) {
-            UXAS_LOG_WARN("*** CPW: ZmqProxy - internalReceiver has received...");
             std::string msg = m_internalReceiver.first->receive();
-            UXAS_LOG_WARN("*** CPW: ZmqProxy - externalSender now forwards message...");
             m_externalSender.first->send(msg);
         }
 
         if (pollItems[1].revents & ZMQ_POLLIN) {
-            UXAS_LOG_WARN("*** CPW: ZmqProxy - externalReceiver has received...");
             std::string msg = m_externalReceiver.first->receive();
             if (!msg.empty()) {
-                UXAS_LOG_WARN("*** CPW: ZmqProxy - internalSender now forwards message...");
                 m_internalSender.first->send(msg);
             }  // else do nothing since no valid message received.
         }

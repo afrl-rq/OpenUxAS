@@ -25,40 +25,11 @@ namespace communications {
 
 class MsgReceiverSentinel : public IMsgReceiver<data::AddressedAttributedMessage> {
 public:
-    MsgReceiverSentinel(std::shared_ptr<IMsgReceiver<std::string>> receiver) 
-    : m_receiver{std::move(receiver)} {}
+    MsgReceiverSentinel(std::shared_ptr<IMsgReceiver<std::string>> receiver);
 
     virtual ~MsgReceiverSentinel() override = default;
 
-    data::AddressedAttributedMessage receive() override {
-        data::AddressedAttributedMessage retVal{};
-        if (!m_receivedMsgs.empty()) {
-            // We already have some buffered messages, return these!
-            UXAS_LOG_WARN("*** CPW: MsgReceiverSentinel - Already had some queued messages to return ***");
-            retVal = std::move(m_receivedMsgs.front());
-            m_receivedMsgs.pop();
-        } else {
-            // Attempt to receive new messages from the owned IMsgReceiver
-            UXAS_LOG_WARN("*** CPW: MsgReceiverSentinel - Get next payload ***");
-            std::string receivedMsg = m_serialBuffer.getNextPayloadString( m_receiver->receive() );
-            while (!receivedMsg.empty()) {
-                data::AddressedAttributedMessage msg{};
-                if (msg.setAddressAttributesAndPayloadFromDelimitedString(std::move(receivedMsg))) {
-                    UXAS_LOG_WARN("*** CPW: MsgReceiverSentinel - Add new message to queue ***");
-                    m_receivedMsgs.push(std::move(msg));
-                } else {
-                    UXAS_LOG_ERROR("*** CPW: MsgReceiverSentinel - Issue generating AddressAttributed Msg ***");
-                }
-                receivedMsg = m_serialBuffer.getNextPayloadString("");
-            }
-
-            if (!m_receivedMsgs.empty()) {
-                retVal = std::move(m_receivedMsgs.front());
-                m_receivedMsgs.pop();
-            }
-        }
-        return retVal;
-    }
+    data::AddressedAttributedMessage receive() override;
 
 private:
     std::shared_ptr<IMsgReceiver<std::string>> m_receiver;

@@ -7,28 +7,28 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#ifndef COMMUNICATIONS_ZMQ_GENERIC_RECEIVER_H
-#define COMMUNICATIONS_ZMQ_GENERIC_RECEIVER_H
-
-#include "ZmqReceiver.h"
+#include "SetArrayClientList.h"
 #include "UxAS_Log.h"
 
-#include <string>
+#include <mutex>
 
 namespace uxas {
 namespace communications {
 
-class ZmqGenericReceiver : public ZmqReceiver<std::string> {
-public:
-    ZmqGenericReceiver(std::shared_ptr<ZmqSocketBase> socket);
+const SetArrayClientList::CList& SetArrayClientList::getClients() const {
+    UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
+    return m_clients;
+}
 
-    ~ZmqGenericReceiver() override = default;
+bool SetArrayClientList::addClient(Client c) {
+    UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
+    return m_clients.emplace(c).second;
+}
 
-    // Generic message receive which will handle multi-part messages and assume that all message content is data.
-    std::string receive() override;
-};
+bool SetArrayClientList::removeClient(Client c) {
+    UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
+    return m_clients.erase(c) > 0 ? true : false;
+}
 
 }
 }
-
-#endif

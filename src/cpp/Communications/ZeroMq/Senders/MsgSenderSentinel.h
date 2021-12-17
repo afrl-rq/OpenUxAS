@@ -27,8 +27,7 @@ public:
      * 
      * @param sender - Decorated object
      */
-    explicit MsgSenderSentinel(std::shared_ptr<IMsgSender<std::string&>> sender) 
-    : m_sender{std::move(sender)} {}
+    explicit MsgSenderSentinel(std::shared_ptr<IMsgSender<std::string&>> sender);
 
     /**
      * @brief Default destructor
@@ -42,10 +41,7 @@ public:
      * 
      * @param msg - message to be "sentinelized"
      */
-    void send(std::string& msg) {
-        std::string msgToSend = common::SentinelSerialBuffer::createSentinelizedString( msg );
-        m_sender->send(msgToSend);
-    }
+    void send(std::string& msg);
 
 private:
     std::shared_ptr<IMsgSender<std::string&>> m_sender;

@@ -13,12 +13,18 @@
 namespace uxas {
 namespace communications {
 
+/**
+ * @brief This class provides a templated interface for a thread execution function.
+ * 
+ * @tparam Ts type parameter pack for interface specification
+ */
+
 template<typename... Ts>
 class IThreadExecutor {
 public:
     virtual ~IThreadExecutor() = default;
 
-    // Receive next message 
+    // Method to execute on a thread
     virtual void executeOnThread(Ts...) = 0;
 };
 

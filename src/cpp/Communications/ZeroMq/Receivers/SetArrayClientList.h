@@ -11,13 +11,15 @@
 #define COMMUNICATIONS_SET_ARRAY_CLIENT_H
 
 #include "IClientList.h"
-#include <array>
-#include <mutex>
 
 #include "UxAS_Log.h"
 
 namespace uxas {
 namespace communications {
+
+/**
+ * @brief Concrete implementation of IClientList.  Methods are NOT thread-safe so protect accordingly.
+ */
 
 class SetArrayClientList : public IClientList<std::vector<uint8_t>> {
 public:
@@ -25,17 +27,13 @@ public:
     typedef std::set<Client> CList;
 
     // Get client list
-    const CList& getClients() const override { return m_clients; };
+    const CList& getClients() const override;
 
     // Add to client list
-    bool addClient(Client c) override {
-        return m_clients.emplace(c).second;
-    };
+    bool addClient(Client c) override;
 
     // Remove a client from list
-    bool removeClient(Client c) override {
-        return m_clients.erase(c) > 0 ? true : false;
-    };
+    bool removeClient(Client c) override;
 
 private:
     CList m_clients;

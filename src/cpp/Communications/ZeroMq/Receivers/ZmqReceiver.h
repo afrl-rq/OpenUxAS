@@ -18,7 +18,7 @@
 namespace uxas {
 namespace communications {
 
-// This class adds data members to the pure interface base class
+// This abstract class adds data members to the pure interface base class
 
 template<typename Msg>
 class ZmqReceiver : public IMsgReceiver<Msg> {

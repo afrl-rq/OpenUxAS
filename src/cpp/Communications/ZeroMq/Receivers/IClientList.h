@@ -15,6 +15,13 @@
 namespace uxas {
 namespace communications {
 
+/**
+ * @brief Maintain a list of clients of type T.  Can optinally specify container for clients.
+ * 
+ * @tparam T - Client type
+ * @tparam Container - Client container type
+ */
+
 template<typename T, typename Container = std::set<T>>
 class IClientList {
 public:
