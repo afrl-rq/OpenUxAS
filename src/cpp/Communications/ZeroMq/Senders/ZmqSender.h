@@ -54,10 +54,7 @@ public:
      */
     virtual void send(Msg msg) override {
         if (m_socket && m_socket->getSocket()) {
-            UXAS_LOG_WARN("*** CPW: ZmqSender - Sending msg=", msg);
             m_socket->getSocket()->send(msg.begin(), msg.end(), 0);
-            // std::size_t sentBytes = m_socket->getSocket()->send(&msg, msg.size());
-            // UXAS_LOG_WARN("*** CPW: ZmqSender - Sent ", sentBytes, " bytes of data ***");
         }
     }
 

@@ -130,6 +130,8 @@ LmcpObjectNetworkTcpBridge::initialize()
 {
     UXAS_LOG_INFORM(s_typeName(), "::initialize - START");
     // m_externalLmcpObjectMessageTcpReceiverSenderPipe.initializeStream(m_entityId, m_networkId, m_tcpReceiveSendAddress, m_isServer);
+    m_externalLmcpObjectMessageTcpReceiverSenderPipe.setProxySend("inproc://toProxy" + m_entityIdString);
+    m_externalLmcpObjectMessageTcpReceiverSenderPipe.setProxyRecv("inproc://fromProxy" + m_entityIdString);
     m_externalLmcpObjectMessageTcpReceiverSenderPipe.initialize(m_tcpReceiveSendAddress, m_isServer);
     UXAS_LOG_INFORM(s_typeName(), "::initialize succeeded");
     return (true);

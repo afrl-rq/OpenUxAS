@@ -31,7 +31,6 @@ bool ZmqSocketBase::initialize(const std::string& address, bool isServer) {
         std::size_t bufferSize{256};
         m_socket->getsockopt(ZMQ_ROUTING_ID, buffer, &bufferSize);
         m_routingId = std::vector<uint8_t>{buffer, buffer + bufferSize};
-        UXAS_LOG_WARN("*** CPW: ZmqSocketBase - Initialized socket with address: ", address, " ***");
         return true;
     } else {
         UXAS_LOG_WARN("*** CPW: ZmqSocketBase - Failed to initialize socket ***");
