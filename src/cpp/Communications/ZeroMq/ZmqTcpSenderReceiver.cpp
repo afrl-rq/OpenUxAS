@@ -39,7 +39,7 @@ std::string ZmqTcpSenderReceiver::receive() {
     return retVal;
 }
 
-std::shared_ptr<ZmqSocketBase> ZmqTcpSenderReceiver::getSocket() {
+std::shared_ptr<ZmqSocketBase> ZmqTcpSenderReceiver::getSocketBase() {
     return m_socket; 
 }
 

@@ -53,8 +53,8 @@ public:
      * to the underlying message container type.
      */
     virtual void send(Msg msg) override {
-        if (m_socket && m_socket->getSocket()) {
-            m_socket->getSocket()->send(msg.begin(), msg.end(), 0);
+        if (m_socket && m_socket->getRawZmqSocket()) {
+            m_socket->getRawZmqSocket()->send(msg.begin(), msg.end(), 0);
         }
     }
 
@@ -63,7 +63,7 @@ public:
      * 
      * @return std::shared_ptr<ZmqSocketBase> 
      */
-    virtual std::shared_ptr<ZmqSocketBase> getSocket() { return m_socket; }
+    virtual std::shared_ptr<ZmqSocketBase> getSocketBase() { return m_socket; }
 
     /**
      * @brief Set the socket for this sender.

@@ -20,20 +20,21 @@ ZmqTcpSender::ZmqTcpSender(std::shared_ptr<ZmqTcpSocket> socket,
 
 void ZmqTcpSender::send(std::string& msg) {
     UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
-    if (!m_socket || !m_socket->getSocket()) {
+    if (!m_socket || !m_socket->getRawZmqSocket()) {
         UXAS_LOG_ERROR(typeid(this).name(),"::",__func__," - Invalid socket pointers!");
         return;
     }
 
     if (!m_socket->isServer()) {
         // Only send message to the server
-        m_socket->getSocket()->send(m_socket->getRoutingId().begin(), m_socket->getRoutingId().end(), ZMQ_SNDMORE);
-        m_socket->getSocket()->send(msg.begin(), msg.end());
+        m_socket->getRawZmqSocket()->send(m_socket->getRoutingId().begin(), m_socket->getRoutingId().end(), ZMQ_SNDMORE);
+        m_socket->getRawZmqSocket()->send(msg.begin(), msg.end());
     } else {
         // Send to all clients!
+        //TODO - Need to test.
         for(const auto& client : m_clients->getClients()) {
-            m_socket->getSocket()->send(client.begin(), client.end(), ZMQ_SNDMORE);
-            m_socket->getSocket()->send(msg.begin(), msg.end());
+            m_socket->getRawZmqSocket()->send(client.begin(), client.end(), ZMQ_SNDMORE);
+            m_socket->getRawZmqSocket()->send(msg.begin(), msg.end());
         }
     }
 }

@@ -19,7 +19,7 @@ ZmqGenericReceiver::ZmqGenericReceiver(std::shared_ptr<ZmqSocketBase> socket)
 std::string ZmqGenericReceiver::receive() {
     UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
     std::string retVal{""};
-    if (!m_socket || !m_socket->getSocket()) {
+    if (!m_socket || !m_socket->getRawZmqSocket()) {
         UXAS_LOG_ERROR(__FILE__,"::",__func__," - Sockets are not valid!");
         return retVal;
     }
@@ -28,9 +28,9 @@ std::string ZmqGenericReceiver::receive() {
     int more = 1;
     while (more) {
         zmq::message_t msg;
-        m_socket->getSocket()->recv(&msg);
+        m_socket->getRawZmqSocket()->recv(&msg);
         size_t moreSize = sizeof(more);
-        m_socket->getSocket()->getsockopt(ZMQ_RCVMORE, &more, &moreSize);
+        m_socket->getRawZmqSocket()->getsockopt(ZMQ_RCVMORE, &more, &moreSize);
         retVal += std::string{static_cast<const char*>(msg.data()), msg.size()};
     }
     return retVal;

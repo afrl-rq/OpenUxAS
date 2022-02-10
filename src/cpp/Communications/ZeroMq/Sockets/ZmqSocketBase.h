@@ -37,7 +37,7 @@ public:
     virtual bool initialize(const std::string& address, bool isServer) override;
 
     // Get pointer to the socket
-    std::shared_ptr<zmq::socket_t> getSocket();
+    std::shared_ptr<zmq::socket_t> getRawZmqSocket();
 
     // Return server status of this socket
     bool isServer() const;

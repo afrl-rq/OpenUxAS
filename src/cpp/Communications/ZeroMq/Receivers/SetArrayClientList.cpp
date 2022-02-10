@@ -10,8 +10,6 @@
 #include "SetArrayClientList.h"
 #include "UxAS_Log.h"
 
-#include <mutex>
-
 namespace uxas {
 namespace communications {
 

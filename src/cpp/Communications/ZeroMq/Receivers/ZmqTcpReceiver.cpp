@@ -21,7 +21,7 @@ std::string ZmqTcpReceiver::receive() {
     UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
     // NOTE: Logic here does not poll socket for possible messages and will block!
     std::string retVal{""};
-    if (!m_socket || !m_socket->getSocket()) {
+    if (!m_socket || !m_socket->getRawZmqSocket()) {
         UXAS_LOG_ERROR(typeid(this).name(),"::",__func__," - Socket are not valid!");
         return retVal;
     }
@@ -31,9 +31,9 @@ std::string ZmqTcpReceiver::receive() {
     std::vector<uint8_t> routeId;
     zmq::message_t msg;
     
-    m_socket->getSocket()->recv(&msg);
+    m_socket->getRawZmqSocket()->recv(&msg);
     // Expect more message contents ONLY after initial routingID data
-    m_socket->getSocket()->getsockopt(ZMQ_RCVMORE, &more, &moreSize);
+    m_socket->getRawZmqSocket()->getsockopt(ZMQ_RCVMORE, &more, &moreSize);
     if (!more) {
         UXAS_LOG_ERROR(typeid(this).name(),"::",__func__,"Unexpected message received from TCP socket!");
     } else {
@@ -42,7 +42,7 @@ std::string ZmqTcpReceiver::receive() {
         auto dataPtr = static_cast<uint8_t*>(msg.data());
         routeId = std::vector<uint8_t>{dataPtr, dataPtr + msg.size()};
         // Get payload data
-        m_socket->getSocket()->recv(&dataMsg);
+        m_socket->getRawZmqSocket()->recv(&dataMsg);
 
         if (dataMsg.size() == 0) {
             // Received a blank message which indicates this client is attempting connect/disconnect, add/erase

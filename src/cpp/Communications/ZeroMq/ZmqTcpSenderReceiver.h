@@ -41,7 +41,7 @@ public:
     std::string receive() override ;
 
     // Get underlying ZeroMqSocket
-    std::shared_ptr<ZmqSocketBase> getSocket();
+    std::shared_ptr<ZmqSocketBase> getSocketBase();
 
 private:
     std::shared_ptr<ZmqSocketBase> m_socket;

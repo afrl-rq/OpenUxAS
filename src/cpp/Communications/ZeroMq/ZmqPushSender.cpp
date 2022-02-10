@@ -21,7 +21,7 @@ ZmqPushSender::ZmqPushSender()
 
 bool ZmqPushSender::initialize(const std::string& address, bool isServer) {
     UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
-    return getSocket()->initialize(address, isServer);
+    return getSocketBase()->initialize(address, isServer);
 }
 
 }

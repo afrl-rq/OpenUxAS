@@ -11,7 +11,7 @@
 #define UXAS_MESSAGE_LMCP_OBJECT_NETWORK_TCP_BRIDGE_H
 
 #include "LmcpObjectNetworkClientBase.h"
-#include "LmcpObjectMessageTcpReceiverSenderPipe.h"
+// #include "LmcpObjectMessageTcpReceiverSenderPipe.h"
 #include "ZmqAttributedMsgSenderReceiver.h"
 
 #include <atomic>

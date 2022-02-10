@@ -22,7 +22,7 @@ ZmqAttributedMsgSenderReceiver::ZmqAttributedMsgSenderReceiver() {
     // Setup receiver backend
     auto receiveSocket = std::make_shared<ZmqPullReceiver>();
     m_receiveSocket = receiveSocket;
-    m_receiver = std::make_shared<MsgReceiverSentinel>(std::move(receiveSocket));;
+    m_receiver = std::make_shared<MsgReceiverSentinel>(std::move(receiveSocket));
 }
 
 // Initialize and start Proxy
@@ -43,9 +43,9 @@ bool ZmqAttributedMsgSenderReceiver::initialize(const std::string& address, bool
     sender->initialize(m_proxyReceiveAddress, false);
     tcpSenderReceiver->initialize(address, isServer);
 
-    auto receiverPair = std::make_pair(receiver, receiver->getSocket());
-    auto senderPair = std::make_pair(sender, sender->getSocket());
-    auto tcpSenderReceiverPair = std::make_pair(tcpSenderReceiver, tcpSenderReceiver->getSocket());
+    auto receiverPair = std::make_pair(receiver, receiver->getSocketBase());
+    auto senderPair = std::make_pair(sender, sender->getSocketBase());
+    auto tcpSenderReceiverPair = std::make_pair(tcpSenderReceiver, tcpSenderReceiver->getSocketBase());
 
     m_tcpProxy = std::make_shared<ZmqProxy>(receiverPair, tcpSenderReceiverPair, 
         tcpSenderReceiverPair, senderPair);

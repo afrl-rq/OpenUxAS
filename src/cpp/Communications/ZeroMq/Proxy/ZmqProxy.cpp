@@ -23,8 +23,8 @@ ZmqProxy::ZmqProxy( ReceiverType inRecv, SenderType outSend, ReceiverType outRec
 void ZmqProxy::executeOnThread() {
     UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
     std::vector<zmq_pollitem_t> pollItems;
-    pollItems.push_back( {*m_internalReceiver.second->getSocket(), 0, ZMQ_POLLIN, 0} );
-    pollItems.push_back( {*m_externalReceiver.second->getSocket(), 0, ZMQ_POLLIN, 0} );
+    pollItems.push_back( {*m_internalReceiver.second->getRawZmqSocket(), 0, ZMQ_POLLIN, 0} );
+    pollItems.push_back( {*m_externalReceiver.second->getRawZmqSocket(), 0, ZMQ_POLLIN, 0} );
 
     while (!m_shutdown) {
         // blocking call for receiving data!

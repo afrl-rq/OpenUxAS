@@ -20,7 +20,7 @@ bool ZmqSocketInitializer::initialize(std::shared_ptr<zmq::socket_t>& socketPtr,
 {
     UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
     transport::ZeroMqSocketConfiguration config(uxas::communications::transport::NETWORK_NAME::zmqLmcpNetwork(),
-        address, type, isServer, false, 10000, 10000);
+        address, type, isServer, false, 0, 0);
     socketPtr = std::move(transport::ZeroMqFabric::getInstance().createSocket(config));
     return (socketPtr) ? true : false;
 }

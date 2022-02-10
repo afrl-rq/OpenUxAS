@@ -27,7 +27,7 @@ public:
     ZmqReceiver(std::shared_ptr<ZmqSocketBase> socket) : m_socket{socket} {}
     virtual ~ZmqReceiver() = default;
 
-    virtual std::shared_ptr<ZmqSocketBase> getSocket() { return m_socket; }
+    virtual std::shared_ptr<ZmqSocketBase> getSocketBase() { return m_socket; }
     void setSocket(std::shared_ptr<ZmqSocketBase> socket) { m_socket = std::move(socket); } 
 
 protected:

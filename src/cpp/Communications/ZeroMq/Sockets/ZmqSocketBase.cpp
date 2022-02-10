@@ -38,7 +38,7 @@ bool ZmqSocketBase::initialize(const std::string& address, bool isServer) {
     }
 }
 
-std::shared_ptr<zmq::socket_t> ZmqSocketBase::getSocket() { return m_socket; }
+std::shared_ptr<zmq::socket_t> ZmqSocketBase::getRawZmqSocket() { return m_socket; }
 
 bool ZmqSocketBase::isServer() const { return m_isServer; }
 
