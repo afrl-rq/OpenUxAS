@@ -24,8 +24,14 @@ from uxas.paths import (
     SBX_DIR,
 )
 
+from uxas.util.logging import (
+    add_logging_group,
+    activate_logger,
+    get_logging_level,
+)
+
 if TYPE_CHECKING:
-    from argparse import ArgumentParser, Namespace
+    from argparse import Namespace
     from typing import Any, Dict, List, Optional, Tuple
 
 
@@ -87,64 +93,6 @@ BIN_YAML_KEY = "bin"
 
 # The default prefix for an OpenUxAS run directory.
 RUN_DIR = "RUNDIR"
-
-# For log consistency with our other usages.
-STREAM_FMT = "%(levelname)-8s %(message)s"
-FILE_FMT = "%(asctime)s: %(name)-24s: %(levelname)-8s %(message)s"
-
-
-def add_logging_group(argument_parser: ArgumentParser) -> None:
-    """
-    Add a group and arguments to control the log.
-
-    Use with `support.log.configure_logging`.
-    """
-    log_group = argument_parser.add_argument_group(title="logging arguments")
-    log_group.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help="make the log output on the console more verbose",
-    )
-    log_group.add_argument(
-        "--log-file",
-        metavar="FILE",
-        default=None,
-        help="store all the logs into the specified file",
-    )
-    log_group.add_argument(
-        "--loglevel",
-        default=logging.WARNING,
-        help="set the console log level",
-        choices={
-            "DEBUG": logging.DEBUG,
-            "INFO": logging.INFO,
-            "WARN": logging.WARN,
-            "ERROR": logging.ERROR,
-            "CRITICAL": logging.CRITICAL,
-        },
-    )
-
-
-def configure_logging(args: Namespace, level: int) -> None:
-    """
-    Configure the log based on parsed command-line arguments.
-
-    To be used with `support.arguments.add_logging_group`.
-    """
-    logging.getLogger("").setLevel(logging.DEBUG)
-
-    streamHandler = logging.StreamHandler()
-    streamHandler.setFormatter(logging.Formatter(STREAM_FMT))
-    streamHandler.setLevel(level)
-    logging.getLogger("").addHandler(streamHandler)
-
-    if args.log_file:
-        fileHandler = logging.FileHandler(args.log_file)
-        fileHandler.setFormatter(logging.Formatter(FILE_FMT))
-        fileHandler.setLevel(min(level, logging.DEBUG))
-        logging.getLogger("").addHandler(fileHandler)
 
 
 def read_yaml(yaml_filename: str) -> Dict[str, Any]:
@@ -225,9 +173,7 @@ def resolve_amase_dir(args: Namespace) -> str:
         if check_amase_dir(AMASE_DIR):
             return AMASE_DIR
         else:
-            logging.warning(
-                UNBUILT_LOCAL_AMASE.format(path=AMASE_DIR, anod=ANOD_CMD)
-            )
+            logging.warning(UNBUILT_LOCAL_AMASE.format(path=AMASE_DIR, anod=ANOD_CMD))
 
     anod_amase_dir = os.path.join(SBX_DIR, "x86_64-linux", "amase", "src")
     if os.path.exists(anod_amase_dir) and check_amase_dir(anod_amase_dir):
@@ -596,25 +542,7 @@ if __name__ == "__main__":
 
     args = ap.parse_args()
 
-    # Logging level
-    if args.verbose == 1:
-        level = logging.INFO
-    elif args.verbose == 2:
-        level = logging.DEBUG
-    else:
-        level = args.loglevel
-
-    # Try to use e3 for logging, but don't require that the user have e3.
-    try:
-        import e3.log
-
-        e3.log.activate(
-            level=level,
-            filename=args.log_file,
-            e3_debug=(level == logging.DEBUG),
-        )
-    except ImportError:
-        configure_logging(args, level)
+    activate_logger(args, get_logging_level(args))
 
     # For KeyboardInterrupt handling
     popen = False
