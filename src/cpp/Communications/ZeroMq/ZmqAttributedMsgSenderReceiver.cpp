@@ -7,6 +7,11 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
+#include "MsgSenderSentinel.h"
+#include "MsgReceiverSentinel.h"
+#include "ZmqPullReceiver.h"
+#include "ZmqPushSender.h"
+#include "ZmqTcpSenderReceiver.h"
 #include "ZmqAttributedMsgSenderReceiver.h"
 
 namespace uxas {
@@ -17,11 +22,13 @@ ZmqAttributedMsgSenderReceiver::ZmqAttributedMsgSenderReceiver() {
     // Setup sender backend
     auto sendSocket = std::make_shared<ZmqPushSender>();
     m_sendSocket = sendSocket;
+    // Use decorator class "MsgSenderSentinel" to wrap the underlying sender.
     m_sender = std::make_shared<MsgSenderSentinel>(std::move(sendSocket));
 
     // Setup receiver backend
     auto receiveSocket = std::make_shared<ZmqPullReceiver>();
     m_receiveSocket = receiveSocket;
+    // Use decorator class "MsgReceiverSentinel" to wrap the underlying receiver.
     m_receiver = std::make_shared<MsgReceiverSentinel>(std::move(receiveSocket));
 }
 
@@ -62,7 +69,16 @@ void ZmqAttributedMsgSenderReceiver::send(data::AddressedAttributedMessage& msg)
 // Receive messages from the local socket (received from the proxy)
 data::AddressedAttributedMessage ZmqAttributedMsgSenderReceiver::receive() {
     UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
-    return m_receiver->receive();
+    data::AddressedAttributedMessage msg;
+    std::string receivedMsg = m_receiver->receive();
+    while( !msg.isValid() && !receivedMsg.empty()) {
+        msg.setAddressAttributesAndPayloadFromDelimitedString(receivedMsg);
+        if (!msg.isValid()) {
+            receivedMsg = m_receiver->receive();
+        }
+    }
+
+    return msg;
 }
 
 void ZmqAttributedMsgSenderReceiver::setProxySend(std::string address) { 
