@@ -8,6 +8,7 @@
 // ===============================================================================
 
 #include "MsgSenderSentinel.h"
+#include "UxAS_SentinelSerialBuffer.h"
 
 #include "UxAS_Log.h"
 
@@ -24,6 +25,8 @@ void MsgSenderSentinel::send(std::string& msg) {
         UXAS_LOG_ERROR(typeid(this).name(),"::",__func__," - Invalid sender pointer");
         return;
     }
+    //TODO - CPW: The class that adds the sentinels could use some refactoring.  It has
+    //       a lot of different responsibilities.
     std::string msgToSend = common::SentinelSerialBuffer::createSentinelizedString( msg );
     m_sender->send(msgToSend);
 }

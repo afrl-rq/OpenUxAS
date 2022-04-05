@@ -22,9 +22,14 @@ namespace communications {
 template<typename... Ts>
 class IThreadExecutor {
 public:
+    /**
+     * @brief Default destructor
+     */
     virtual ~IThreadExecutor() = default;
 
-    // Method to execute on a thread
+    /**
+     * @brief Method to execute on a thread
+     */
     virtual void executeOnThread(Ts...) = 0;
 };
 

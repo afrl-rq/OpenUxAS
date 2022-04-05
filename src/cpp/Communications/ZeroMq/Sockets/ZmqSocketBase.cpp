@@ -18,6 +18,7 @@ ZmqSocketBase::ZmqSocketBase(InitializerPtr initializer, zmq::socket_type socket
 
 ZmqSocketBase::~ZmqSocketBase() {
     if (m_socket) {
+        // Set to NO linger, socket will immediately close and discard pending messages.
         m_socket->setsockopt<uint32_t>(ZMQ_LINGER,0);
         m_socket->close();
     }
@@ -33,7 +34,7 @@ bool ZmqSocketBase::initialize(const std::string& address, bool isServer) {
         m_routingId = std::vector<uint8_t>{buffer, buffer + bufferSize};
         return true;
     } else {
-        UXAS_LOG_WARN("*** CPW: ZmqSocketBase - Failed to initialize socket ***");
+        UXAS_LOG_ERROR("*** ZmqSocketBase - Failed to initialize socket ***");
         return false;
     }
 }

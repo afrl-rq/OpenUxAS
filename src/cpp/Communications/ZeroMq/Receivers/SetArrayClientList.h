@@ -18,21 +18,38 @@ namespace uxas {
 namespace communications {
 
 /**
- * @brief Concrete implementation of IClientList.  Methods are NOT thread-safe so protect accordingly.
+ * @brief Implementation of IClientList with basic add/remove/get for clients.  
+ * Methods are NOT thread-safe so protect accordingly.
  */
 
 class SetArrayClientList : public IClientList<std::vector<uint8_t>> {
 public:
     typedef std::vector<uint8_t> Client;
+    // std::set is the default container type of the IClientList interface
     typedef std::set<Client> CList;
 
-    // Get client list
+    /**
+     * @brief Get a reference to the client list.  Must ensure that the lifetime of this object will exceed scope
+     *        in which reference is used.
+     * 
+     * @return const CList& - client list reference object. 
+     */
     const CList& getClients() const override;
 
-    // Add to client list
+    /**
+     * @brief Add to the client list.
+     * 
+     * @param c - client to add.
+     * @return boolean indicating if the client was added successfully.
+     */
     bool addClient(Client c) override;
 
-    // Remove a client from list
+    /**
+     * @brief Remove a client from the list
+     * 
+     * @param c - client to remove
+     * @return boolean indicating if the client was removed successfully.
+     */
     bool removeClient(Client c) override;
 
 private:

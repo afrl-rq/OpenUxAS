@@ -49,7 +49,7 @@ public:
 
 protected:
     /**
-     * @brief Method for separate thread execution for proxy processing.  Should use 'm_shutdown' variable
+     * @brief Method for separate thread execution from proxy processing.  Should use 'm_shutdown' variable
      * from base class to determine when processing should end.
      */
     void executeOnThread() override;

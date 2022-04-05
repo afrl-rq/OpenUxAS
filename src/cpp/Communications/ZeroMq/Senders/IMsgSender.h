@@ -21,10 +21,18 @@ namespace communications {
 template<typename Msg>
 class IMsgSender {
 public:
+    /**
+     * @brief Default destructor
+     * 
+     */
     virtual ~IMsgSender() = default;
 
-    // Send message (of type Msg)
-    virtual void send(Msg) = 0;
+    /**
+     * @brief Interface method for sending a message (of type Msg)
+     * 
+     * @param msg - message to be send (of type Msg)
+     */
+    virtual void send(Msg msg) = 0;
 };
 
 }

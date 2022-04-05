@@ -19,6 +19,10 @@ bool ZmqSocketInitializer::initialize(std::shared_ptr<zmq::socket_t>& socketPtr,
     const std::string& address, int32_t type, bool isServer)
 {
     UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
+    //TODO: CPW - Possibly refactor this area to remove ZeroMqFabric (singleton) dependence and the use of the
+    //      zmqLmcpNetwork() call.
+    // Currently this configuration sets the High-Water-Marks (values at which Zmq sockets start dropping information
+    // due to buffers filling up) to 0 which essentially means infinite buffers.
     transport::ZeroMqSocketConfiguration config(uxas::communications::transport::NETWORK_NAME::zmqLmcpNetwork(),
         address, type, isServer, false, 0, 0);
     socketPtr = std::move(transport::ZeroMqFabric::getInstance().createSocket(config));

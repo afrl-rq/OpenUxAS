@@ -19,7 +19,8 @@ namespace uxas {
 namespace communications {
 
 /**
- * @brief This abstract class provides basic management of a thread execution.
+ * @brief This abstract class provides basic management of a thread execution.  Deriving from
+ *        templated interface IThreadExecutor provides specification for method to execute on thread execution.
  */
 
 class ThreadRunnerBase : public IThreadExecutor<> {

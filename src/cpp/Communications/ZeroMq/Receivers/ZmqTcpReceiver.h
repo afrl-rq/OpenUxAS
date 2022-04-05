@@ -21,13 +21,32 @@
 namespace uxas {
 namespace communications {
 
+/**
+ * @brief Receiver class that is specific to the ZMQ_STREAM type for TCP based communication.
+ */
+
 class ZmqTcpReceiver : public ZmqReceiver<std::string> {
 public:
+    /**
+     * @brief Construct a new Zmq Tcp Receiver object
+     * 
+     * @param socket - Socket type is tightly-coupled with the ZmqTcpSocket type.
+     * @param clients - Shared pointer to a list of clients.
+     */
     ZmqTcpReceiver(std::shared_ptr<ZmqTcpSocket> socket,
         std::shared_ptr<IClientList<std::vector<uint8_t>>> clients);
 
+    /**
+     * @brief Default constructor
+     */
     ~ZmqTcpReceiver() override = default;
 
+    /**
+     * @brief Receive data from the TCP connection.  This call will block on receiving data so
+     *        guard this call appropriately.
+     * 
+     * @return std::string - Received data placed into a std::string object.
+     */
     std::string receive() override;
 
 private:

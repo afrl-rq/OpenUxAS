@@ -13,12 +13,27 @@
 namespace uxas {
 namespace communications {
 
+/**
+ * @brief This class provides a templated interface for and class that intends to implement
+ * a receive() method
+ * 
+ * @tparam Msg - type of message intended to be received and returned by the virtual method.
+ */
+
 template<typename Msg>
 class IMsgReceiver {
 public:
+    /**
+     * @brief Default destructor
+     * 
+     */
     virtual ~IMsgReceiver() = default;
 
-    // Receive next message 
+    /**
+     * @brief Interface method for receiving a message.
+     * 
+     * @return Msg - type of message to be received.
+     */
     virtual Msg receive() = 0;
 };
 

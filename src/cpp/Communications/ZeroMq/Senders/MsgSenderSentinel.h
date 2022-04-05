@@ -11,13 +11,13 @@
 #define COMMUNICATIONS_MSG_SENDER_SENTINEL_H
 
 #include "IMsgSender.h"
-#include "UxAS_SentinelSerialBuffer.h"
 
 namespace uxas {
 namespace communications {
 
 /**
- * @brief Class that decorates an IMsgSender<std::string> type with sentinels
+ * @brief Class that decorates an IMsgSender<std::string> type with LMCP message Sentinels
+ * that are used within UxAS.
  */
 
 class MsgSenderSentinel : public IMsgSender<std::string&> {
@@ -25,7 +25,7 @@ public:
     /**
      * @brief Constructor with decorated object passed as a parameter
      * 
-     * @param sender - Decorated object
+     * @param sender - Sender object that will be called after send() method of this class.
      */
     explicit MsgSenderSentinel(std::shared_ptr<IMsgSender<std::string&>> sender);
 
@@ -39,7 +39,8 @@ public:
      * @brief Modify message string by adding sentinels and then forwarding on to the 
      * owned object for sending.
      * 
-     * @param msg - message to be "sentinelized"
+     * @param msg - message to be "sentinelized".  This is intended to be an LMCP message
+     * that has not been sentinelized yet for sending over a TCP stream.
      */
     void send(std::string& msg);
 

@@ -31,6 +31,7 @@ std::string ZmqGenericReceiver::receive() {
         m_socket->getRawZmqSocket()->recv(&msg);
         size_t moreSize = sizeof(more);
         m_socket->getRawZmqSocket()->getsockopt(ZMQ_RCVMORE, &more, &moreSize);
+        // Use string concatenation for combining multipart messages from socket.
         retVal += std::string{static_cast<const char*>(msg.data()), msg.size()};
     }
     return retVal;

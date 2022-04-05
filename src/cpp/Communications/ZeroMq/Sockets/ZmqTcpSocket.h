@@ -16,11 +16,23 @@ namespace uxas {
 namespace communications {
 
 // Add some additional destructor functionality from the base class
+/**
+ * @brief Socket class specific to ZMQ_STREAM socket type (TCP connection).  Provides additional
+ *        destructor functionality that is required for ZMQ_STREAM type sockets.
+ */
 
 class ZmqTcpSocket : public ZmqSocketBase {
 public:
+    /**
+     * @brief Constructor which specifies the socket type as ZMQ_STREAM
+     * 
+     * @param initializer 
+     */
     ZmqTcpSocket(InitializerPtr initializer) : ZmqSocketBase{initializer, zmq::socket_type::stream} {}
 
+    /**
+     * @brief Desctructor which provides additional functionality required for closing of TCP socket.
+     */
     ~ZmqTcpSocket() override;
 };
 

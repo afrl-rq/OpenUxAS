@@ -12,11 +12,13 @@
 namespace uxas {
 namespace communications {
 
+//TODO: CPW - Is there a way to decouple the tight-coupling with the ZmqTcpSocket type here?
 ZmqTcpReceiver::ZmqTcpReceiver(std::shared_ptr<ZmqTcpSocket> socket, 
     std::shared_ptr<IClientList<std::vector<uint8_t>>> clients) 
     : ZmqReceiver{socket}, m_clients{std::move(clients)}
     {}
 
+//TODO: CPW - TCP receive here does not account for multipart ZMQ messages.  Does it need to?
 std::string ZmqTcpReceiver::receive() {
     UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
     // NOTE: Logic here does not poll socket for possible messages and will block!

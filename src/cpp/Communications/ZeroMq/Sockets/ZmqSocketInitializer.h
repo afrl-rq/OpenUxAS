@@ -21,12 +21,29 @@ namespace uxas {
 namespace communications {
 
 // This class provides a means of creating the ZeroMq socket! 
+/**
+ * @brief This class provides a de-coupled means of creating a ZeroMq socket.  The creation and 
+ *        initialization of ZeroMq sockets require a shared "context" which is currently accomplished
+ *        in UxAS via a Singleton class.  This class was created with the objective of refactoring the
+ *        removal of the Singleton in the future.
+ */
 
 class ZmqSocketInitializer : public ISocket<std::shared_ptr<zmq::socket_t>&, const std::string&, int32_t, bool> {
 public:
+    /**
+     * @brief Default destructor
+     */
     ~ZmqSocketInitializer() override = default;
 
-    // Initialize the socket
+    /**
+     * @brief Method to initialize a given socket based on given parameters.
+     * 
+     * @param socketPtr - Pointer to uninitialized RAW Zmq socket.
+     * @param address - Address this socket will connect to.
+     * @param type - Type of the socket (e.g. ZMQ_PUSH, ZMQ_PULL, ZMQ_STREAM, etc.)
+     * @param isServer - Boolean indicating if this socket is a server.
+     * @return Return true if initialized appropriately, false otherwise.
+     */
     bool initialize(std::shared_ptr<zmq::socket_t>& socketPtr, 
         const std::string& address, int32_t type, bool isServer) override;
 };

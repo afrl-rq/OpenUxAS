@@ -22,9 +22,16 @@ namespace communications {
 template<typename... Ts>
 class ISocket {
 public:
+    /**
+     * @brief Default destructor
+     */
     virtual ~ISocket() = default;
 
-    // Initialize the socket
+    /**
+     * @brief Interface specification for an initialize() method with variadic template spec
+     * 
+     * @return return if the socket was initialized appropriately.
+     */
     virtual bool initialize(Ts...) = 0;
 };
 

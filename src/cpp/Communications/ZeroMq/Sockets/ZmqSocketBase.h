@@ -18,8 +18,10 @@
 namespace uxas {
 namespace communications {
 
-// This class allows for different socket types to be created via constructor arguments.  For
-// additional constructor/destructor setup should extend this class.
+/**
+ * @brief - This class allows for different socket types to be created via constructor arguments.  For 
+ *          additional constructor/destructor setup, this class should be extended.
+ */
 
 class ZmqSocketBase : public ISocket<const std::string&, bool> {
 protected:
@@ -28,20 +30,54 @@ protected:
         InitializerPtr;  
 
 public:
+    /**
+     * @brief Default constructor
+     */
     ZmqSocketBase() = default;
+
+    /**
+     * @brief Construct a Zmq socket object from an initializer and type of socket.
+     * 
+     * @param initializer - pointer to a decoupled method of socket instantiation.
+     * @param socketType - requested Zmq socket type to instantiate.
+     */
     ZmqSocketBase(InitializerPtr initializer, zmq::socket_type socketType);
 
+    /**
+     * @brief Destructor with basic functionality to close socket upon object destruction. 
+     */
     virtual ~ZmqSocketBase() override;
 
     // Initialize the socket
+    /**
+     * @brief Initialize the socket.  The separate functionality here allows for error handling outside
+     *        of object instantiation and for passing address after config file has been read.
+     * 
+     * @param address - Zmq address for socket to connect.
+     * @param isServer - Boolean indicating if this Zmq socket is a server.
+     * @return boolean indicating if socket was appropriately initialized.
+     */
     virtual bool initialize(const std::string& address, bool isServer) override;
 
-    // Get pointer to the socket
+    /**
+     * @brief Get shared pointer to the RAW Zmq socket.
+     * 
+     * @return std::shared_ptr<zmq::socket_t> 
+     */
     std::shared_ptr<zmq::socket_t> getRawZmqSocket();
 
-    // Return server status of this socket
+    /**
+     * @brief Query on server status of this socket.
+     * 
+     * @return Return true if a server, false otherwise.
+     */
     bool isServer() const;
 
+    /**
+     * @brief Get routing ID for this socket (used for some socket types that require routing)
+     * 
+     * @return const std::vector<uint8_t>& - ensure lifetime of this object exceeds that of caller scope.
+     */
     const std::vector<uint8_t>& getRoutingId() const;
 
 protected: 

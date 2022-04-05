@@ -22,25 +22,56 @@
 namespace uxas {
 namespace communications {
 
-// This class instantiates a TCP sender/receiver, this IS NOT thread-safe and should not be shared across threads!
+/**
+ * @brief Class that appropriately combines a sender, receiver, and socket type to provide client functionality for a
+ *        ZMQ_STREAM type socket with send/receive capabilities.  This class IS NOT thread-safe and should not be
+ *        shared across threads!
+ */
 
 class ZmqTcpSenderReceiver : public IMsgSender<std::string&>, public IMsgReceiver<std::string>,
     public ZmqSocketBase {
 public:
+    /**
+     * @brief Default constructor which currently serves as a "dependency injector" for the socket creation and
+     *        underlying sender/receiver implementations.
+     */
     ZmqTcpSenderReceiver();
 
+    /**
+     * @brief Default destructor
+     */
     ~ZmqTcpSenderReceiver() override = default;
 
-    // Initialize our socket!
+    /**
+     * @brief Pass through to initialize the underlying socket base type.
+     * 
+     * @param address - Zmq socket address to connect to
+     * @param isServer - Boolean indicating if this socket is a server.
+     * @return Return true if initialized appropriately, false otherwise.
+     */
     bool initialize(const std::string& address, bool isServer);
 
-    // Send message
+    /**
+     * @brief Send message to underlying socket.  Currently acts as a passthrough to the underlying
+     *        m_sender type.
+     * 
+     * @param msg - reference to message to be sent.
+     */
     void send(std::string& msg) override;
 
-    // Receive message
+    /**
+     * @brief Receive messages from underlying socket.  Currently acts as a passthrough to the underlying
+     *        m_receiver type.
+     * 
+     * @return std::string - copy of received message.
+     */
     std::string receive() override ;
 
-    // Get underlying ZeroMqSocket
+    /**
+     * @brief Get a shared pointer to the underlying Zmq socket.
+     * 
+     * @return std::shared_ptr<ZmqSocketBase> 
+     */
     std::shared_ptr<ZmqSocketBase> getSocketBase();
 
 private:
