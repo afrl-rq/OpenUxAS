@@ -12,6 +12,9 @@
 
 #include "IMsgSender.h"
 
+#include <string>
+#include <memory>
+
 namespace uxas {
 namespace communications {
 
