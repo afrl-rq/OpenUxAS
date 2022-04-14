@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 """Script to run OpenUxAS examples."""
 
 from __future__ import annotations
@@ -10,6 +8,7 @@ import os
 import pathlib
 import shutil
 import subprocess
+import sys
 import time
 import traceback
 from typing import TYPE_CHECKING
@@ -24,8 +23,14 @@ from uxas.paths import (
     SBX_DIR,
 )
 
+from uxas.util.logging import (
+    add_logging_group,
+    activate_logger,
+    get_logging_level,
+)
+
 if TYPE_CHECKING:
-    from argparse import ArgumentParser, Namespace
+    from argparse import Namespace
     from typing import Any, Dict, List, Optional, Tuple
 
 
@@ -88,68 +93,10 @@ BIN_YAML_KEY = "bin"
 # The default prefix for an OpenUxAS run directory.
 RUN_DIR = "RUNDIR"
 
-# For log consistency with our other usages.
-STREAM_FMT = "%(levelname)-8s %(message)s"
-FILE_FMT = "%(asctime)s: %(name)-24s: %(levelname)-8s %(message)s"
-
-
-def add_logging_group(argument_parser: ArgumentParser) -> None:
-    """
-    Add a group and arguments to control the log.
-
-    Use with `support.log.configure_logging`.
-    """
-    log_group = argument_parser.add_argument_group(title="logging arguments")
-    log_group.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help="make the log output on the console more verbose",
-    )
-    log_group.add_argument(
-        "--log-file",
-        metavar="FILE",
-        default=None,
-        help="store all the logs into the specified file",
-    )
-    log_group.add_argument(
-        "--loglevel",
-        default=logging.WARNING,
-        help="set the console log level",
-        choices={
-            "DEBUG": logging.DEBUG,
-            "INFO": logging.INFO,
-            "WARN": logging.WARN,
-            "ERROR": logging.ERROR,
-            "CRITICAL": logging.CRITICAL,
-        },
-    )
-
-
-def configure_logging(args: Namespace, level: int) -> None:
-    """
-    Configure the log based on parsed command-line arguments.
-
-    To be used with `support.arguments.add_logging_group`.
-    """
-    logging.getLogger("").setLevel(logging.DEBUG)
-
-    streamHandler = logging.StreamHandler()
-    streamHandler.setFormatter(logging.Formatter(STREAM_FMT))
-    streamHandler.setLevel(level)
-    logging.getLogger("").addHandler(streamHandler)
-
-    if args.log_file:
-        fileHandler = logging.FileHandler(args.log_file)
-        fileHandler.setFormatter(logging.Formatter(FILE_FMT))
-        fileHandler.setLevel(min(level, logging.DEBUG))
-        logging.getLogger("").addHandler(fileHandler)
-
 
 def read_yaml(yaml_filename: str) -> Dict[str, Any]:
     """Read and parse a YAML file, returning the content as a yaml object."""
-    with open(yaml_filename) as yaml_file:
+    with open(yaml_filename, encoding="utf-8") as yaml_file:
         loaded_yaml = yaml.safe_load(yaml_file.read())
 
     return loaded_yaml
@@ -167,29 +114,29 @@ MISSING_AMASE = """\
 Before you can run examples that use OpenAMASE, you need to build it. You
 should:
 
-    {anod} build amase
+    %s build amase
 """
 
 UNBUILT_SPECIFIED_AMASE = """\
-The OpenAMASE path `{path}` exists, but hasn't been built. You should:
+The OpenAMASE path `%s exists, but hasn't been built. You should:
 
-    cd "{path}/OpenAMASE" && ant
+    cd "%s/OpenAMASE" && ant
 
 You may need to put ant on your path first, like this:
 
-    eval "$( {anod} printenv ant )"
+    eval "$( %s printenv ant )"
 """
 
 
 UNBUILT_LOCAL_AMASE = """\
-There is an OpenAMASE in {path}, but it hasn't been built. If you
+There is an OpenAMASE in %s, but it hasn't been built. If you
 want to use this version of OpenAMASE, you should:
 
-    cd "{path}/OpenAMASE" && ant
+    cd "%s/OpenAMASE" && ant
 
 You may need to put ant on your path first, like this:
 
-    eval "$( {anod} printenv ant )"
+    eval "$( %s printenv ant )"
 
 Trying the anod-built OpenAMASE as a fall back.
 """
@@ -217,24 +164,22 @@ def resolve_amase_dir(args: Namespace) -> str:
             return args.amase_dir
         else:
             logging.critical(
-                UNBUILT_SPECIFIED_AMASE.format(path=args.amase_dir, anod=ANOD_CMD)
+                UNBUILT_SPECIFIED_AMASE, args.amase_dir, args.amase_dir, ANOD_CMD
             )
-            exit(1)
+            sys.exit(1)
 
     if os.path.exists(AMASE_DIR):
         if check_amase_dir(AMASE_DIR):
             return AMASE_DIR
         else:
-            logging.warning(
-                UNBUILT_LOCAL_AMASE.format(path=AMASE_DIR, anod=ANOD_CMD)
-            )
+            logging.warning(UNBUILT_LOCAL_AMASE, AMASE_DIR, AMASE_DIR, ANOD_CMD)
 
     anod_amase_dir = os.path.join(SBX_DIR, "x86_64-linux", "amase", "src")
     if os.path.exists(anod_amase_dir) and check_amase_dir(anod_amase_dir):
         return anod_amase_dir
     else:
-        logging.critical(MISSING_AMASE.format(anod=ANOD_CMD))
-        exit(1)
+        logging.critical(MISSING_AMASE, ANOD_CMD)
+        sys.exit(1)
 
 
 def list_examples(examples_dir: str) -> None:
@@ -264,12 +209,12 @@ def check_amase(
 
     if SCENARIO_YAML_KEY not in loaded_yaml[AMASE_YAML_KEY].keys():
         logging.critical("OpenAMASE configuration must specify a scenario file.")
-        exit(1)
+        sys.exit(1)
 
     scenario_file = loaded_yaml[AMASE_YAML_KEY][SCENARIO_YAML_KEY]
     if not os.path.exists(os.path.join(example_dir, scenario_file)):
-        logging.critical(f"Specified scenario file '{scenario_file}' does not exist.")
-        exit(1)
+        logging.critical("Specified scenario file '%s' does not exist.", scenario_file)
+        sys.exit(1)
 
     if CONFIG_YAML_KEY in loaded_yaml[AMASE_YAML_KEY].keys():
         config_file = loaded_yaml[AMASE_YAML_KEY][CONFIG_YAML_KEY]
@@ -304,9 +249,9 @@ def run_amase(
     amase_cmd = [
         "java",
         "-Xmx2048m",
-        "-splash:%s" % os.path.join("data", "amase_splash.png"),
+        f"-splash:{os.path.join('data', 'amase_splash.png')}",
         "-classpath",
-        "%s:%s" % (os.path.join("dist", "*"), os.path.join("lib", "*")),
+        f"{os.path.join('dist', '*')}:{os.path.join('lib', '*')}",
         "avtas.app.Application",
         "--config",
         os.path.join("config", resolved_config_file),
@@ -315,18 +260,20 @@ def run_amase(
     ]
 
     logging.info(
-        "Running OpenAMASE in\n"
-        f"             {amase_dir}\n"
-        f"         with scenario '{scenario_file}'."
+        "Running OpenAMASE in\n             %s\n" "         with scenario '%s'.",
+        amase_dir,
+        scenario_file,
     )
     logging.debug(
-        f"Run: cd {os.path.join(amase_dir, 'OpenAMASE')}; {' '.join(amase_cmd)}"
+        "Run: cd %s; %s",
+        os.path.join(amase_dir, "OpenAMASE"),
+        " ".join(amase_cmd),
     )
 
     return subprocess.Popen(amase_cmd, cwd=os.path.join(amase_dir, "OpenAMASE"))
 
 
-def check_uxas(loaded_yaml: Dict[str, Any], args: Namespace) -> List[Dict[str, str]]:
+def check_uxas(loaded_yaml: Dict[str, Any], example_dir: str) -> List[Dict[str, str]]:
     """
     Check the OpenUxAS configuration in the YAML and return a list of configs.
 
@@ -336,9 +283,9 @@ def check_uxas(loaded_yaml: Dict[str, Any], args: Namespace) -> List[Dict[str, s
 
     if UXASES_YAML_KEY in loaded_yaml.keys():
         for record in loaded_yaml[UXASES_YAML_KEY]:
-            uxas_configs += [check_one_uxas(record, args)]
+            uxas_configs += [check_one_uxas(record, example_dir)]
     elif UXAS_YAML_KEY in loaded_yaml.keys():
-        uxas_configs += [check_one_uxas(loaded_yaml[UXAS_YAML_KEY], args)]
+        uxas_configs += [check_one_uxas(loaded_yaml[UXAS_YAML_KEY], example_dir)]
 
     return uxas_configs
 
@@ -380,17 +327,17 @@ def find_uxas_bin(bin_name: str) -> Optional[str]:
 
 
 MISSING_BIN = """\
-The command `{bin}` cannot be found on your path. Either specify the absolute
+The command `%s` cannot be found on your path. Either specify the absolute
 path to the desired OpenUXAS binary in the config file (*not recommended*),
 manually add the desired OpenUxAS binary to your path, perfom a local build of
 the binary (e.g., for C++, `make -j all`) or use anod to build the desired
 version of OpenUxAS with, e.g., for C++:
 
-    {anod} build {bin}
+    %s build %s
 """
 
 
-def check_one_uxas(record: Dict[str, str], args: Namespace) -> Dict[str, str]:
+def check_one_uxas(record: Dict[str, str], example_dir: str) -> Dict[str, str]:
     """
     Check one OpenUxAS configuration from the YAML and return the config.
 
@@ -398,12 +345,12 @@ def check_one_uxas(record: Dict[str, str], args: Namespace) -> Dict[str, str]:
     """
     if CONFIG_YAML_KEY not in record.keys():
         logging.critical("OpenUxAS configuration must specify a config file.")
-        exit(1)
+        sys.exit(1)
 
     config_file = record[CONFIG_YAML_KEY]
     if not os.path.exists(os.path.join(example_dir, config_file)):
-        logging.critical(f"Specified config file '{config_file}' does not exist.")
-        exit(1)
+        logging.critical("Specified config file '%s' does not exist.", config_file)
+        sys.exit(1)
 
     run_dir_name = RUN_DIR
     if RUNDIR_YAML_KEY in record.keys():
@@ -416,8 +363,8 @@ def check_one_uxas(record: Dict[str, str], args: Namespace) -> Dict[str, str]:
 
     uxas_binary = find_uxas_bin(bin_name)
     if uxas_binary is None:
-        logging.critical(MISSING_BIN.format(bin=bin_name, anod=ANOD_CMD))
-        exit(1)
+        logging.critical(MISSING_BIN, bin_name, ANOD_CMD, bin_name)
+        sys.exit(1)
 
     return {
         "config_file": config_file,
@@ -430,7 +377,7 @@ def run_uxas(
     uxas_configs: List[Dict[str, str]], example_dir: str, popen: bool
 ) -> List[subprocess.Popen]:
     """Run an OpenUxAS instance for each configuration."""
-    pids = list()
+    pids = []
     for config in uxas_configs:
         pid = run_one_uxas(config, example_dir, popen)
         if pid is not None:
@@ -439,7 +386,7 @@ def run_uxas(
     if popen:
         return pids
     else:
-        return list()
+        return []
 
 
 def run_one_uxas(
@@ -458,27 +405,33 @@ def run_one_uxas(
     if popen:
         logging.info(
             "Running OpenUxAS binary\n"
-            f"             {uxas_bin}\n"
+            "             %s\n"
             "         in a separate process with configuration\n"
-            f"             {config_file}\n"
+            "             %s\n"
             "         Data and logfiles are in:\n"
-            f"             {run_dir}"
+            "             %s",
+            uxas_bin,
+            config_file,
+            run_dir,
         )
-        logging.debug(f"Run: cd {run_dir}; {' '.join(uxas_cmd)}")
+        logging.debug("Run: cd %s; %s", run_dir, " ".join(uxas_cmd))
 
         return subprocess.Popen(uxas_cmd, cwd=run_dir)
     else:
         logging.info(
             "Running OpenUxAS binary\n"
-            f"             {uxas_bin}\n"
+            "             %s\n"
             "         with configuration\n"
-            f"             {config_file}\n"
+            "             %s\n"
             "         Data and logfiles are in:\n"
-            f"             {run_dir}"
+            "             %s",
+            uxas_bin,
+            config_file,
+            run_dir,
         )
-        logging.debug(f"Run: cd {run_dir}; {' '.join(uxas_cmd)}")
+        logging.debug("Run: cd %s; %s", run_dir, " ".join(uxas_cmd))
 
-        subprocess.run(uxas_cmd, cwd=run_dir)
+        subprocess.run(uxas_cmd, cwd=run_dir, check=True)
         return None
 
 
@@ -500,7 +453,7 @@ def killall_uxases(popen: bool, pids: List[subprocess.Popen]) -> None:
                 # the process was actually killed, so we wait a moment.
                 time.sleep(0.1)
                 if pid.poll() is None:
-                    logging.error(f"  Unable to kill PID {pid.pid}.")
+                    logging.error("  Unable to kill PID %s.", pid.pid)
 
 
 # From
@@ -511,9 +464,9 @@ class _ListAction(argparse.Action):
         option_strings,
         dest=argparse.SUPPRESS,
         default=argparse.SUPPRESS,
-        help=None,
+        help=None,  # (needed for superclass) pylint: disable=redefined-builtin
     ):
-        super(_ListAction, self).__init__(
+        super().__init__(
             option_strings=option_strings,
             dest=dest,
             default=default,
@@ -539,9 +492,9 @@ class _CompleteOptionsAction(argparse.Action):
         option_strings,
         dest=argparse.SUPPRESS,
         default=argparse.SUPPRESS,
-        help=None,
+        help=None,  # (needed for superclass) pylint: disable=redefined-builtin
     ):
-        super(_CompleteOptionsAction, self).__init__(
+        super().__init__(
             option_strings=option_strings,
             dest=dest,
             default=default,
@@ -557,14 +510,14 @@ class _CompleteOptionsAction(argparse.Action):
         parser.exit()
 
 
-# Script processing.
-if __name__ == "__main__":
-    ap = argparse.ArgumentParser(
+def run_example_main() -> int:
+    """Run main processing of run-example."""
+    argument_parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=DESCRIPTION,
     )
 
-    ap.add_argument(
+    argument_parser.add_argument(
         "--delay",
         dest="amase_delay",
         type=int,
@@ -572,22 +525,28 @@ if __name__ == "__main__":
         "before starting instances of OpenUxAS",
     )
 
-    ap.add_argument(
+    argument_parser.add_argument(
         "--amase-dir",
         help="absolute path to the OpenAMASE repository containing build outputs",
     )
 
-    ap.add_argument("--uxas-bin", help="absolute path to the OpenUxAS binary")
+    argument_parser.add_argument(
+        "--uxas-bin",
+        help="absolute path to the OpenUxAS binary",
+    )
 
-    ap.add_argument(
+    argument_parser.add_argument(
         "--uxas-dir",
         default=OPENUXAS_ROOT,
         help="absolute path to the OpenUxAS repository containing build outputs",
     )
 
-    ap.add_argument("--examples-dir", help="absolute path to the root of the examples")
+    argument_parser.add_argument(
+        "--examples-dir",
+        help="absolute path to the root of the examples",
+    )
 
-    ap.add_argument(
+    argument_parser.add_argument(
         "-l",
         "--list",
         dest="list_examples",
@@ -598,41 +557,23 @@ if __name__ == "__main__":
     )
 
     # This is only for driving autocomplete
-    ap.add_argument(
+    argument_parser.add_argument(
         "--complete-options",
         default=False,
         action=_CompleteOptionsAction,
         help=argparse.SUPPRESS,
     )
 
-    ap.add_argument(
+    argument_parser.add_argument(
         "example",
         help="the example directory",
     )
 
-    add_logging_group(ap)
+    add_logging_group(argument_parser)
 
-    args = ap.parse_args()
+    args = argument_parser.parse_args()
 
-    # Logging level
-    if args.verbose == 1:
-        level = logging.INFO
-    elif args.verbose == 2:
-        level = logging.DEBUG
-    else:
-        level = args.loglevel
-
-    # Try to use e3 for logging, but don't require that the user have e3.
-    try:
-        import e3.log
-
-        e3.log.activate(
-            level=level,
-            filename=args.log_file,
-            e3_debug=(level == logging.DEBUG),
-        )
-    except ImportError:
-        configure_logging(args, level)
+    activate_logger(args, get_logging_level(args))
 
     # For KeyboardInterrupt handling
     popen = False
@@ -649,27 +590,30 @@ if __name__ == "__main__":
         else:
             example_dir = os.path.join(EXAMPLES_DIR, args.example)
 
-        logging.info("Running example in\n" f"           {example_dir}")
+        logging.info("Running example in\n           %s", example_dir)
 
         if not os.path.exists(example_dir):
             example_dir = os.path.join(examples_dir, args.example)
 
             if not os.path.exists(example_dir):
                 logging.critical(
-                    f"Example '{args.example}' does not exist in\n"
-                    f"           {examples_dir}\n"
-                    "        Use the `--list` option for a list of available examples."
+                    "Example '%s' does not exist in\n           %s\n"
+                    "        Use the `--list` option for a list of available examples.",
+                    args.example,
+                    examples_dir,
                 )
-                exit(1)
+                return 1
 
         yaml_filename = os.path.join(example_dir, CONFIG_FILE)
         if not os.path.exists(yaml_filename):
             logging.critical(
-                f"Example '{args.example}' is not property configured.\n"
-                f"        There is no '{CONFIG_FILE}' in the example directory.\n"
-                "        Use the `--list` option for a list of available examples."
+                "Example '%s' is not property configured.\n"
+                "        There is no '%s' in the example directory.\n"
+                "        Use the `--list` option for a list of available examples.",
+                args.example,
+                CONFIG_FILE,
             )
-            exit(1)
+            return 1
 
         loaded_yaml = read_yaml(yaml_filename)
 
@@ -678,7 +622,7 @@ if __name__ == "__main__":
             loaded_yaml, example_dir, amase_dir, args
         )
 
-        uxas_configs = check_uxas(loaded_yaml, args)
+        uxas_configs = check_uxas(loaded_yaml, example_dir)
 
         if amase_scenario_file is not None:
             amase_pid = run_amase(
@@ -700,12 +644,20 @@ if __name__ == "__main__":
             amase_pid.wait()
 
         killall_uxases(popen, pids)
+        return 0
 
     except KeyboardInterrupt:
         print(" ")
         killall_uxases(popen, pids)
+        return 2
 
-    except Exception as e:
-        logging.critical(f"Got an exception {e}")
+    except Exception as exception:  # pylint: disable=broad-except
+        logging.critical("Got an exception %s", exception)
         traceback.print_exc()
-        ap.print_usage()
+        argument_parser.print_usage()
+        return 3
+
+
+# Script processing.
+if __name__ == "__main__":
+    sys.exit(run_example_main())

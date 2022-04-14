@@ -1,4 +1,4 @@
-# Globally-defined repository paths and helper functions. 
+# Globally-defined repository paths and helper functions.
 #
 # This file should be sourced by any script that needs to work with repository
 # paths: this way, if the layout changes, we can more easily manage the impact.
@@ -45,9 +45,9 @@ export SPEC_DIR="${INFRASTRUCTURE_DIR}/specs"
 export SBX_DIR="${INFRASTRUCTURE_DIR}/sbx"
 
 
-# Try to activate the python venv. 
+# Try to activate the python venv.
 #
-# If the venv does not exist, try to install the venv and then activate it. 
+# If the venv does not exist, try to install the venv and then activate it.
 # If the venv cannot be activated, exit with an error.
 function activate_venv {
     if [ -f ${VPYTHON_ACTIVATE} ]; then
@@ -60,8 +60,8 @@ function activate_venv {
             exit 1
         fi
 
-        echo "It looks like this is your first time running anod for this OpenUxAS clone."
-        echo "Let's install the infrastructure support on which anod depends."
+        echo "It looks like this is your first time running scripts in this OpenUxAS clone."
+        echo "Let's install the infrastructure support on which anod & scripts depend."
         echo " "
         echo "To do this, we will use apt. We will update the index and install all needed"
         echo "packages automatically. If you would prefer more control over how dependencies"
@@ -147,7 +147,7 @@ function is_first_positional_arg {
         case ${arg} in
             -*)
                 ;;
-            
+
             $2)
                 return 0
                 ;;
@@ -235,7 +235,7 @@ function get_first_positional_arg {
         case ${arg} in
             -*)
                 ;;
-            
+
             *)
                 echo ${arg}
                 return 0

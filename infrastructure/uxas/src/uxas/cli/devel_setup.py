@@ -135,8 +135,7 @@ def do_devel_setup(m: Main, set_prog: bool = True) -> int:
     if not os.path.exists(REPOSITORIES_YAML_PATH):
         logging.error(
             "Cannot find `repositories.yaml` under `specs/config`.\n"
-            + "Are you running in the right location?",
-            file=sys.stderr,
+            "Are you running in the right location?"
         )
         exit(1)
 
