@@ -16,7 +16,8 @@ class ZeroMQ(spec('github')):
     @Anod.primitive()
     def build(self):
         self.cmake_build(params={
-            'BUILD_TESTS': 'OFF'})
+            'BUILD_TESTS': 'OFF',
+            'CMAKE_INSTALL_LIBDIR': 'lib'})
         self.adjust_pkg_config(pc_file='libzmq.pc')
         mkdir(os.path.join(self.lib_dir, 'static'))
         cp(os.path.join(self.lib_dir, 'libzmq.a'),
