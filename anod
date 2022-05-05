@@ -1,0 +1,76 @@
+#! /usr/bin/env bash
+#
+# Anod wrapper script.
+#
+# Note that this script is meant to either be run directly by the user or is
+# meant to be sourced. In the former case, we can assume we're running bash. In
+# the latter case, we're in the user's current shell. We support bash and zsh.
+# Support for ksh is incomplete.
+
+# Script location
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+# Load global paths
+source "${SCRIPT_DIR}/infrastructure/paths.sh"
+
+# Determine if we're being sourced (BASH, KSH, and ZSH compliant):
+([[ -n $ZSH_EVAL_CONTEXT && $ZSH_EVAL_CONTEXT =~ :file$ ]] || 
+ [[ -n $KSH_VERSION && $(cd "$(dirname -- "$0")" &&
+    printf '%s' "${PWD%/}/")$(basename -- "$0") != "${.sh.file}" ]] || 
+ [[ -n $BASH_VERSION ]] && (return 0 2>/dev/null)) && sourced=1 || sourced=0
+
+ANOD_SCRIPT="from uxas.cli.anod import do_cli; exit(do_cli())"
+
+
+# Define a shell function for anod.
+function _anod {
+    # Activate the python venv
+    activate_venv
+
+    # Look ahead to see if we're building uxas-ada
+    if is_first_positional_arg "$*" "build" && contains "$*" "uxas-ada"; then
+        ensure_gnat
+    fi
+    
+    # Look ahead to process specific commands.
+    command=$( get_first_positional_arg "$*" )
+    case ${command} in
+        build)
+            # Are we building? if so, we should set the SHELL variable to bash;
+            # zsh will not work correctly with boost.
+            debug_and_run "SHELL=$( which bash ) python3 -c \"${ANOD_SCRIPT}\" $*"
+            ;;
+
+        setenv)
+            if [[ -n ${_DIRECT_EXEC} ]]; then
+                echo "Can't setenv: anod was not called as shell function."
+                echo " "
+                echo "try \`source ./anod\` and then call anod without the ./ like this:"
+                echo "\`anod setenv\`"
+                return 1
+            else
+                debug_and_run "eval \"\$( python3 -c \"${ANOD_SCRIPT}\" printenv ${@/$command} )\""
+            fi
+            ;;
+
+        reset)
+            debug_and_run "rm -rf \"${SBX_DIR}\""
+            ;;
+        
+        *)
+            debug_and_run "python3 -c \"${ANOD_SCRIPT}\" $*"
+            ;;
+    esac
+}
+
+
+# If we're not being sourced, then try to run the command the user requested.
+if [ $sourced -eq 0 ]; then
+    _DIRECT_EXEC=0
+    _anod $@
+else
+    # If the user sources this file, install anod as a shell function
+    function anod {
+        _anod $@
+    }
+fi
