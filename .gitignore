@@ -4,6 +4,21 @@ build_debug
 build_odroid
 build_open
 
+# Bootstrap Stuff
+# sandbox
+infrastructure/sbx
+infrastructure/software
+
+# python venv
+.vpython
+
+# develop directory (for LMCP and OpenAMASE repos)
+develop
+
+# generated LMCP messages
+src/cpp/LMCP
+
+
 # afrl internal directories
 UxAS-afrl_internal
 
@@ -33,14 +48,16 @@ examples/**/datawork/**
 /UxAS-afrl_internal/
 
 # Visual Studio
-/.vs
-/regen-temp
-.vscode/c_cpp_properties.json
-.vscode/launch.json
-.vscode/settings.json
+.vscode
 
 # Ignore pyc files
 *.pyc
+__pycache__
+.mypy_cache
+.coverage
+.tox
+*.egg-info
+.flake8
 
 # Ignore build directories
 /prerequisites/sbx
@@ -54,6 +71,8 @@ src/ada/proof/sessions/*/*.gz.bak
 
 # object files
 obj
+objs
+uxas-ada
 
 # testsuite results
 tests/cpp/log

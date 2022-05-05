@@ -1,0 +1,111 @@
+#! /usr/bin/env bash
+
+# Supported options are given with environment variables. All arguments are
+# passed through to install/install
+#
+# Options
+#
+#   BOOTSTRAP_ROOT : specify the directory in which the bootstrap should be
+#                    placed. Defaults to: ${HOME}/OpenUxAS
+#
+#   BOOTSTRAP_FORK : specify the fork of OpenUxAS-bootstrap to use. Note that
+#                    the master branch is always selected; it is not currently
+#                    possible to specify a ref-spec. Defaults to:
+#                    afrl-rq/OpenUxAS
+#
+#   USE_GIT_URI    : if set (to anything other than the empty string), do not
+#                    perform the checkout using https.
+#
+#   DEVEL          : if set (to anything other than the empty string),
+#                    configure lmcp and amase for development.
+
+ARGS=$@
+
+if [ -z "$BOOTSTRAP_ROOT" ]; then
+  BOOTSTRAP_ROOT="${HOME}/OpenUxAS"
+fi
+
+if [ -z "$BOOTSTRAP_FORK" ]; then
+  BOOTSTRAP_FORK="manthonyaiello/OpenUxAS.git"
+fi
+
+colorize() {
+  if [ -t 1 ]; then printf "\e[%sm%s\e[m" "$1" "$2"
+  else echo -n "$2"
+  fi
+}
+
+# Checks for bootstrap, and suggests to remove it for installing
+if [ -d "${BOOTSTRAP_ROOT}" ]; then
+  { echo
+    colorize 1 "CRITICAL"
+    echo ": Can not proceed with installation. Kindly remove the '${BOOTSTRAP_ROOT}' directory first."
+    echo
+  } >&2
+    exit 1
+fi
+
+if ! command -v git 1>/dev/null 2>&1; then
+  { echo
+    colorize 1 "CRITICAL"
+    echo ": Git is not installed; can't continue."
+    echo
+  } >&2
+  exit 1
+fi
+
+if ! command -v python3 1>/dev/null 2>&1; then
+  { echo
+    colorize 1 "CRITICAL"
+    echo ": python3 is not installed; can't continue."
+    echo
+  } >&2
+  exit 1
+fi
+
+PYTHON_MAJOR_VERSION=$( python3 -c 'import sys; print(sys.version_info[0])' )
+PYTHON_MINOR_VERSION=$( python3 -c 'import sys; print(sys.version_info[1])' )
+
+if ((10#${PYTHON_MAJOR_VERSION} < 3)); then
+  { echo
+    colorize 1 "CRITICAL"
+    echo ": python >= 3.7 is required; can't continue."
+    echo
+  } >&2
+  exit 1
+else
+  if ((10#${PYTHON_MINOR_VERSION} < 7)); then
+    { echo
+      colorize 1 "CRITICAL"
+      echo ": python >= 3.7 is required; can't continue."
+      echo
+    }
+    exit 1
+  fi
+fi
+
+failed_checkout() {
+  colorize 1 "CRITICAL"
+  echo ": Failed to git clone $1"
+  exit -1
+}
+
+checkout() {
+  [ -d "$2" ] || git clone "$1" "$2" || failed_checkout "$1"
+}
+
+
+if [ -n "${USE_GIT_URI}" ]; then
+  GITHUB="git://github.com"
+else
+  GITHUB="https://github.com"
+fi
+
+checkout "${GITHUB}/${BOOTSTRAP_FORK}" "${BOOTSTRAP_ROOT}"
+
+( cd "${BOOTSTRAP_ROOT}" && infrastructure/install )
+
+if [ -n "${DEVEL}" ]; then
+  ( cd "${BOOTSTRAP_ROOT}" && \
+    ./anod devel-setup lmcp amase --log-file devel-setup.log )
+fi

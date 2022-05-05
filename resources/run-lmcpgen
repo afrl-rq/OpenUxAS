@@ -1,0 +1,14 @@
+#! /usr/bin/env bash
+#
+# RunLmcpGen.py wrapper script.
+
+# Script location
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+# Load global paths
+source "${SCRIPT_DIR}/../infrastructure/paths.sh"
+
+# Activate the python venv
+activate_venv
+
+debug_and_run "python3 \"${RESOURCES_DIR}/run_lmcpgen.py\" $*"
