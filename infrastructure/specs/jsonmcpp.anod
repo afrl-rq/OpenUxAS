@@ -1,0 +1,17 @@
+from e3.anod.loader import spec
+from e3.anod.spec import Anod
+
+
+class JsonMCPP(spec('github')):
+
+    github_project = 'jsonmcpp'
+
+    @property
+    def build_deps(self):
+        return [Anod.Dependency('compiler'),
+                Anod.Dependency('cmake')]
+
+    @Anod.primitive()
+    def build(self):
+        self.cmake_build()
+
