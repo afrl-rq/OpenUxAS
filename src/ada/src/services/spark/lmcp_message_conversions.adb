@@ -43,9 +43,9 @@ package body LMCP_Message_Conversions is
      (Msg : LMCP_Messages.MissionCommand)
       return MissionCommand_Acc;
 
-   function As_MissionCommand_Message
-     (Msg : MissionCommand_Acc)
-      return LMCP_Messages.MissionCommand;
+   --  function As_MissionCommand_Message
+   --    (Msg : MissionCommand_Acc)
+   --     return LMCP_Messages.MissionCommand;
 
    function As_RouteConstraints_Acc
      (Msg : LMCP_Messages.RouteConstraints)
