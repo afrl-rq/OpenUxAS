@@ -17,17 +17,17 @@ package Waypoint_Plan_Manager with SPARK_Mode is
 
    Max : constant Ada.Containers.Count_Type := 2000;
 
-   subtype Int64_Positive is Int64 range 1 .. Int64'Last;
+   subtype Positive64 is Int64 range 1 .. Int64'Last;
 
-   subtype Int64_Natural is Int64 range 0 .. Int64'Last;
+   subtype Natural64 is Int64 range 0 .. Int64'Last;
 
    --  package WP_Vectors is new Ada.Containers.Formal_Vectors (Positive, WP);
    --  type WP_Vector is new WP_Vectors.Vector (Max);
 
-   package WP_ID_Maps is new Ada.Containers.Formal_Ordered_Maps (Int64_Positive, Int64_Natural);
+   package WP_ID_Maps is new Ada.Containers.Formal_Ordered_Maps (Positive64, Natural64);
    type WP_ID_Map is new WP_ID_Maps.Map (Max);
 
-   package WP_ID_Vectors is new Ada.Containers.Formal_Vectors (Positive, Int64_Positive);
+   package WP_ID_Vectors is new Ada.Containers.Formal_Vectors (Positive, Positive64);
    type WP_ID_Vector is new WP_ID_Vectors.Vector (Max + 5);
 
    type Waypoint_Plan_Manager_Configuration_Data is record
@@ -40,13 +40,14 @@ package Waypoint_Plan_Manager with SPARK_Mode is
 
    type Waypoint_Plan_Manager_State is record
       Original_MC : MissionCommand;
-      Current_WP_ID : Int64_Positive;
+      Current_WP_ID : Positive64;
       ID_Map : WP_ID_Map;
       New_Command : Boolean;
-      Next_Seg_ID : Int64_Natural;
+      Next_Seg_ID : Natural64;
       Second_Element_Is_FirstID : Boolean;
       Prefix : WP_ID_Vector;
       Cycle : WP_ID_Vector;
+      Current_Segment : WP_ID_Vector;
    end record;
 
    procedure Process_Mission_Command
@@ -54,6 +55,14 @@ package Waypoint_Plan_Manager with SPARK_Mode is
      with Pre =>
        Length (This.Original_MC.WaypointList) <= Max and then
        This.Original_MC.FirstWaypoint > 0;
+
+   procedure Update_Segment
+     (State : in out Waypoint_Plan_Manager_State;
+      Config : Waypoint_Plan_Manager_Configuration_Data)
+     with Pre =>
+       Config.NumberWaypointsToServe >= 1 and then Config.NumberWaypointsToServe <= 2000 and then
+       Config.NumberWaypointOverlap >= 2 and then Config.NumberWaypointOverlap <= 1999 and then
+       State.Next_Seg_ID >= 1;
 
 private
 

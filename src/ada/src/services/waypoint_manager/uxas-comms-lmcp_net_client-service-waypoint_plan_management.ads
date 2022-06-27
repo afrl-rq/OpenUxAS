@@ -6,6 +6,7 @@ with Waypoint_Plan_Manager;               use Waypoint_Plan_Manager;
 with Waypoint_Plan_Manager_Communication; use Waypoint_Plan_Manager_Communication;
 
 with AFRL.CMASI.Enumerations; use AFRL.CMASI.Enumerations;
+with AFRL.CMASI.MissionCommand; use AFRL.CMASI.MissionCommand;
 
 with Common; use Common;
 
@@ -28,10 +29,6 @@ package UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
    function Create return Any_Service;
 
 private
-
-   --  static
-   --  ServiceBase::CreationRegistrar<AutomationRequestValidatorService> s_registrar;
-   --  see the package body executable part
 
    type Waypoint_Plan_Manager_Service is new Service_Base with record
 
@@ -59,6 +56,8 @@ private
       TimeBetweenMissionCommandsMin_ms : Common.Int64 := 1000;
       -- Payload Id to use for addressing the managed vehicle's gimbal
       GimbalPayloadId : Common.Int64 := -1;
+
+      Stored_MC, Seg_MC : MissionCommand_Acc;
 
       Config  : Waypoint_Plan_Manager_Configuration_Data;
       Mailbox : Waypoint_Plan_Manager_Mailbox;

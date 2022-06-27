@@ -15,7 +15,6 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
    function To_WP_ID_Map (MC : MissionCommand) return WP_ID_Map is
       M : WP_ID_Map;
       WP : Waypoint;
-      -- Size : Ada.Containers.Count_Type := 0 with Ghost;
    begin
 
       for I in WP_Sequences.First .. Last (MC.WaypointList) loop
@@ -26,15 +25,6 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
          end if;
          pragma Loop_Invariant (Integer (Length (M)) <= I - WP_Sequences.First + 1);
       end loop;
-
-      --  for WP of MC.WaypointList loop
-      --     if WP.Number > 0 and then WP.NextWaypoint >= 1 and then not Contains (M, WP.Number) then
-      --        Insert (M, WP.Number, WP.NextWaypoint);
-      --     end if;
-      --     Size := Size + 1;
-      --     pragma Loop_Invariant (Size <= Length (MC.WaypointList));
-      --     pragma Loop_Invariant (Length (M) <= Size);
-      --  end loop;
 
       return M;
 
@@ -47,7 +37,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
    procedure Process_Mission_Command
      (This : in out Waypoint_Plan_Manager_State)
    is
-      FirstID : Int64_Positive := Int64_Positive (This.Original_MC.FirstWaypoint);
+      FirstID : Positive64 := Positive64 (This.Original_MC.FirstWaypoint);
       M : WP_ID_Map := To_WP_ID_Map (This.Original_MC);
       ID_List : WP_ID_Vector;
    begin
@@ -63,7 +53,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
       if Contains (This.ID_Map, FirstID) then
          -- FirstID has no successors or points to itself. Return it.
          if Element (This.ID_Map, FirstID) = 0
-             or else not Contains (This.ID_Map, Int64_Positive (Element (This.ID_Map, FirstID))) -- Had to add Positive here for SPARK
+             or else not Contains (This.ID_Map, Positive64 (Element (This.ID_Map, FirstID))) -- Had to add Positive here for SPARK
              or else Element (This.ID_Map, FirstID) = FirstID
          then
             Append (This.Prefix, FirstID);
@@ -119,7 +109,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
                -- Found a cycle. Copy first part of ID_List to prefix and rest to cycle.
                declare
                   Index : WP_ID_Vectors.Extended_Index;
-                  Next_ID : Int64_Positive := Element (M, Last_Element (ID_List));
+                  Next_ID : Positive64 := Element (M, Last_Element (ID_List));
                begin
                   Index := Find_Index (ID_List, Next_ID);
                   for I in First_Index (ID_List) .. Index - 1 loop
@@ -135,7 +125,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
             else
                -- Found a successor that's not a cycle
                declare
-                  ID : Int64_Positive := Last_Element (ID_List);
+                  ID : Positive64 := Last_Element (ID_List);
                begin
                   Append (ID_List, Element (M, ID));
                   Delete (M, ID);
@@ -159,62 +149,69 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
 
    end Process_Mission_Command;
 
-   --  procedure Get_Segment (WC : in out WP_Command; Len, Overlap : in Positive; Seg : out WP_ID_Vector) is
-   --     I : Natural := 1;
-   --     C : WP_ID_Vectors.Extended_Index;
-   --
-   --     ID : Positive := WC.Next_Seg_ID;
-   --     Seg_Out : WP_ID_Vector;
-   --     In_Prefix : Boolean;
-   --  begin
-   --
-   --     WC.Next_Seg_ID := 0;
-   --
-   --     C := Find_Index (WC.Prefix, ID);
-   --     if C /= WP_ID_Vectors.No_Index then
-   --        In_Prefix := True;
-   --     else
-   --        In_Prefix := False;
-   --     end if;
-   --
-   --     while C in First_Index (WC.Prefix) .. Last_Index (WC.Prefix) and then I <= Len loop
-   --        pragma Loop_Invariant (Natural (Length (Seg_Out)) < I);
-   --        Append (Seg_Out, Element (WC.Prefix, C));
-   --        if (I = Len - Overlap  + 1 and (not Is_Empty (WC.Cycle) or C /= Last_Index (WC.Prefix))) then
-   --           WC.Next_Seg_ID := Element (WC.Prefix, C);
-   --        end if;
-   --        C := Iter_Next (WC.Prefix, C);
-   --        I := I + 1;
-   --     end loop;
-   --
-   --     if In_Prefix then
-   --        C := First_Index (WC.Cycle);
-   --     else
-   --        C := Find_Index (WC.Cycle, ID);
-   --     end if;
-   --
-   --     while C in First_Index (WC.Cycle) .. Last_Index (WC.Cycle) and then I <= Len loop
-   --        pragma Loop_Invariant (Natural (Length (Seg_Out)) < I);
-   --        Append (Seg_Out, Element (WC.Cycle, C));
-   --        if (I = Len - Overlap + 1) then
-   --           WC.Next_Seg_ID := Element (WC.Cycle, C);
-   --        end if;
-   --        C := Iter_Next (WC.Cycle, C);
-   --        if not Iter_Has_Element (WC.Cycle, C) then
-   --           C := First_Index (WC.Cycle);
-   --        end if;
-   --
-   --        I := I + 1;
-   --     end loop;
-   --
-   --     if WC.New_Command then
-   --        WC.New_Command := False;
-   --     else
-   --        WC.Second_Element_Is_FirstID := True;
-   --     end if;
-   --
-   --     Seg := Seg_Out;
-   --
-   --  end Get_Segment;
+   procedure Update_Segment
+     (State : in out Waypoint_Plan_Manager_State;
+      Config : Waypoint_Plan_Manager_Configuration_Data)
+   is
+      ID : constant Positive64 := State.Next_Seg_ID;
+      Prefix : constant WP_ID_Vector := State.Prefix;
+      Cycle : constant WP_ID_Vector := State.Cycle;
+      Len : constant Positive := Positive (Config.NumberWaypointsToServe);
+      Overlap : constant Positive := Positive (Config.NumberWaypointOverlap);
+
+      I : Natural := 1;
+      C : WP_ID_Vectors.Extended_Index;
+      Seg_Out : WP_ID_Vector;
+      In_Prefix : Boolean;
+   begin
+
+      State.Next_Seg_ID := 0;
+
+      C := Find_Index (Prefix, ID);
+      if C /= WP_ID_Vectors.No_Index then
+         In_Prefix := True;
+      else
+         In_Prefix := False;
+      end if;
+
+      while C in First_Index (Prefix) .. Last_Index (Prefix) and then I <= Len loop
+         pragma Loop_Invariant (Natural (Length (Seg_Out)) < I);
+         Append (Seg_Out, Element (Prefix, C));
+         if I = Len - Overlap  + 1 and (not Is_Empty (Cycle) or C /= Last_Index (Prefix)) then
+            State.Next_Seg_ID := Element (Prefix, C);
+         end if;
+         C := Iter_Next (Prefix, C);
+         I := I + 1;
+      end loop;
+
+      if In_Prefix then
+         C := First_Index (Cycle);
+      else
+         C := Find_Index (Cycle, ID);
+      end if;
+
+      while C in First_Index (Cycle) .. Last_Index (Cycle) and then I <= Len loop
+         pragma Loop_Invariant (Natural (Length (Seg_Out)) < I);
+         Append (Seg_Out, Element (Cycle, C));
+         if I = Len - Overlap + 1 then
+            State.Next_Seg_ID := Element (Cycle, C);
+         end if;
+         C := Iter_Next (Cycle, C);
+         if not Iter_Has_Element (Cycle, C) then
+            C := First_Index (Cycle);
+         end if;
+
+         I := I + 1;
+      end loop;
+
+      if State.New_Command then
+         State.New_Command := False;
+      else
+         State.Second_Element_Is_FirstID := True;
+      end if;
+
+      State.Current_Segment := Seg_Out;
+
+   end Update_Segment;
 
 end Waypoint_Plan_Manager;

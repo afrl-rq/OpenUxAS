@@ -44,8 +44,6 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
    -- Local subprograms --
    -----------------------
 
-   --  Those are refactored out of Process_Received_LMCP_Message for readability, comprehension, etc.
-
    procedure Handle_AirVehicleState
      (This : in out Waypoint_Plan_Manager_Service;
       Msg  : Any_LMCP_Message);
@@ -119,7 +117,6 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
       This.Add_Subscription_Address (AFRL.CMASI.MissionCommand.Subscription, Unused);
       -- This.Add_Subscription_Address (UxAS.Messages.UxNative.IncrementWaypoint.Subscription, Unused);
 
-      --  return true;
       Result := True;
    end Configure;
 
@@ -160,7 +157,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
             This.WPM_Timer := Time;
             This.WPM_Timer_Triggered := True;
          end if;
-         This.State.Current_WP_ID := Positive (WP_ID);
+         This.State.Current_WP_ID := Positive64 (WP_ID);
       end if;
    end Handle_AirVehicleState;
 
@@ -177,6 +174,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
    begin
       if Vehicle_ID = This.VehicleID then
          This.State.Original_MC := As_MissionCommand_Message (MC);
+         This.Stored_MC := MC;
          This.State.New_Command := True;
       end if;
    end Handle_Mission_Command;
@@ -190,11 +188,12 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
       Msg  : Any_LMCP_Message)
    is
       AR : constant AutomationResponse_Any := AutomationResponse_Any (Msg.Payload);
-      MC_Vec_Acc : constant Vect_MissionCommand_Acc_Acc := AR.getMissionCommandList;
+      Vec_MC_Acc_Acc : constant Vect_MissionCommand_Acc_Acc := AR.getMissionCommandList;
    begin
-      for MC_Acc of MC_Vec_Acc.all loop
+      for MC_Acc of Vec_MC_Acc_Acc.all loop
          if Common.Int64 (MC_Acc.getVehicleID) = This.VehicleID then
             This.State.Original_MC := As_MissionCommand_Message (MC_Acc);
+            This.Stored_MC := MC_Acc;
             This.State.New_Command := True;
             exit;
          end if;
@@ -247,14 +246,36 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
 
          if This.State.New_Command then
 
-            This.Process_Mission_Command;
+            Process_Mission_Command (This.State);
+            Update_Segment (This.State, This.Config);
 
-            This.Message_Sender_Pipe.Send_Shared_Broadcast_Message (Object_Any (This.State.Current_Mission_Command));
+            if This.State.Second_Element_Is_FirstID then
+               This.Stored_MC.setFirstWaypoint
+                 (AVTAS.LMCP.Types.Int64
+                    (Element (This.State.Current_Segment,
+                     First_Index (This.State.Current_Segment) + 1)));
+            else
+               This.Stored_MC.setFirstWaypoint
+                 (AVTAS.LMCP.Types.Int64 (First_Element (This.State.Current_Segment)));
+            end if;
+
+            This.Stored_MC.getWaypointList.Clear;
+
+            for E of This.State.Current_Segment loop
+               This.Stored_MC.getWaypointList.Append (
+            end loop;
+
+            -- This.Message_Sender_Pipe.Send_Shared_Broadcast_Message (Object_Any (This.State.Current_Mission_Command));
             This.State.New_Command := False;
             This.WPM_Timer_Triggered := False;
-         elsif This.State.Current_WP_ID = This.State.Next_Seg_ID then
+         elsif This.State.Next_Seg_ID > 0 and then
+                This.State.Current_WP_ID =
+                  Element (This.State.Current_Segment,
+                           Last_Index (This.State.Current_Segment) -
+                                 WP_ID_Vectors.Extended_Index (This.Config.NumberWaypointOverlap + 2))
+         then
 
-            This.Message_Sender_Pipe.Send_Shared_Broadcast_Message (Object_Any (This.State.Current_Mission_Command));
+            -- This.Message_Sender_Pipe.Send_Shared_Broadcast_Message (Object_Any (This.State.Current_Mission_Command));
             This.State.New_Command := False;
             This.WPM_Timer_Triggered := False;
          end if;
