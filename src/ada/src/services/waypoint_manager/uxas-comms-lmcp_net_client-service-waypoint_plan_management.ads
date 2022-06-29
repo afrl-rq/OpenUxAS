@@ -57,7 +57,7 @@ private
       -- Payload Id to use for addressing the managed vehicle's gimbal
       GimbalPayloadId : Common.Int64 := -1;
 
-      Stored_MC, Seg_MC : MissionCommand_Acc;
+      -- Stored_MC, Seg_MC : MissionCommand_Acc;
 
       Config  : Waypoint_Plan_Manager_Configuration_Data;
       Mailbox : Waypoint_Plan_Manager_Mailbox;

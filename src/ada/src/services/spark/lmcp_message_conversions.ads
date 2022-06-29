@@ -56,9 +56,7 @@ package LMCP_Message_Conversions is
 
    function As_EntityState_Message (Msg : not null EntityState_Any) return LMCP_Messages.EntityState;
 
-   function As_MissionCommand_Message
-     (Msg : MissionCommand_Acc)
-      return LMCP_Messages.MissionCommand;
+   function As_MissionCommand_Message (Msg : MissionCommand_Acc) return LMCP_Messages.MissionCommand;
 
    function As_Object_Any (Msg : LMCP_Messages.Message_Root'Class) return AVTAS.LMCP.Object.Object_Any;
 
