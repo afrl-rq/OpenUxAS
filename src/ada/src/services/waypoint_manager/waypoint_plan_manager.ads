@@ -1,54 +1,55 @@
-with Ada.Containers.Formal_Doubly_Linked_Lists;
-with Ada.Containers.Formal_Hashed_Maps;
 with Ada.Containers.Formal_Ordered_Maps;
-with Ada.Containers.Functional_Maps;
 with Ada.Containers.Formal_Vectors;
 with Ada.Containers;                             use all type Ada.Containers.Count_Type;
-with Ada.Strings.Unbounded;                      use Ada.Strings.Unbounded;
 with Waypoint_Plan_Manager_Communication;        use Waypoint_Plan_Manager_Communication;
 with Common;                                     use Common;
 with LMCP_Messages;                              use LMCP_Messages;
 
--- with AFRL.CMASI.Waypoint; use AFRL.CMASI.Waypoint;
--- with AFRL.CMASI.MissionCommand; use AFRL.CMASI.MissionCommand;
-
 package Waypoint_Plan_Manager with SPARK_Mode is
-   pragma Unevaluated_Use_Of_Old (Allow);
 
    Max : constant Ada.Containers.Count_Type := 2000;
 
-   subtype Positive64 is Int64 range 1 .. Int64'Last;
+   subtype Pos64 is Int64 range 1 .. Int64'Last;
 
-   subtype Natural64 is Int64 range 0 .. Int64'Last;
+   subtype Nat64 is Int64 range 0 .. Int64'Last;
 
-   package WP_Maps is new Ada.Containers.Formal_Ordered_Maps (Positive64, Waypoint);
+   package WP_Maps is new Ada.Containers.Formal_Ordered_Maps (Pos64, Waypoint);
    type WP_Map is new WP_Maps.Map (Max);
 
-   package WP_ID_Maps is new Ada.Containers.Formal_Ordered_Maps (Positive64, Natural64);
-   type WP_ID_Map is new WP_ID_Maps.Map (Max);
+   package ID_Maps is new Ada.Containers.Formal_Ordered_Maps (Pos64, Nat64);
+   type ID_Map is new ID_Maps.Map (Max);
 
-   package WP_ID_Vectors is new Ada.Containers.Formal_Vectors (Positive, Positive64);
-   type WP_ID_Vector is new WP_ID_Vectors.Vector (Max + 5);
+   package ID_Vectors is new Ada.Containers.Formal_Vectors (Positive, Pos64);
+   type ID_Vector is new ID_Vectors.Vector (Max + 5);
 
    type Waypoint_Plan_Manager_Configuration_Data is record
       -- Max number of waypoints to serve for each segment.
-      -- Defaults to a large number to serve them all
-      NumberWaypointsToServe : Common.UInt32 := 15;
-      -- Number of waypoints remaining before starting the next segment
-      NumberWaypointOverlap : Common.UInt32 := 3;
+      -- Defaults to Max to serve them all. Minimum is 1.
+      NumberWaypointsToServe : Common.UInt32 := Common.UInt32 (Max);
+      -- Number of waypoints remaining before starting the next segment.
+      -- Minimum is 2.
+      NumberWaypointsOverlap : Common.UInt32 := 3;
+      -- Radius to use for loiters added by the waypoint manager
+      LoiterRadiusDefault : Common.Real64 := 200.0;
+      -- Turn type to use for loiters added by the waypoint manager
+      TurnType : LMCP_Messages.TurnTypeEnum := TurnShort;
+      -- Gimbal payload ID to use for loiters added by the waypoint manager
+      GimbalPayloadId : Common.Int64 := -1;
+      -- Vehicle ID of managed vehicle
+      VehicleID : Common.Int64 := -1;
    end record;
 
    type Waypoint_Plan_Manager_State is record
       MC : MissionCommand;
       WPs : WP_Map;
-      Succ_IDs : WP_ID_Map;
+      Succ_IDs : ID_Map;
       New_Command : Boolean;
-      Next_Segment_ID : Natural64 := 0;
-      Next_FirstID : Natural64 := 0;
-      Prefix : WP_ID_Vector;
-      Cycle : WP_ID_Vector;
-      Segment : WP_ID_Vector;
-      AV_WP_ID : Positive64;
+      Next_Segment_ID : Nat64 := 0;
+      Next_FirstID : Nat64 := 0;
+      Prefix : ID_Vector;
+      Cycle : ID_Vector;
+      Segment : ID_Vector;
+      AV_WP_ID : Pos64;
    end record;
 
    procedure Handle_MissionCommand
@@ -66,23 +67,9 @@ package Waypoint_Plan_Manager with SPARK_Mode is
        State.Next_FirstID > 0 and then
        State.Next_Segment_ID > 0 and then
        Config.NumberWaypointsToServe >= 1 and then
-       Config.NumberWaypointsToServe <= 2000 and then
-       Config.NumberWaypointOverlap >= 2 and then
-       Config.NumberWaypointOverlap <= 1999;
-
-   --  procedure Process_Mission_Command_Info
-   --    (This : in out Waypoint_Plan_Manager_State)
-   --    with Pre =>
-   --      -- Length (This.Original_MC.WaypointList) <= Max and then
-   --      This.Next_FirstID > 0;
-   --
-   --  procedure Update_Segment
-   --    (State : in out Waypoint_Plan_Manager_State;
-   --     Config : Waypoint_Plan_Manager_Configuration_Data)
-   --    with Pre =>
-   --      Config.NumberWaypointsToServe >= 1 and then Config.NumberWaypointsToServe <= 2000 and then
-   --      Config.NumberWaypointOverlap >= 2 and then Config.NumberWaypointOverlap <= 1999 and then
-   --      State.Next_Seg_ID >= 1;
+       Config.NumberWaypointsToServe <= UInt32 (Max) and then
+       Config.NumberWaypointsOverlap >= 2 and then
+       Config.NumberWaypointsOverlap <= UInt32 (Max) - 1;
 
    procedure Print (State : Waypoint_Plan_Manager_State);
 

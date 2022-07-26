@@ -1,13 +1,12 @@
 with DOM.Core.Elements;
-with GNAT.Regexp; use GNAT.Regexp;
 with Ada.Text_IO;  use Ada.Text_IO;
 
 with AFRL.CMASI.AutomationResponse;    use AFRL.CMASI.AutomationResponse;
 with AFRL.CMASI.AirVehicleState;       use AFRL.CMASI.AirVehicleState;
 with AFRL.CMASI.MissionCommand;        use AFRL.CMASI.MissionCommand;
--- with UxAS.Messages.UxNative.IncrementWaypoint; use UxAS.Messages.UxNative.IncrementWaypoint;
 
 with Common;                   use Common;
+with LMCP_Messages;            -- use LMCP_Messages;
 with LMCP_Message_Conversions; use LMCP_Message_Conversions;
 
 package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
@@ -15,6 +14,12 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
    ---------------------------
    -- Convenience functions --
    ---------------------------
+
+   function TurnType_Attribute
+     (XML_Node : DOM.Core.Element;
+      Name     : String;
+      Default  : LMCP_Messages.TurnTypeEnum)
+      return LMCP_Messages.TurnTypeEnum;
 
    function UInt32_Attribute
      (XML_Node : DOM.Core.Element;
@@ -69,7 +74,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
       Unused : Boolean;
    begin
 
-      This.VehicleID :=
+      This.Config.VehicleID :=
         Int64_Attribute (XML_Node, "VehicleID",
                          Default => Common.Int64 (This.Entity_Id)); -- Is it This.Entity_Id or Entity_Id (This)?
 
@@ -77,45 +82,39 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
         UInt32_Attribute (XML_Node, "NumberWaypointsToServe",
                           Default => This.Config.NumberWaypointsToServe);
 
-      This.Config.NumberWaypointOverlap :=
-        UInt32_Attribute (XML_Node, "NumberWaypointOverlap",
-                          Default => This.Config.NumberWaypointOverlap);
+      This.Config.NumberWaypointsToServe :=
+        Common.UInt32'Max (This.Config.NumberWaypointsToServe, 1);
 
-      This.Config.NumberWaypointOverlap :=
-        Common.UInt32'Max (This.Config.NumberWaypointOverlap, 2);
+      This.Config.NumberWaypointsOverlap :=
+        UInt32_Attribute (XML_Node, "NumberWaypointsOverlap",
+                          Default => This.Config.NumberWaypointsOverlap);
 
-      This.LoiterRadiusDefault :=
+      This.Config.NumberWaypointsOverlap :=
+        Common.UInt32'Max (This.Config.NumberWaypointsOverlap, 2);
+
+      This.Config.LoiterRadiusDefault :=
         Real64_Attribute (XML_Node, "DefaultLoiterRadius_m",
-                          Default => This.LoiterRadiusDefault);
+                          Default => This.Config.LoiterRadiusDefault);
 
-      --  This.IsAddLoiterToEndOfSegments :=
-      --    Boolean_Attribute (XML_Node, "AddLoiterToEndOfSegments",
-      --                       Default => This.IsAddLoiterToEndOfSegments);
-
-      --  This.IsAddLoiterToEndOfMission :=
-      --    Boolean_Attribute (XML_Node, "AddLoiterToEndOfMission",
-      --                       Default => This.IsAddLoiterToEndOfMission);
-
-      --  This.IsLoopBackToFirstTask :=
-      --    Boolean_Attribute (XML_Node, "LoopBackToFirstTask",
-      --                       Default => This.IsLoopBackToFirstTask);
-
-      --  This.IsSetLastWaypointSpeedTo0 :=
-      --    Boolean_Attribute (XML_Node, "SetLastWaypointSpeedTo0",
-      --                       Default => This.IsSetLastWaypointSpeedTo0);
-
-      This.GimbalPayloadId :=
+      This.Config.GimbalPayloadId :=
         Int64_Attribute (XML_Node, "GimbalPayloadId",
-                         Default => This.GimbalPayloadId);
+                         Default => This.Config.GimbalPayloadId);
 
-      This.TurnType := AFRL.CMASI.Enumerations.TurnTypeEnum (TurnShort);
+      This.Config.TurnType :=
+        TurnType_Attribute (XML_Node, "TurnType",
+                            Default => This.Config.TurnType);
 
-      This.TimeBetweenMissionCommandsMin_ms := 1000; -- int64
+      --  Put_Line ("===== Configuration Done =====");
+      --  Put_Line ("VehicleID:" & This.Config.VehicleID'Image);
+      --  Put_Line ("NumberWaypointsToServe:" & This.Config.NumberWaypointsToServe'Image);
+      --  Put_Line ("NumberWaypointOverlap:" & This.Config.NumberWaypointsOverlap'Image);
+      --  Put_Line ("LoiterRadiusDefault:" & This.Config.LoiterRadiusDefault'Image);
+      --  Put_Line ("GimbalPayloadId:" & This.Config.GimbalPayloadId'Image);
+      --  Put_Line ("TurnType:" & This.Config.TurnType'Image);
 
       This.Add_Subscription_Address (AFRL.CMASI.AutomationResponse.Subscription, Unused);
       This.Add_Subscription_Address (AFRL.CMASI.AirVehicleState.Subscription, Unused);
       This.Add_Subscription_Address (AFRL.CMASI.MissionCommand.Subscription, Unused);
-      -- This.Add_Subscription_Address (UxAS.Messages.UxNative.IncrementWaypoint.Subscription, Unused);
 
       Result := True;
    end Configure;
@@ -149,7 +148,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
       WP_ID : constant Common.Int64 := Common.Int64 (AVS.getCurrentWaypoint);
    begin
       -- If the AVS is for this vehicle, update timer and waypoint state
-      if AV_ID = This.VehicleID then
+      if AV_ID = This.Config.VehicleID then
          if This.WPM_Timer = 0 then
             This.WPM_Timer := Time;
          end if;
@@ -157,7 +156,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
             This.WPM_Timer := Time;
             This.WPM_Timer_Triggered := True;
          end if;
-         This.State.AV_WP_ID := Positive64 (WP_ID);
+         This.State.AV_WP_ID := Pos64 (WP_ID);
       end if;
    end Handle_AirVehicleState_Msg;
 
@@ -172,7 +171,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
       MC : constant MissionCommand_Acc := MissionCommand_Acc (Msg.Payload);
       Vehicle_ID : Common.Int64 := Common.Int64 (MC.getVehicleID);
    begin
-      if Vehicle_ID = This.VehicleID then
+      if Vehicle_ID = This.Config.VehicleID then
          Handle_MissionCommand (This.State, As_MissionCommand_Message (MC));
          Put_Line ("Got MC.");
       end if;
@@ -190,7 +189,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
       Vec_MC_Acc_Acc : constant Vect_MissionCommand_Acc_Acc := AR.getMissionCommandList;
    begin
       for MC of Vec_MC_Acc_Acc.all loop
-         if Common.Int64 (MC.getVehicleID) = This.VehicleID then
+         if Common.Int64 (MC.getVehicleID) = This.Config.VehicleID then
             Handle_MissionCommand (This.State, As_MissionCommand_Message (MC));
             Put_Line ("Got AR.");
             Print (This.State);
@@ -270,6 +269,33 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
    function Registry_Service_Type_Names return Service_Type_Names_List is
       (Service_Type_Names_List'(1 => Instance (Service_Type_Name_Max_Length, Content => Type_Name)));
 
+   ------------------------
+   -- TurnType_Attribute --
+   ------------------------
+
+   function TurnType_Attribute
+     (XML_Node : DOM.Core.Element;
+      Name     : String;
+      Default  : LMCP_Messages.TurnTypeEnum)
+      return LMCP_Messages.TurnTypeEnum
+   is
+      use DOM.Core;
+      Attr_Value : constant DOM_String := Elements.Get_Attribute (XML_Node, Name);
+   begin
+      if Attr_Value /= ""
+      then
+         begin
+            return LMCP_Messages.TurnTypeEnum'Value (Attr_Value);
+         exception
+            when others =>
+               Put_Line ("Could not convert " & Attr_Value & " to TurnTypeEnum. Using default " & Default'Image);
+               return Default;
+         end;
+      else
+         return Default;
+      end if;
+   end TurnType_Attribute;
+
    ----------------------
    -- UInt32_Attribute --
    ----------------------
@@ -280,17 +306,26 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
       Default  : Common.UInt32)
       return Common.UInt32
    is
-      use DOM.Core; use GNAT.Regexp;
+      use DOM.Core;
       Attr_Value : constant DOM_String := Elements.Get_Attribute (XML_Node, Name);
-      RE : Regexp := Compile ("[ \t]*\d+[ \t]*", Case_Sensitive => False);
    begin
-      if Attr_Value /= "" and then (Match (Attr_Value, RE))
+      if Attr_Value /= ""
       then
-         return Common.UInt32'Value (Attr_Value);
+         begin
+            return Common.UInt32'Value (Attr_Value);
+         exception
+            when others =>
+               Put_Line ("Could not convert " & Attr_Value & " to UInt32. Using default " & Default'Image);
+               return Default;
+         end;
       else
          return Default;
       end if;
    end UInt32_Attribute;
+
+   ---------------------
+   -- Int64_Attribute --
+   ---------------------
 
    function Int64_Attribute
      (XML_Node : DOM.Core.Element;
@@ -315,6 +350,10 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
       end if;
    end Int64_Attribute;
 
+   ----------------------
+   -- Real64_Attribute --
+   ----------------------
+
    function Real64_Attribute
      (XML_Node : DOM.Core.Element;
       Name     : String;
@@ -337,6 +376,10 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
          return Default;
       end if;
    end Real64_Attribute;
+
+   -----------------------
+   -- Boolean_Attribute --
+   -----------------------
 
    function Boolean_Attribute
      (XML_Node : DOM.Core.Element;
@@ -371,8 +414,8 @@ begin
    --  own package like this, with their own params. The effect is the same as the
    --  following:
    --
-   --    AutomationRequestValidatorService::ServiceBase::CreationRegistrar<AutomationRequestValidatorService>
-   --    AutomationRequestValidatorService::s_registrar(AutomationRequestValidatorService::s_registryServiceTypeNames());
+   --    WaypointPlanManagerService::ServiceBase::CreationRegistrar<WaypointPlanManagerService>
+   --    WaypointPlanManagerService::s_registrar(WaypointPlanManagerService::s_registryServiceTypeNames());
    --
    --  located at the top of the cpp file
 

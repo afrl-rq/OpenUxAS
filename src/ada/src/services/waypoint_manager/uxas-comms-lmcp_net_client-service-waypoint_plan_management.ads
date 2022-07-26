@@ -31,34 +31,9 @@ package UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
 private
 
    type Waypoint_Plan_Manager_Service is new Service_Base with record
-
       WPM_Timer : Common.Int64 := 0;
       WPM_Timer_Triggered : Boolean := False;
-
-      -- ID of the vehicle that this manager is working for
-      VehicleID : Common.Int64 := -1;
-
-      -- Radius to use for loiters that are added by the waypoint manager
-      LoiterRadiusDefault : Common.Real64 := 200.0;
-      -- Add an infinite loiter to the end of each waypoint segment served
-      -- IsAddLoiterToEndOfSegments : Boolean := False;
-      -- Add an infinite loiter to the last waypoint in the mission
-      -- IsAddLoiterToEndOfMission : Boolean := False;
-      -- Use the index of the first waypoint with an associated task
-      -- as the last waypoint in the mission's "NextWaypoint"
-      -- IsLoopBackToFirstTask : Boolean := False;
-      -- Set the speed of the last waypoint in the mission to 0.
-      -- Used for vehicles (ground, surface) that should stop at end of plan.
-      -- IsSetLastWaypointSpeedTo0 : Boolean := False;
-      -- The turn type to send out in mission commands
-      TurnType : AFRL.CMASI.Enumerations.TurnTypeEnum := TurnShort;
-      -- Minimun time between send in mission commands
       TimeBetweenMissionCommandsMin_ms : Common.Int64 := 1000;
-      -- Payload Id to use for addressing the managed vehicle's gimbal
-      GimbalPayloadId : Common.Int64 := -1;
-
-      -- Stored_MC, Seg_MC : MissionCommand_Acc;
-
       Config  : Waypoint_Plan_Manager_Configuration_Data;
       Mailbox : Waypoint_Plan_Manager_Mailbox;
       State   : Waypoint_Plan_Manager_State;
