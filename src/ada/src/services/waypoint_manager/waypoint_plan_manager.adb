@@ -47,39 +47,39 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
      (State : in out Waypoint_Plan_Manager_State;
       MC : MissionCommand)
    is
-      FirstID : Pos64 := MC.FirstWaypoint;
+      First_ID : Pos64 := MC.FirstWaypoint;
       M : ID_Map;
       ID_List : ID_Vector;
    begin
 
       State.MC := MC;
       State.New_Command := True;
-      State.Next_Segment_ID := FirstID;
-      State.Next_FirstID := FirstID;
+      State.Next_Segment_ID := First_ID;
+      State.Next_First_ID := First_ID;
       Extract_MissionCommand_Maps (State, MC);
       Clear (State.Prefix);
       Clear (State.Cycle);
       M := State.Succ_IDs;
 
       -- Handle FirstID
-      if Contains (State.Succ_IDs, FirstID) then
-         if Element (State.Succ_IDs, FirstID) = 0
-             or else not Contains (State.Succ_IDs, Pos64 (Element (State.Succ_IDs, FirstID))) -- Had to add Positive here for SPARK
-             or else Element (State.Succ_IDs, FirstID) = FirstID
+      if Contains (State.Succ_IDs, First_ID) then
+         if Element (State.Succ_IDs, First_ID) = 0
+             or else not Contains (State.Succ_IDs, Pos64 (Element (State.Succ_IDs, First_ID))) -- Had to add Positive here for SPARK
+             or else Element (State.Succ_IDs, First_ID) = First_ID
          then
             -- FirstID has no successors or points to itself. Return.
-            Append (State.Prefix, FirstID);
+            Append (State.Prefix, First_ID);
             return;
          else
             -- FirstID has a successor. Continue.
-            Append (ID_List, FirstID);
-            Append (ID_List, Element (State.Succ_IDs, FirstID));
-            Delete (M, FirstID);
+            Append (ID_List, First_ID);
+            Append (ID_List, Element (State.Succ_IDs, First_ID));
+            Delete (M, First_ID);
          end if;
       else
          -- FirstID not known. Return.
          State.Next_Segment_ID := 0;
-         State.Next_FirstID := 0;
+         State.Next_First_ID := 0;
          return;
       end if;
 
@@ -92,7 +92,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
          if Element (M, K) = First_Element (ID_List) then
             if Last_Element (ID_List) = K then
                -- FirstID cycles with its precedessor. Return.
-               State.Next_FirstID := K;
+               State.Next_First_ID := K;
                State.Cycle := ID_List;
                return;
             else
@@ -169,7 +169,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
       Mailbox : in out Waypoint_Plan_Manager_Mailbox)
    is
       ID : constant Pos64 := State.Next_Segment_ID;
-      FirstID : constant Pos64 := State.Next_FirstID;
+      First_ID : constant Pos64 := State.Next_First_ID;
       Prefix : constant ID_Vector := State.Prefix;
       Cycle : constant ID_Vector := State.Cycle;
       Len : constant Positive := Positive (Config.NumberWaypointsToServe);
@@ -181,7 +181,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
    begin
 
       State.Next_Segment_ID := 0;
-      State.Next_FirstID := 0;
+      State.Next_First_ID := 0;
       State.New_Command := False;
       Clear (State.Segment);
 
@@ -199,7 +199,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
             State.Next_Segment_ID := Element (Prefix, C);
          end if;
          if I = Len - Overlap + 2 then
-            State.Next_FirstID := Element (Prefix, C);
+            State.Next_First_ID := Element (Prefix, C);
          end if;
          C := Iter_Next (Prefix, C);
          I := I + 1;
@@ -218,7 +218,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
             State.Next_Segment_ID := Element (Cycle, C);
          end if;
          if I = Len - Overlap + 2 then
-            State.Next_FirstID := Element (Cycle, C);
+            State.Next_First_ID := Element (Cycle, C);
          end if;
          C := Iter_Next (Cycle, C);
          if not Iter_Has_Element (Cycle, C) then
@@ -231,20 +231,21 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
       declare
          MC_Out : MissionCommand := State.MC;
          WP_List : WP_Seq;
-         WP_ID : Pos64;
+         ID : Pos64;
          WP : Waypoint;
       begin
-         MC_Out.FirstWaypoint := FirstID;
+         MC_Out.FirstWaypoint := First_ID;
          for I in First_Index (State.Segment) .. Last_Index (State.Segment) loop
-            WP_ID := Element (State.Segment, I);
-            if Contains (State.WPs, WP_ID) then
-               WP := Element (State.WPs, WP_ID);
+            ID := Element (State.Segment, I);
+            if Contains (State.WPs, ID) then
+               WP := Element (State.WPs, ID);
                if I = Last_Index (State.Segment) then
                   WP.NextWaypoint := WP.Number;
-                  -- Here's where you would add all other other waypoint settings
-                  WP.TurnType := Config.TurnType;
-                  --WP.
+                  -- TODO: Extend SPARK messages to handle
+                  -- VehicleAction -> NavigationAction -> LoiterAction
+                  -- VehicleAction -> PayloadAction -> GimbalAngleAction
                end if;
+               WP.TurnType := Config.TurnType;
                WP_List := Add (WP_List, WP);
             end if;
             pragma Loop_Invariant
@@ -262,7 +263,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
    is
    begin
       Put_Line ("MissionCommand.FirstWaypoint: " & MC.FirstWaypoint'Image);
-      Put ("MissionCommand.WaypointList IDs: ");
+      Put ("MissionCommand.WaypointList: ");
       for WP of MC.WaypointList loop
          Put ("[" & WP.Number'Image & ", " & WP.NextWaypoint'Image & "] ");
       end loop;
@@ -317,14 +318,14 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
       Print (State.Succ_IDs);
       Put_Line ("New_Command : " & (if State.New_Command then "True" else "False"));
       Put_Line ("Next_Segment_ID : " & State.Next_Segment_ID'Image);
-      Put_Line ("Next_FirstID : " & State.Next_FirstID'Image);
+      Put_Line ("Next_FirstID : " & State.Next_First_ID'Image);
       Put ("Prefix : ");
       Print (State.Prefix);
       Put ("Cycle : ");
       Print (State.Cycle);
       Put ("Segment : ");
       Print (State.Segment);
-      Put_Line ("AV_WP_ID : " & State.AV_WP_ID'Image);
+      Put_Line ("Headed_To_First_ID : " & State.Headed_To_First_ID'Image);
 
    end Print;
 

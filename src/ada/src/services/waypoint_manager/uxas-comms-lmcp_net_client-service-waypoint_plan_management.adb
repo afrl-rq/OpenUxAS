@@ -149,14 +149,16 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
    begin
       -- If the AVS is for this vehicle, update timer and waypoint state
       if AV_ID = This.Config.VehicleID then
-         if This.WPM_Timer = 0 then
-            This.WPM_Timer := Time;
+         if This.Timer = 0 then
+            This.Timer := Time;
          end if;
-         if Time - This.WPM_Timer > This.TimeBetweenMissionCommandsMin_ms then
-            This.WPM_Timer := Time;
-            This.WPM_Timer_Triggered := True;
+         if Time - This.Timer > This.Min_Time_Between_Commands_ms then
+            This.Timer := Time;
+            This.Time_Elapsed := True;
          end if;
-         This.State.AV_WP_ID := Pos64 (WP_ID);
+         if WP_ID = This.State.Next_First_ID then
+            This.State.Headed_To_First_ID := True;
+         end if;
       end if;
    end Handle_AirVehicleState_Msg;
 
@@ -240,26 +242,23 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
          This.Handle_AutomationResponse_Msg (Received_Message);
       end if;
 
-      if This.WPM_Timer_Triggered then
+      if This.Time_Elapsed then
 
-         Put_Line ("Timer Triggered.");
-
-         if (This.State.New_Command and This.State.Next_Segment_ID > 0 and This.State.Next_FirstID > 0)
-           or else (not This.State.New_Command and This.State.AV_WP_ID = This.State.Next_FirstID)
+         if (This.State.New_Command and This.State.Next_Segment_ID > 0 and This.State.Next_First_ID > 0)
+           or else (not This.State.New_Command and This.State.Headed_To_First_ID)
          then
-
             Print (This.State);
             Produce_Segment (This.State, This.Config, This.Mailbox);
             Put_Line ("===Producing Segment===");
             Print (This.State);
-
+            This.Time_Elapsed := False;
+            This.State.Headed_To_First_ID := False;
          end if;
-
-         This.WPM_Timer_Triggered := False;
 
       end if;
 
       Should_Terminate := False;
+
    end Process_Received_LMCP_Message;
 
    ---------------------------------

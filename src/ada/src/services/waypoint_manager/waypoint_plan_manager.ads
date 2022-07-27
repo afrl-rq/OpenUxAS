@@ -23,12 +23,12 @@ package Waypoint_Plan_Manager with SPARK_Mode is
    type ID_Vector is new ID_Vectors.Vector (Max + 5);
 
    type Waypoint_Plan_Manager_Configuration_Data is record
-      -- Max number of waypoints to serve for each segment.
-      -- Defaults to Max to serve them all. Minimum is 1.
+      -- Max number of waypoints to serve for each segment. Minimum 1.
+      -- Default to Max to serve them all.
       NumberWaypointsToServe : Common.UInt32 := Common.UInt32 (Max);
       -- Number of waypoints remaining before starting the next segment.
       -- Minimum is 2.
-      NumberWaypointsOverlap : Common.UInt32 := 3;
+      NumberWaypointsOverlap : Common.UInt32 := 2;
       -- Radius to use for loiters added by the waypoint manager
       LoiterRadiusDefault : Common.Real64 := 200.0;
       -- Turn type to use for loiters added by the waypoint manager
@@ -45,11 +45,11 @@ package Waypoint_Plan_Manager with SPARK_Mode is
       Succ_IDs : ID_Map;
       New_Command : Boolean;
       Next_Segment_ID : Nat64 := 0;
-      Next_FirstID : Nat64 := 0;
+      Next_First_ID : Nat64 := 0;
       Prefix : ID_Vector;
       Cycle : ID_Vector;
       Segment : ID_Vector;
-      AV_WP_ID : Pos64;
+      Headed_To_First_ID : Boolean := False;
    end record;
 
    procedure Handle_MissionCommand
@@ -64,7 +64,7 @@ package Waypoint_Plan_Manager with SPARK_Mode is
       Config : Waypoint_Plan_Manager_Configuration_Data;
       Mailbox : in out Waypoint_Plan_Manager_Mailbox)
      with Pre =>
-       State.Next_FirstID > 0 and then
+       State.Next_First_ID > 0 and then
        State.Next_Segment_ID > 0 and then
        Config.NumberWaypointsToServe >= 1 and then
        Config.NumberWaypointsToServe <= UInt32 (Max) and then

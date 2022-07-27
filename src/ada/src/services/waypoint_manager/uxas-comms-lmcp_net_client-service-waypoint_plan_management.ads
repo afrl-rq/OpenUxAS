@@ -31,9 +31,9 @@ package UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
 private
 
    type Waypoint_Plan_Manager_Service is new Service_Base with record
-      WPM_Timer : Common.Int64 := 0;
-      WPM_Timer_Triggered : Boolean := False;
-      TimeBetweenMissionCommandsMin_ms : Common.Int64 := 1000;
+      Timer        : Common.Int64 := 0;
+      Time_Elapsed : Boolean := False;
+      Min_Time_Between_Commands_ms : Common.Int64 := 1000;
       Config  : Waypoint_Plan_Manager_Configuration_Data;
       Mailbox : Waypoint_Plan_Manager_Mailbox;
       State   : Waypoint_Plan_Manager_State;
