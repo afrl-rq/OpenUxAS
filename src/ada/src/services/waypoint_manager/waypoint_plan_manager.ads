@@ -1,4 +1,4 @@
-with Ada.Containers.Formal_Ordered_Maps;
+with Ada.Containers.Formal_Hashed_Maps;
 with Ada.Containers.Formal_Vectors;
 with Ada.Containers;                             use all type Ada.Containers.Count_Type;
 with Waypoint_Plan_Manager_Communication;        use Waypoint_Plan_Manager_Communication;
@@ -13,17 +13,20 @@ package Waypoint_Plan_Manager with SPARK_Mode is
 
    subtype Nat64 is Int64 range 0 .. Int64'Last;
 
-   package WP_Maps is new Ada.Containers.Formal_Ordered_Maps (Pos64, Waypoint);
-   type WP_Map is new WP_Maps.Map (Max);
+   function Pos64_Hash (X : Pos64) return Ada.Containers.Hash_Type is
+     (Ada.Containers.Hash_Type'Mod (X));
 
-   package ID_Maps is new Ada.Containers.Formal_Ordered_Maps (Pos64, Nat64);
-   type ID_Map is new ID_Maps.Map (Max);
+   package WP_Maps is new Ada.Containers.Formal_Hashed_Maps (Pos64, Waypoint, Pos64_Hash);
+   type WP_Map is new WP_Maps.Map (Max, WP_Maps.Default_Modulus (Max));
+
+   package ID_Maps is new Ada.Containers.Formal_Hashed_Maps (Pos64, Nat64, Pos64_Hash);
+   type ID_Map is new ID_Maps.Map (Max, ID_Maps.Default_Modulus (Max));
 
    package ID_Vectors is new Ada.Containers.Formal_Vectors (Positive, Pos64);
-   type ID_Vector is new ID_Vectors.Vector (Max + 5);
+   type ID_Vector is new ID_Vectors.Vector (Max + 1);
 
    type Waypoint_Plan_Manager_Configuration_Data is record
-      -- Max number of waypoints to serve for each segment. Minimum 1.
+      -- Max number of waypoints to serve for each segment. Minimum 3.
       -- Default to Max to serve them all.
       NumberWaypointsToServe : Common.UInt32 := Common.UInt32 (Max);
       -- Number of waypoints remaining before starting the next segment.
@@ -66,10 +69,10 @@ package Waypoint_Plan_Manager with SPARK_Mode is
      with Pre =>
        State.Next_First_ID > 0 and then
        State.Next_Segment_ID > 0 and then
-       Config.NumberWaypointsToServe >= 1 and then
-       Config.NumberWaypointsToServe <= UInt32 (Max) and then
        Config.NumberWaypointsOverlap >= 2 and then
-       Config.NumberWaypointsOverlap <= UInt32 (Max) - 1;
+       Config.NumberWaypointsOverlap <= UInt32 (Max) - 1 and then
+       Config.NumberWaypointsToServe > Config.NumberWaypointsOverlap and then
+       Config.NumberWaypointsToServe <= UInt32 (Max);
 
    procedure Print (State : Waypoint_Plan_Manager_State);
 

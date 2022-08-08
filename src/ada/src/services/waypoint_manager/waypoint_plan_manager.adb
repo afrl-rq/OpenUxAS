@@ -87,6 +87,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
       -- We already checked that FirstID does not point to itself.
       pragma Assert (not Is_Empty (ID_List));
       pragma Assert (Length (ID_List) = 2);
+      pragma Assert (Length (M) <= Max - 1);
 
       for K of M loop
          if Element (M, K) = First_Element (ID_List) then
@@ -100,12 +101,15 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
                State.Next_Segment_ID := K;
                Prepend (ID_List, K);
                Delete (M, K);
+               exit;
             end if;
-            exit;
          end if;
          pragma Loop_Invariant (Length (ID_List) <= 3);
+         pragma Loop_Invariant (Length (M) <= Max - 1);
          pragma Loop_Invariant (not Is_Empty (ID_List));
       end loop;
+
+      pragma Assert (Length (M) <= Max - 1);
 
       while Length (M) > 0 loop
 
@@ -117,7 +121,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
                State.Prefix := ID_List;
                return;
             elsif Contains (ID_List, Element (M, Last_Element (ID_List))) then
-               -- Found a cycle. Copy first part of ID_List to prefix and rest to cycle.
+               -- Found a cycle. Copy first part of ID_List to prefix and the rest to cycle.
                declare
                   Index : ID_Vectors.Extended_Index;
                   Next_ID : Pos64 := Element (M, Last_Element (ID_List));
@@ -148,10 +152,8 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
             return;
          end if;
 
-         pragma Loop_Invariant (Length (M) <= ID_List.Capacity - 4);
-         pragma Loop_Invariant
-           (Length (ID_List) <= 3 + Length (M'Loop_Entry) - Length (M));
          pragma Loop_Invariant (not Is_Empty (ID_List));
+         pragma Loop_Invariant (Length (ID_List) <= Max - Length (M) + 1);
       end loop;
 
       -- There are no more keys in the map, so everything is in the prefix.
