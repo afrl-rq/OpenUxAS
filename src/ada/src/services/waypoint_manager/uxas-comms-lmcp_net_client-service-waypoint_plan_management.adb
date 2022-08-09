@@ -156,8 +156,8 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
             This.Timer := Time;
             This.Time_Elapsed := True;
          end if;
-         if WP_ID = This.State.Next_First_ID then
-            This.State.Headed_To_First_ID := True;
+         if WP_ID = This.State.Next_First_Id then
+            This.State.Headed_To_First_Id := True;
          end if;
       end if;
    end Handle_AirVehicleState_Msg;
@@ -193,8 +193,8 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
       for MC of Vec_MC_Acc_Acc.all loop
          if Common.Int64 (MC.getVehicleID) = This.Config.VehicleID then
             Handle_MissionCommand (This.State, As_MissionCommand_Message (MC));
-            Put_Line ("Got AR.");
-            Print (This.State);
+            -- Put_Line ("Got AR.");
+            -- Print (This.State);
             exit;
          end if;
       end loop;
@@ -209,9 +209,9 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
      (This   : in out Waypoint_Plan_Manager_Service;
       Result : out Boolean)
    is
-      -- since not doing the Timers
+      -- Since we are not doing the Timers
    begin
-      --  the C++ version creates the timers here (but we don't, unless we implement the timers).
+      --  the C++ version creates the timers here (but we don't currently).
       Waypoint_Plan_Manager_Communication.Initialize
         (This.Mailbox,
          Source_Group => Value (This.Message_Source_Group),
@@ -244,15 +244,12 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
 
       if This.Time_Elapsed then
 
-         if (This.State.New_Command and This.State.Next_Segment_ID > 0 and This.State.Next_First_ID > 0)
-           or else (not This.State.New_Command and This.State.Headed_To_First_ID)
+         if (This.State.New_Command and This.State.Next_Segment_Id > 0 and This.State.Next_First_Id > 0)
+           or else (not This.State.New_Command and This.State.Headed_To_First_Id)
          then
-            Print (This.State);
             Produce_Segment (This.State, This.Config, This.Mailbox);
-            Put_Line ("===Producing Segment===");
-            Print (This.State);
             This.Time_Elapsed := False;
-            This.State.Headed_To_First_ID := False;
+            This.State.Headed_To_First_Id := False;
          end if;
 
       end if;
@@ -287,7 +284,8 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
             return LMCP_Messages.TurnTypeEnum'Value (Attr_Value);
          exception
             when others =>
-               Put_Line ("Could not convert " & Attr_Value & " to TurnTypeEnum. Using default " & Default'Image);
+               Put_Line ("Could not convert " & Attr_Value &
+                           " to TurnTypeEnum. Using default " & Default'Image);
                return Default;
          end;
       else
@@ -314,7 +312,8 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
             return Common.UInt32'Value (Attr_Value);
          exception
             when others =>
-               Put_Line ("Could not convert " & Attr_Value & " to UInt32. Using default " & Default'Image);
+               Put_Line ("Could not convert " & Attr_Value &
+                           " to UInt32. Using default " & Default'Image);
                return Default;
          end;
       else
@@ -341,7 +340,8 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
             return Common.Int64'Value (Attr_Value);
          exception
             when others =>
-               Put_Line ("Could not convert " & Attr_Value & " to Int64. Using default " & Default'Image);
+               Put_Line ("Could not convert " & Attr_Value &
+                           " to Int64. Using default " & Default'Image);
                return Default;
          end;
       else
@@ -368,7 +368,8 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
             return Common.Real64'Value (Attr_Value);
          exception
             when others =>
-               Put_Line ("Could not convert " & Attr_Value & " to Real64. Using default " & Default'Image);
+               Put_Line ("Could not convert " & Attr_Value &
+                           " to Real64. Using default " & Default'Image);
                return Default;
          end;
       else
@@ -395,7 +396,8 @@ package body UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
             return Boolean'Value (Attr_Value);
          exception
             when others =>
-               Put_Line ("Could not convert " & Attr_Value & " to Boolean. Using default " & Default'Image);
+               Put_Line ("Could not convert " & Attr_Value &
+                           " to Boolean. Using default " & Default'Image);
                return Default;
          end;
       else

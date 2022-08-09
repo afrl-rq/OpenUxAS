@@ -1,5 +1,3 @@
---  see OpenUxAS\src\Services\WaypointPlanManagerService.h
-
 with DOM.Core;
 
 with Waypoint_Plan_Manager;               use Waypoint_Plan_Manager;
@@ -20,12 +18,8 @@ package UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Management is
 
    Directory_Name : constant String := "";
 
-   --  static const std::vector<std::string>
-   --  s_registryServiceTypeNames()
    function Registry_Service_Type_Names return Service_Type_Names_List;
 
-   --  static ServiceBase*
-   --  create()
    function Create return Any_Service;
 
 private

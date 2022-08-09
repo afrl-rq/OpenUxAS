@@ -16,22 +16,24 @@ package Waypoint_Plan_Manager with SPARK_Mode is
    function Pos64_Hash (X : Pos64) return Ada.Containers.Hash_Type is
      (Ada.Containers.Hash_Type'Mod (X));
 
-   package WP_Maps is new Ada.Containers.Formal_Hashed_Maps (Pos64, Waypoint, Pos64_Hash);
-   type WP_Map is new WP_Maps.Map (Max, WP_Maps.Default_Modulus (Max));
+   package Pos64_WP_Maps is new Ada.Containers.Formal_Hashed_Maps (Pos64, Waypoint, Pos64_Hash);
+   type Pos64_WP_Map is new Pos64_WP_Maps.Map (Max, Pos64_WP_Maps.Default_Modulus (Max));
 
-   package ID_Maps is new Ada.Containers.Formal_Hashed_Maps (Pos64, Nat64, Pos64_Hash);
-   type ID_Map is new ID_Maps.Map (Max, ID_Maps.Default_Modulus (Max));
+   package Pos64_Nat64_Maps is new Ada.Containers.Formal_Hashed_Maps (Pos64, Nat64, Pos64_Hash);
+   type Pos64_Nat64_Map is new Pos64_Nat64_Maps.Map (Max, Pos64_Nat64_Maps.Default_Modulus (Max));
 
-   package ID_Vectors is new Ada.Containers.Formal_Vectors (Positive, Pos64);
-   type ID_Vector is new ID_Vectors.Vector (Max + 1);
+   package Pos64_Vectors is new Ada.Containers.Formal_Vectors (Positive, Pos64);
+   type Pos64_Vector is new Pos64_Vectors.Vector (Max + 1);
 
    type Waypoint_Plan_Manager_Configuration_Data is record
-      -- Max number of waypoints to serve for each segment. Minimum 3.
+
+      -- Number of waypoints remaining before starting the next segment.
+      -- Value must be in [2, Max - 1]
+      NumberWaypointsOverlap : Common.UInt32 := 2;
+      -- Max number of waypoints to serve for each segment.
+      -- Value must be in [NumberWaypointsOverlap + 1, Max].
       -- Default to Max to serve them all.
       NumberWaypointsToServe : Common.UInt32 := Common.UInt32 (Max);
-      -- Number of waypoints remaining before starting the next segment.
-      -- Minimum is 2.
-      NumberWaypointsOverlap : Common.UInt32 := 2;
       -- Radius to use for loiters added by the waypoint manager
       LoiterRadiusDefault : Common.Real64 := 200.0;
       -- Turn type to use for loiters added by the waypoint manager
@@ -44,15 +46,15 @@ package Waypoint_Plan_Manager with SPARK_Mode is
 
    type Waypoint_Plan_Manager_State is record
       MC : MissionCommand;
-      WPs : WP_Map;
-      Succ_IDs : ID_Map;
+      Id_To_Waypoint : Pos64_WP_Map;
+      Id_To_Next_Id : Pos64_Nat64_Map;
       New_Command : Boolean;
-      Next_Segment_ID : Nat64 := 0;
-      Next_First_ID : Nat64 := 0;
-      Prefix : ID_Vector;
-      Cycle : ID_Vector;
-      Segment : ID_Vector;
-      Headed_To_First_ID : Boolean := False;
+      Next_Segment_Id : Nat64 := 0;
+      Next_First_Id : Nat64 := 0;
+      Prefix : Pos64_Vector;
+      Cycle : Pos64_Vector;
+      Segment : Pos64_Vector;
+      Headed_To_First_Id : Boolean := False;
    end record;
 
    procedure Handle_MissionCommand
@@ -67,14 +69,16 @@ package Waypoint_Plan_Manager with SPARK_Mode is
       Config : Waypoint_Plan_Manager_Configuration_Data;
       Mailbox : in out Waypoint_Plan_Manager_Mailbox)
      with Pre =>
-       State.Next_First_ID > 0 and then
-       State.Next_Segment_ID > 0 and then
+       State.Next_First_Id > 0 and then
+       State.Next_Segment_Id > 0 and then
        Config.NumberWaypointsOverlap >= 2 and then
        Config.NumberWaypointsOverlap <= UInt32 (Max) - 1 and then
        Config.NumberWaypointsToServe > Config.NumberWaypointsOverlap and then
        Config.NumberWaypointsToServe <= UInt32 (Max);
 
    procedure Print (State : Waypoint_Plan_Manager_State);
+
+   procedure Print (MC : MissionCommand);
 
 private
 
