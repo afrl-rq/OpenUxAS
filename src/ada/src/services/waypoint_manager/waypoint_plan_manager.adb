@@ -170,8 +170,8 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
       Config : Waypoint_Plan_Manager_Configuration_Data;
       Mailbox : in out Waypoint_Plan_Manager_Mailbox)
    is
-      ID : constant Pos64 := State.Next_Segment_Id;
-      First_ID : constant Pos64 := State.Next_First_Id;
+      Id : constant Pos64 := State.Next_Segment_Id;
+      First_Id : constant Pos64 := State.Next_First_Id;
       Prefix : constant Pos64_Vector := State.Prefix;
       Cycle : constant Pos64_Vector := State.Cycle;
       Len : constant Positive := Positive (Config.NumberWaypointsToServe);
@@ -187,7 +187,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
       State.New_Command := False;
       Clear (State.Segment);
 
-      C := Find_Index (Prefix, ID);
+      C := Find_Index (Prefix, Id);
       In_Prefix := (if C /= Pos64_Vectors.No_Index then True else False);
 
       while C in First_Index (Prefix) .. Last_Index (Prefix) and then I <= Len loop
@@ -200,7 +200,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
       if In_Prefix then
          C := First_Index (Cycle);
       else
-         C := Find_Index (Cycle, ID);
+         C := Find_Index (Cycle, Id);
       end if;
 
       while C in First_Index (Cycle) .. Last_Index (Cycle) and then I <= Len loop
@@ -221,14 +221,14 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
       declare
          MC_Out : MissionCommand := State.MC;
          WP_List : WP_Seq;
-         ID : Pos64;
+         Id : Pos64;
          WP : Waypoint;
       begin
-         MC_Out.FirstWaypoint := First_ID;
+         MC_Out.FirstWaypoint := First_Id;
          for I in First_Index (State.Segment) .. Last_Index (State.Segment) loop
-            ID := Element (State.Segment, I);
-            if Contains (State.Id_To_Waypoint, ID) then
-               WP := Element (State.Id_To_Waypoint, ID);
+            Id := Element (State.Segment, I);
+            if Contains (State.Id_To_Waypoint, Id) then
+               WP := Element (State.Id_To_Waypoint, Id);
                if I = Last_Index (State.Segment) then
                   WP.NextWaypoint := WP.Number;
                   -- TODO: Extend SPARK messages to handle
