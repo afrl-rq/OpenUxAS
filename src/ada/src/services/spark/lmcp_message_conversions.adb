@@ -414,7 +414,7 @@ package body LMCP_Message_Conversions is
    -------------------------------
 
    function As_MissionCommand_Message
-     (Msg : MissionCommand_Acc)
+     (Msg : not null MissionCommand_Acc)
       return LMCP_Messages.MissionCommand
    is
       Result : LMCP_Messages.MissionCommand;
