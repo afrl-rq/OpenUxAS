@@ -19,8 +19,7 @@ class Uxas(spec('common')):
             Anod.Dependency('zyre'),
             Anod.Dependency('sqlite'),
             Anod.Dependency('boost'),
-            Anod.Dependency('sqlitecpp'),
-            Anod.Dependency('jsonmcpp')]
+            Anod.Dependency('sqlitecpp')]
 
     @property
     def build_source_list(self):
@@ -65,7 +64,6 @@ class Uxas(spec('common')):
         self.deps['sqlitecpp'].setenv()
         self.deps['boost'].setenv()
         self.deps['czmq'].setenv()
-        self.deps['jsonmcpp'].setenv()
 
     @Anod.primitive()
     def build(self):
