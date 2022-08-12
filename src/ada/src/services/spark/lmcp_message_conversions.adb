@@ -43,9 +43,9 @@ package body LMCP_Message_Conversions is
      (Msg : LMCP_Messages.MissionCommand)
       return MissionCommand_Acc;
 
-   function As_MissionCommand_Message
-     (Msg : MissionCommand_Acc)
-      return LMCP_Messages.MissionCommand;
+   --  function As_MissionCommand_Message
+   --    (Msg : MissionCommand_Acc)
+   --     return LMCP_Messages.MissionCommand;
 
    function As_RouteConstraints_Acc
      (Msg : LMCP_Messages.RouteConstraints)
@@ -414,7 +414,7 @@ package body LMCP_Message_Conversions is
    -------------------------------
 
    function As_MissionCommand_Message
-     (Msg : MissionCommand_Acc)
+     (Msg : not null MissionCommand_Acc)
       return LMCP_Messages.MissionCommand
    is
       Result : LMCP_Messages.MissionCommand;
@@ -464,7 +464,7 @@ package body LMCP_Message_Conversions is
       --  versions) to write the message objects to a byte array, then use
       --  Unpack to get the LMCP pointer type from that. We'd need a function
       --  mapping Message_Root tags to the LMCP enumeration identifying message
-      --  types (which handles the necessary ommision of writing the tags)
+      --  types (which handles the necessary omission of writing the tags)
 
       if Msg in LMCP_Messages.RoutePlanRequest'Class then
          Result := AVTAS.LMCP.Object.Object_Any (As_RoutePlanRequest_Acc (LMCP_Messages.RoutePlanRequest'Class (Msg)));
@@ -498,6 +498,9 @@ package body LMCP_Message_Conversions is
 
       elsif Msg in LMCP_Messages.AutomationResponse'Class then
          Result := AVTAS.LMCP.Object.Object_Any (As_AutomationResponse_Acc (LMCP_Messages.AutomationResponse'Class (Msg)));
+
+      elsif Msg in LMCP_Messages.MissionCommand'Class then
+         Result := AVTAS.LMCP.Object.Object_Any (As_MissionCommand_Acc (LMCP_Messages.MissionCommand (Msg)));
 
       else
          raise Program_Error with "unexpected message kind in Route_Aggregator_Message_Conversions.As_Object_Any";
