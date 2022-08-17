@@ -69,16 +69,12 @@ package Waypoint_Plan_Manager with SPARK_Mode is
       Config : Waypoint_Plan_Manager_Configuration_Data;
       Mailbox : in out Waypoint_Plan_Manager_Mailbox)
      with Pre =>
-       State.Next_First_Id > 0 and then
        State.Next_Segment_Id > 0 and then
+       State.Next_First_Id > 0 and then
        Config.NumberWaypointsOverlap >= 2 and then
        Config.NumberWaypointsOverlap <= UInt32 (Max) - 1 and then
        Config.NumberWaypointsToServe > Config.NumberWaypointsOverlap and then
        Config.NumberWaypointsToServe <= UInt32 (Max);
-
-   procedure Print (State : Waypoint_Plan_Manager_State);
-
-   procedure Print (MC : MissionCommand);
 
 private
 
