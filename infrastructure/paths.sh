@@ -12,37 +12,40 @@ else
     export OPENUXAS_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/.. >/dev/null 2>&1 && pwd )"
 fi
 
-export ANOD_BIN="${OPENUXAS_ROOT}/anod"
+: "${ANOD_BIN:=${OPENUXAS_ROOT}/anod}"
 
-export DOC_DIR="${OPENUXAS_ROOT}/doc"
-export EXAMPLES_DIR="${OPENUXAS_ROOT}/examples"
-export INFRASTRUCTURE_DIR="${OPENUXAS_ROOT}/infrastructure"
-export MDMS_DIR="${OPENUXAS_ROOT}/mdms"
-export OBJ_DIR="${OPENUXAS_ROOT}/obj"
-export RESOURCES_DIR="${OPENUXAS_ROOT}/resources"
-export SRC_DIR="${OPENUXAS_ROOT}/src"
-export TESTS_DIR="${OPENUXAS_ROOT}/tests"
+: "${DOC_DIR:=${OPENUXAS_ROOT}/doc}"
+: "${EXAMPLES_DIR:=${OPENUXAS_ROOT}/examples}"
+: "${INFRASTRUCTURE_DIR:=${OPENUXAS_ROOT}/infrastructure}"
+: "${MDMS_DIR:=${OPENUXAS_ROOT}/mdms}"
+: "${OBJ_DIR:=${OPENUXAS_ROOT}/obj}"
+: "${RESOURCES_DIR:=${OPENUXAS_ROOT}/resources}"
+: "${SRC_DIR:=${OPENUXAS_ROOT}/src}"
+: "${TESTS_DIR:=${OPENUXAS_ROOT}/tests}"
 
-export CPP_DIR="${SRC_DIR}/cpp"
-export ADA_DIR="${SRC_DIR}/ada"
+: "${CPP_DIR:=${SRC_DIR}/cpp}"
+: "${ADA_DIR:=${SRC_DIR}/ada}"
 
-export UXAS_BIN="${OBJ_DIR}/cpp/uxas"
-export UXAS_ADA_BIN="${ADA_DIR}/uxas-ada"
+: "${UXAS_BIN:=${OBJ_DIR}/cpp/uxas}"
+: "${UXAS_ADA_BIN:=${ADA_DIR}/uxas-ada}"
 
-# For LmcpGen and OpenAMASE
-export SUPPORT_DIR="${OPENUXAS_ROOT}/develop"
-export LMCP_DIR="${SUPPORT_DIR}/LmcpGen"
-export AMASE_DIR="${SUPPORT_DIR}/OpenAMASE"
+: "${VPYTHON_DIR:=${OPENUXAS_ROOT}/.vpython}"
+: "${VPYTHON_ACTIVATE:=${VPYTHON_DIR}/bin/activate}"
 
-export VPYTHON_DIR="${OPENUXAS_ROOT}/.vpython"
-export VPYTHON_ACTIVATE="${VPYTHON_DIR}/bin/activate"
+: "${INSTALL_LIBEXEC_DIR:=${INFRASTRUCTURE_DIR}/install-libexec}"
+: "${SOFTWARE_DIR:=${INFRASTRUCTURE_DIR}/software}"
+: "${GNAT_DIR:=${SOFTWARE_DIR}/gnat}"
 
-export INSTALL_LIBEXEC_DIR="${INFRASTRUCTURE_DIR}/install-libexec"
-export SOFTWARE_DIR="${INFRASTRUCTURE_DIR}/software"
-export GNAT_DIR="${SOFTWARE_DIR}/gnat"
+: "${SPEC_DIR:=${INFRASTRUCTURE_DIR}/specs}"
+: "${SBX_DIR:=${INFRASTRUCTURE_DIR}/sbx}"
+: "${ARCH_DIR:=${SBX_DIR}/x86_64-linux}"
 
-export SPEC_DIR="${INFRASTRUCTURE_DIR}/specs"
-export SBX_DIR="${INFRASTRUCTURE_DIR}/sbx"
+: "${LMCP_DIR:=${ARCH_DIR}/lmcpgen/src}"
+: "${AMASE_DIR:=${ARCH_DIR}/amase/src}"
+
+: "${SUPPORT_DIR:=${OPENUXAS_ROOT}/develop}"
+: "${LMCP_DEVEL_DIR:=${SUPPORT_DIR}/LmcpGen}"
+: "${AMASE_DEVEL_DIR:=${SUPPORT_DIR}/OpenAMASE}"
 
 
 # Try to activate the python venv.
