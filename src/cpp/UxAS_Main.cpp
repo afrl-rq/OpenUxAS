@@ -1,7 +1,7 @@
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
-// 
+//
 // Copyright (c) 2017 Government of the United State of America, as represented by
 // the Secretary of the Air Force.  No copyright is claimed in the United States under
 // Title 17, U.S. Code.  All Other Rights Reserved.
@@ -52,10 +52,10 @@
 #define BEFORE_LOG_MANAGER_INITIALIZATION_LOG_MESSAGE(message) std::cout << message << std::endl; std::cout.flush();
 
 #ifdef GCOV_MODE
-extern "C" void __gcov_flush();
+extern "C" void __gcov_dump();
 
 void signalHandler( int signum ) {
-    __gcov_flush();
+    __gcov_dump();
     std::exit(signum);
 }
 #endif
@@ -76,7 +76,7 @@ main(int argc, char** argv)
     }
      */
 
-    // 
+    //
     // declare relative paths of configuration files with default values
     // example arguments: -cfgBasePath ./cfg/cfgbase2.xml
     //
@@ -181,7 +181,7 @@ main(int argc, char** argv)
      * (d) Services and bridges use the same socket addresses as components
      *     - static const std::string& strGetInProc_FromMessageHub(){static std::string strString("inproc://from_message_hub");return(strString);};
      *     - static const std::string& strGetInProc_ToMessageHub(){static std::string strString("inproc://to_message_hub");return(strString);};
-     * 
+     *
      */
 
     //

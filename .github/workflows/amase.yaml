@@ -1,33 +1,29 @@
 on:
-    push:
-        paths:
-            - 'infrastructure/uxas/**'
-            - 'infrastructure/paths.sh'
-            - 'infrastructure/specs/**'
-            - 'infrastructure/run_example.py'
-            - 'anod'
-            - 'src/cpp/**'
-            - 'run-example'
     pull_request:
         paths:
             - 'infrastructure/uxas/**'
             - 'infrastructure/paths.sh'
-            - 'infrastructure/specs/**'
-            - 'infrastructure/run_example.py'
+            - 'infrastructure/specs/amase.anod'
             - 'anod'
-            - 'src/cpp/**'
-            - 'run-example'
-    workflow_dispatch:
+    push:
+        paths:
+            - 'infrastructure/uxas/**'
+            - 'infrastructure/paths.sh'
+            - 'infrastructure/specs/amase.anod'
+            - 'anod'
     schedule:
-        - cron: '20 3 * * 4'
+        - cron: '45 3 * * 4'
+    workflow_dispatch:
 
-name: Test run-example
+name: Build OpenAMASE
 jobs:
     build:
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-18.04, ubuntu-20.04]
+                os: [ubuntu-18.04, ubuntu-20.04, ubuntu-22.04]
+                component: [amase]
+                qualifier: [scenario=release]
                 python-version: [3.7, 3.8]
         runs-on: ${{ matrix.os }}
         steps:
@@ -50,17 +46,7 @@ jobs:
                   cd OpenUxAS
                   infrastructure/install -vv --no-gnat --no-java -y
 
-            - name: Build OpenUxAS C++
-              run: |
-                  cd OpenUxAS
-                  ./anod -v build uxas
-
             - name: Build OpenAMASE
               run: |
                   cd OpenUxAS
-                  ./anod -v build amase
-
-            - name: Test run-example
-              run: |
-                  cd OpenUxAS
-                  ./run-example 01_HelloWorld
+                  ./anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
