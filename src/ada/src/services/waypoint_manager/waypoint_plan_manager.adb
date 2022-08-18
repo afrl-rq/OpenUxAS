@@ -54,79 +54,80 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
    begin
 
       State.MC := MC;
+      Extract_MissionCommand_Maps (State, MC);
       State.New_Command := True;
       State.Next_Segment_Id := First_Id;
       State.Next_First_Id := First_Id;
-      Extract_MissionCommand_Maps (State, MC);
       Clear (State.Prefix);
       Clear (State.Cycle);
       Ids := State.Id_To_Next_Id;
 
-      -- Handle FirstID
+      -- Look for First_Id.
       if Contains (Ids, First_Id) then
          if Successor (Ids, First_Id) = 0
              or else not Contains (Ids, Pos64 (Successor (Ids, First_Id)))
              or else Successor (Ids, First_Id) = First_Id
          then
-            -- FirstID has no successors or points to itself. Return.
+            -- First_Id has no successors. Return.
             Append (State.Prefix, First_Id);
             return;
          else
-            -- FirstID has a successor. Continue.
+            -- First_Id has a successor. Continue.
             Append (Id_List, First_Id);
             Append (Id_List, Successor (Ids, First_Id));
             Delete (Ids, First_Id);
          end if;
       else
-         -- FirstID not known. Return.
+         -- First_Id not found. Return with no segment.
          State.Next_Segment_Id := 0;
          State.Next_First_Id := 0;
          return;
       end if;
 
-      -- Try to find a predecessor for FirstID.
-      -- We already checked that FirstID does not point to itself.
       pragma Assert (not Is_Empty (Id_List));
       pragma Assert (Length (Id_List) = 2);
 
+      -- Look for a predecessor to First_Id.
+      -- We already checked that it does not point to itself.
       for Id of Ids loop
          if Successor (Ids, Id) = First_Element (Id_List) then
             if Last_Element (Id_List) = Id then
-               -- FirstID cycles with its precedessor. Return.
+               -- First_Id cycles with its precedessor. Return.
                State.Next_Segment_Id := Id;
                Reverse_Elements (Id_List);
                State.Cycle := Id_List;
                return;
             else
-               -- FirstID has precessor that starts the segment. Continue.
+               -- First_Id has a precessor. Continue.
                State.Next_Segment_Id := Id;
                Prepend (Id_List, Id);
                Delete (Ids, Id);
                exit;
             end if;
          end if;
+         pragma Loop_Invariant (not Is_Empty (Id_List));
          pragma Loop_Invariant (Length (Id_List) <= 3);
          pragma Loop_Invariant (Length (Ids) <= Max - 1);
-         pragma Loop_Invariant (not Is_Empty (Id_List));
       end loop;
 
+      -- Search for successors until done.
       while Length (Ids) > 0 loop
-
          if Contains (Ids, Last_Element (Id_List)) then
             if Successor (Ids, Last_Element (Id_List)) = 0
               or else not Contains (State.Id_To_Next_Id, Pos64 (Successor (Ids, Last_Element (Id_List))))
               or else Successor (Ids, Last_Element (Id_List)) = Last_Element (Id_List)
             then
-               -- No more elements found, so no cycle. Return a prefix only.
+               -- Candidate successor is 0 , unknown , or points to itself.
+               -- Return with a prefix only.
                State.Prefix := Id_List;
                return;
             elsif Contains (Id_List, Successor (Ids, Last_Element (Id_List))) then
-               -- Found a cycle. Copy first part of Id_List to prefix and the rest to cycle.
+               -- Found a cycle. Compute prefix & cycle. Return.
                declare
                   Index : Pos64_Vectors.Extended_Index;
-                  Next_ID : Pos64 := Successor (Ids, Last_Element (Id_List));
+                  Next_Id : Pos64 := Successor (Ids, Last_Element (Id_List));
                begin
-                  Index := Find_Index (Id_List, Next_ID);
+                  Index := Find_Index (Id_List, Next_Id);
                   for I in First_Index (Id_List) .. Index - 1 loop
                      Append (State.Prefix, Element (Id_List, I));
                      pragma Loop_Invariant (Integer (Length (State.Prefix)) = I - First_Index (Id_List) + 1);
@@ -138,7 +139,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
                   return;
                end;
             else
-               -- Found a successor that's not a cycle
+               -- Found a successor that's not a cycle.
                declare
                   Id : Pos64 := Last_Element (Id_List);
                begin
@@ -147,7 +148,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
                end;
             end if;
          else
-            -- Can't find successor. Nothing to add. No cycle.
+            -- Can't find a successor. Return a prefix.
             State.Prefix := Id_List;
             return;
          end if;
@@ -156,7 +157,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
          pragma Loop_Invariant (Length (Id_List) <= Max - Length (Ids) + 1);
       end loop;
 
-      -- There are no more keys in the map, so everything is in the prefix.
+      -- No more successors. Return a prefix.
       State.Prefix := Id_List;
 
    end Handle_MissionCommand;
@@ -182,9 +183,9 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
       In_Prefix : Boolean;
    begin
 
+      State.New_Command := False;
       State.Next_Segment_Id := 0;
       State.Next_First_Id := 0;
-      State.New_Command := False;
       Clear (State.Segment);
 
       C := Find_Index (Prefix, Id);
@@ -197,11 +198,7 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
          I := I + 1;
       end loop;
 
-      if In_Prefix then
-         C := First_Index (Cycle);
-      else
-         C := Find_Index (Cycle, Id);
-      end if;
+      C := (if In_Prefix then First_Index (Cycle) else Find_Index (Cycle, Id));
 
       while C in First_Index (Cycle) .. Last_Index (Cycle) and then I <= Len loop
          pragma Loop_Invariant (Natural (Length (State.Segment)) < I);
@@ -246,75 +243,5 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
       end;
 
    end Produce_Segment;
-
-   procedure Print (MC : MissionCommand)
-   is
-   begin
-      Put_Line ("MissionCommand.FirstWaypoint: " & MC.FirstWaypoint'Image);
-      Put ("MissionCommand.WaypointList: ");
-      for WP of MC.WaypointList loop
-         Put ("[" & WP.Number'Image & ", " & WP.NextWaypoint'Image & "] ");
-      end loop;
-      New_Line;
-   end Print;
-
-   procedure Print (WPs : Pos64_WP_Map);
-
-   procedure Print (WPs : Pos64_WP_Map)
-   is
-      WP : Waypoint;
-   begin
-      Put ("WPs: ");
-      for K of WPs loop
-         WP := Element (WPs, K);
-         Put ("[" & K'Image & ", (" & WP.Number'Image & ", " & WP.NextWaypoint'Image & ",)]");
-      end loop;
-      New_Line;
-
-   end Print;
-
-   procedure Print (Succ_IDs : Pos64_Nat64_Map);
-
-   procedure Print (Succ_IDs : Pos64_Nat64_Map)
-   is
-   begin
-      Put ("Succ_IDs: ");
-      for K of Succ_IDs loop
-         Put ("[" & K'Image & ", " & Element (Succ_IDs, K)'Image & "]");
-      end loop;
-      New_Line;
-
-   end Print;
-
-   procedure Print (Id_List : Pos64_Vector);
-
-   procedure Print (Id_List : Pos64_Vector)
-   is
-   begin
-      for K of Id_List loop
-         Put (K'Image & ", ");
-      end loop;
-      New_Line;
-
-   end Print;
-
-   procedure Print (State : Waypoint_Plan_Manager_State)
-   is
-   begin
-      Print (State.MC);
-      Print (State.Id_To_Waypoint);
-      Print (State.Id_To_Next_Id);
-      Put_Line ("New_Command : " & (if State.New_Command then "True" else "False"));
-      Put_Line ("Next_Segment_ID : " & State.Next_Segment_Id'Image);
-      Put_Line ("Next_FirstID : " & State.Next_First_Id'Image);
-      Put ("Prefix : ");
-      Print (State.Prefix);
-      Put ("Cycle : ");
-      Print (State.Cycle);
-      Put ("Segment : ");
-      Print (State.Segment);
-      Put_Line ("Headed_To_First_ID : " & State.Headed_To_First_Id'Image);
-
-   end Print;
 
 end Waypoint_Plan_Manager;
