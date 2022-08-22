@@ -141,7 +141,7 @@ Trying the anod-built OpenAMASE as a fall back.
 
 
 def check_amase_jar(path: str) -> bool:
-    """Test to make sure a path has the OpeAMASE jar."""
+    """Test to make sure a path has the OpenAMASE jar."""
     return os.path.exists(os.path.join(path, "OpenAMASE", "dist", "OpenAMASE.jar"))
 
 
