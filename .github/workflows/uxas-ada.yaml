@@ -4,26 +4,29 @@ on:
             - 'infrastructure/uxas/**'
             - 'infrastructure/paths.sh'
             - 'infrastructure/specs/**'
-            - 'resources/run-lmcpgen'
-            - 'resources/run_lmcpgen.py'
+            - 'anod'
+            - 'src/ada/**'
+            - 'tests/proof/**'
     pull_request:
         paths:
             - 'infrastructure/uxas/**'
             - 'infrastructure/paths.sh'
-            - 'infrastructure/specs/**'
-            - 'resources/run-lmcpgen'
-            - 'resources/run_lmcpgen.py'
+            - 'anod'
+            - 'src/ada/**'
+            - 'tests/proof/**'
     workflow_dispatch:
     schedule:
-        - cron: '20 3 * * 4'
+        - cron: '35 3 * * 4'
 
-name: Test Running LmcpGen
+name: "Build and Prove UxAS Ada Services"
 jobs:
     build:
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-18.04, ubuntu-20.04]
+                os: [ubuntu-18.04, ubuntu-20.04, ubuntu-22.04]
+                component: [uxas-ada]
+                qualifier: [scenario=release]
                 python-version: [3.7, 3.8]
         runs-on: ${{ matrix.os }}
         steps:
@@ -46,13 +49,18 @@ jobs:
                   cd OpenUxAS
                   infrastructure/install -vv --no-gnat --no-java -y
 
-            - name: LMCP and Amase devel setup
-              run: |
-                  cd OpenUxAS
-                  ./anod devel-setup lmcp
-                  ./anod devel-setup amase
+            - name: Install GNAT CE 2021
+              if: ${{ matrix.component == 'uxas-ada' }}
+              uses: ada-actions/toolchain@ce2021
+              with:
+                  distrib: community
 
-            - name: Run LmcpGen
+            - name: Build OpenUxAS Ada
               run: |
                   cd OpenUxAS
-                  resources/run-lmcpgen
+                  ./anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
+
+            - name: Prove OpenUxAS Ada
+              run: |
+                  cd OpenUxAS/tests/proof
+                  ./run-proofs -E --timeout=2400 --failure-exit-code=1

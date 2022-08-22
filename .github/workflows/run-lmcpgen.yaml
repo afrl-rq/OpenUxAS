@@ -4,29 +4,26 @@ on:
             - 'infrastructure/uxas/**'
             - 'infrastructure/paths.sh'
             - 'infrastructure/specs/**'
-            - 'anod'
-            - 'src/ada/**'
-            - 'tests/proof/**'
+            - 'resources/run-lmcpgen'
+            - 'resources/run_lmcpgen.py'
     pull_request:
         paths:
             - 'infrastructure/uxas/**'
             - 'infrastructure/paths.sh'
-            - 'anod'
-            - 'src/ada/**'
-            - 'tests/proof/**'
+            - 'infrastructure/specs/**'
+            - 'resources/run-lmcpgen'
+            - 'resources/run_lmcpgen.py'
     workflow_dispatch:
     schedule:
-        - cron: '35 3 * * 4'
+        - cron: '20 3 * * 4'
 
-name: "Build and Prove UxAS Ada Services"
+name: Test Running LmcpGen
 jobs:
     build:
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-18.04, ubuntu-20.04]
-                component: [uxas-ada]
-                qualifier: [scenario=release]
+                os: [ubuntu-18.04, ubuntu-20.04, ubuntu-22.04]
                 python-version: [3.7, 3.8]
         runs-on: ${{ matrix.os }}
         steps:
@@ -49,18 +46,13 @@ jobs:
                   cd OpenUxAS
                   infrastructure/install -vv --no-gnat --no-java -y
 
-            - name: Install GNAT CE 2021
-              if: ${{ matrix.component == 'uxas-ada' }}
-              uses: ada-actions/toolchain@ce2021
-              with:
-                  distrib: community
-
-            - name: Build OpenUxAS Ada
+            - name: LMCP and Amase devel setup
               run: |
                   cd OpenUxAS
-                  ./anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
+                  ./anod devel-setup lmcp
+                  ./anod devel-setup amase
 
-            - name: Prove OpenUxAS Ada
+            - name: Run LmcpGen
               run: |
-                  cd OpenUxAS/tests/proof
-                  ./run-proofs -E --timeout=2400 --failure-exit-code=1
+                  cd OpenUxAS
+                  resources/run-lmcpgen
