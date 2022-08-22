@@ -1,4 +1,4 @@
-"""Build LMCPgen and generate code and docs from MDMs."""
+"""Build LmcpGen and generate code and docs from MDMs."""
 
 from __future__ import annotations
 
@@ -9,17 +9,21 @@ import logging
 import re
 import subprocess
 import sys
-
 from typing import TYPE_CHECKING
+import yaml
 
 from uxas.paths import (
     OPENUXAS_ROOT,
     ANOD_BIN,
     MDMS_DIR,
+    DEFAULT_LMCP_DEVEL_DIR,
+    DEFAULT_AMASE_DEVEL_DIR,
+    LMCP_DEVEL_DIR,
     LMCP_DIR,
-    AMASE_DIR,
+    AMASE_DEVEL_DIR,
     CPP_DIR,
     DOC_DIR,
+    REPOSITORIES_YAML,
 )
 
 from uxas.util.logging import (
@@ -29,36 +33,35 @@ from uxas.util.logging import (
 )
 
 if TYPE_CHECKING:
+    from argparse import Namespace
     from typing import List
     from os import _Environ
 
 
 DESCRIPTION = """\
-This script will build LMCPgen and generate cpp, docs, and python from all
+This script will build LmcpGen and generate cpp, docs, and python from all
 MDMs in the OpenUxAS repository.
 """
 
-# Path variables. The assumption is that these should be read from the
-# environment, but we provide fallbacks just in case.
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-AMASE_LMCP_DIR = os.path.join(AMASE_DIR, "OpenAMASE", "lib", "LMCP")
+"""Path to the script directory."""
 
 ANT_CMD = ["ant", "-q", "jar"]
-
-LMCP_JAR = os.path.join(LMCP_DIR, "dist", "LmcpGen.jar")
-LMCP_CMD = ["java", "-Xmx2048m", "-jar", LMCP_JAR, "-mdmdir", MDMS_DIR]
+"""Command to run Ant."""
 
 SRC_CPP_LMCP = os.path.join(CPP_DIR, "LMCP")
+"""Path to the C++ LMCP directory."""
 
 DOC_LMCP = os.path.join(DOC_DIR, "LMCP")
+"""Path to the LMCP documentation directory."""
 
 PY_LMCP = os.path.join(SRC_CPP_LMCP, "py")
+"""Path to the Python LMCP directory."""
 
 
 def log_call(cmd: List[str], cwd: str, env: _Environ) -> None:
     """Log to debug and call."""
-    logging.debug("Run `%s{}` in %s", ' '.join(env), cwd)
+    logging.debug("Run `%s` in %s", " ".join(cmd), cwd)
     subprocess.run(cmd, cwd=cwd, env=env, check=True)
 
 
@@ -82,17 +85,125 @@ def compute_env() -> _Environ:
     return base_env
 
 
+UNBUILT_SPECIFIED_LMCPGEN = """\
+The LmcpGen path `%s` exists, but it hasn't been built. You should:
+
+    cd "%s" && %s
+
+You may need to put ant on your path first, like this:
+
+    eval "$( %s printenv ant )"
+"""
+
+MISSING_LMCPGEN = """\
+Before you can run LmcpGen, you need to build it. You should:
+
+    %s build lmcpgen
+"""
+
+
+def check_lmcp_jar(path: str) -> bool:
+    """Check if the LMCP jar exists."""
+    return os.path.exists(os.path.join(path, "dist", "LmcpGen.jar"))
+
+
+def resolve_lmcp_devel_dir() -> str:
+    """Resolve the LMCP development directory."""
+    if LMCP_DEVEL_DIR != DEFAULT_LMCP_DEVEL_DIR:
+        return LMCP_DEVEL_DIR
+
+    with open(REPOSITORIES_YAML, encoding="utf-8") as yaml_file:
+        loaded_yaml = yaml.safe_load(yaml_file.read())
+
+    if loaded_yaml["lmcpgen"]["vcs"] == "external":
+        return os.path.abspath(
+            os.path.join(OPENUXAS_ROOT, loaded_yaml["lmcpgen"]["url"])
+        )
+
+    # no better default...
+    return LMCP_DEVEL_DIR
+
+
+def build_lmcpgen(path: str, env: _Environ) -> None:
+    """Build LmcpGen."""
+    logging.info("Building LmcpGen")
+    log_call(ANT_CMD, path, env)
+    logging.info("Done building LmcpGen")
+
+
+def resolve_lmcp_dir(args: Namespace, env: _Environ) -> str:
+    """Resolve the LMCP directory."""
+    if args.lmcp_dir:
+        if not os.path.exists(args.lmcp_dir):
+            logging.critical(
+                "The specified LmcpGen path `%s` does not exist.", args.lmcp_dir
+            )
+            sys.exit(1)
+
+        if not check_lmcp_jar(args.lmcp_dir):
+            build_lmcpgen(args.lmcp_dir, env)
+
+        return args.lmcp_dir
+
+    lmcp_devel_dir = resolve_lmcp_devel_dir()
+    logging.info("Using LmcpGen development directory: %s", lmcp_devel_dir)
+
+    if os.path.exists(lmcp_devel_dir):
+        if not check_lmcp_jar(lmcp_devel_dir):
+            build_lmcpgen(lmcp_devel_dir, env)
+
+        return lmcp_devel_dir
+
+    if check_lmcp_jar(LMCP_DIR):
+        return LMCP_DIR
+
+    logging.critical(MISSING_LMCPGEN, ANOD_BIN)
+    sys.exit(1)
+
+
+def resolve_amase_devel_dir(args: Namespace) -> str:
+    """Resolve the AMASE development directory."""
+    if args.amase_dir:
+        if not os.path.exists(args.amase_dir):
+            logging.critical(
+                "The specified OpenAMASE path `%s` does not exist.", args.amase_dir
+            )
+            sys.exit(1)
+
+        return args.amase_dir
+
+    if AMASE_DEVEL_DIR != DEFAULT_AMASE_DEVEL_DIR:
+        return AMASE_DEVEL_DIR
+
+    with open(REPOSITORIES_YAML, encoding="utf-8") as yaml_file:
+        loaded_yaml = yaml.safe_load(yaml_file.read())
+
+    if loaded_yaml["amase"]["vcs"] == "external":
+        return os.path.abspath(os.path.join(OPENUXAS_ROOT, loaded_yaml["amase"]["url"]))
+
+    return AMASE_DEVEL_DIR
+
+
 def run_lmcp_gen_main() -> int:
-    """Run main script-like functionality for lmcpgen."""
+    """Run main script-like functionality for LmcpGen."""
     argument_parser = ArgumentParser(
         description=DESCRIPTION,
     )
     argument_parser.add_argument(
         "-a",
+        "--build-amase",
         dest="build_amase",
         action="store_true",
         default=False,
         help="build all languages, including  the java library for OpenAMASE",
+    )
+    argument_parser.add_argument(
+        "--lmcp-dir",
+        help="absolute path to the LmcpGen directory",
+    )
+    argument_parser.add_argument(
+        "--amase-dir",
+        help="absolute path to the OpenAMASE directory",
     )
 
     add_logging_group(argument_parser)
@@ -101,57 +212,51 @@ def run_lmcp_gen_main() -> int:
 
     activate_logger(args, get_logging_level(args))
 
-    if not os.path.isdir(LMCP_DIR):
-        logging.critical(
-            "LmcpGen is critical but not found at %s\n"
-            "        Run `anod devel-setup lmcp` and try again.",
-            LMCP_DIR
-        )
-        return 1
-
     env = compute_env()
 
-    logging.info("Building LmcpGen")
-    log_call(ANT_CMD, LMCP_DIR, env)
-    logging.info("Done building LmcpGen")
-
-    logging.info("Processing MDMs from %s...", MDMS_DIR)
-    logging.info("Generating CPP bindings in %s", SRC_CPP_LMCP)
-    log_call(LMCP_CMD + ["-cpp", "-dir", SRC_CPP_LMCP], OPENUXAS_ROOT, env)
-
-    if os.path.isdir(AMASE_DIR):
-        logging.info("Generating Java bindings in %s", AMASE_LMCP_DIR)
-        log_call(LMCP_CMD + ["-java", "-dir", AMASE_LMCP_DIR], OPENUXAS_ROOT, env)
-    else:
-        logging.warning(
-            "Cannot generate Java bindings - OpenAMASE not found in %s\n"
-            "        Run `anod devel-setup amase` and try again.",
-            AMASE_DIR
-        )
-
-    logging.info("Generating documentation in %s", DOC_LMCP)
-    log_call(LMCP_CMD + ["-doc", "-dir", DOC_LMCP], OPENUXAS_ROOT, env)
-
-    logging.info("Generating python bindings in %s", PY_LMCP)
-    log_call(LMCP_CMD + ["-py", "-dir", PY_LMCP], OPENUXAS_ROOT, env)
-    logging.info("Done processing MDMs")
-
     if args.build_amase:
-        if not os.path.isdir(AMASE_DIR):
+        amase_devel_dir = resolve_amase_devel_dir(args)
+
+        if not os.path.isdir(amase_devel_dir):
             logging.critical(
-                "Cannot build java library for OpenAMASE - OpenAMASE not found in %s\n"
-                "        Run `anod devel-setup amase` and try again.",
-                AMASE_DIR
+                "Cannot generate Java bindings or build java library for "
+                "OpenAMASE - OpenAMASE not found in %s\n"
+                "        Run `%s devel-setup amase` and try again.",
+                amase_devel_dir,
+                ANOD_BIN,
             )
             return 2
 
+    lmcp_dir = resolve_lmcp_dir(args, env)
+    lmcp_jar = os.path.join(lmcp_dir, "dist", "LmcpGen.jar")
+
+    logging.info("Processing MDMs from %s...", MDMS_DIR)
+    lmcp_cmd = ["java", "-Xmx2048m", "-jar", lmcp_jar, "-mdmdir", MDMS_DIR]
+
+    logging.info("Generating CPP bindings in %s", SRC_CPP_LMCP)
+    log_call(lmcp_cmd + ["-cpp", "-dir", SRC_CPP_LMCP], OPENUXAS_ROOT, env)
+
+    logging.info("Generating documentation in %s", DOC_LMCP)
+    log_call(lmcp_cmd + ["-doc", "-dir", DOC_LMCP], OPENUXAS_ROOT, env)
+
+    logging.info("Generating python bindings in %s", PY_LMCP)
+    log_call(lmcp_cmd + ["-py", "-dir", PY_LMCP], OPENUXAS_ROOT, env)
+    logging.info("Done processing MDMs")
+
+    if args.build_amase:
+        logging.info("Using OpenAMASE development directory: %s", amase_devel_dir)
+        amase_lmcp_dir = os.path.join(amase_devel_dir, "OpenAMASE", "lib", "LMCP")
+
+        logging.info("Generating Java bindings in %s", amase_lmcp_dir)
+        log_call(lmcp_cmd + ["-java", "-dir", amase_lmcp_dir], OPENUXAS_ROOT, env)
+
         logging.info("Building java library for OpenAMASE")
-        log_call(ANT_CMD, AMASE_LMCP_DIR, env)
+        log_call(ANT_CMD, amase_lmcp_dir, env)
         shutil.copy(
-            os.path.join(AMASE_LMCP_DIR, "dist", "lmcplib.jar"),
-            os.path.join(AMASE_DIR, "OpenAMASE", "lib"),
+            os.path.join(amase_lmcp_dir, "dist", "lmcplib.jar"),
+            os.path.join(amase_devel_dir, "OpenAMASE", "lib"),
         )
-        log_call(ANT_CMD, os.path.join(AMASE_DIR, "OpenAMASE"), env)
+        log_call(ANT_CMD, os.path.join(amase_devel_dir, "OpenAMASE"), env)
         logging.info("Done building java library for OpenAMASE")
 
     return 0
