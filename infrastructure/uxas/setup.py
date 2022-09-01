@@ -2,8 +2,8 @@
 from setuptools import setup, find_packages
 
 install_requires = [
-    "e3-core",
-    "e3-testsuite",
+    "e3-core==22.1.0",
+    "e3-testsuite==24.0",
     "pyzmq",
 ]
 
