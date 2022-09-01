@@ -45,8 +45,7 @@ def create_anod_context(spec_dir: str) -> AnodContext:
 
 
 def create_anod_sandbox(sbx_dir: str, spec_dir: str) -> SandBox:
-    sbx = SandBox()
-    sbx.root_dir = sbx_dir
+    sbx = SandBox(sbx_dir)
     sbx.specs_dir = spec_dir
 
     return sbx
