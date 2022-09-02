@@ -53,7 +53,7 @@ If you would like to copy-paste commands from this README, you should only copy 
 We've tried to make getting started with OpenUxAS as simple as possible.
 Before you begin, you will need:
 
-1. Ubuntu 20.04
+1. Ubuntu 22.04 or 20.04
 2. git
 
 Use git to clone this repository:
