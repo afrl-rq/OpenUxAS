@@ -8,7 +8,7 @@ The Air Force Open Source Agreement closely follows the NASA Open Source Agreeme
 OpenUxAS
 ========
 
-[![Build Status](https://github.com/afrl-rq/OpenUxAS/workflows/Build/badge.svg)](https://github.com/afrl-rq/OpenUxAS/actions)
+[![Build and Test OpenUxAS C++](https://github.com/afrl-rq/OpenUxAS/actions/workflows/uxas-cpp.yaml/badge.svg?branch=develop)](https://github.com/afrl-rq/OpenUxAS/actions/workflows/uxas-cpp.yaml) [![Build and Prove OpenUxAS Ada](https://github.com/afrl-rq/OpenUxAS/actions/workflows/uxas-ada.yaml/badge.svg?branch=develop)](https://github.com/afrl-rq/OpenUxAS/actions/workflows/uxas-ada.yaml)
 
 UxAS is a collection of modular services that interact via a common message-passing architecture.
 Similar in design to Robot Operating System (ROS), each service subscribes to messages in the system and responds to queries.
