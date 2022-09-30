@@ -1,3 +1,12 @@
+# Boost anod spec
+#
+# Updating this spec:
+# 1. Check for new versions at boost.org
+# 2. Update the NAME and URL properties - make sure to update the release number
+#    in the URL
+# 3. run `anod reset` and `anod build boost` to make sure the spec still works
+# 4. run `anod build uxas` and test the result by running examples
+
 import os
 from e3.fs import sync_tree
 from e3.os.fs import unixpath
@@ -8,22 +17,24 @@ from e3.anod.spec import Anod
 class Boost(spec('common')):
     """Boost provides free peer-reviewed portable C++ source libraries."""
 
+    NAME = "boost_1_74_0.tar.bz2"
+    URL = f"https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/{NAME}"
+
     @property
     def build_deps(self):
         return [Anod.Dependency('compiler')]
 
     @property
     def build_source_list(self):
-        return [Anod.Source(name='boost_1_68_0.tar.bz2',
+        return [Anod.Source(name=Boost.NAME,
                             publish=True)]
 
     @property
     def source_pkg_build(self):
         return [
             self.HTTPSSourceBuilder(
-                name='boost_1_68_0.tar.bz2',
-                url='https://boostorg.jfrog.io/artifactory/main/release/1.68.0/source/'
-                'boost_1_68_0.tar.bz2')]
+                name=Boost.NAME,
+                url=Boost.URL)]
 
     @Anod.primitive()
     def build(self):
