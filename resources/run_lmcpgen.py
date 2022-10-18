@@ -10,20 +10,18 @@ import re
 import subprocess
 import sys
 from typing import TYPE_CHECKING
-import yaml
 
 from uxas.paths import (
     OPENUXAS_ROOT,
     ANOD_BIN,
     MDMS_DIR,
-    DEFAULT_LMCP_DEVEL_DIR,
-    DEFAULT_AMASE_DEVEL_DIR,
-    LMCP_DEVEL_DIR,
     LMCP_DIR,
-    AMASE_DEVEL_DIR,
     CPP_DIR,
     DOC_DIR,
-    REPOSITORIES_YAML,
+    add_amase_dir_argument,
+    resolve_amase_devel_dir,
+    add_lmcp_dir_argument,
+    resolve_lmcp_devel_dir,
 )
 
 from uxas.util.logging import (
@@ -107,23 +105,6 @@ def check_lmcp_jar(path: str) -> bool:
     return os.path.exists(os.path.join(path, "dist", "LmcpGen.jar"))
 
 
-def resolve_lmcp_devel_dir() -> str:
-    """Resolve the LMCP development directory."""
-    if LMCP_DEVEL_DIR != DEFAULT_LMCP_DEVEL_DIR:
-        return LMCP_DEVEL_DIR
-
-    with open(REPOSITORIES_YAML, encoding="utf-8") as yaml_file:
-        loaded_yaml = yaml.safe_load(yaml_file.read())
-
-    if loaded_yaml["lmcpgen"]["vcs"] == "external":
-        return os.path.abspath(
-            os.path.join(OPENUXAS_ROOT, loaded_yaml["lmcpgen"]["url"])
-        )
-
-    # no better default...
-    return LMCP_DEVEL_DIR
-
-
 def build_lmcpgen(path: str, env: _Environ) -> None:
     """Build LmcpGen."""
     logging.info("Building LmcpGen")
@@ -132,23 +113,19 @@ def build_lmcpgen(path: str, env: _Environ) -> None:
 
 
 def resolve_lmcp_dir(args: Namespace, env: _Environ) -> str:
-    """Resolve the LMCP directory."""
-    if args.lmcp_dir:
-        if not os.path.exists(args.lmcp_dir):
-            logging.critical(
-                "The specified LmcpGen path `%s` does not exist.", args.lmcp_dir
-            )
-            sys.exit(1)
+    """
+    Resolve the LMCP directory.
 
-        if not check_lmcp_jar(args.lmcp_dir):
-            build_lmcpgen(args.lmcp_dir, env)
-
-        return args.lmcp_dir
-
-    lmcp_devel_dir = resolve_lmcp_devel_dir()
-    logging.info("Using LmcpGen development directory: %s", lmcp_devel_dir)
+    Find the LMCP directory in the following order:
+      1. Using `resolve_lmcp_devel_dir`, if the development directory exists,
+         use that.
+      2. Use the default LMCP_DIR.
+    """
+    lmcp_devel_dir = resolve_lmcp_devel_dir(args)
 
     if os.path.exists(lmcp_devel_dir):
+        logging.info("Using LmcpGen development directory: %s", lmcp_devel_dir)
+
         if not check_lmcp_jar(lmcp_devel_dir):
             build_lmcpgen(lmcp_devel_dir, env)
 
@@ -159,29 +136,6 @@ def resolve_lmcp_dir(args: Namespace, env: _Environ) -> str:
 
     logging.critical(MISSING_LMCPGEN, ANOD_BIN)
     sys.exit(1)
-
-
-def resolve_amase_devel_dir(args: Namespace) -> str:
-    """Resolve the AMASE development directory."""
-    if args.amase_dir:
-        if not os.path.exists(args.amase_dir):
-            logging.critical(
-                "The specified OpenAMASE path `%s` does not exist.", args.amase_dir
-            )
-            sys.exit(1)
-
-        return args.amase_dir
-
-    if AMASE_DEVEL_DIR != DEFAULT_AMASE_DEVEL_DIR:
-        return AMASE_DEVEL_DIR
-
-    with open(REPOSITORIES_YAML, encoding="utf-8") as yaml_file:
-        loaded_yaml = yaml.safe_load(yaml_file.read())
-
-    if loaded_yaml["amase"]["vcs"] == "external":
-        return os.path.abspath(os.path.join(OPENUXAS_ROOT, loaded_yaml["amase"]["url"]))
-
-    return AMASE_DEVEL_DIR
 
 
 def run_lmcp_gen_main() -> int:
@@ -197,14 +151,8 @@ def run_lmcp_gen_main() -> int:
         default=False,
         help="build all languages, including  the java library for OpenAMASE",
     )
-    argument_parser.add_argument(
-        "--lmcp-dir",
-        help="absolute path to the LmcpGen directory",
-    )
-    argument_parser.add_argument(
-        "--amase-dir",
-        help="absolute path to the OpenAMASE directory",
-    )
+    add_lmcp_dir_argument(argument_parser)
+    add_amase_dir_argument(argument_parser)
 
     add_logging_group(argument_parser)
 

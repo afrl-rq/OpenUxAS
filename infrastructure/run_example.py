@@ -18,11 +18,13 @@ from uxas.paths import (
     ANOD_BIN,
     OPENUXAS_ROOT,
     EXAMPLES_DIR,
-    AMASE_DEVEL_DIR,
+    DEFAULT_AMASE_DEVEL_DIR,
     AMASE_DIR,
     UXAS_BIN,
     UXAS_ADA_BIN,
     SBX_DIR,
+    add_amase_dir_argument,
+    resolve_amase_devel_dir,
 )
 
 from uxas.util.logging import (
@@ -142,44 +144,43 @@ Trying the anod-built OpenAMASE as a fall back.
 
 def check_amase_jar(path: str) -> bool:
     """Test to make sure a path has the OpenAMASE jar."""
-    return os.path.exists(os.path.join(path, "OpenAMASE", "dist", "OpenAMASE.jar"))
+    path = os.path.join(path, "OpenAMASE", "dist", "OpenAMASE.jar")
+    logging.debug("Checking for OpenAMASE jar in %s", path)
+
+    return os.path.exists(path)
 
 
 def resolve_amase_dir(args: Namespace) -> str:
     """
-    Resolve the absolute path to the OpenAMASE source directory.
+    Resolve the path to the OpenAMASE source directory.
 
-    1. if we've been given an absolute path in the arguments, check and use
-       that.
-    2. see if there's a local OpenAMASE, check and use that.
-    3. try to use the anod-built OpenAMASE.
+    Find the OpenAMASE directory in the following order:
+      1. Using `resolve_amase_devel_dir`, check for the OpenAMASE jar and use
+         that.
+      2. Use the default AMASE_DIR, check for the OpenAMASE jar and use that.
 
-    If the OpenAMASE directory exists but doesn't appear to be built,
-    immediately exit.
+    If no OpenAMASE has been built, print an error message and exit.
+
+    Note: there is a case here that's not well reported in the logging: if the
+    user is trying to use the default development location of OpenUxAS but the
+    path doesn't exist. In this case, the script will assume that the user
+    hasn't asked for the development version of OpenAMASE at all and will
+    (silently) fall back to trying AMASE_DIR. Fixing this doesn't seem
+    worthwhile.
     """
-    if args.amase_dir:
-        if not os.path.exists(args.amase_dir):
+    amase_devel_dir = resolve_amase_devel_dir(args)
+
+    if os.path.exists(amase_devel_dir):
+        if check_amase_jar(amase_devel_dir):
+            return amase_devel_dir
+
+        logging.warning(UNBUILT_LOCAL_AMASE, amase_devel_dir, amase_devel_dir, ANOD_BIN)
+    else:
+        if amase_devel_dir != DEFAULT_AMASE_DEVEL_DIR:
             logging.critical(
-                "The specified OpenAMASE path `%s` doesn't exist.", args.amase_dir
+                "The specified OpenAMASE path `%s` doesn't exist.", amase_devel_dir
             )
             sys.exit(1)
-
-        if check_amase_jar(args.amase_dir):
-            return args.amase_dir
-
-        logging.critical(
-            UNBUILT_SPECIFIED_AMASE,
-            args.amase_dir,
-            args.amase_dir,
-            ANOD_BIN,
-        )
-        sys.exit(1)
-
-    if os.path.exists(AMASE_DEVEL_DIR):
-        if check_amase_jar(AMASE_DEVEL_DIR):
-            return AMASE_DEVEL_DIR
-
-        logging.warning(UNBUILT_LOCAL_AMASE, AMASE_DEVEL_DIR, AMASE_DEVEL_DIR, ANOD_BIN)
 
     if check_amase_jar(AMASE_DIR):
         return AMASE_DIR
@@ -516,10 +517,7 @@ def run_example_main() -> int:
         "before starting instances of OpenUxAS",
     )
 
-    argument_parser.add_argument(
-        "--amase-dir",
-        help="absolute path to the OpenAMASE repository containing build outputs",
-    )
+    add_amase_dir_argument(argument_parser)
 
     argument_parser.add_argument(
         "--uxas-bin",
