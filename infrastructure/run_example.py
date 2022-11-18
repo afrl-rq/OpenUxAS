@@ -641,10 +641,10 @@ def run_example_main() -> int:
                 )
                 time.sleep(amase_delay)
 
-        popen = amase_scenario_file is not None
+        popen = scenario_file is not None
         pids = run_uxas(uxas_configs, example_dir, popen)
 
-        if amase_scenario_file is not None:
+        if scenario_file:
             # Wait for the user to close AMASE
             amase_pid.wait()
 
