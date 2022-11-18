@@ -1,0 +1,68 @@
+on:
+    push:
+        paths:
+            - 'infrastructure/uxas/**'
+            - 'infrastructure/paths.sh'
+            - 'infrastructure/specs/**'
+            - 'anod'
+            - 'src/ada/**'
+            - 'tests/proof/**'
+    pull_request:
+        paths:
+            - 'infrastructure/uxas/**'
+            - 'infrastructure/paths.sh'
+            - 'anod'
+            - 'src/ada/**'
+            - 'tests/proof/**'
+    workflow_dispatch:
+    schedule:
+        - cron: '35 3 * * 4'
+
+name: "Build and Prove UxAS Ada Services"
+jobs:
+    build:
+        strategy:
+            fail-fast: false
+            matrix:
+                env: [
+                    {os: ubuntu-20.04, python: '3.8'},
+                    {os: ubuntu-22.04, python: '3.10'}
+                ]
+                component: [uxas-ada]
+                qualifier: [scenario=release]
+        runs-on: ${{ matrix.env.os }}
+        steps:
+            - uses: actions/checkout@v2
+              with:
+                  path: OpenUxAS
+
+            - name: Set up python ${{ matrix.env.python }}
+              uses: actions/setup-python@v2
+              with:
+                  python-version: ${{ matrix.env.python }}
+
+            - name: Set up java
+              uses: actions/setup-java@v1
+              with:
+                  java-version: '11'
+
+            - name: Install infrastructure
+              run: |
+                  cd OpenUxAS
+                  infrastructure/install -vv --no-gnat --no-java -y
+
+            - name: Install GNAT CE 2021
+              if: ${{ matrix.component == 'uxas-ada' }}
+              uses: ada-actions/toolchain@ce2021
+              with:
+                  distrib: community
+
+            - name: Build OpenUxAS Ada
+              run: |
+                  cd OpenUxAS
+                  ./anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
+
+            - name: Prove OpenUxAS Ada
+              run: |
+                  cd OpenUxAS/tests/proof
+                  ./run-proofs -E --timeout=2400 --failure-exit-code=1

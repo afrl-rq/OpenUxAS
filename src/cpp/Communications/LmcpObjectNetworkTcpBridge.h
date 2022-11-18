@@ -11,8 +11,7 @@
 #define UXAS_MESSAGE_LMCP_OBJECT_NETWORK_TCP_BRIDGE_H
 
 #include "LmcpObjectNetworkClientBase.h"
-// #include "LmcpObjectMessageTcpReceiverSenderPipe.h"
-#include "ZmqAttributedMsgSenderReceiver.h"
+#include "IMsgSenderReceiver.h"
 
 #include <atomic>
 #include <cstdint>
@@ -125,8 +124,7 @@ private:
 
     std::string m_remoteConfigurationString;
 
-    // uxas::communications::LmcpObjectMessageTcpReceiverSenderPipe m_externalLmcpObjectMessageTcpReceiverSenderPipe;
-    ZmqAttributedMsgSenderReceiver m_externalLmcpObjectMessageTcpReceiverSenderPipe;
+    std::unique_ptr<IMsgSenderReceiver<data::AddressedAttributedMessage, const std::string&, bool>> m_externalLmcpMsgTcpReceiverSenderPipe;
 
     std::set<std::string> m_nonImportForwardAddresses;
     std::set<std::string> m_nonExportForwardAddresses;

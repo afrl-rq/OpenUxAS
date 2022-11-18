@@ -12,6 +12,7 @@
 
 #include "ZmqProxy.h"
 #include "AddressedAttributedMessage.h"
+#include "IMsgSenderReceiver.h"
 
 #include <string>
 #include <thread>
@@ -25,9 +26,7 @@ namespace communications {
  */
 
 class ZmqAttributedMsgSenderReceiver 
-    : public ISocket<const std::string&, bool>,
-      public IMsgSender<data::AddressedAttributedMessage&>,
-      public IMsgReceiver<data::AddressedAttributedMessage> 
+    : public IMsgSenderReceiver<data::AddressedAttributedMessage, const std::string&, bool>
 {
 public:
     /**
@@ -51,10 +50,6 @@ public:
     // Receive messages from the local socket (received from the proxy)
     data::AddressedAttributedMessage receive() override;
 
-    // Set Proxy Send/Recv Addresses
-    void setProxySend(std::string address);
-    void setProxyRecv(std::string address);
-
 private:
     std::shared_ptr<ISocket<const std::string&, bool>> m_sendSocket;
     std::shared_ptr<ISocket<const std::string&, bool>> m_receiveSocket;
@@ -63,8 +58,9 @@ private:
     std::shared_ptr<IMsgReceiver<std::string>> m_receiver;
     std::shared_ptr<ZmqProxy> m_tcpProxy;
     common::SentinelSerialBuffer m_serialBuffer;
-    std::string m_proxySendAddress;   // This is sending to the Proxy from UxAS
-    std::string m_proxyReceiveAddress;  // This is receiving from the Proxy
+
+    // Keep track of how many instances of this class have been initialized
+    static std::atomic<int> count;
 };
 
 }

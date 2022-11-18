@@ -1,4 +1,4 @@
-on: 
+on:
     push:
         paths:
             - 'infrastructure/install-libexec/**'
@@ -15,18 +15,20 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-18.04, ubuntu-20.04]
-                python-version: [3.7, 3.8]
-        runs-on: ${{ matrix.os }}
+                env: [
+                    {os: ubuntu-20.04, python: '3.8'},
+                    {os: ubuntu-22.04, python: '3.10'}
+                ]
+        runs-on: ${{ matrix.env.os }}
         steps:
             - uses: actions/checkout@v2
               with:
                   path: OpenUxAS
 
-            - name: Set up python ${{ matrix.python-version }}
+            - name: Set up python ${{ matrix.env.python }}
               uses: actions/setup-python@v2
               with:
-                  python-version: ${{ matrix.python-version }}
+                  python-version: ${{ matrix.env.python }}
 
             - name: Set up testing tools
               run: |
