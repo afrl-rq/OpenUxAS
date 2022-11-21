@@ -40,7 +40,7 @@ public:
     ~ZeroMqFabric();
 
     std::unique_ptr<zmq::socket_t>
-    createSocket(ZeroMqSocketConfiguration& socketConfiguration);
+    createSocket(const ZeroMqSocketConfiguration& socketConfiguration);
 
 private:
 

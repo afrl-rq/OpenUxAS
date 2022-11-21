@@ -205,14 +205,15 @@ def list_examples(examples_dir: str) -> None:
 
 def check_amase(
     loaded_yaml: Dict[str, Any], example_dir: str, args: Namespace
-) -> Tuple[Optional[str], int, Optional[str]]:
+) -> Tuple[Optional[str], Optional[str], int, Optional[str]]:
+
     """
     Check the OpenAMASE configuration in the YAML and return the scenario file.
 
     If any errors are encountered, report them and immediately exit.
     """
     if AMASE_YAML_KEY not in loaded_yaml.keys():
-        return (None, 0, None)
+        return (None, None, 0, None)
 
     if SCENARIO_YAML_KEY not in loaded_yaml[AMASE_YAML_KEY].keys():
         logging.critical("OpenAMASE configuration must specify a scenario file.")
@@ -225,6 +226,20 @@ def check_amase(
 
     amase_dir = resolve_amase_dir(args)
 
+    if CONFIG_YAML_KEY in loaded_yaml[AMASE_YAML_KEY].keys():
+        config_file = loaded_yaml[AMASE_YAML_KEY][CONFIG_YAML_KEY]
+        config_dir = os.path.join(amase_dir, "OpenAMASE", "config")
+        if config_file is not None and not os.path.exists(
+            os.path.join(config_dir, config_file)
+        ):
+            logging.critical(
+                f"Specified config file '{config_file}' does not exist in "
+                f"'{config_dir}'."
+            )
+            exit(1)
+    else:
+        config_file = None
+
     if args.amase_delay is not None:
         amase_delay = args.amase_delay
     elif DELAY_YAML_KEY in loaded_yaml[AMASE_YAML_KEY].keys():
@@ -232,11 +247,15 @@ def check_amase(
     else:
         amase_delay = AMASE_DELAY
 
-    return (scenario_file, amase_delay, amase_dir)
+    return (scenario_file, config_file, amase_delay, amase_dir)
 
 
-def run_amase(scenario_file: str, example_dir: str, amase_dir: str) -> subprocess.Popen:
+def run_amase(
+    scenario_file: str, config_file: Optional[str], example_dir: str, amase_dir: str
+) -> subprocess.Popen:
     """Run the OpenAMASE part of the example."""
+    resolved_config_file = config_file or "amase"
+
     amase_cmd = [
         "java",
         "-Xmx2048m",
@@ -245,7 +264,7 @@ def run_amase(scenario_file: str, example_dir: str, amase_dir: str) -> subproces
         f"{os.path.join('dist', '*')}:{os.path.join('lib', '*')}",
         "avtas.app.Application",
         "--config",
-        os.path.join("config", "amase"),
+        os.path.join("config", resolved_config_file),
         "--scenario",
         os.path.join(example_dir, scenario_file),
     ]
@@ -606,14 +625,14 @@ def run_example_main() -> int:
 
         loaded_yaml = read_yaml(yaml_filename)
 
-        (scenario_file, amase_delay, amase_dir) = check_amase(
+        (scenario_file, config_file, amase_delay, amase_dir) = check_amase(
             loaded_yaml, example_dir, args
         )
 
         uxas_configs = check_uxas(loaded_yaml, example_dir)
 
         if scenario_file and amase_dir:
-            amase_pid = run_amase(scenario_file, example_dir, amase_dir)
+            amase_pid = run_amase(scenario_file, config_file, example_dir, amase_dir)
 
             if amase_delay > 0:
                 print(
