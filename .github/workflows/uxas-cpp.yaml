@@ -1,0 +1,62 @@
+on:
+    push:
+        paths:
+            - 'infrastructure/uxas/**'
+            - 'infrastructure/paths.sh'
+            - 'infrastructure/specs/**'
+            - 'anod'
+            - 'src/cpp/**'
+            - 'tests/cpp/**'
+    pull_request:
+        paths:
+            - 'infrastructure/uxas/**'
+            - 'infrastructure/paths.sh'
+            - 'anod'
+            - 'src/cpp/**'
+            - 'tests/cpp/**'
+    workflow_dispatch:
+    schedule:
+        - cron: '20 3 * * 4'
+
+name: Build and Test UxAS C++
+jobs:
+    build:
+        strategy:
+            fail-fast: false
+            matrix:
+                env: [
+                    {os: ubuntu-20.04, python: '3.8'},
+                    {os: ubuntu-22.04, python: '3.10'}
+                ]
+                component: [uxas]
+                qualifier: [scenario=release, scenario=gcov]
+        runs-on: ${{ matrix.env.os }}
+        steps:
+            - uses: actions/checkout@v2
+              with:
+                  path: OpenUxAS
+
+            - name: Set up python ${{ matrix.env.python }}
+              uses: actions/setup-python@v2
+              with:
+                  python-version: ${{ matrix.env.python }}
+
+            - name: Set up java
+              uses: actions/setup-java@v1
+              with:
+                  java-version: '11'
+
+            - name: Install infrastructure
+              run: |
+                  cd OpenUxAS
+                  infrastructure/install -vv --no-gnat --no-java -y
+
+            - name: Build OpenUxAS C++
+              run: |
+                  cd OpenUxAS
+                  ./anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
+
+            - name: Test OpenUxAS C++
+              run: |
+                  cd OpenUxAS/tests/cpp
+                  ./run-tests --qualifier=${{ matrix.qualifier}}

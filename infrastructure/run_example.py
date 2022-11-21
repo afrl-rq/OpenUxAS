@@ -15,12 +15,16 @@ from typing import TYPE_CHECKING
 import yaml
 
 from uxas.paths import (
+    ANOD_BIN,
     OPENUXAS_ROOT,
     EXAMPLES_DIR,
+    DEFAULT_AMASE_DEVEL_DIR,
     AMASE_DIR,
     UXAS_BIN,
     UXAS_ADA_BIN,
     SBX_DIR,
+    add_amase_dir_argument,
+    resolve_amase_devel_dir,
 )
 
 from uxas.util.logging import (
@@ -36,10 +40,6 @@ if TYPE_CHECKING:
 
 # Relativized root
 REL_OPENUXAS_ROOT = os.path.relpath(OPENUXAS_ROOT)
-
-# Anod command
-ANOD_CMD = os.path.join(REL_OPENUXAS_ROOT, "anod")
-
 
 # Allow the environment to specify how long we should wait after starting an
 # instance of OpenAMASE; default to 0 seconds.
@@ -118,7 +118,7 @@ should:
 """
 
 UNBUILT_SPECIFIED_AMASE = """\
-The OpenAMASE path `%s exists, but hasn't been built. You should:
+The OpenAMASE path `%s` exists, but hasn't been built. You should:
 
     cd "%s/OpenAMASE" && ant
 
@@ -142,44 +142,51 @@ Trying the anod-built OpenAMASE as a fall back.
 """
 
 
-def check_amase_dir(path: str) -> bool:
-    """Test to make sure a path has the OpenUxAS build."""
-    return os.path.exists(os.path.join(path, "OpenAMASE", "build"))
+def check_amase_jar(path: str) -> bool:
+    """Test to make sure a path has the OpenAMASE jar."""
+    path = os.path.join(path, "OpenAMASE", "dist", "OpenAMASE.jar")
+    logging.debug("Checking for OpenAMASE jar in %s", path)
+
+    return os.path.exists(path)
 
 
 def resolve_amase_dir(args: Namespace) -> str:
     """
-    Resolve the absolute path to the OpenAMASE source directory.
+    Resolve the path to the OpenAMASE source directory.
 
-    1. if we've been given an absolute path in the arguments, check and use
-       that.
-    2. see if there's a local OpenAMASE, check and use that.
-    3. try to use the anod-built OpenAMASE.
+    Find the OpenAMASE directory in the following order:
+      1. Using `resolve_amase_devel_dir`, check for the OpenAMASE jar and use
+         that.
+      2. Use the default AMASE_DIR, check for the OpenAMASE jar and use that.
 
-    If the OpenAMASE directory exists but doesn't appear to be built,
-    immediately exit.
+    If no OpenAMASE has been built, print an error message and exit.
+
+    Note: there is a case here that's not well reported in the logging: if the
+    user is trying to use the default development location of OpenUxAS but the
+    path doesn't exist. In this case, the script will assume that the user
+    hasn't asked for the development version of OpenAMASE at all and will
+    (silently) fall back to trying AMASE_DIR. Fixing this doesn't seem
+    worthwhile.
     """
-    if args.amase_dir:
-        if check_amase_dir(args.amase_dir):
-            return args.amase_dir
-        else:
+    amase_devel_dir = resolve_amase_devel_dir(args)
+
+    if os.path.exists(amase_devel_dir):
+        if check_amase_jar(amase_devel_dir):
+            return amase_devel_dir
+
+        logging.warning(UNBUILT_LOCAL_AMASE, amase_devel_dir, amase_devel_dir, ANOD_BIN)
+    else:
+        if amase_devel_dir != DEFAULT_AMASE_DEVEL_DIR:
             logging.critical(
-                UNBUILT_SPECIFIED_AMASE, args.amase_dir, args.amase_dir, ANOD_CMD
+                "The specified OpenAMASE path `%s` doesn't exist.", amase_devel_dir
             )
             sys.exit(1)
 
-    if os.path.exists(AMASE_DIR):
-        if check_amase_dir(AMASE_DIR):
-            return AMASE_DIR
-        else:
-            logging.warning(UNBUILT_LOCAL_AMASE, AMASE_DIR, AMASE_DIR, ANOD_CMD)
+    if check_amase_jar(AMASE_DIR):
+        return AMASE_DIR
 
-    anod_amase_dir = os.path.join(SBX_DIR, "x86_64-linux", "amase", "src")
-    if os.path.exists(anod_amase_dir) and check_amase_dir(anod_amase_dir):
-        return anod_amase_dir
-    else:
-        logging.critical(MISSING_AMASE, ANOD_CMD)
-        sys.exit(1)
+    logging.critical(MISSING_AMASE, ANOD_BIN)
+    sys.exit(1)
 
 
 def list_examples(examples_dir: str) -> None:
@@ -197,15 +204,16 @@ def list_examples(examples_dir: str) -> None:
 
 
 def check_amase(
-    loaded_yaml: Dict[str, Any], example_dir: str, amase_dir: str, args: Namespace
-) -> Tuple[Optional[str], Optional[str], int]:
+    loaded_yaml: Dict[str, Any], example_dir: str, args: Namespace
+) -> Tuple[Optional[str], Optional[str], int, Optional[str]]:
+
     """
     Check the OpenAMASE configuration in the YAML and return the scenario file.
 
     If any errors are encountered, report them and immediately exit.
     """
     if AMASE_YAML_KEY not in loaded_yaml.keys():
-        return (None, None, 0)
+        return (None, None, 0, None)
 
     if SCENARIO_YAML_KEY not in loaded_yaml[AMASE_YAML_KEY].keys():
         logging.critical("OpenAMASE configuration must specify a scenario file.")
@@ -215,6 +223,8 @@ def check_amase(
     if not os.path.exists(os.path.join(example_dir, scenario_file)):
         logging.critical("Specified scenario file '%s' does not exist.", scenario_file)
         sys.exit(1)
+
+    amase_dir = resolve_amase_dir(args)
 
     if CONFIG_YAML_KEY in loaded_yaml[AMASE_YAML_KEY].keys():
         config_file = loaded_yaml[AMASE_YAML_KEY][CONFIG_YAML_KEY]
@@ -237,7 +247,7 @@ def check_amase(
     else:
         amase_delay = AMASE_DELAY
 
-    return (scenario_file, config_file, amase_delay)
+    return (scenario_file, config_file, amase_delay, amase_dir)
 
 
 def run_amase(
@@ -260,7 +270,7 @@ def run_amase(
     ]
 
     logging.info(
-        "Running OpenAMASE in\n             %s\n" "         with scenario '%s'.",
+        "Running OpenAMASE in\n             %s\n         with scenario '%s'.",
         amase_dir,
         scenario_file,
     )
@@ -279,7 +289,7 @@ def check_uxas(loaded_yaml: Dict[str, Any], example_dir: str) -> List[Dict[str, 
 
     Calls `check_one_uxas` and thus may immediately exit.
     """
-    uxas_configs = list()
+    uxas_configs = []
 
     if UXASES_YAML_KEY in loaded_yaml.keys():
         for record in loaded_yaml[UXASES_YAML_KEY]:
@@ -320,10 +330,11 @@ def find_uxas_bin(bin_name: str) -> Optional[str]:
 
     if os.path.exists(local_bin_path):
         return local_bin_path
-    elif os.path.exists(anod_bin_path):
+
+    if os.path.exists(anod_bin_path):
         return anod_bin_path
-    else:
-        return None
+
+    return None
 
 
 MISSING_BIN = """\
@@ -363,7 +374,7 @@ def check_one_uxas(record: Dict[str, str], example_dir: str) -> Dict[str, str]:
 
     uxas_binary = find_uxas_bin(bin_name)
     if uxas_binary is None:
-        logging.critical(MISSING_BIN, bin_name, ANOD_CMD, bin_name)
+        logging.critical(MISSING_BIN, bin_name, ANOD_BIN, bin_name)
         sys.exit(1)
 
     return {
@@ -525,10 +536,7 @@ def run_example_main() -> int:
         "before starting instances of OpenUxAS",
     )
 
-    argument_parser.add_argument(
-        "--amase-dir",
-        help="absolute path to the OpenAMASE repository containing build outputs",
-    )
+    add_amase_dir_argument(argument_parser)
 
     argument_parser.add_argument(
         "--uxas-bin",
@@ -617,17 +625,14 @@ def run_example_main() -> int:
 
         loaded_yaml = read_yaml(yaml_filename)
 
-        amase_dir = resolve_amase_dir(args)
-        (amase_scenario_file, amase_config_file, amase_delay) = check_amase(
-            loaded_yaml, example_dir, amase_dir, args
+        (scenario_file, config_file, amase_delay, amase_dir) = check_amase(
+            loaded_yaml, example_dir, args
         )
 
         uxas_configs = check_uxas(loaded_yaml, example_dir)
 
-        if amase_scenario_file is not None:
-            amase_pid = run_amase(
-                amase_scenario_file, amase_config_file, example_dir, amase_dir
-            )
+        if scenario_file and amase_dir:
+            amase_pid = run_amase(scenario_file, config_file, example_dir, amase_dir)
 
             if amase_delay > 0:
                 print(
@@ -636,10 +641,10 @@ def run_example_main() -> int:
                 )
                 time.sleep(amase_delay)
 
-        popen = amase_scenario_file is not None
+        popen = scenario_file is not None
         pids = run_uxas(uxas_configs, example_dir, popen)
 
-        if amase_scenario_file is not None:
+        if scenario_file:
             # Wait for the user to close AMASE
             amase_pid.wait()
 
