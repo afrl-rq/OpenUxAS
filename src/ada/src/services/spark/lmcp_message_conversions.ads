@@ -4,6 +4,7 @@ with AFRL.CMASI.AutomationRequest;                    use AFRL.CMASI.AutomationR
 with AFRL.CMASI.EntityState;                          use AFRL.CMASI.EntityState;
 with AFRL.CMASI.KeyValuePair;                         use AFRL.CMASI.KeyValuePair;
 with AFRL.CMASI.Location3D;                           use AFRL.CMASI.Location3D;
+with AFRL.CMASI.MissionCommand;                       use AFRL.CMASI.MissionCommand;
 with AFRL.CMASI.VehicleAction;                        use AFRL.CMASI.VehicleAction;
 with AFRL.CMASI.Waypoint;                             use AFRL.CMASI.Waypoint;
 with AFRL.Impact.ImpactAutomationRequest;             use AFRL.Impact.ImpactAutomationRequest;
@@ -54,6 +55,8 @@ package LMCP_Message_Conversions is
    function As_TaskPlanOption_Message (Msg : not null TaskPlanOptions_Any) return LMCP_Messages.TaskPlanOptions;
 
    function As_EntityState_Message (Msg : not null EntityState_Any) return LMCP_Messages.EntityState;
+
+   function As_MissionCommand_Message (Msg : not null MissionCommand_Acc) return LMCP_Messages.MissionCommand;
 
    function As_Object_Any (Msg : LMCP_Messages.Message_Root'Class) return AVTAS.LMCP.Object.Object_Any;
 

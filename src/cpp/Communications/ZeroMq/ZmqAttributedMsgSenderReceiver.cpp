@@ -14,8 +14,12 @@
 #include "ZmqTcpSenderReceiver.h"
 #include "ZmqAttributedMsgSenderReceiver.h"
 
+#include "UxAS_ConfigurationManager.h"
+
 namespace uxas {
 namespace communications {
+
+std::atomic<int> ZmqAttributedMsgSenderReceiver::count{0};
 
 ZmqAttributedMsgSenderReceiver::ZmqAttributedMsgSenderReceiver() {
     UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
@@ -35,19 +39,26 @@ ZmqAttributedMsgSenderReceiver::ZmqAttributedMsgSenderReceiver() {
 // Initialize and start Proxy
 bool ZmqAttributedMsgSenderReceiver::initialize(const std::string& address, bool isServer) {
     UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
+    // Internal setting of proxy address
+    std::string entityId = std::to_string(common::ConfigurationManager::getInstance().getEntityId());
+    // Increment counter to keep track of how many sender/receivers have been initialized.
+    int initializeCount = ++count;
+    std::string proxySendAddress = "inproc://toZmqProxy" + entityId + "_" + std::to_string(initializeCount);
+    std::string proxyReceiveAddress = "inproc://fromZmqProxy" + entityId + "_" + std::to_string(initializeCount);
+
     // Initialize the sender backend
-    m_sendSocket->initialize(m_proxySendAddress, false);
+    m_sendSocket->initialize(proxySendAddress, false);
 
     // Initialze the receiver backend
-    m_receiveSocket->initialize(m_proxyReceiveAddress, true);
+    m_receiveSocket->initialize(proxyReceiveAddress, true);
 
     // Setup TCP proxy, initialize, and begin thread
     auto receiver = std::make_shared<ZmqPullReceiver>();
     auto sender = std::make_shared<ZmqPushSender>();
     auto tcpSenderReceiver = std::make_shared<ZmqTcpSenderReceiver>();
 
-    receiver->initialize(m_proxySendAddress, true);
-    sender->initialize(m_proxyReceiveAddress, false);
+    receiver->initialize(proxySendAddress, true);
+    sender->initialize(proxyReceiveAddress, false);
     tcpSenderReceiver->initialize(address, isServer);
 
     auto receiverPair = std::make_pair(receiver, receiver->getSocketBase());
@@ -79,16 +90,6 @@ data::AddressedAttributedMessage ZmqAttributedMsgSenderReceiver::receive() {
     }
 
     return msg;
-}
-
-void ZmqAttributedMsgSenderReceiver::setProxySend(std::string address) { 
-    UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
-    m_proxySendAddress = std::move(address); 
-}
-
-void ZmqAttributedMsgSenderReceiver::setProxyRecv(std::string address) { 
-    UXAS_LOG_DEBUG_VERBOSE(typeid(this).name(),"::",__func__,":TRACE");
-    m_proxyReceiveAddress = std::move(address);
 }
 
 }

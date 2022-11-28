@@ -16,7 +16,6 @@ from e3.main import Main
 # Define what we mean by a successful build.
 BUILD_SUCCESS = [
     ReturnValue.success,
-    ReturnValue.force_skip,
     ReturnValue.skip,
     ReturnValue.unchanged,
 ]

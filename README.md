@@ -8,7 +8,7 @@ The Air Force Open Source Agreement closely follows the NASA Open Source Agreeme
 OpenUxAS
 ========
 
-[![Build Status](https://github.com/afrl-rq/OpenUxAS/workflows/Build/badge.svg)](https://github.com/afrl-rq/OpenUxAS/actions)
+[![Build and Test OpenUxAS C++](https://github.com/afrl-rq/OpenUxAS/actions/workflows/uxas-cpp.yaml/badge.svg?branch=develop)](https://github.com/afrl-rq/OpenUxAS/actions/workflows/uxas-cpp.yaml) [![Build and Prove OpenUxAS Ada](https://github.com/afrl-rq/OpenUxAS/actions/workflows/uxas-ada.yaml/badge.svg?branch=develop)](https://github.com/afrl-rq/OpenUxAS/actions/workflows/uxas-ada.yaml)
 
 > ***This branch is intended to facilitate in-progress efforts to integrate DAIDALUS into OpenUxAS.***
 > Most users should instead use the main development branch [here](http://github.com/afrl-rq/OpenUxAS).
@@ -57,7 +57,7 @@ If you would like to copy-paste commands from this README, you should only copy 
 We've tried to make getting started with OpenUxAS as simple as possible.
 Before you begin, you will need:
 
-1. Ubuntu 20.04
+1. Ubuntu 22.04 or 20.04
 2. git
 
 Use git to clone this repository:
