@@ -26,6 +26,7 @@ class Command:
         description: Optional[str] = None,
         cwd: Optional[str] = None,
     ) -> None:
+        """Initialize an instance."""
         self.cmd: List[str] = []
 
         # Spurious type errors on both branches:
@@ -80,3 +81,31 @@ def run_command_and_exit_on_fail(
             logging.critical(format_command(command) + " failed.")
 
         exit(result)
+
+
+def run_command_getting_result_and_exit_on_fail(
+    command: Command, dry_run: Optional[bool] = False
+) -> str:
+    """
+    Log and run a command, capturing its output.
+
+    Log and run a command, capturing its output and printing a message and
+    exiting if the result is nonzero.
+    """
+    print_cmd = format_command(command)
+    logging.debug(print_cmd)
+
+    if dry_run:
+        print(print_cmd)
+        return "<dry run result>"
+    else:
+        result = subprocess.run(command.cmd, cwd=command.cwd, stdout=subprocess.PIPE)
+        if result.returncode != 0:
+            if command.description is not None:
+                logging.critical(command.description + " failed.")
+            else:
+                logging.critical(format_command(command) + " failed.")
+
+            exit(result.returncode)
+        else:
+            return result.stdout.decode("utf-8")
