@@ -34,7 +34,9 @@ fi
 
 : "${INSTALL_LIBEXEC_DIR:=${INFRASTRUCTURE_DIR}/install-libexec}"
 : "${SOFTWARE_DIR:=${INFRASTRUCTURE_DIR}/software}"
-: "${GNAT_DIR:=${SOFTWARE_DIR}/gnat}"
+#: "${GNAT_DIR:=${SOFTWARE_DIR}/gnat}"
+: "${ALR_DIR:=${SOFTWARE_DIR}/alr}"
+
 
 : "${SPEC_DIR:=${INFRASTRUCTURE_DIR}/specs}"
 : "${SBX_DIR:=${INFRASTRUCTURE_DIR}/sbx}"
@@ -104,11 +106,11 @@ function ensure_gnat {
     which gnat >/dev/null 2>&1
 
     if [ $? -ne 0 ]; then
-        if [ -d "${GNAT_DIR}" ]; then
-            debug_and_run "export PATH=\"${GNAT_DIR}/bin:${PATH}\""
+        if [ -d "${ALR_DIR}" ]; then
+            debug_and_run "eval \"\$( cd \"${ALR_DIR}/gnatprove\" && ${ALR_DIR}/bin/alr printenv )\""
         else
             echo "For this step, you need an Ada compiler to continue."
-            echo "Let's install the GNAT Community compiler and support on which it depends."
+            echo "Let's install the GNAT compiler and support on which it depends using Alire."
             echo " "
             echo "To do this, we will use apt. We will update the index and install all needed"
             echo "packages automatically. If you would prefer more control over how dependencies"
@@ -119,10 +121,10 @@ function ensure_gnat {
             read _response
 
             if [[ "${_response}" != "n" ]]; then
-                debug_and_run "${INFRASTRUCTURE_DIR}/install --no-anod --no-java --automatic"
+                debug_and_run "eval \"\$( cd \"${ALR_DIR}/gnatprove\" && ${ALR_DIR}/bin/alr printenv )\""
 
-                if [ -d "${GNAT_DIR}" ]; then
-                    debug_and_run "export PATH=\"${GNAT_DIR}/bin:${PATH}\""
+                if [ -d "${ALR_DIR}" ]; then
+                    debug_and_run "cd \"${ALR_DIR}/gnatprove\" && eval \"$( ../bin/alr printenv )\" && cd \"${OPENUXAS_ROOT}\""
                 else
                     echo "Installing GNAT appears to have failed."
                     exit 1
