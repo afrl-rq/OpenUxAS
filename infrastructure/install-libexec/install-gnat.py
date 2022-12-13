@@ -154,6 +154,16 @@ ALR_XMLADA_DIRNAME_CMD = Command(
 )
 
 
+ALR_XMLADA_BUILD_CMD = Command(
+    cmd=[
+        os.path.join("..", ALR_BIN),
+        "build",
+    ],
+    description="Build XMLAda using alr",
+    cwd=os.path.join(ALR_DIR, "xmlada"),
+)
+
+
 DESCRIPTION = """\
 This script automates the installation of GNAT and gnatprove, which is required
 to build the Ada services for OpenUxAS and run the proofs. You should run this
@@ -261,3 +271,5 @@ if __name__ == "__main__":
         )
     else:
         shutil.move(XMLADA_SRC_DIR, XMLADA_DST_DIR)
+
+    run_command_and_exit_on_fail(ALR_XMLADA_BUILD_CMD, args.dry_run)
