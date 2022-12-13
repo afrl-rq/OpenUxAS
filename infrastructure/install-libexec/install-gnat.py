@@ -51,6 +51,7 @@ APT_INSTALL = Command(
         "install",
         "-y",
         "unzip",
+        "libsodium-dev",  # TBD if we want this here
     ],
     description="Installing dependencies",
 )
@@ -126,15 +127,29 @@ ALR_GNATPROVE_DIRNAME_CMD = Command(
 )
 
 
-# NOTE: This is a hack to get around alr's lack of a way to specify a crate's
-# directory when getting it. This is *not portable* at the moment.
-GNATPROVE_RENAME_CMD = Command(
+ALR_XMLADA_CMD = Command(
     cmd=[
-        "mv",
-        f"`{ALR_BIN} -c {ALR_CONFIG_DIR} get --dirname gnatprove`",
-        "gnatprove",
+        ALR_BIN,
+        "-c",
+        ALR_CONFIG_DIR,
+        "get",
+        "xmlada",
     ],
-    description="Rename GNATprove directory",
+    description="Install XMLAda using alr",
+    cwd=ALR_DIR,
+)
+
+
+ALR_XMLADA_DIRNAME_CMD = Command(
+    cmd=[
+        ALR_BIN,
+        "-c",
+        ALR_CONFIG_DIR,
+        "get",
+        "--dirname",
+        "xmlada",
+    ],
+    description="Get install directory of XMLAda using alr",
     cwd=ALR_DIR,
 )
 
@@ -208,6 +223,8 @@ if __name__ == "__main__":
     run_command_and_exit_on_fail(ALR_DOWNLOAD_CMD, args.dry_run)
     run_command_and_exit_on_fail(ALR_UNZIP_CMD, args.dry_run)
     run_command_and_exit_on_fail(ALR_TOOLCHAIN_CMD, args.dry_run)
+
+    # Now install gnatprove
     run_command_and_exit_on_fail(ALR_GNATPROVE_CMD, args.dry_run)
 
     GNATPROVE_SRC_DIR = os.path.join(
@@ -225,3 +242,22 @@ if __name__ == "__main__":
         )
     else:
         shutil.move(GNATPROVE_SRC_DIR, GNATPROVE_DST_DIR)
+
+    # Now install XMLAda
+    run_command_and_exit_on_fail(ALR_XMLADA_CMD, args.dry_run)
+
+    XMLADA_SRC_DIR = os.path.join(
+        ALR_DIR,
+        run_command_getting_result_and_exit_on_fail(
+            ALR_XMLADA_DIRNAME_CMD, args.dry_run
+        ).strip(),
+    )
+    XMLADA_DST_DIR = os.path.join(ALR_DIR, "xmlada")
+
+    if args.dry_run:
+        print(
+            f"mv {os.path.relpath(XMLADA_SRC_DIR, OPENUXAS_ROOT)}"
+            f"{os.path.relpath(XMLADA_DST_DIR, OPENUXAS_ROOT)}"
+        )
+    else:
+        shutil.move(XMLADA_SRC_DIR, XMLADA_DST_DIR)
