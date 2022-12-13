@@ -108,6 +108,7 @@ function ensure_gnat {
     if [ $? -ne 0 ]; then
         if [ -d "${ALR_DIR}" ]; then
             debug_and_run "eval \"\$( cd \"${ALR_DIR}/gnatprove\" && ${ALR_DIR}/bin/alr printenv )\""
+            debug_and_run "eval \"\$( cd \"${ALR_DIR}/xmlada\" && ${ALR_DIR}/bin/alr printenv )\""
         else
             echo "For this step, you need an Ada compiler to continue."
             echo "Let's install the GNAT compiler and support on which it depends using Alire."
@@ -121,10 +122,11 @@ function ensure_gnat {
             read _response
 
             if [[ "${_response}" != "n" ]]; then
-                debug_and_run "eval \"\$( cd \"${ALR_DIR}/gnatprove\" && ${ALR_DIR}/bin/alr printenv )\""
+                debug_and_run "${INFRASTRUCTURE_DIR}/install --no-anod --no-java --automatic"
 
                 if [ -d "${ALR_DIR}" ]; then
-                    debug_and_run "cd \"${ALR_DIR}/gnatprove\" && eval \"$( ../bin/alr printenv )\" && cd \"${OPENUXAS_ROOT}\""
+                    debug_and_run "eval \"\$( cd \"${ALR_DIR}/gnatprove\" && ${ALR_DIR}/bin/alr printenv )\""
+                    debug_and_run "eval \"\$( cd \"${ALR_DIR}/xmlada\" && ${ALR_DIR}/bin/alr printenv )\""
                 else
                     echo "Installing GNAT appears to have failed."
                     exit 1
