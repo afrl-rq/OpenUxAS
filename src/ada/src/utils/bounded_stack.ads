@@ -1,5 +1,5 @@
-with Ada.Containers.Functional_Maps;
-with Ada.Containers.Functional_Vectors;
+with SPARK.Containers.Functional.Maps;
+with SPARK.Containers.Functional.Vectors;
 with Common; use Common;
 with Ada.Containers; use Ada.Containers;
 
@@ -20,23 +20,31 @@ package Bounded_Stack with SPARK_Mode is
    function Element (S : Stack; I : Index) return Element_Type
      with Ghost, Pre => I <= Size (S);
 
+   function Element_Logic_Equal (Left, Right : Element_Type) return Boolean
+   with
+     Ghost,
+     Import,
+     Global => null,
+     Annotate => (GNATprove, Logical_Equal),
+     Annotate => (GNATprove, Always_Return);
+
    procedure Push (S : in out Stack; E : Element_Type) with
      Pre  => Size (S) < Capacity,
      Post =>
        Size (S) = Size (S'Old) + 1
          and then
-       (for all I in 1 .. Size (S'Old) => Element (S, I) = Element (S'Old, I))
+       (for all I in 1 .. Size (S'Old) => Element_Logic_Equal (Element (S, I), Element (S'Old, I)))
          and then
-           Element (S, Size (S)) = E;
+           Element_Logic_Equal (Element (S, Size (S)), E);
 
    procedure Pop (S : in out Stack; E : out Element_Type) with
      Pre  => Size (S) > Empty,
      Post =>
        Size (S) = Size (S'Old) - 1
          and then
-       (for all I in 1 .. Size (S) => Element (S, I) = Element (S'Old, I))
+       (for all I in 1 .. Size (S) => Element_Logic_Equal (Element (S, I), Element (S'Old, I)))
          and then
-       E = Element (S'Old, Size (S'Old));
+       Element_Logic_Equal (E, Element (S'Old, Size (S'Old)));
 
 private
 

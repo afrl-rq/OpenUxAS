@@ -1,6 +1,7 @@
 with AVTAS.LMCP.Types;  use AVTAS.LMCP.Types;  -- used by child packages
 
-with Ada.Containers.Formal_Hashed_Sets;
+with SPARK.Containers.Formal.Hashed_Sets;
+with SPARK.Containers.Types;
 with Ada.Strings.Hash;
 
 with Dynamic_Strings; use Dynamic_Strings;
@@ -12,11 +13,11 @@ package UxAS.Comms is
    subtype Subscription_Address is Dynamic_String (Capacity => Subscription_Address_Max_Length);
    --  a constrained subtype for the sake of instantiating the Containers generic
 
-   function Hashed_Subscription_Address (Element : Subscription_Address) return Ada.Containers.Hash_Type is
+   function Hashed_Subscription_Address (Element : Subscription_Address) return SPARK.Containers.Types.Hash_Type is
       (Ada.Strings.Hash (Value (Element)));
 
    pragma Assertion_Policy (Post => Ignore);
-   package Subscription_Addresses is new Ada.Containers.Formal_Hashed_Sets
+   package Subscription_Addresses is new SPARK.Containers.Formal.Hashed_Sets
      (Element_Type        => Subscription_Address,
       Hash                => Hashed_Subscription_Address,
       Equivalent_Elements => "=");

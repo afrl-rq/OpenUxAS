@@ -1,4 +1,4 @@
-with Ada.Containers.Formal_Hashed_Maps;
+with SPARK.Containers.Formal.Hashed_Maps;
 with Ada.Strings.Hash;
 with Ada.Directories;
 
@@ -15,7 +15,7 @@ package body UxAS.Comms.LMCP_Net_Client.Service is
    function Hashed_Service_Type_Name (Element : Service_Type_Name) return Ada.Containers.Hash_Type is
       (Ada.Strings.Hash (Value (Element)));
 
-   package Creation_Function_To_Service_Names is new Ada.Containers.Formal_Hashed_Maps
+   package Creation_Function_To_Service_Names is new SPARK.Containers.Formal.Hashed_Maps
      (Element_Type    => Service_Creation_Function_Pointer,
       Key_Type        => Service_Type_Name,
       Hash            => Hashed_Service_Type_Name,

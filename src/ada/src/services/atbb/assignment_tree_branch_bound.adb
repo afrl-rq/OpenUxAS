@@ -1,5 +1,5 @@
 with Ada.Containers;                     use Ada.Containers;
-with Ada.Containers.Formal_Ordered_Maps;
+with SPARK.Containers.Formal.Ordered_Maps;
 with Ada.Strings.Fixed;                  use Ada.Strings.Fixed;
 with Ada.Strings;                        use Ada.Strings;
 with Ada.Text_IO;                        use Ada.Text_IO;
@@ -19,7 +19,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
    end record
    with Predicate => TotalTime >= 0;
 
-   package Int64_VehicleAssignmentCost_Maps is new Ada.Containers.Formal_Hashed_Maps
+   package Int64_VehicleAssignmentCost_Maps is new SPARK.Containers.Formal.Hashed_Maps
      (Key_Type     => Int64,
       Element_Type => VehicleAssignmentCost,
       Hash         => Int64_Hash);
@@ -40,7 +40,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
 
    type Children_Arr is array (Positive range <>) of Assignment_Info;
 
-   package Int64_Unbounded_String_Maps is new Ada.Containers.Functional_Maps
+   package Int64_Unbounded_String_Maps is new SPARK.Containers.Functional.Maps
      (Key_Type     => Int64,
       Element_Type => Unbounded_String);
    type Int64_Unbounded_String_Map is new Int64_Unbounded_String_Maps.Map;
@@ -185,8 +185,9 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
      (Algebra             : not null access constant Algebra_Tree_Cell;
       TaskPlanOptions_Map : Int64_TPO_Map)
       return Boolean
-   with Ghost;
-   pragma Annotate (GNATprove, Terminating, All_Actions_In_Map);
+   with Ghost,
+        Subprogram_Variant => (Structural => Algebra);
+   pragma Annotate (GNATprove, Always_Return, All_Actions_In_Map);
 
    function TaskOptionId_In_Map
      (TaskOptionId        : Int64;
@@ -351,8 +352,9 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       with
         Ghost,
         Pre  => Is_Present (Alg, ID) and then All_Actions_In_Map (Alg, TaskPlanOptions_Map),
-        Post => ID in 0 .. 9_999_999_999 and then TaskOptionId_In_Map (ID, TaskPlanOptions_Map);
-      pragma Annotate (GNATprove, Terminating, Prove_TaskOptionId_In_Map);
+        Post => ID in 0 .. 9_999_999_999 and then TaskOptionId_In_Map (ID, TaskPlanOptions_Map),
+        Subprogram_Variant => (Structural => Alg);
+      pragma Annotate (GNATprove, Always_Return, Prove_TaskOptionId_In_Map);
 
       procedure Prove_Travel_In_CostMatrix
         (EntityId : Int64;
@@ -737,64 +739,8 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       State   : in out Assignment_Tree_Branch_Bound_State;
       Matrix  : AssignmentCostMatrix)
    is
-      Old_AssignmentCostMatrixes : constant Int64_AssignmentCostMatrix_Map := State.m_assignmentCostMatrixes with Ghost;
-
-      procedure Insert
-        (assignmentCostMatrixes   : in out Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
-      with
-        Pre =>
-            (for all ReqId of assignmentCostMatrixes =>
-               (Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, ReqId))
-                  and then
-                Contains (uniqueAutomationRequests, ReqId)
-                  and then
-                Contains (taskPlanOptions, ReqId)
-                  and then
-                All_Travels_In_CostMatrix
-                  (Element (uniqueAutomationRequests, ReqId),
-                   Element (taskPlanOptions, ReqId),
-                   Element (assignmentCostMatrixes, ReqId))))
-              and then
-            not Contains (assignmentCostMatrixes, Matrix.CorrespondingAutomationRequestID)
-              and then Valid_AssignmentCostMatrix (Matrix)
-              and then Contains (uniqueAutomationRequests, Matrix.CorrespondingAutomationRequestID)
-              and then Contains (taskPlanOptions, Matrix.CorrespondingAutomationRequestID)
-              and then
-            All_Travels_In_CostMatrix
-              (Element (uniqueAutomationRequests, Matrix.CorrespondingAutomationRequestID),
-               Element (taskPlanOptions, Matrix.CorrespondingAutomationRequestID),
-               Matrix),
-        Post =>
-          (for all ReqId of assignmentCostMatrixes =>
-             (Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, ReqId))
-                and then
-              Contains (uniqueAutomationRequests, ReqId)
-                and then
-              Contains (taskPlanOptions, ReqId)
-                and then
-              All_Travels_In_CostMatrix
-                (Element (uniqueAutomationRequests, ReqId),
-                 Element (taskPlanOptions, ReqId),
-                 Element (assignmentCostMatrixes, ReqId))));
-
-      ------------
-      -- Insert --
-      ------------
-
-      procedure Insert
-        (assignmentCostMatrixes   : in out Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
-      is
-         pragma SPARK_Mode (Off);
-      begin
-         Insert (assignmentCostMatrixes, Matrix.CorrespondingAutomationRequestID, Matrix);
-      end Insert;
-
    begin
-      Insert (State.m_assignmentCostMatrixes, State.m_taskPlanOptions, State.m_uniqueAutomationRequests);
+      Insert (State.m_assignmentCostMatrixes, Matrix.CorrespondingAutomationRequestID, Matrix);
       Check_Assignment_Ready (Mailbox, Data, State, Matrix.CorrespondingAutomationRequestID);
    end Handle_Assignment_Cost_Matrix;
 
@@ -860,63 +806,6 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
                     Element (taskPlanOptions, Req),
                     Element (assignmentCostMatrixes, Req)));
 
-      procedure Insert_Empty_TPO_Map
-        (assignmentCostMatrixes   : Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : in out Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
-      with
-        Pre  =>
-          (for all Req of taskPlanOptions =>
-             (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
-                and then Contains (uniqueAutomationRequests, Req)
-                and then
-                  All_EligibleEntities_In_EntityList
-                    (Element (uniqueAutomationRequests, Req),
-                     Element (taskPlanOptions, Req))))
-             and then
-          (for all Req of assignmentCostMatrixes =>
-             Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, Req))
-               and then Contains (uniqueAutomationRequests, Req)
-               and then Contains (taskPlanOptions, Req)
-               and then
-                 All_Travels_In_CostMatrix
-                   (Element (uniqueAutomationRequests, Req),
-                    Element (taskPlanOptions, Req),
-                    Element (assignmentCostMatrixes, Req)))
-            and then
-          not Contains (taskPlanOptions, ReqId)
-            and then
-           Contains (uniqueAutomationRequests, ReqId)
-            and then
-              (for all Option of Options.Options =>
-                (for all EntityId of Option.EligibleEntities =>
-                   Contains (Element (uniqueAutomationRequests, ReqId).EntityList,
-                             TO_Sequences.First,
-                             Last (Element (uniqueAutomationRequests, ReqId).EntityList),
-                             EntityId))),
-        Post =>
-          (for all Req of taskPlanOptions =>
-             (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
-                and then Contains (uniqueAutomationRequests, Req)
-                and then
-                  All_EligibleEntities_In_EntityList
-                    (Element (uniqueAutomationRequests, Req),
-                     Element (taskPlanOptions, Req))))
-             and then
-          (for all Req of assignmentCostMatrixes =>
-             Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, Req))
-               and then Contains (uniqueAutomationRequests, Req)
-               and then Contains (taskPlanOptions, Req)
-               and then
-                 All_Travels_In_CostMatrix
-                   (Element (uniqueAutomationRequests, Req),
-                    Element (taskPlanOptions, Req),
-                    Element (assignmentCostMatrixes, Req)))
-             and then
-           Contains (taskPlanOptions, ReqId)
-             and then
-           not Has_Key (Element (taskPlanOptions, ReqId), Options.TaskID);
-
       ------------------------
       -- Add_TaskPlanOption --
       ------------------------
@@ -937,24 +826,9 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
             New_Int64_TPO_Map);
       end Add_TaskPlanOption;
 
-      --------------------------
-      -- Insert_Empty_TPO_Map --
-      --------------------------
-
-      procedure Insert_Empty_TPO_Map
-        (assignmentCostMatrixes   : Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : in out Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
-      is
-         pragma SPARK_Mode (Off);
-         Empty_Int64_TPO_Map : Int64_TPO_Map;
-      begin
-         Insert (taskPlanOptions, ReqId, Empty_Int64_TPO_Map);
-      end Insert_Empty_TPO_Map;
-
    begin
       if not Contains (State.m_taskPlanOptions, ReqId) then
-         Insert_Empty_TPO_Map (State.m_assignmentCostMatrixes, State.m_taskPlanOptions, State.m_uniqueAutomationRequests);
+         Insert (State.m_taskPlanOptions, ReqId, Empty_Map);
       end if;
 
       Add_TaskPlanOption (State.m_assignmentCostMatrixes, State.m_taskPlanOptions, State.m_uniqueAutomationRequests);
@@ -971,69 +845,8 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       State   : in out Assignment_Tree_Branch_Bound_State;
       Areq    : UniqueAutomationRequest)
    is
-
-      procedure Insert
-        (assignmentCostMatrixes   : Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : in out Int64_UniqueAutomationRequest_Map)
-        with
-          Pre =>
-            (for all ReqId of taskPlanOptions =>
-               (Valid_TaskPlanOptions (Element (taskPlanOptions, ReqId))
-                  and then Contains (uniqueAutomationRequests, ReqId)
-                  and then
-                    All_EligibleEntities_In_EntityList
-                      (Element (uniqueAutomationRequests, ReqId),
-                       Element (taskPlanOptions, ReqId))))
-               and then
-            (for all ReqId of assignmentCostMatrixes =>
-               Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, ReqId))
-                 and then Contains (uniqueAutomationRequests, ReqId)
-                 and then Contains (taskPlanOptions, ReqId)
-                 and then
-                   All_Travels_In_CostMatrix
-                     (Element (uniqueAutomationRequests, ReqId),
-                      Element (taskPlanOptions, ReqId),
-                      Element (assignmentCostMatrixes, ReqId)))
-               and then
-             not Contains (uniqueAutomationRequests, Areq.RequestID)
-               and then
-             not Contains (assignmentCostMatrixes, Areq.RequestID),
-          Post =>
-            (for all ReqId of taskPlanOptions =>
-               (Valid_TaskPlanOptions (Element (taskPlanOptions, ReqId))
-                  and then Contains (uniqueAutomationRequests, ReqId)
-                  and then
-                    All_EligibleEntities_In_EntityList
-                      (Element (uniqueAutomationRequests, ReqId),
-                       Element (taskPlanOptions, ReqId))))
-               and then
-            (for all ReqId of assignmentCostMatrixes =>
-               Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, ReqId))
-                 and then Contains (uniqueAutomationRequests, ReqId)
-                 and then Contains (taskPlanOptions, ReqId)
-                 and then
-                   All_Travels_In_CostMatrix
-                     (Element (uniqueAutomationRequests, ReqId),
-                      Element (taskPlanOptions, ReqId),
-                      Element (assignmentCostMatrixes, ReqId)));
-
-      ------------
-      -- Insert --
-      ------------
-
-      procedure Insert
-        (assignmentCostMatrixes   : Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : in out Int64_UniqueAutomationRequest_Map)
-      is
-         pragma SPARK_Mode (Off);
-      begin
-         Insert (uniqueAutomationRequests, Areq.RequestID, Areq);
-      end Insert;
-
    begin
-      Insert (State.m_assignmentCostMatrixes, State.m_taskPlanOptions, State.m_uniqueAutomationRequests);
+      Insert (State.m_uniqueAutomationRequests, Areq.RequestID, Areq);
       Check_Assignment_Ready (Mailbox, Data, State, Areq.RequestID);
    end Handle_Unique_Automation_Request;
 
@@ -1318,8 +1131,9 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
          if not Error then
             declare
                procedure Check_Actions_In_Map_Rec (Tree : not null Algebra_Tree) with
-                 Post => (if not Error then All_Actions_In_Map (Tree, TaskPlanOptions_Map));
-               pragma Annotate (GNATprove, Terminating, Check_Actions_In_Map_Rec);
+                 Post => (if not Error then All_Actions_In_Map (Tree, TaskPlanOptions_Map)),
+                 Subprogram_Variant => (Structural => Tree);
+               pragma Annotate (GNATprove, Always_Return, Check_Actions_In_Map_Rec);
                procedure Check_Actions_In_Map_Rec (Tree : not null Algebra_Tree) is
                begin
                   case Tree.all.Node_Kind is
@@ -1673,34 +1487,6 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
         Pre  => A = B and then Valid_TaskPlanOptions (TaskPlanOptions_Map) and then Valid_Assignment (A, TaskPlanOptions_Map, Automation_Request),
         Post => Valid_Assignment (B, TaskPlanOptions_Map, Automation_Request);
 
-      procedure Pop_Wrapper (Search_Stack : in out Stack; Current_Element : out Assignment_Info) with
-        Pre  =>
-          Size (Search_Stack) > Assignment_Stack.Empty
-            and then
-          Valid_TaskPlanOptions (TaskPlanOptions_Map)
-            and then
-          (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Element (Search_Stack, K), TaskPlanOptions_Map, Automation_Request)),
-        Post =>
-          Size (Search_Stack) = Size (Search_Stack'Old) - 1
-            and then
-          Valid_Assignment (Current_Element, TaskPlanOptions_Map, Automation_Request)
-            and then
-          (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Element (Search_Stack, K), TaskPlanOptions_Map, Automation_Request));
-
-      procedure Push_Wrapper (Search_Stack : in out Stack; Current_Element : Assignment_Info) with
-        Pre  =>
-          Size (Search_Stack) < Assignment_Stack.Capacity
-            and then
-          Valid_TaskPlanOptions (TaskPlanOptions_Map)
-            and then
-          (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Element (Search_Stack, K), TaskPlanOptions_Map, Automation_Request))
-            and then
-          Valid_Assignment (Current_Element, TaskPlanOptions_Map, Automation_Request),
-        Post =>
-          Size (Search_Stack) = Size (Search_Stack'Old) + 1
-            and then
-          (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Element (Search_Stack, K), TaskPlanOptions_Map, Automation_Request));
-
       -----------------
       -- Bubble_Sort --
       -----------------
@@ -1780,43 +1566,6 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
          end loop;
       end Equal_Implies_Valid_Assignment;
 
-      -----------------
-      -- Pop_Wrapper --
-      -----------------
-
-      procedure Pop_Wrapper (Search_Stack : in out Stack; Current_Element : out Assignment_Info) is
-         Old_Stack : constant Stack := Search_Stack with Ghost;
-      begin
-         Pop (Search_Stack, Current_Element);
-         Equal_Implies_Valid_Assignment (Element (Old_Stack, Size (Old_Stack)), Current_Element);
-         for K in 1 .. Size (Search_Stack) loop
-            Equal_Implies_Valid_Assignment (Element (Old_Stack, K), Element (Search_Stack, K));
-            pragma Loop_Invariant
-              (for all J in 1 .. K => Valid_Assignment (Element (Search_Stack, J), TaskPlanOptions_Map, Automation_Request));
-         end loop;
-      end Pop_Wrapper;
-
-      ------------------
-      -- Push_Wrapper --
-      ------------------
-
-      procedure Push_Wrapper (Search_Stack : in out Stack; Current_Element : Assignment_Info) is
-         Old_Stack : constant Stack := Search_Stack with Ghost;
-      begin
-         Push (Search_Stack, Current_Element);
-
-         for K in 1 .. Size (Search_Stack) loop
-            if K < Size (Search_Stack) then
-               Equal_Implies_Valid_Assignment (Element (Old_Stack, K), Element (Search_Stack, K));
-            else
-               Equal_Implies_Valid_Assignment (Current_Element, Element (Search_Stack, K));
-            end if;
-
-            pragma Loop_Invariant
-              (for all J in 1 .. K => Valid_Assignment (Element (Search_Stack, J), TaskPlanOptions_Map, Automation_Request));
-         end loop;
-      end Push_Wrapper;
-
       type Min_Option (Found : Boolean := False) is record
          case Found is
             when True =>
@@ -1843,7 +1592,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
 
          --  The first element is a null assignment
 
-         Push_Wrapper (Search_Stack,
+         Push (Search_Stack,
                        (Empty_TA_Seq,
                         Empty_VA_Map));
          pragma Assert (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Element (Search_Stack, K), TaskPlanOptions_Map, Automation_Request));
@@ -1861,7 +1610,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
 
             --  The element at the top of the stack is popped
 
-            Pop_Wrapper (Search_Stack, Current_Element);
+            Pop (Search_Stack, Current_Element);
 
             if not Min.Found or else Cost (Current_Element, Data.Cost_Function) < Min.Cost then
                declare
@@ -1894,7 +1643,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
                         begin
                            if not Min.Found or else Cost (Child, Data.Cost_Function) < Min.Cost then
                               pragma Assume (Size (Search_Stack) < Assignment_Stack.Capacity, "we have space for another child");
-                              Push_Wrapper (Search_Stack, Child);
+                              Push (Search_Stack, Child);
                            end if;
                         end;
                      end loop;
@@ -1917,6 +1666,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
          end;
       end if;
       Free_Tree (Algebra);
+      pragma Assert (Algebra = null);
    end Run_Calculate_Assignment;
 
    ---------------------------------
@@ -1930,193 +1680,6 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       ReqId   : Int64)
    is
       Summary : TaskAssignmentSummary;
-
-      procedure Delete_AssignmentCostMatrix
-        (assignmentCostMatrixes   : in out Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
-        with
-          Pre =>
-            (for all Req of taskPlanOptions =>
-               (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
-                  and then Contains (uniqueAutomationRequests, Req)
-                  and then
-                    All_EligibleEntities_In_EntityList
-                      (Element (uniqueAutomationRequests, Req),
-                       Element (taskPlanOptions, Req))))
-               and then
-            (for all Req of assignmentCostMatrixes =>
-               Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, Req))
-                 and then Contains (uniqueAutomationRequests, Req)
-                 and then Contains (taskPlanOptions, Req)
-                 and then
-                   All_Travels_In_CostMatrix
-                     (Element (uniqueAutomationRequests, Req),
-                      Element (taskPlanOptions, Req),
-                      Element (assignmentCostMatrixes, Req)))
-               and then
-             Contains (assignmentCostMatrixes, ReqId),
-          Post =>
-            (for all Req of taskPlanOptions =>
-               (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
-                  and then Contains (uniqueAutomationRequests, Req)
-                  and then
-                    All_EligibleEntities_In_EntityList
-                     (Element (uniqueAutomationRequests, Req),
-                      Element (taskPlanOptions, Req))))
-               and then
-            (for all Req of assignmentCostMatrixes =>
-               Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, Req))
-                 and then Contains (uniqueAutomationRequests, Req)
-                 and then Contains (taskPlanOptions, Req)
-                 and then
-                   All_Travels_In_CostMatrix
-                     (Element (uniqueAutomationRequests, Req),
-                      Element (taskPlanOptions, Req),
-                      Element (assignmentCostMatrixes, Req)))
-               and then
-             not Contains (assignmentCostMatrixes, ReqId);
-
-      procedure Delete_TaskPlanOption
-        (assignmentCostMatrixes   : Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : in out Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
-        with
-          Pre =>
-            (for all Req of taskPlanOptions =>
-               (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
-                  and then Contains (uniqueAutomationRequests, Req)
-                  and then
-                    All_EligibleEntities_In_EntityList
-                      (Element (uniqueAutomationRequests, Req),
-                       Element (taskPlanOptions, Req))))
-               and then
-            (for all Req of assignmentCostMatrixes =>
-               Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, Req))
-                 and then Contains (uniqueAutomationRequests, Req)
-                 and then Contains (taskPlanOptions, Req)
-                 and then
-                   All_Travels_In_CostMatrix
-                     (Element (uniqueAutomationRequests, Req),
-                      Element (taskPlanOptions, Req),
-                      Element (assignmentCostMatrixes, Req)))
-               and then
-             not Contains (assignmentCostMatrixes, ReqId)
-               and then
-             Contains (taskPlanOptions, ReqId),
-          Post =>
-            (for all Req of taskPlanOptions =>
-               (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
-                  and then Contains (uniqueAutomationRequests, Req)
-                  and then
-                    All_EligibleEntities_In_EntityList
-                      (Element (uniqueAutomationRequests, Req),
-                       Element (taskPlanOptions, Req))))
-               and then
-            (for all Req of assignmentCostMatrixes =>
-               Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, Req))
-                 and then Contains (uniqueAutomationRequests, Req)
-                 and then Contains (taskPlanOptions, Req)
-                 and then
-                   All_Travels_In_CostMatrix
-                     (Element (uniqueAutomationRequests, Req),
-                      Element (taskPlanOptions, Req),
-                      Element (assignmentCostMatrixes, Req)))
-               and then
-             not Contains (assignmentCostMatrixes, ReqId)
-               and then
-             not Contains (taskPlanOptions, ReqId);
-
-      procedure Delete_UniqueAutomationRequest
-        (assignmentCostMatrixes   : Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : in out Int64_UniqueAutomationRequest_Map)
-        with
-          Pre =>
-            (for all Req of taskPlanOptions =>
-               (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
-                  and then Contains (uniqueAutomationRequests, Req)
-                  and then
-                    All_EligibleEntities_In_EntityList
-                      (Element (uniqueAutomationRequests, Req),
-                       Element (taskPlanOptions, Req))))
-               and then
-            (for all Req of assignmentCostMatrixes =>
-               Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, Req))
-                 and then Contains (uniqueAutomationRequests, Req)
-                 and then Contains (taskPlanOptions, Req)
-                 and then
-                   All_Travels_In_CostMatrix
-                     (Element (uniqueAutomationRequests, Req),
-                      Element (taskPlanOptions, Req),
-                      Element (assignmentCostMatrixes, Req)))
-               and then
-             not Contains (assignmentCostMatrixes, ReqId)
-               and then
-             not Contains (taskPlanOptions, ReqId)
-               and then
-             Contains (uniqueAutomationRequests, ReqId),
-          Post =>
-            (for all Req of taskPlanOptions =>
-               (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
-                  and then Contains (uniqueAutomationRequests, Req)
-                  and then
-                    All_EligibleEntities_In_EntityList
-                      (Element (uniqueAutomationRequests, Req),
-                       Element (taskPlanOptions, Req))))
-               and then
-            (for all Req of assignmentCostMatrixes =>
-               Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, Req))
-                 and then Contains (uniqueAutomationRequests, Req)
-                 and then Contains (taskPlanOptions, Req)
-                 and then
-                   All_Travels_In_CostMatrix
-                     (Element (uniqueAutomationRequests, Req),
-                      Element (taskPlanOptions, Req),
-                      Element (assignmentCostMatrixes, Req)));
-
-      ---------------------------------
-      -- Delete_AssignmentCostMatrix --
-      ---------------------------------
-
-      procedure Delete_AssignmentCostMatrix
-        (assignmentCostMatrixes   : in out Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
-      is
-         pragma SPARK_Mode (Off);
-      begin
-         Delete (assignmentCostMatrixes, ReqId);
-      end Delete_AssignmentCostMatrix;
-
-      ---------------------------
-      -- Delete_TaskPlanOption --
-      ---------------------------
-
-      procedure Delete_TaskPlanOption
-        (assignmentCostMatrixes   : Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : in out Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
-      is
-         pragma SPARK_Mode (Off);
-      begin
-         Delete (taskPlanOptions, ReqId);
-      end Delete_TaskPlanOption;
-
-      ------------------------------------
-      -- Delete_UniqueAutomationRequest --
-      ------------------------------------
-
-      procedure Delete_UniqueAutomationRequest
-        (assignmentCostMatrixes   : Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : in out Int64_UniqueAutomationRequest_Map)
-      is
-         pragma SPARK_Mode (Off);
-      begin
-         Delete (uniqueAutomationRequests, ReqId);
-      end Delete_UniqueAutomationRequest;
-
       Error   : Boolean;
       Message : Unbounded_String;
    begin
@@ -2142,9 +1705,9 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       else
          sendErrorMessage (Mailbox, Message);
       end if;
-      Delete_AssignmentCostMatrix (State.m_assignmentCostMatrixes, State.m_taskPlanOptions, State.m_uniqueAutomationRequests);
-      Delete_TaskPlanOption (State.m_assignmentCostMatrixes, State.m_taskPlanOptions, State.m_uniqueAutomationRequests);
-      Delete_UniqueAutomationRequest (State.m_assignmentCostMatrixes, State.m_taskPlanOptions, State.m_uniqueAutomationRequests);
+      Delete (State.m_assignmentCostMatrixes, ReqId);
+      Delete (State.m_taskPlanOptions, ReqId);
+      Delete (State.m_uniqueAutomationRequests, ReqId);
    end Send_TaskAssignmentSummary;
 
    -------------------------
