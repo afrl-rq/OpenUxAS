@@ -1,33 +1,11 @@
 with Ada.Text_IO; use Ada.Text_IO;
+with SPARK.Big_Integers; use SPARK.Big_Integers;
+with SPARK.Big_Intervals; use SPARK.Big_Intervals;
 
 package body Route_Aggregator with SPARK_Mode is
    pragma Unevaluated_Use_Of_Old (Allow);
 
    pragma Assertion_Policy (Ignore);
-
-   --  Lemmas used to factor out reasonning about the redefined model of
-   --  Int64_Formal_Set_Maps
-
-   -------------------
-   -- Model_Include --
-   -------------------
-
-   procedure Model_Include
-     (M1, M2 : Int64_Formal_Set_Maps.Formal_Model.M.Map;
-      N1, N2 : Int_Set_Maps_M.Map)
-   --  Lemma: Inclusion of old models implies inclusion of redefined models
-   with Ghost,
-     Global => null,
-     Pre  => Same_Mappings (M1, N1) and Same_Mappings (M2, N2) and M1 <= M2,
-     Post => N1 <= N2;
-
-   procedure Model_Include
-     (M1, M2 : Int64_Formal_Set_Maps.Formal_Model.M.Map;
-      N1, N2 : Int_Set_Maps_M.Map)
-   is
-   begin
-      null;
-   end Model_Include;
 
    -----------------------------
    -- Lift_From_Keys_To_Model --
@@ -662,10 +640,7 @@ package body Route_Aggregator with SPARK_Mode is
       Delete (m_pendingRequest, Position);
 
       --  Establish the effect on the redefined Model of maps of formal sets
-
-      Model_Include
-        (Int64_Formal_Set_Maps.Formal_Model.Model (m_pendingRequest), Old_pendingRoute_M,
-         Model (m_pendingRequest), Old_pendingRoute);
+      pragma Assert (Model (m_pendingRequest) <= Old_pendingRoute);
    end Delete_PendingRequest;
 
    --------------------
@@ -1040,13 +1015,7 @@ package body Route_Aggregator with SPARK_Mode is
    begin
       Insert (m_pendingRequest, RequestID, PlanRequests);
       --  Establish the effect on the redefined Model of maps of formal sets
-
-      Model_Include
-        (Old_pendingRequest_M, Int64_Formal_Set_Maps.Formal_Model.Model (m_pendingRequest),
-         Old_pendingRequest, Model (m_pendingRequest));
-
-      pragma Assert (No_Overlaps (Model (m_pendingRequest)));
-      pragma Assert (All_Pending_Requests_Seen (Model (m_pendingRequest), m_routeRequestId));
+      pragma Assert (Old_pendingRequest <= Model (m_pendingRequest));
 
    end Insert_PendingRequest;
 
@@ -1069,7 +1038,7 @@ package body Route_Aggregator with SPARK_Mode is
       begin
          for C in S loop
             pragma Loop_Variant (Increases => Int_Set_P.Get (Positions (S), C));
-            pragma Loop_Invariant (Length (Res) = Int_Set_P.Get (Positions (S), C) - 1);
+            pragma Loop_Invariant (Length (Res) = +(Int_Set_P.Get (Positions (S), C) - 1));
             pragma Loop_Invariant (for all E of Res => Contains (S, E));
             pragma Loop_Invariant
               (for all K in 1 .. Int_Set_P.Get (Positions (S), C) - 1 =>
@@ -1086,7 +1055,7 @@ package body Route_Aggregator with SPARK_Mode is
    begin
       for C in M loop
          pragma Loop_Variant (Increases => Int_Set_Maps_P.Get (Positions (M), C));
-         pragma Loop_Invariant (Int_Set_Maps_M.Length (Res) = Int_Set_Maps_P.Get (Positions (M), C) - 1);
+         pragma Loop_Invariant (Int_Set_Maps_M.Length (Res) = +(Int_Set_Maps_P.Get (Positions (M), C) - 1));
          pragma Loop_Invariant (for all I of Res => Contains (M, I));
          pragma Loop_Invariant
            (for all I of Res =>
@@ -1436,7 +1405,6 @@ package body Route_Aggregator with SPARK_Mode is
                  (for all J in Int_Set_P.Get (Positions (routePlans), C2) .. Length (routePlans) =>
                          not Has_Key (Res, Int_Set_E.Get (Elements (routePlans), J)));
 
-               pragma Assume (Length (Res) < Count_Type'Last, "We have less than Count_Type'Last pending plan requests in total");
                Res := Add (Res, Element (routePlans, C2), Key (pendingRoute, C));
             end loop;
          end;

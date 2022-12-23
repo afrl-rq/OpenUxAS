@@ -1,5 +1,5 @@
-with Ada.Containers.Formal_Hashed_Maps;
-with Ada.Containers.Functional_Maps;
+with SPARK.Containers.Formal.Hashed_Maps;
+with SPARK.Containers.Functional.Maps;
 with Ada.Containers;                             use Ada.Containers;
 with Ada.Strings.Unbounded;                      use Ada.Strings.Unbounded;
 with Assignment_Tree_Branch_Bound_Communication; use Assignment_Tree_Branch_Bound_Communication;
@@ -10,7 +10,7 @@ package Assignment_Tree_Branch_Bound with SPARK_Mode is
 
    type Cost_Function_Kind is (Minmax, Cumulative);
 
-   package Int64_UAR_Maps is new Ada.Containers.Formal_Hashed_Maps
+   package Int64_UAR_Maps is new SPARK.Containers.Formal.Hashed_Maps
        (Key_Type     => Int64,
         Element_Type => UniqueAutomationRequest,
         Hash         => Int64_Hash);
@@ -18,12 +18,12 @@ package Assignment_Tree_Branch_Bound with SPARK_Mode is
      Int64_UAR_Maps.Map (10, Int64_UAR_Maps.Default_Modulus (10));
    use Int64_UAR_Maps;
 
-   package Int64_TaskPlanOptions_Maps is new Ada.Containers.Functional_Maps
+   package Int64_TaskPlanOptions_Maps is new SPARK.Containers.Functional.Maps
      (Key_Type     => Int64,
       Element_Type => TaskPlanOptions);
    type Int64_TPO_Map is new Int64_TaskPlanOptions_Maps.Map;
 
-   package Int64_TPO_Map_Maps is new Ada.Containers.Formal_Hashed_Maps
+   package Int64_TPO_Map_Maps is new SPARK.Containers.Formal.Hashed_Maps
      (Key_Type => Int64,
       Element_Type => Int64_TPO_Map,
       Hash  => Int64_Hash);
@@ -34,7 +34,7 @@ package Assignment_Tree_Branch_Bound with SPARK_Mode is
    package Int64_TaskPlanOptions_Map_Maps_P renames Int64_TPO_Map_Maps.Formal_Model.P;
    package Int64_TaskPlanOptions_Map_Maps_K renames Int64_TPO_Map_Maps.Formal_Model.K;
 
-   package Int64_ACM_Maps is new Ada.Containers.Formal_Hashed_Maps
+   package Int64_ACM_Maps is new SPARK.Containers.Formal.Hashed_Maps
        (Key_Type     => Int64,
         Element_Type => AssignmentCostMatrix,
         Hash         => Int64_Hash);

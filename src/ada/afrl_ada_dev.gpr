@@ -1,6 +1,7 @@
 with "xmlada";
 with "zmq.gpr";
 with "lmcp_generated_messages.gpr";
+with "sparklib";
 
 project AFRL_Ada_Dev is
 
@@ -23,11 +24,12 @@ project AFRL_Ada_Dev is
    Style_Flags := ("-gnaty3aehiIklnOprstux");
 
    Debug_Flags :=
-     ("-gnata",   -- enable assertions of all kinds
-      "-gnatwa",  -- enable all the usual warnings (but not absolutely all)
-      "-gnateA",  -- check for overlapping actual parameters
-      "-g",       -- include symbols etc used for debugging
-      "-O0");     -- don't optimize at all, for sake of debugging
+     ("-gnata",    -- enable assertions of all kinds
+      "-gnatwa",   -- enable all the usual warnings (but not absolutely all)
+      "-gnateA",   -- check for overlapping actual parameters
+      "-g",        -- include symbols etc used for debugging
+      "-O0",       -- don't optimize at all, for sake of debugging
+      "-gnat2022"); -- enable GNAT 2022 features
 
    GCOV_Flags := ("-fprofile-arcs", "-ftest-coverage");
 
@@ -35,7 +37,8 @@ project AFRL_Ada_Dev is
                      "-gnatn",               -- inline across units (moderate, since we're using -O2)
                      "-gnatp",               -- don't generate runtime checks
                      "-fdata-sections",      -- data go into separate sections
-                     "-ffunction-sections"); -- routines go into separate sections
+                     "-ffunction-sections",  -- routines go into separate sections
+                     "-gnat2022");           -- enable GNAT 2022 features
 
    package Naming is
 
