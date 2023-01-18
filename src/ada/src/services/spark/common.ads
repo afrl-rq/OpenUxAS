@@ -65,17 +65,7 @@ package Common with SPARK_Mode is
       Tail : Character);
    --  Append Tail to Msg if there is enough room in the unbounded string
 
-   package Unbounded_Strings_Subprograms is
-      function To_Unbounded_String
-        (Source : String)  return Unbounded_String
-      with
-        Post   =>
-          Length (To_Unbounded_String'Result) = Source'Length
-            and then
-          (for all J in 1 .. Source'Length =>
-             (Source (Source'First - 1 + J)
-              = Element (To_Unbounded_String'Result, J))),
-        Global => null;
+   package Unbounded_Strings_Subprograms with Annotate => (GNATprove, Always_Return) is
 
       function Index
         (Source  : Unbounded_String;
@@ -117,16 +107,12 @@ package Common with SPARK_Mode is
    private
       pragma SPARK_Mode (Off);
 
-      function To_Unbounded_String
-        (Source : String)  return Unbounded_String
-         renames Ada.Strings.Unbounded.To_Unbounded_String;
-
       function Index
         (Source  : Unbounded_String;
          Pattern : String;
          Going   : Ada.Strings.Direction := Ada.Strings.Forward;
          Mapping : Ada.Strings.Maps.Character_Mapping := Ada.Strings.Maps.Identity) return Natural
-         renames Ada.Strings.Unbounded.Index;
+      is (Ada.Strings.Unbounded.Index (Source, Pattern, Going, Mapping));
 
       function Index
         (Source  : Unbounded_String;
@@ -134,12 +120,12 @@ package Common with SPARK_Mode is
          From    : Positive;
          Going   : Ada.Strings.Direction := Ada.Strings.Forward;
          Mapping : Ada.Strings.Maps.Character_Mapping := Ada.Strings.Maps.Identity) return Natural
-         renames Ada.Strings.Unbounded.Index;
+      is (Ada.Strings.Unbounded.Index (Source, Pattern, From, Going, Mapping));
 
       function Slice
         (Source : Unbounded_String;
          Low    : Positive;
          High   : Natural) return String
-         renames Ada.Strings.Unbounded.Slice;
+      is (Ada.Strings.Unbounded.Slice (Source, Low, High));
    end Unbounded_Strings_Subprograms;
 end Common;

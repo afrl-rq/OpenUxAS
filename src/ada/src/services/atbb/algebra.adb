@@ -18,28 +18,52 @@ package body Algebra with SPARK_Mode is
       Result                 : out Int64_Seq;
       Encounter_Executed_Out : out Boolean);
 
+   function Depth (T : access constant Algebra_Tree_Cell) return Big_Natural is
+   begin
+      if T = null then
+         return 0;
+      else
+         if T.Node_Kind /= Operator then
+            return 1;
+         else
+            declare
+               Max_Depth : Big_Natural := 0;
+            begin
+               for J in T.all.Collection.Children'Range loop
+                  Max_Depth := Max (Max_Depth, Depth (T.all.Collection.Children (J)));
+
+                  pragma Loop_Invariant
+                    (for all K in T.all.Collection.Children'First .. J =>
+                       Max_Depth >= Depth (T.all.Collection.Children (K)));
+               end loop;
+               return Max_Depth + 1;
+            end;
+         end if;
+      end if;
+   end Depth;
+
    ---------------
    -- Free_Tree --
    ---------------
 
-   procedure Free_Tree (X : in out Algebra_Tree)
+   procedure Free_Tree (T : in out Algebra_Tree)
    is
-      pragma SPARK_Mode (Off);
       procedure Internal_Free is new Ada.Unchecked_Deallocation
         (Algebra_Tree_Cell, Algebra_Tree);
    begin
-      if X /= null then
-         if X.all.Node_Kind = Operator then
+      if T /= null then
+         if T.all.Node_Kind = Operator then
             declare
-               Children : Algebra_Tree_Array := Algebra_Tree_Array (X.all.Collection.Children);
+               Children : Algebra_Tree_Array := Algebra_Tree_Array (T.all.Collection.Children);
             begin
                for J in Children'Range loop
                   Free_Tree (Children (J));
+
                   pragma Loop_Invariant (for all K in Children'First .. J => Children (K) = null);
                end loop;
             end;
          end if;
-         Internal_Free (X);
+         Internal_Free (T);
       end if;
    end Free_Tree;
 
@@ -231,17 +255,17 @@ package body Algebra with SPARK_Mode is
       if Element (form, 1) = '.' then
          Kind := Operator;
          Operator_Kind := Sequential;
-         form := Unb.To_Unbounded_String (Unb.Slice (form, 3, Unb.Index (form, ")", Backward) - 1));
+         form := To_Unbounded_String (Unb.Slice (form, 3, Unb.Index (form, ")", Backward) - 1));
 
       elsif Element (form, 1) = '+' then
          Kind := Operator;
          Operator_Kind := Alternative;
-         form := Unb.To_Unbounded_String (Unb.Slice (form, 3, Unb.Index (form, ")", Backward) - 1));
+         form := To_Unbounded_String (Unb.Slice (form, 3, Unb.Index (form, ")", Backward) - 1));
 
       elsif Element (form, 1) = '|' then
          Kind := Operator;
          Operator_Kind := Parallel;
-         form := Unb.To_Unbounded_String (Unb.Slice (form, 3, Unb.Index (form, ")", Backward) - 1));
+         form := To_Unbounded_String (Unb.Slice (form, 3, Unb.Index (form, ")", Backward) - 1));
 
       elsif Element (form, 1) = 'p' then
          Kind := Action;
@@ -250,7 +274,7 @@ package body Algebra with SPARK_Mode is
             form := To_Unbounded_String (Slice (form, 2, Length (form)));
             pragma Assert (Length (form) <= Length (Formula) and then Length (form) < Natural'Last);
          else
-            form := Unb.To_Unbounded_String (Unb.Slice (form, 2, Unb.Index (form, ")", Backward) - 1));
+            form := To_Unbounded_String (Unb.Slice (form, 2, Unb.Index (form, ")", Backward) - 1));
          end if;
       end if;
 
@@ -325,6 +349,7 @@ package body Algebra with SPARK_Mode is
 
                               pragma Loop_Invariant (iEnd in J + 1 .. Length (form));
                               pragma Loop_Invariant (numParenthesisTmp >= 1);
+                              pragma Loop_Variant (Increases => iEnd);
                               iEnd := iEnd + 1;
                            end loop;
                            if not Error then
@@ -362,6 +387,7 @@ package body Algebra with SPARK_Mode is
                      begin
                         while iEnd <= Length (form) loop
                            pragma Loop_Invariant (iEnd in J + 2 .. Length (form));
+                           pragma Loop_Variant (Increases => iEnd);
                            if Element (form, iEnd) in ')' | ' ' then
                               exit;
                            end if;
