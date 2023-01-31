@@ -277,6 +277,16 @@ let
     );
 
 
+    check "L2.\n  "
+    (
+       monitored_route.first_index = task_future_out_msg.route.first_index and
+       monitored_route.last_index = task_future_out_msg.route.last_index and
+       monitored_route.first_index >= 0
+    ) => (
+       O(in_msg.kind  = automation_response and
+         in_msg.route = task_future_out_msg.route)
+    );
+
     -- ===================================================================== --
     -- Antecedent Witnesses
     --

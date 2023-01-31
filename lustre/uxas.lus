@@ -74,9 +74,38 @@ tel;
 
 
 --
+-- This observer calls all the other observers for uxas.
+--
+node uxas_all() returns ();
+var
+    dummy : bool;
+let
+    dummy = uxas_ics() and
+            uxas_env() and
+            uxas_env_antecedents() and
+            uxas_env_witnesses() and
+            uxas_props() and
+            uxas_props_antecedents();
+tel;
+
+
+--
+-- This observer calls all the non-antecedent / non-witness observers for uxas.
+--
+node uxas_all_props() returns ();
+var
+    dummy : bool;
+let
+    dummy = uxas_ics() and
+            uxas_env() and
+            uxas_props();
+tel;
+
+
+--
 -- This observer checks the initial conditions of uxas.
 --
-node uxas_ics() returns ();
+node uxas_ics() returns ( _ : bool; );
 var
     -- data received from the bus
     in_msg : message;
@@ -135,7 +164,7 @@ tel;
 -- This observer checks "environment" properties - relationships amongst
 -- messages and their IDs.
 --
-node uxas_env() returns ();
+node uxas_env() returns ( _ : bool; );
 var
     -- data received from the bus
     in_msg : message;
@@ -246,7 +275,7 @@ tel;
 --
 -- This observer checks the antecedents of uxas_env
 --
-node uxas_env_antecedents() returns ();
+node uxas_env_antecedents() returns ( _ : bool; );
 var
     -- data received from the bus
     in_msg : message;
@@ -315,7 +344,7 @@ tel;
 --
 -- This observer poses witnesses for interesting behaviors in the model.
 --
-node uxas_env_witnesses() returns ();
+node uxas_env_witnesses() returns ( _ : bool; );
 var
     -- data received from the bus
     in_msg : message;
@@ -395,7 +424,7 @@ tel;
 --
 -- This observer checks properties on the model.
 --
-node uxas_props() returns ();
+node uxas_props() returns ( _ : bool; );
 var
     -- data received from the bus
     in_msg : message;
@@ -510,7 +539,7 @@ tel;
 --
 -- This observer checks property antecedents
 --
-node uxas_props_antecedents() returns ();
+node uxas_props_antecedents() returns ( _ : bool; );
 var
     -- data received from the bus
     in_msg : message;

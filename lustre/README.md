@@ -27,14 +27,17 @@ Two key differences between Lustre and typical programming languages are worth h
    The operator allows the programmer to designate the value to be used when an expression would otherwise be `nil`.
    The arrow operator is used in conjunction with `pre` to designate the value to be used when there is no prior value for an expression.
 
-### VS Code Extension ###
-
-There is a [VS Code](#https://code.visualstudio.com/) extension for Lustre: https://github.com/MercierCorentin/vscode-lustre that offers syntax highlighting and comment/uncomment functionality.
-The support for `kind2`'s Lustre is incomplete but generally adequate.
-
 ## kind2 ##
 
 `kind2` is an open-source model checker developed at the University of Iowa: https://kind2-mc.github.io/kind2/
+
+### kind2 VS Code Extension ###
+
+There is a an extension for VS Code available for kind2: https://marketplace.visualstudio.com/items?itemName=kind2-mc.vscode-kind2
+
+This extension offers excellent syntax highlighting and coding support for lustre, as well as integrated commands for checking and simulating lustre nodes.
+The extension does not support compositional analysis, which is required to prove the OpenUxAS properties.
+You should thus also install the command-line tool, `kind2`.
 
 ### Installing Kind2 ###
 
@@ -43,17 +46,13 @@ Follow these steps:
 
     $ sh <(curl -sL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)
     $ opam init
-    $ opam install opam-depext
-    $ opam depext kind2
+    $ opam install --update-invariant kind2
+
+If you do not already have z3 installed, you can install it with `opam`:
+
     $ opam install z3
-    $ opam install kind2
 
-### Installing z3 ###
-
-`z3` is an open-source SMT solver from Microsoft: https://github.com/Z3Prover/z3
-
-The install of `kind2`, above, doesn't install the `z3` binary, only the `z3` bindings for OCaml.
-So you need to install `z3`, e.g., by downloading and installing a release or building from source.
+This takes a while.
 
 ## Running kind2 ##
 
@@ -63,25 +62,29 @@ To run `kind2`, you first need to export the `opam`-provided environment:
 
 Then, you can run `kind2` to reprove all properties on all nodes of the model, like this:
 
-    OpenUxAS/lustre$ kind2 uxas.lus --modular true
+    kind2 uxas.lus --lus_main uxas_props --compositional true --modular true
 
-This may take a long time (multiple hours).
-If you prefer to see output from the tool while it is working, you can add `-v` to the command, like this:
+This will take a few minutes, depending on your hardware, and will result in a final message like this:
 
-    OpenUxAS/lustre$ kind2 uxas.lus --modular true -v
+    Analysis breakdown, total runtime xx.xxxs seconds:
+      automation_request_validator:
+        safe in xx.xxxs
+        without refinement: 0 abstract systems
+        5 properties
+      waypoint_manager:
+        safe in xx.xxxs
+        without refinement: 0 abstract systems
+        9 properties
+      task:
+        safe in xx.xxxs
+        without refinement: 0 abstract systems
+        11 properties
+      uxas_props:
+        safe in xx.xxxs
+        without refinement: 5 abstract systems
+        5 properties
 
-When complete, you should see that:
-
-  * all properties with single-line text descriptions are falsified.
-    These properties are requests that the model checker find a _witness_ for a property or behavior of instance in the model.
-    We use these witnesses to build confidence that the model is operating as expected and to guard against vacuity in properties that are stated using implication.
-
-  * all properties with multi-line text descriptions are proved.
-
-The formatting of the results has been tailored to make checking witnesses v properties easier.
-
-Additional details on proving the model are presented below.
-
+Above this message, `kind2` provides the result of analyzing each of the lustre nodes mentioned.
 
 # Model #
 
@@ -166,10 +169,6 @@ The `uxas` node relies on four files in the `common` directory:
 Type definitions shared across the services and the `uxas` note are grouped here.
 There are no nodes and no properties described here.
 
-There is one function of interest, which expresses a critical predicate over our messages: `ids_imply_equality`.
-This predicate checks that if two messages have the same ID, the two messages are identical.
-We prove that this predicate holds as a property expressed on all messages sent and received in the `uxas` node and rely on this predicate in the antecedent of both compositional properties for the `uxas` node.
-
 ### sequences_simple.lus ###
 
 Lustre does not have any notion of a sequence or an unbounded array.
@@ -187,9 +186,10 @@ The theory is documented and contains many properties and witnesses intended to 
 ### bus.lus ###
 
 The `bus` node is used to down select the output from the services and to provide loop closure.
-In this model, the bus is only allowed to send a single message as output.
-We therefore introduce a constraint on the bus that says that only one service is allowed to send a nonempty message per step.
-Because the services are designed so that they do not have to send a nonempty message, even when they could send a nonempty message, this constraint does not preclude arbitrary interleavings of messages.
+The bus receives an input from each service, but assumes that at most one services provides a message to the bus at each time step.
+The bus outputs whatever message was received, or no message, if no message was received.
+The bus also outputs a freely-chosen token that designates which service is allowed to send a message on the next time step.
+This allows arbitrary interleavings of messages and quiescence.
 
 ### pltl.lus ###
 
@@ -198,11 +198,12 @@ This implementation is adapted from https://github.com/lgwagner/pattern-observer
 
 ## Services ##
 
-Three services are implemented in the model and included in the `services` directory:
+The following services are implemented in the model and included in the `services` directory:
 
   1. `plan-builder.lus`
   2. `automation-request-validator.lus`
   3. `waypoint-manager.lus`
+  4. `task.lus`
 
 ### plan-builder.lus ###
 
@@ -221,18 +222,74 @@ This service receives an Automation Response message and sends Mission Command m
 Data and temporal relationships amongst the messages are stated as requirements and proved.
 A contact is provided for the service that is sufficient to allow successful contract-based proof of the properties in the `uxas` node.
 
+### task.lus ###
+
+This service monitors waypoints and either sends a Task Complete message when all expected waypoints have been seen or raises an error if waypoints are not seen in order.
+The properties for this service are partial and need additional work.
 
 # Analysis #
 
 ## Top-Level Proof ##
 
-You can use `kind2` to prove the properties at the top-level like this:
+you can use `kind2` to reprove all properties on all nodes of the model, like this:
 
-    OpenUxAS/lustre$ kind2 uxas.lus
+    kind2 uxas.lus --lus_main uxas_all_props --compositional true --modular true
 
-This may take a long time (multiple hours).
+This will take a few minutes, depending on your hardware, and will result in a final message like this (your times will be different):
 
-When complete, you should see that:
+    Analysis breakdown, total runtime 325.967s seconds:
+      automation_request_validator:
+        safe in 0.384s
+        without refinement: 0 abstract systems
+        5 properties
+      waypoint_manager:
+        safe in 1.899s
+        without refinement: 0 abstract systems
+        9 properties
+      task:
+        safe in 2.040s
+        without refinement: 0 abstract systems
+        11 properties
+      uxas_props:
+        safe in 306.166s
+        without refinement: 5 abstract systems
+        5 properties
+      uxas_env:
+        safe in 14.213s
+        without refinement: 5 abstract systems
+        8 properties
+      uxas_ics:
+        safe in 0.711s
+        without refinement: 5 abstract systems
+        5 properties
+
+Above this message, `kind2` provides the result of analyzing each of the lustre nodes mentioned.
+
+The top-level model is organized so different sets of properties are grouped in different lustre nodes.
+They are:
+
+* uxas_ics - properties stating initial conditions for the OpenUxAS model
+* uxas_env - properties about the OpenUxAS operating environment
+* uxas_env_antecedents - witnesses to check antecedents in sequent-style properties for the environment
+* uxas_env_witnesses - witness to demonstrate that certain desireable behaviors in the OpenUxAS environment are possible
+* uxas_props - safety, lemma, and compositional properties for the OpenUxAS model
+* uxas_props_antecedents - witnesses to check antecedents in sequent-style properties for OpenUxAS
+* uxas_all - includes all of the above.
+* uxas_all_props - does not include witnesses or antecedents (which complicate reading the output)
+
+Currently, all of the _antecedent and _witness properties should fail; all other properties should pass.
+
+## Proving the Services ##
+
+The contracts on nodes called by the OpenUxAS model are proved with the `--modular true` flag shown above.
+This does not prove the properties contained within the service nodes, which are used to help establish the contracts and to build confidence in contract correctness.
+
+You can prove the properties of individual services like this:
+
+    OpenUxAS/lustre$ kind2 services/automation-request-validator.lus
+    OpenUxAS/lustre$ kind2 services/waypoint-manager.lus
+
+You should see that:
 
   * all properties with single-line text descriptions are falsified.
     These properties are requests that the model checker find a _witness_ for a property or behavior of instance in the model.
@@ -242,28 +299,12 @@ When complete, you should see that:
 
 The formatting of the results has been tailored to make checking witnesses v properties easier.
 
-## Recursive Proof ##
+Note: to avoid re-proving the properties on the sequence theory, you can specify the service node as the lustre main node, like this:
 
-You can use `kind2` to prove the top-level node and all properties on all called nodes like this:
+    OpenUxAS/lustre$ kind2 services/waypoint-manager.lus --lus_main waypoint_manager
 
-    OpenUxAS/lustre$ kind2 uxas.lus --modular true
+`kind2` will then only prove the properties associated with this and any called nodes.
 
-This may take a long time (multiple hours).
-
-## Contract-based Proof ##
-
-`kind2` offers an option for contract-based proof, which labels calls "compositional" proof.
-In this mode, all properties at the top level of the OpenUxAS model can be proved in a few minutes.
-You run this mode like this:
-
-    OpenUxAS/lustre$ kind2 uxas.lus --compositional true
-
-## Proving the Services ##
-
-You can prove the properties on the services like this:
-
-    OpenUxAS/lustre$ kind2 services/automation-request-validator.lus
-    OpenUxAS/lustre$ kind2 services/waypoint-manager.lus
 
 ## Proving the Sequences Theory ##
 
@@ -271,11 +312,15 @@ Properties on the sequences theory (see below) can be proved like this:
 
     OpenUxAS/lustre$ kind2 common/sequences_simple.lus
 
+Note that there is one witness that proves - this means that `kind2` was not able to find the requested witness to the (falsified) property.
+This arises because of the details of the sequences theory; additional information is provided in comments in the `sequences_simple.lus` file.
+
 ## Suppressing Witnesses ##
 
 The output from the witnesses - which present as proof failures - can make reading the output of the tool more difficult.
 Also, when new properties are introduced that may not immediately prove, they can make finding the useful counterexample for the new property more difficult.
 To ease this, the witness properties can be easily disabled.
 
-In the `uxas`, `automation_request_validator`, and `waypoint_manager` nodes, the witnesses are grouped at the bottom of the node.
+In the service nodes, the witnesses are grouped at the bottom of the node.
 This way, they can easily be commented out so that they will not be considered during analysis.
+Currently, they are commented out so that the proof output is clean when run modularly from the top-level node.

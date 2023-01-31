@@ -7,7 +7,7 @@
 -- still be used by theory clients. The sequence, rather than holding arbitrary
 -- values, holds values that equal the index. That is,
 --
---   get(s, i) = i if i is a valid index if sequence s
+--   get(s, i) = i if i is a valid index of sequence s
 --
 -- As a result, the witness that checks for repeated elements in a sequence of
 -- size > 1 fails: elements are, perforce, unique.
@@ -556,6 +556,8 @@ let
         get(sequence, sequence.last_index)
     );
 
+    -- This check fails, as mentioned above, because the formalism does not
+    -- allow non-unque elements: each element is equal to its index.
     check "witness 5: sequence of length n can have the same elements at first and last"
     (
         nonempty_sequence(sequence) and
