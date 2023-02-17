@@ -182,7 +182,6 @@ if __name__ == "__main__":
     if args.download_gnat and (
         not args.interactive or input("Download gnat? [Y/n] ") != "n"
     ):
-
         skip_gnat_download = False
 
         gnat_bin_file = os.path.join(GNAT_DOWNLOAD_DIR, GNAT_DOWNLOAD_FILE)
@@ -211,7 +210,6 @@ if __name__ == "__main__":
     if args.clone_gnat_installer and (
         not args.interactive or input("Clone gnat installer? [Y/n] ") != "n"
     ):
-
         skip_installer_download = False
 
         if os.path.exists(GNAT_INSTALLER_DIR):

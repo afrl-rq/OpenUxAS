@@ -1,3 +1,11 @@
+# SQLite anod spec
+#
+# Updating this spec:
+# 1. Check for new versions at sqlite.org
+# 2. Update the NAME and URL properties
+# 3. run `anod reset` and `anod build sqlite` to make sure the spec still works
+# 4. run `anod build uxas` and test the result by running examples
+
 from e3.os.fs import unixpath
 from e3.anod.loader import spec
 from e3.anod.helper import Configure, Make
@@ -5,7 +13,10 @@ from e3.anod.spec import Anod
 
 
 class Sqlite(spec('common')):
-    """Boost provides free peer-reviewed portable C++ source libraries."""
+    """SQLite."""
+
+    NAME = "sqlite-autoconf-3390400.tar.gz"
+    URL = f"https://sqlite.org/2022/{NAME}"
 
     @property
     def build_deps(self):
@@ -13,16 +24,15 @@ class Sqlite(spec('common')):
 
     @property
     def build_source_list(self):
-        return [Anod.Source(name='sqlite-autoconf-3290000.tar.gz',
+        return [Anod.Source(name=Sqlite.NAME,
                             publish=True)]
 
     @property
     def source_pkg_build(self):
         return [
             self.HTTPSSourceBuilder(
-                name='sqlite-autoconf-3290000.tar.gz',
-                url='https://www.sqlite.org/2019/'
-                'sqlite-autoconf-3290000.tar.gz')]
+                name=Sqlite.NAME,
+                url=Sqlite.URL)]
 
     @Anod.primitive()
     def build(self):

@@ -1,3 +1,26 @@
+# pugixml anod spec
+#
+# Instructions for updating.
+#
+# Note: pugixml doesn't provide support for int64, but OpenUxAS depends on this
+# type. So we have to patch pugixml to add support for int64.
+#
+# 1. check for the latest release of pugixml (v1.12.1 at the time of writing)
+# 2. update repositories.yaml to v1.12.1
+# 3. clone pugixml locally
+# 4. manually apply the changes from `patches/pugixml.patch` to
+#    `src/pugixml.hpp` and `src/pugixml.cpp`
+# 5. run `git diff --no-prefix > pugixml.patch`
+# 6. copy `pugixml.patch` to `patches/pugixml.patch`
+#
+# Then test the changes by running:
+#   `anod reset`
+#   `anod build pugixml`
+# and verify that the sources are patched and the build is clean.
+#
+# Then run `anod build uxas`.
+
+
 from e3.anod.loader import spec
 from e3.anod.spec import Anod
 from e3.diff import patch
@@ -19,5 +42,4 @@ class PugiXML(spec('github')):
         patch(os.path.join(self.build_space.src_dir, 'patches',
                            'pugixml.patch'),
               self.build_space.src_dir)
-        self.cmake_build(
-            cmake_dir=os.path.join(self.build_space.src_dir, 'scripts'))
+        self.cmake_build()

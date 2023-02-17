@@ -62,8 +62,8 @@ class Uxas(spec('common')):
         self.deps['czmq'].setenv()
         self.deps['zyre'].setenv()
         self.deps['sqlite'].setenv()
+        self.deps['boost'].setenv()  # remove for system-wide boost
         self.deps['sqlitecpp'].setenv()
-        self.deps['boost'].setenv()
         self.deps['czmq'].setenv()
         self.deps['wellclear'].setenv()
 
