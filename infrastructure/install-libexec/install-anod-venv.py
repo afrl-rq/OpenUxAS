@@ -56,6 +56,13 @@ APT_INSTALL = Command(
         "python3-distutils",
         "python3-venv",
         "python3-pip",
+        # For a system-wide boost, we need these packages. Commented out until
+        # we have a way to choose between system-wide and local boost.
+        # "libboost-dev",
+        # "libboost-filesystem-dev",
+        # "libboost-regex-dev",
+        # "libboost-date-time-dev",
+        # "libboost-system-dev",
     ],
     description="Installing dependencies",
 )
