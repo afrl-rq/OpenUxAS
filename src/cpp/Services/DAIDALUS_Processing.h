@@ -293,11 +293,9 @@ private:    //the following are member variables associated with response to DAI
         afrl::cmasi::AltitudeType::AltitudeType altitude_type;
         afrl::cmasi::SpeedType::SpeedType speed_type;
     }m_CurrentState, m_DivertState, m_ReturnState;
-    void ResetResponse();
     void SetDivertState(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands);
     bool isSafeToReturnToMission(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_band);
     bool foundWCVAltitudeResolution(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands);
-    bool foundWCVVerticalSpeedResolution(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands);
     bool foundWCVGroundSpeedResolution(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands);
     bool foundWCVHeadingResolution(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands);
    
