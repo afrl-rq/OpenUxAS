@@ -101,6 +101,7 @@
 #define STRING_XML_HORIZONTALDETECTIONTYPE "HorizontalDetectionType"
 #define STRING_XML_DTHR "DTHR"
 #define STRING_XML_ZTHR "ZTHR"
+#define STRING_XML_PRIORITYSWITCHTIME "PrioritySwitchTime"
 
 //preprocessor directives associated with response
 #define STRING_XML_AUTOMATICRESPONSESTATUS "AutomaticResponseStatus"
@@ -1087,6 +1088,11 @@ bool DAIDALUS_Processing::configure(const pugi::xml_node& ndComponent)
         {
             m_AutomaticResponseStatus = "ON";
         }
+    }
+    if (!ndComponent.attribute(STRING_XML_PRIORITYSWITCHTIME).empty())
+    {
+        double local_priority_time_threshold_s = ndComponent.attribute(STRING_XML_PRIORITYSWITCHTIME).as_double();
+        m_priority_time_threshold_s = local_priority_time_threshold_s;
     }
     m_daa.parameters.setLookaheadTime(m_lookahead_time_s, "s");
     m_daa.parameters.setLeftTrack(m_left_trk_deg, "deg");
