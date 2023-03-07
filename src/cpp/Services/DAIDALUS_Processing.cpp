@@ -101,6 +101,7 @@
 #define STRING_XML_HORIZONTALDETECTIONTYPE "HorizontalDetectionType"
 #define STRING_XML_DTHR "DTHR"
 #define STRING_XML_ZTHR "ZTHR"
+#define STRING_XML_PRIORITYSWITCHTIME "PrioritySwitchTime"
 
 //preprocessor directives associated with response
 #define STRING_XML_AUTOMATICRESPONSESTATUS "AutomaticResponseStatus"
@@ -148,6 +149,35 @@ namespace {
     {
         return ((lower < value) && (value <= upper));
     }
+    
+    struct intervals
+    {
+        double lower;
+        double upper;
+    };
+    
+    bool isInRecovery(const double& divert, const std::vector<intervals>& r_bands)
+    {
+        bool RecoveryExists{false}, isFoundInRecovery{false};
+        if (!r_bands.empty())
+        {
+            RecoveryExists = true;
+            for (uint i = 0; i < r_bands.size(); i++)
+            {
+                if (isInRange(r_bands[i].lower, r_bands[i].upper, divert))
+                {
+                    isFoundInRecovery = true;
+                    break;
+                }
+            }
+        }
+        else 
+        {
+            RecoveryExists = false;
+        }
+        
+        return (RecoveryExists && isFoundInRecovery);
+    }
 
 }
 
@@ -170,17 +200,12 @@ DAIDALUS_Processing::~DAIDALUS_Processing() { };
 
 bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands)
 {
-    bool guaranteed_flag = true;
+    bool acceptable_action_flag = true;
     m_DivertState.heading_deg = m_CurrentState.heading_deg;
     m_DivertState.altitude_m = m_CurrentState.altitude_m;
     m_DivertState.horizontal_speed_mps = m_CurrentState.horizontal_speed_mps;
     m_DivertState.vertical_speed_mps = 0; // hold current altitude while diverting m_CurrentState.vertical_speed_mps;       
 
-    struct intervals
-    {
-        double lower;
-        double upper;
-    };
     std::vector<intervals> bands, r_bands;
     intervals temp;
     for (uint i = 0; i < DAIDALUS_bands->getWCVGroundHeadingIntervals().size(); i++)
@@ -189,12 +214,19 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
         temp.upper = DAIDALUS_bands->getWCVGroundHeadingIntervals()[i]->getGroundHeadings()[1];
         bands.push_back(temp);
     }
+    for (uint i = 0; i < DAIDALUS_bands->getRecoveryGroundHeadingIntervals().size(); i++)
+    {
+        temp.lower = DAIDALUS_bands->getRecoveryGroundHeadingIntervals()[i]->getRecoveryGroundHeadings()[0];
+        temp.upper = DAIDALUS_bands->getRecoveryGroundHeadingIntervals()[i]->getRecoveryGroundHeadings()[1];
+        r_bands.push_back(temp);
+    }
 
     if (bands.size() == 0)
     {
         //Expected conflict bands but found none--set divert state to current state
         std::cout << "Expected bands but found none." << std::endl;
-        return false;
+        acceptable_action_flag = false;
+        return acceptable_action_flag;
     }
     uint initial_band = 0;  //band that the initial heading was in.
     bool isFound = false;  //boolean stating whether the band that the initial heading was in has been identified
@@ -231,7 +263,7 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
         }
     }
 
-   //using angle wrapped versions of the CurrentState_heading_deg and DivertState.heading_deg to determine if Divert would result in a left turn
+   //using angle wrapped versions of the CurrentState_heading_deg and DivertState.heading_deg to determine if Divert would result in a right turn
     if ((std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) > std::fmod(m_DivertState.heading_deg + 360.0, 360.0) &&
             (std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) - std::fmod(m_DivertState.heading_deg + 360.0, 360.0) >= 180.0)) ||
             (std::fmod(m_DivertState.heading_deg + 360.0, 360.0) > std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) &&
@@ -239,6 +271,8 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
 
     {
         m_DivertState.heading_deg = std::fmod(m_DivertState.heading_deg + 360.0, 360.0);
+        //if recovery exits and divert heading is within, acceptable action achieved
+        acceptable_action_flag = r_bands.empty()? true : isInRecovery(m_DivertState.heading_deg, r_bands);
     }
     else 
     {
@@ -275,25 +309,22 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
                     std::fmod(m_DivertState.heading_deg + 360.0, 360.0) - std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) > 180.0)) 
         {
             m_DivertState.heading_deg = std::fmod(m_DivertState.heading_deg + 360.0, 360.0);
+            //if recovery exists and divert heading is within, acceptable action achieved
+            acceptable_action_flag = r_bands.empty()? true : isInRecovery(m_DivertState.heading_deg, r_bands);
         }
-        else if (DAIDALUS_bands->getRecoveryGroundHeadingIntervals().size() >0)
+        else if (!acceptable_action_flag && DAIDALUS_bands->getRecoveryGroundHeadingIntervals().size() >0)
         {
-            guaranteed_flag = false;
-                //m_DivertState.heading_deg = m_CurrentState.heading_deg;
+            acceptable_action_flag = false;
             bool isRecoveryFound = false;
-            for (uint i = 0; i < DAIDALUS_bands->getRecoveryGroundHeadingIntervals().size(); i++)
-            {
-                temp.lower = DAIDALUS_bands->getRecoveryGroundHeadingIntervals()[i]->getRecoveryGroundHeadings()[0];
-                temp.upper = DAIDALUS_bands->getRecoveryGroundHeadingIntervals()[i]->getRecoveryGroundHeadings()[1];
-                r_bands.push_back(temp);
-            }
-
+            //Current method for placing in recovery does not properly handle preferences
+            //for right turns over left turns
             for (uint i = 0; i < r_bands.size(); i++)
             {
                 if ((r_bands[i].lower > m_CurrentState.heading_deg) && (r_bands[i].upper > m_CurrentState.heading_deg))
                 {
                     m_DivertState.heading_deg = r_bands[i].lower + m_heading_interval_buffer_deg / 2.0;
                     isRecoveryFound = true;
+                    acceptable_action_flag = true;
                     break;
                 }
             }
@@ -304,6 +335,7 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
                     if ((r_bands[i].lower < m_CurrentState.heading_deg) && (r_bands[i].upper < m_CurrentState.heading_deg))
                     {
                         m_DivertState.heading_deg = r_bands[i].upper - m_heading_interval_buffer_deg / 2.0;
+                        acceptable_action_flag = true;
                         break;
                     }
             }
@@ -314,29 +346,24 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
         }
         else
         {
-            guaranteed_flag = false;
+            acceptable_action_flag = false;
             m_DivertState.heading_deg = std::fmod((m_CurrentState.heading_deg + 180.0) + 360.0, 360.0); //fallback action: turn right 180deg
             // std::cout << "No resolution found. Divert heading is " << m_DivertState.heading_deg << std::endl;
             // std::cout << std::endl;
         }
     }
     //TODO: ensure divert action does not violate keep out zones
-    return guaranteed_flag;
+    return acceptable_action_flag;
 }
 
 bool DAIDALUS_Processing::foundWCVGroundSpeedResolution(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands)
 {
     //slower speeds preferred
-    bool guaranteed_flag = true;
+    bool acceptable_action_flag = true;
     m_DivertState.horizontal_speed_mps = m_CurrentState.horizontal_speed_mps;
     m_DivertState.altitude_m = m_CurrentState.altitude_m;
     m_DivertState.heading_deg = m_CurrentState.heading_deg;
     m_DivertState.vertical_speed_mps = 0;   //hold altitude while divertingm_CurrentState.vertical_speed_mps;
-    struct intervals
-    {
-        double lower;
-        double upper;
-    };
     std::vector<intervals> bands, r_bands;
     intervals temp;
     for (uint i = 0; i < DAIDALUS_bands->getWCVGroundSpeedIntervals().size(); i++)
@@ -349,7 +376,14 @@ bool DAIDALUS_Processing::foundWCVGroundSpeedResolution(const std::shared_ptr<la
     {
         //unexpected result
         std::cout << "Expected conflict bands but found none." << std::endl;
-        return false;
+        acceptable_action_flag = false;
+        return acceptable_action_flag;
+    }
+    for (uint i = 0; i < DAIDALUS_bands->getRecoveryGroundSpeedIntervals().size(); i++)
+    {
+        temp.lower = DAIDALUS_bands->getRecoveryGroundSpeedIntervals()[i]->getRecoveryGroundSpeeds()[0];
+        temp.upper = DAIDALUS_bands->getRecoveryGroundSpeedIntervals()[i]->getRecoveryGroundSpeeds()[1];
+        r_bands.push_back(temp);
     }
     uint initial_band = 0;  //band that the initial heading was in.
     for (uint i = 0; i < bands.size(); i++)
@@ -380,10 +414,15 @@ bool DAIDALUS_Processing::foundWCVGroundSpeedResolution(const std::shared_ptr<la
             }
         }
     }
+    else // divert speed is greater than min and not in a conflict band
+    {
+       //if recovery exists and divert is within, acceptable action achieved. 
+        acceptable_action_flag = r_bands.empty()? true : isInRecovery(m_DivertState.horizontal_speed_mps, r_bands);
+    }
 
     if (m_DivertState.horizontal_speed_mps > m_max_gs_mps)  //If after checking slow downs and speed up no better heading found, check recovery intervals
     {
-        guaranteed_flag = false;
+        acceptable_action_flag = false;
         if (DAIDALUS_bands->getRecoveryGroundSpeedIntervals().size() > 0)
         {
             bool isRecoveryFound = false;
@@ -402,6 +441,7 @@ bool DAIDALUS_Processing::foundWCVGroundSpeedResolution(const std::shared_ptr<la
                 {
                     m_DivertState.horizontal_speed_mps = r_bands[i].upper - m_groundspeed_interval_buffer_mps / 2.0;
                     isRecoveryFound = true;
+                    acceptable_action_flag = true;
                     break;
                 }
             }
@@ -413,6 +453,7 @@ bool DAIDALUS_Processing::foundWCVGroundSpeedResolution(const std::shared_ptr<la
                     if ((r_bands[i].lower > m_CurrentState.horizontal_speed_mps) && (r_bands[i].upper > m_CurrentState.horizontal_speed_mps))
                     {
                         m_DivertState.horizontal_speed_mps = r_bands[i].lower + m_groundspeed_interval_buffer_mps / 2.0;
+                        acceptable_action_flag = true;
                         break;
                     }
             }
@@ -421,118 +462,25 @@ bool DAIDALUS_Processing::foundWCVGroundSpeedResolution(const std::shared_ptr<la
         else 
         {
             //If no recovery found, set default behavior to minimum speed
+            acceptable_action_flag = false;
             m_DivertState.horizontal_speed_mps = m_min_gs_mps;
         }
     }
-    return guaranteed_flag;    
+    else // divert speed is less than max and not in a conflict band
+    {
+        //if recovery exists and divert is within, acceptable action achieved.
+        acceptable_action_flag = r_bands.empty()? true : isInRecovery(m_DivertState.horizontal_speed_mps, r_bands);
+    }
+    return acceptable_action_flag;    
 }
-bool DAIDALUS_Processing::foundWCVVerticalSpeedResolution(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands)
-{
-    bool guaranteed_flag = true;
-    m_DivertState.vertical_speed_mps = m_CurrentState.vertical_speed_mps;
-    m_DivertState.altitude_m = m_CurrentState.altitude_m;
-    m_DivertState.heading_deg = m_CurrentState.heading_deg;
-    m_DivertState.horizontal_speed_mps = m_CurrentState.horizontal_speed_mps;
-    struct intervals
-    {
-        double lower;
-        double upper;
-    };
-    std::vector<intervals> bands, r_bands;
-    intervals temp;
-    for (uint i = 0; i < DAIDALUS_bands->getWCVVerticalSpeedIntervals().size(); i++)
-    {
-        temp.lower = DAIDALUS_bands->getWCVVerticalSpeedIntervals()[i]->getVerticalSpeeds()[0];
-        temp.upper = DAIDALUS_bands->getWCVVerticalSpeedIntervals()[i]->getVerticalSpeeds()[1];
-        bands.push_back(temp);
-    }
-    if (bands.size() == 0)
-    {
-        //Expected conflict bands but found none--set divert state to current state
-        std::cout << "Expected bands but found none." << std::endl;
-        return false;
-    }
-    uint initial_band = 0;  //band that the initial heading was in.
-    bool isFound = false;  //boolean stating whether the band that the initial heading was in has been identified
-    //Of the reported bad bands, find which one the current vertical speed is in
-    for (uint i = 0; i < bands.size(); i++)
-    {
-        if (isInRange(bands[i].lower, bands[i].upper, m_DivertState.vertical_speed_mps))
-        {
-            m_DivertState.vertical_speed_mps = bands[i].upper + m_verticalspeed_interval_buffer_mps; //if DivertState is in a bad band, alter to more than maximum
-            if (!isFound)
-            {
-                initial_band = i;
-                isFound = true;
-            }
-        }
-    }
 
-    if (m_DivertState.vertical_speed_mps > m_max_vs_mps)  //If divert vertical speed  is greater than max, a decrease turn is preferred.
-    {
-        m_DivertState.vertical_speed_mps = m_CurrentState.vertical_speed_mps; //reset divert speed to current speed and check lowers speeds
-        for (int i = initial_band; i >= 0; i--)
-        {
-            if (isInRange(bands[i].lower, bands[i].upper, m_CurrentState.vertical_speed_mps))
-            {
-                m_DivertState.vertical_speed_mps = bands[i].lower - m_verticalspeed_interval_buffer_mps; //if divert speed in a bad band, alter to less than the minimum
-            }
-        }
-    }
-
-    if (m_DivertState.vertical_speed_mps < m_min_vs_mps)//If after checking speed increases and decreases no better heading found, check recovery
-    {
-        guaranteed_flag = false;
-        if (DAIDALUS_bands->getRecoveryVerticalSpeedIntervals().size() > 0)
-        {
-            //m_DivertState.vertical_speed_mps = m_CurrentState.vertical_speed_mps;
-            bool isRecoveryFound = false;
-            //Form a vector of recovery bands
-            for (uint i = 0; i < DAIDALUS_bands->getRecoveryVerticalSpeedIntervals().size(); i++)
-            {
-                temp.lower = DAIDALUS_bands->getRecoveryVerticalSpeedIntervals()[i]->getRecoveryVerticalSpeed()[0];
-                temp.upper = DAIDALUS_bands->getRecoveryVerticalSpeedIntervals()[i]->getRecoveryVerticalSpeed()[1];
-                r_bands.push_back(temp);
-            }
-
-            for (uint i = 0; i < bands.size(); i++)
-            {
-                //Find first recovery interval with speeds greater than current and set divert to just over minimum
-                if ((r_bands[i].lower > m_CurrentState.vertical_speed_mps) && (r_bands[i].upper > m_CurrentState.vertical_speed_mps))
-                {
-                    m_DivertState.vertical_speed_mps = r_bands[i].lower + m_verticalspeed_interval_buffer_mps / 2.0;
-                    isRecoveryFound = true;
-                    break;
-                }
-            }
-
-            if (!isRecoveryFound)
-            {
-                //if no faster recovery found, check lower recovery
-                for (int i = r_bands.size()-1; i >= 0; i--)
-                    if ((r_bands[i].lower < m_CurrentState.vertical_speed_mps) && (r_bands[i].upper < m_CurrentState.vertical_speed_mps))
-                    {
-                        m_DivertState.vertical_speed_mps = r_bands[i].upper - m_verticalspeed_interval_buffer_mps / 2.0;
-                        break;
-                    }
-            }
-        }
-
-    }
-    return guaranteed_flag;
-}
 bool DAIDALUS_Processing::foundWCVAltitudeResolution(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands)
 {
-    bool guaranteed_flag = true;
+    bool acceptable_action_flag = true;
     m_DivertState.altitude_m = m_CurrentState.altitude_m;
     m_DivertState.vertical_speed_mps = 0.0; //m_CurrentState.vertical_speed_mps;--"fix" for inconsistency in DivertState.
     m_DivertState.heading_deg = m_CurrentState.heading_deg;
     m_DivertState.horizontal_speed_mps = m_CurrentState.horizontal_speed_mps;    
-    struct intervals
-    {
-        double lower;
-        double upper;
-    };
     std::vector<intervals> bands, r_bands;
     intervals temp;
     for (uint i = 0; i < DAIDALUS_bands->getWCVAlitudeIntervals().size(); i++)
@@ -540,6 +488,12 @@ bool DAIDALUS_Processing::foundWCVAltitudeResolution(const std::shared_ptr<larcf
         temp.lower = DAIDALUS_bands->getWCVAlitudeIntervals()[i]->getAltitude()[0];
         temp.upper = DAIDALUS_bands->getWCVAlitudeIntervals()[i]->getAltitude()[1];
         bands.push_back(temp);
+    }
+    for (uint i = 0; i < DAIDALUS_bands->getRecoveryAltitudeIntervals().size(); i++)
+    {
+        temp.lower = DAIDALUS_bands->getRecoveryAltitudeIntervals()[i]->getRecoveryAltitude()[0];
+        temp.upper = DAIDALUS_bands->getRecoveryAltitudeIntervals()[i]->getRecoveryAltitude()[1];
+        r_bands.push_back(temp);
     }
     if (bands.size() == 0)
     {
@@ -565,6 +519,7 @@ bool DAIDALUS_Processing::foundWCVAltitudeResolution(const std::shared_ptr<larcf
 
     if (m_DivertState.altitude_m > m_max_alt_m)  //If divert altitude is greater than altitude max, a descent is preferred.
     {
+        acceptable_action_flag = false;
         m_DivertState.altitude_m = m_CurrentState.altitude_m; //reset divert altitude to current altitude then check bands below current altitude
         for (int i = initial_band; i >= 0; i--)
         {
@@ -574,21 +529,20 @@ bool DAIDALUS_Processing::foundWCVAltitudeResolution(const std::shared_ptr<larcf
             }
         }
     }
+    else //divert altitude is less than max and not in a conflict band
+    {
+        //if recovery exists and divert altitude is within, acceptable action achieved
+        acceptable_action_flag = r_bands.empty()? true : isInRecovery(m_DivertState.altitude_m, r_bands);
+    }
 
     if (m_DivertState.altitude_m < m_min_alt_m)//If after checking ascents and descents no better heading found, check recovery bands
     {
-        guaranteed_flag = false;
+        acceptable_action_flag = false;
         if (DAIDALUS_bands->getRecoveryAltitudeIntervals().size() > 0)
         {
             //m_DivertState.altitude_m = m_CurrentState.altitude_m;
             bool isRecoveryFound = false;
             //Form a vector of recovery band intervals
-            for (uint i = 0; i < DAIDALUS_bands->getRecoveryAltitudeIntervals().size(); i++)
-            {
-                temp.lower = DAIDALUS_bands->getRecoveryAltitudeIntervals()[i]->getRecoveryAltitude()[0];
-                temp.upper = DAIDALUS_bands->getRecoveryAltitudeIntervals()[i]->getRecoveryAltitude()[1];
-                r_bands.push_back(temp);
-            }
 
             //Find the first recovery band that is at an altitude greater than the current altitude and set divert altitude to just over the minimum
             for (uint i = 0; i < r_bands.size(); i++)
@@ -597,6 +551,7 @@ bool DAIDALUS_Processing::foundWCVAltitudeResolution(const std::shared_ptr<larcf
                 {
                     m_DivertState.altitude_m = r_bands[i].lower + m_altitude_interval_buffer_m / 2.0; 
                     isRecoveryFound = true;
+                    acceptable_action_flag = true;
                     break;
                 }
             }
@@ -609,6 +564,7 @@ bool DAIDALUS_Processing::foundWCVAltitudeResolution(const std::shared_ptr<larcf
                     if ((r_bands[i].lower < m_CurrentState.altitude_m) && (r_bands[i].upper < m_CurrentState.altitude_m))
                     {
                         m_DivertState.altitude_m = r_bands[i].upper - m_altitude_interval_buffer_m / 2.0;
+                        acceptable_action_flag = true;
                         break;
                     }
             }
@@ -616,42 +572,36 @@ bool DAIDALUS_Processing::foundWCVAltitudeResolution(const std::shared_ptr<larcf
         else
         {
             //if no solution and no recovery found default to diverting to maximum altitude
-            guaranteed_flag = false;
+            acceptable_action_flag = false;
             m_DivertState.altitude_m = m_max_alt_m;
             // std::cout << "No way to avoid violation of Well Clear Volume" << std::endl;
             // std::cout << std::endl;
 
         }
     }
-
-    return guaranteed_flag;
+    else //divert altitude is greater than minimum and not in a conflict band
+    {
+        //if recovery exists and divert altitude is within, acceptable action achieved
+        acceptable_action_flag = r_bands.empty()? true : isInRecovery(m_DivertState.altitude_m, r_bands);
+    }
+    return acceptable_action_flag;
 }
-
-void DAIDALUS_Processing::ResetResponse()
-{
-    m_isTakenAction = false;
-    m_isActionCompleted = false;
-    m_isConflict = false;
-    m_ConflictResolutionList.clear();
-    m_isCloseToDesired = false;
-}
-
 
 void DAIDALUS_Processing::SetDivertState(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands)
 {
     //different response hierarchy based on "priority"
-    bool altitude_resolution_good, heading_resolution_good, groundspeed_resolution_good;
+    bool altitude_resolution_acceptable, heading_resolution_acceptable, groundspeed_resolution_acceptable;
     switch (m_priority)
     {
         case Standard:
         //standard priority seeks a resolution according to altitude > heading > groundspeed hierarchy. if all fail, fallback behavior described by groundspeed resolution
-            altitude_resolution_good = foundWCVAltitudeResolution(DAIDALUS_bands);
-            if (!altitude_resolution_good)
+            altitude_resolution_acceptable = foundWCVAltitudeResolution(DAIDALUS_bands);
+            if (!altitude_resolution_acceptable)
             {
-                heading_resolution_good = foundWCVHeadingResolution(DAIDALUS_bands);
-                if (!heading_resolution_good)
+                heading_resolution_acceptable = foundWCVHeadingResolution(DAIDALUS_bands);
+                if (!heading_resolution_acceptable)
                 {
-                    groundspeed_resolution_good = foundWCVGroundSpeedResolution(DAIDALUS_bands);
+                    groundspeed_resolution_acceptable = foundWCVGroundSpeedResolution(DAIDALUS_bands);
                 }
                 
             }
@@ -659,13 +609,13 @@ void DAIDALUS_Processing::SetDivertState(const std::shared_ptr<larcfm::DAIDALUS:
             break;
         case High:
         //high priority seeks a resolution accordingn to groundspeed > heading > altitude heirarchy. if all fail, fallback behavior described by altitude resolution
-            groundspeed_resolution_good = foundWCVGroundSpeedResolution(DAIDALUS_bands);
-            if (!groundspeed_resolution_good)
+            groundspeed_resolution_acceptable = foundWCVGroundSpeedResolution(DAIDALUS_bands);
+            if (!groundspeed_resolution_acceptable)
             {
-                heading_resolution_good = foundWCVHeadingResolution(DAIDALUS_bands);
-                if (!heading_resolution_good)
+                heading_resolution_acceptable = foundWCVHeadingResolution(DAIDALUS_bands);
+                if (!heading_resolution_acceptable)
                 {
-                    altitude_resolution_good = foundWCVAltitudeResolution(DAIDALUS_bands);
+                    altitude_resolution_acceptable = foundWCVAltitudeResolution(DAIDALUS_bands);
                 }
                 
             }
@@ -1138,6 +1088,11 @@ bool DAIDALUS_Processing::configure(const pugi::xml_node& ndComponent)
         {
             m_AutomaticResponseStatus = "ON";
         }
+    }
+    if (!ndComponent.attribute(STRING_XML_PRIORITYSWITCHTIME).empty())
+    {
+        double local_priority_time_threshold_s = ndComponent.attribute(STRING_XML_PRIORITYSWITCHTIME).as_double();
+        m_priority_time_threshold_s = local_priority_time_threshold_s;
     }
     m_daa.parameters.setLookaheadTime(m_lookahead_time_s, "s");
     m_daa.parameters.setLeftTrack(m_left_trk_deg, "deg");

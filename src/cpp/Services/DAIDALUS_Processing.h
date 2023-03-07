@@ -96,6 +96,7 @@ namespace service
  *  - EarlyAlertTime3 - the time limit to determine if a WCV violation will occur before for an early NEAR classification
  *  - HorizontalDetectionType - the type of time projection limit used in determination of WCV violation- TAUMOD, TCPA, or TEP
  *  - AutomaticResponseStatus - ON for response to detected violations causing changes to vehicle action commands. Otherwise no change to vehicle behavior
+ *  - PrioritySwitchTime - time where the priority for modality of avoidance is switched
  * 
  * Design: The objective of DAIDALUS_Processing is interface with NASA's DAIDALUS code to detect projected violations of the well-clear volume for
  *         the ownship.  This service then reports any detections of projected violations to other services along with the configuration parameters 
@@ -265,7 +266,7 @@ private:    //the following are member variables associated with response to DAI
     double m_tolerance_clock_s;
     double m_tolerance_threshold_time_s{5};  //time needed to stay within desired state to be considered attained--seconds
     double m_action_time_threshold_s;   // time threshold to hold when taking action
-    double m_priority_time_threshold_s; //time threshold to raise priority level when taking action
+    double m_priority_time_threshold_s{-15}; //time threshold to raise priority level when taking action
     double m_action_hold_release_time_s;  //time at which an action hold must be released
     double m_heading_max_deg{360.0};  //DAIDALUS maximum heading 
     double m_heading_min_deg{0.0};   //DAIDALUS minimum heading 
@@ -293,11 +294,9 @@ private:    //the following are member variables associated with response to DAI
         afrl::cmasi::AltitudeType::AltitudeType altitude_type;
         afrl::cmasi::SpeedType::SpeedType speed_type;
     }m_CurrentState, m_DivertState, m_ReturnState;
-    void ResetResponse();
     void SetDivertState(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands);
     bool isSafeToReturnToMission(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_band);
     bool foundWCVAltitudeResolution(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands);
-    bool foundWCVVerticalSpeedResolution(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands);
     bool foundWCVGroundSpeedResolution(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands);
     bool foundWCVHeadingResolution(const std::shared_ptr<larcfm::DAIDALUS::WellClearViolationIntervals>& DAIDALUS_bands);
    
