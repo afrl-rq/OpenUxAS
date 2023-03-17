@@ -246,6 +246,9 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
     }
     if (m_DivertState.heading_deg > m_heading_max_deg)  //If divert heading is greater than 360, check to see if a right turn is still possible if not turn left
     {
+        //recast the heading to be between 0.0 and 360.0
+        m_DivertState.heading_deg = std::fmod(m_DivertState.heading_deg + 360.0, 360.0);
+
         // this loop checks the angle wrapped form of the divert action to see if increased turn to the right can find a heading that is not in conflict
         // process terminates immediately when a conflict interval does not contain the candidate divert heading
         for (uint i = 0; i < bands.size(); i++)
@@ -263,6 +266,18 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
         }
     }
 
+    if (m_DivertState.heading_deg > m_heading_max_deg)
+    {
+        //If after checking right for a divert heading including checking for 
+        //angle wrapping the heading is still greater than the max, then full
+        //range is saturated.  Fallback as a result
+        acceptable_action_flag = false;
+        m_DivertState.heading_deg = std::fmod(m_CurrentState.heading_deg + 180.0, 360.0);
+    }
+    else
+    {
+           
+    
    //using angle wrapped versions of the CurrentState_heading_deg and DivertState.heading_deg to determine if Divert would result in a right turn
     if ((std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) > std::fmod(m_DivertState.heading_deg + 360.0, 360.0) &&
             (std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) - std::fmod(m_DivertState.heading_deg + 360.0, 360.0) >= 180.0)) ||
@@ -270,7 +285,6 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
                 std::fmod(m_DivertState.heading_deg + 360.0, 360.0) - std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) <= 180.0)) 
 
     {
-        m_DivertState.heading_deg = std::fmod(m_DivertState.heading_deg + 360.0, 360.0);
         //if recovery exits and divert heading is within, acceptable action achieved
         acceptable_action_flag = r_bands.empty()? true : isInRecovery(m_DivertState.heading_deg, r_bands);
     }
@@ -288,6 +302,7 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
         }
         if (m_DivertState.heading_deg < m_heading_min_deg)  //check for angle wrap if candidate divert heading is less than the minimum
         {
+            m_DivertState.heading_deg = std::fmod(m_DivertState.heading_deg + 360.0, 360.0);
             for (int i = bands.size()-1; i >=0; i--)
             {
                 if (isInRange(bands[i].lower, bands[i].upper, std::fmod(m_DivertState.heading_deg + 360.0, 360.0)))
@@ -302,6 +317,17 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
             }
 
         }
+        if (m_DivertState.heading_deg < m_heading_min_deg)
+        {
+            //less than minimum after checking angle wrap, full range is saturated
+            //therefore fallback 
+            acceptable_action_flag = false;
+            m_DivertState.heading_deg = std::fmod(m_CurrentState.heading_deg + 180.0, 360.0);
+        }
+            
+        
+        else
+        {
         //using angle wrapped versions of the CurrentState_heading_deg and DivertState.heading_deg to determine if Divert would result in a left turn
         if ((std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) > std::fmod(m_DivertState.heading_deg + 360.0, 360.0) &&
                 (std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) - std::fmod(m_DivertState.heading_deg + 360.0, 360.0) < 180.0)) ||
@@ -351,8 +377,11 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
             // std::cout << "No resolution found. Divert heading is " << m_DivertState.heading_deg << std::endl;
             // std::cout << std::endl;
         }
+        }
     }
+    
     //TODO: ensure divert action does not violate keep out zones
+    }
     return acceptable_action_flag;
 }
 
