@@ -262,19 +262,30 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
 
         }
     }
+    
+    m_DivertState.heading_deg = std::fmod((m_DivertState.heading_deg + 360.0), 360.0);
+    if (m_DivertState.heading_deg > m_heading_max_deg)
+    {
+        //divert heading greater than max after checking angle wrap then fallback
+        //maneuver enacted
+        acceptable_action_flag = false;
+        m_DivertState.heading_deg = std::fmod((m_DivertState.heading_deg + 180.0), 360.0);
+    }
+    else
+    {
 
-   //using angle wrapped versions of the CurrentState_heading_deg and DivertState.heading_deg to determine if Divert would result in a right turn
-    if ((std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) > std::fmod(m_DivertState.heading_deg + 360.0, 360.0) &&
+        //using angle wrapped versions of the CurrentState_heading_deg and DivertState.heading_deg to determine if Divert would result in a right turn
+        if ((std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) > std::fmod(m_DivertState.heading_deg + 360.0, 360.0) &&
             (std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) - std::fmod(m_DivertState.heading_deg + 360.0, 360.0) >= 180.0)) ||
             (std::fmod(m_DivertState.heading_deg + 360.0, 360.0) > std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) &&
                 std::fmod(m_DivertState.heading_deg + 360.0, 360.0) - std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) <= 180.0)) 
 
-    {
-        m_DivertState.heading_deg = std::fmod(m_DivertState.heading_deg + 360.0, 360.0);
-        //if recovery exits and divert heading is within, acceptable action achieved
-        acceptable_action_flag = r_bands.empty()? true : isInRecovery(m_DivertState.heading_deg, r_bands);
-    }
-    else 
+        {
+             m_DivertState.heading_deg = std::fmod(m_DivertState.heading_deg + 360.0, 360.0);
+            //if recovery exits and divert heading is within, acceptable action achieved
+            acceptable_action_flag = r_bands.empty()? true : isInRecovery(m_DivertState.heading_deg, r_bands);
+        }
+        else 
     {
         //this branch attempts to find a left turn for divert heading by looping over the intervals from last to first--already know some bands exist
         m_DivertState.heading_deg = m_CurrentState.heading_deg;
@@ -302,17 +313,26 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
             }
 
         }
+        m_DivertState.heading_deg = std::fmod(m_DivertState.heading_deg + 360.0, 360.0);
+        if (m_DivertState.heading_deg < m_heading_min_deg)
+        {
+            //still less than heading minimum after checking for angle wrap
+            //enact fallback maneuver
+            acceptable_action_flag = false;
+            m_DivertState.heading_deg = std::fmod((m_CurrentState.heading_deg + 180.0), 360.0);
+        }
+        else
+        {
         //using angle wrapped versions of the CurrentState_heading_deg and DivertState.heading_deg to determine if Divert would result in a left turn
-        if ((std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) > std::fmod(m_DivertState.heading_deg + 360.0, 360.0) &&
+            if ((std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) > std::fmod(m_DivertState.heading_deg + 360.0, 360.0) &&
                 (std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) - std::fmod(m_DivertState.heading_deg + 360.0, 360.0) < 180.0)) ||
                 (std::fmod(m_DivertState.heading_deg + 360.0, 360.0) > std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) &&
                     std::fmod(m_DivertState.heading_deg + 360.0, 360.0) - std::fmod(m_CurrentState.heading_deg + 360.0, 360.0) > 180.0)) 
-        {
-            m_DivertState.heading_deg = std::fmod(m_DivertState.heading_deg + 360.0, 360.0);
-            //if recovery exists and divert heading is within, acceptable action achieved
-            acceptable_action_flag = r_bands.empty()? true : isInRecovery(m_DivertState.heading_deg, r_bands);
-        }
-        else if (!acceptable_action_flag && DAIDALUS_bands->getRecoveryGroundHeadingIntervals().size() >0)
+            {
+                //if recovery exists and divert heading is within, acceptable action achieved
+                acceptable_action_flag = r_bands.empty()? true : isInRecovery(m_DivertState.heading_deg, r_bands);
+            }
+            else if (!acceptable_action_flag && DAIDALUS_bands->getRecoveryGroundHeadingIntervals().size() >0)
         {
             acceptable_action_flag = false;
             bool isRecoveryFound = false;
@@ -344,15 +364,17 @@ bool DAIDALUS_Processing::foundWCVHeadingResolution(const std::shared_ptr<larcfm
             // std::cout << std::endl;
            //use right turn recovery band
         }
-        else
-        {
-            acceptable_action_flag = false;
-            m_DivertState.heading_deg = std::fmod((m_CurrentState.heading_deg + 180.0) + 360.0, 360.0); //fallback action: turn right 180deg
+            else
+            {
+                acceptable_action_flag = false;
+                m_DivertState.heading_deg = std::fmod((m_CurrentState.heading_deg + 180.0), 360.0); //fallback action: turn right 180deg
             // std::cout << "No resolution found. Divert heading is " << m_DivertState.heading_deg << std::endl;
             // std::cout << std::endl;
+            }
         }
     }
     //TODO: ensure divert action does not violate keep out zones
+    }
     return acceptable_action_flag;
 }
 
