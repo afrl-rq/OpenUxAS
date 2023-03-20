@@ -58,8 +58,8 @@ GNAT_DOWNLOAD_DIR = os.path.join(SOFTWARE_DIR, "gnat_community")
 GNAT_DOWNLOAD_FILE = "gnat-bin"
 GNAT_DOWNLOAD_LINK = (
     "https://community.download.adacore.com/v1/"
-    "4d99b7b2f212c8efdab2ba8ede474bb9fa15888d?"
-    "filename=gnat-2020-20200429-x86_64-linux-bin"
+    "f3a99d283f7b3d07293b2e1d07de00e31e332325?"
+    "filename=gnat-2021-20210519-x86_64-linux-bin"
 )
 
 GNAT_DOWNLOAD = Command(
@@ -182,7 +182,6 @@ if __name__ == "__main__":
     if args.download_gnat and (
         not args.interactive or input("Download gnat? [Y/n] ") != "n"
     ):
-
         skip_gnat_download = False
 
         gnat_bin_file = os.path.join(GNAT_DOWNLOAD_DIR, GNAT_DOWNLOAD_FILE)
@@ -211,7 +210,6 @@ if __name__ == "__main__":
     if args.clone_gnat_installer and (
         not args.interactive or input("Clone gnat installer? [Y/n] ") != "n"
     ):
-
         skip_installer_download = False
 
         if os.path.exists(GNAT_INSTALLER_DIR):

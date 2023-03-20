@@ -694,7 +694,7 @@ std::unique_ptr<c_TaskAssignmentState> c_TaskAssignmentState::clone()
 c_TaskAssignmentState::c_TaskAssignmentState(const c_TaskAssignmentState & rhs)
 {
     m_taskOptionId = rhs.m_taskOptionId;
-    m_taskOptionId = rhs.m_taskOptionId;
+    m_taskCompletionTime_ms = rhs.m_taskCompletionTime_ms;
 }
 
 

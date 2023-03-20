@@ -1,4 +1,4 @@
-with Ada.Strings.Unbounded;      use Ada.Strings.Unbounded;
+with Ada.Containers;             use Ada.Containers;
 with AVTAS.LMCP.Types;
 with UxAS.Comms.LMCP_Net_Client; use UxAS.Comms.LMCP_Net_Client;
 
@@ -14,7 +14,8 @@ package body Automation_Request_Validator with SPARK_Mode is
       States           : Int64_Set;
       Planning_States  : PlanningState_Seq;
       ReasonForFailure : in out Unbounded_String;
-      IsReady          : in out Boolean)
+      IsReady          : in out Boolean;
+      EntityList       : in out Int64_Seq)
    with Post =>
      IsReady = (IsReady'Old and
                   Check_For_Required_Entity_Configurations
@@ -74,13 +75,14 @@ package body Automation_Request_Validator with SPARK_Mode is
      (Config    : Automation_Request_Validator_Configuration_Data;
       Sandbox : in out Request_Details_Map;
       Mailbox : in out Automation_Request_Validator_Mailbox;
-      Request : UniqueAutomationRequest;
+      Request : in out UniqueAutomationRequest;
       IsReady : out Boolean)
    is
       ReasonForFailure : Unbounded_String :=
         To_Unbounded_String
           ("Automation Request ID["
            & Int64'Image (Request.RequestID) & "] Not Ready ::");
+      EntityList : Int64_Seq;
    begin
       IsReady := True;
 
@@ -90,7 +92,8 @@ package body Automation_Request_Validator with SPARK_Mode is
          States           => Config.Available_State_Entity_Ids,
          Planning_States  => Request.PlanningStates,
          ReasonForFailure => ReasonForFailure,
-         IsReady          => IsReady);
+         IsReady          => IsReady,
+         EntityList       => EntityList);
 
       Check_Required_Operating_Region_And_Keepin_Keepout_Zones
         (Operating_Region  => Request.OperatingRegion,
@@ -108,6 +111,10 @@ package body Automation_Request_Validator with SPARK_Mode is
          TaskIds                         => Request.TaskList,
          ReasonForFailure                => ReasonForFailure,
          IsReady                         => IsReady);
+
+      if Length (Request.EntityList) = 0 then
+         Request.EntityList := EntityList;
+      end if;
 
       if not IsReady then
          declare
@@ -134,7 +141,8 @@ package body Automation_Request_Validator with SPARK_Mode is
       States           : Int64_Set;
       Planning_States  : PlanningState_Seq;
       ReasonForFailure : in out Unbounded_String;
-      IsReady          : in out Boolean)
+      IsReady          : in out Boolean;
+      EntityList       : in out Int64_Seq)
    is
    begin
       if Length (Entity_Ids) /= 0 then
@@ -210,7 +218,6 @@ package body Automation_Request_Validator with SPARK_Mode is
                   end if;
                end;
             end loop;
-
          else
             Append_To_Msg (Msg  => ReasonForFailure,
                            Tail => "- No EntityStates available.");
@@ -238,6 +245,14 @@ package body Automation_Request_Validator with SPARK_Mode is
                                  Tail => "- No EntityStates that match EntityConfigurations"
                                  & " are available.");
                   IsReady := False;
+               else
+                  for Id of Configurations loop
+                     if Contains (States, Id) then
+                        pragma Assume (Length (EntityList) < Count_Type'Last, "we have less than Count_Type'Last vehicles");
+                        EntityList := Add (EntityList, Id);
+                     end if;
+                     pragma Loop_Invariant (IsReady = IsReady'Loop_Entry);
+                  end loop;
                end if;
             end;
          else
@@ -415,7 +430,6 @@ package body Automation_Request_Validator with SPARK_Mode is
      (Config  : Automation_Request_Validator_Configuration_Data;
       State   : in out Automation_Request_Validator_State;
       Mailbox : in out Automation_Request_Validator_Mailbox)
-   with SPARK_Mode => Off
    is
       areAllTasksReady    : Boolean := True;
       isNewPendingRequest : Boolean := False;
@@ -428,6 +442,8 @@ package body Automation_Request_Validator with SPARK_Mode is
               (for all TaskId of Req.TaskList => Contains (Config.Available_Initialized_Tasks, TaskId));
             if areAllTasksReady then
                isNewPendingRequest := True;
+
+               pragma Assume (Length (State.Pending_Requests) < State.Pending_Requests.Capacity, "we have enough space for another request");
                Append (State.Pending_Requests, Req);
                Delete_First (State.Requests_Waiting_For_Tasks);
             end if;
@@ -458,7 +474,6 @@ package body Automation_Request_Validator with SPARK_Mode is
       State   : in out Automation_Request_Validator_State;
       Mailbox : in out Automation_Request_Validator_Mailbox;
       Request : AutomationRequest)
-   with SPARK_Mode => Off
    is
       Unique_Automation_Request : UniqueAutomationRequest;
       ReqId                     : Int64;
@@ -467,6 +482,7 @@ package body Automation_Request_Validator with SPARK_Mode is
    begin
 
       Get_Unique_Request_Id (ReqId);
+      pragma Assume (not Contains (State.Sandbox, ReqId), "returned Id is actually unique");
 
       Unique_Automation_Request.RequestID := ReqId;
       Unique_Automation_Request.EntityList := Request.EntityList;
@@ -474,6 +490,7 @@ package body Automation_Request_Validator with SPARK_Mode is
       Unique_Automation_Request.TaskList := Request.TaskList;
       Unique_Automation_Request.TaskRelationships := Request.TaskRelationships;
 
+      pragma Assume (Length (State.Sandbox) < State.Sandbox.Capacity, "we have enough space for another request");
       Insert (State.Sandbox, ReqId, Details);
 
       Check_Automation_Request_Requirements
@@ -484,6 +501,7 @@ package body Automation_Request_Validator with SPARK_Mode is
          isReady);
 
       if isReady then
+         pragma Assume (Length (State.Requests_Waiting_For_Tasks) < State.Requests_Waiting_For_Tasks.Capacity, "we have enough space for another request");
          Append (State.Requests_Waiting_For_Tasks, Unique_Automation_Request);
          Check_Tasks_Initialized (Config, State, Mailbox);
       end if;
@@ -497,7 +515,6 @@ package body Automation_Request_Validator with SPARK_Mode is
       (State    : in out Automation_Request_Validator_State;
        Mailbox  : in out Automation_Request_Validator_Mailbox;
        Response : UniqueAutomationResponse)
-   with SPARK_Mode => Off
    is
    begin
       if Length (State.Pending_Requests) = 0 then
@@ -527,7 +544,6 @@ package body Automation_Request_Validator with SPARK_Mode is
       State   : in out Automation_Request_Validator_State;
       Mailbox : in out Automation_Request_Validator_Mailbox;
       Request : ImpactAutomationRequest)
-   with SPARK_Mode => Off
    is
       Unique_Automation_Request : UniqueAutomationRequest;
       ReqId                     : Int64;
@@ -546,6 +562,7 @@ package body Automation_Request_Validator with SPARK_Mode is
 
       Details.Play_Id := Request.PlayID;
       Details.Soln_Id := Request.SolutionID;
+      pragma Assume (Length (State.Sandbox) < State.Sandbox.Capacity, "we have enough space for another request");
       Insert (State.Sandbox, ReqId, Details);
 
       Check_Automation_Request_Requirements
@@ -556,6 +573,7 @@ package body Automation_Request_Validator with SPARK_Mode is
          isReady);
 
       if isReady then
+         pragma Assume (Length (State.Requests_Waiting_For_Tasks) < State.Requests_Waiting_For_Tasks.Capacity, "we have enough space for another request");
          Append (State.Requests_Waiting_For_Tasks, Unique_Automation_Request);
          Check_Tasks_Initialized (Config, State, Mailbox);
       end if;
@@ -570,7 +588,6 @@ package body Automation_Request_Validator with SPARK_Mode is
       State   : in out Automation_Request_Validator_State;
       Mailbox : in out Automation_Request_Validator_Mailbox;
       Request : TaskAutomationRequest)
-   with SPARK_Mode => Off
    is
       Unique_Automation_Request : UniqueAutomationRequest;
       ReqId                     : Int64;
@@ -589,6 +606,7 @@ package body Automation_Request_Validator with SPARK_Mode is
       Unique_Automation_Request.PlanningStates := Request.PlanningStates;
 
       Details.Task_Request_Id := ReqId;
+      pragma Assume (Length (State.Sandbox) < State.Sandbox.Capacity, "we have enough space for another request");
       Insert (State.Sandbox, ReqId, Details);
 
       Check_Automation_Request_Requirements
@@ -599,6 +617,7 @@ package body Automation_Request_Validator with SPARK_Mode is
          isReady);
 
       if isReady then
+         pragma Assume (Length (State.Requests_Waiting_For_Tasks) < State.Requests_Waiting_For_Tasks.Capacity, "we have enough space for another request");
          Append (State.Requests_Waiting_For_Tasks, Unique_Automation_Request);
          Check_Tasks_Initialized (Config, State, Mailbox);
       end if;
@@ -611,7 +630,6 @@ package body Automation_Request_Validator with SPARK_Mode is
    procedure Send_Next_Request
      (Mailbox          : in out Automation_Request_Validator_Mailbox;
       Pending_Requests : UniqueAutomationRequest_Ref_Deque)
-   with SPARK_Mode => Off
    is
    begin
       if Length (Pending_Requests) = 0 then
@@ -640,7 +658,6 @@ package body Automation_Request_Validator with SPARK_Mode is
      (Mailbox  : in out Automation_Request_Validator_Mailbox;
       Sandbox  : Request_Details_Map;
       Response : UniqueAutomationResponse)
-   with SPARK_Mode => Off
    is
    begin
       if not Contains (Sandbox, Response.ResponseID)

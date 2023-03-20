@@ -12,7 +12,7 @@ source "${SCRIPT_DIR}/infrastructure/paths.sh"
 activate_venv
 
 # Just in case, for uxas-ada. A bit ugly and special-purpose. Use build-env to
-# avoid directly putting uxas-ada itself on the path (in case there's a local 
+# avoid directly putting uxas-ada itself on the path (in case there's a local
 # build)
 debug_and_run "eval \"\$( \"${OPENUXAS_ROOT}/anod\" printenv uxas-ada --build-env )\""
-debug_and_run "python3 \"${INFRASTRUCTURE_DIR}/run-example.py\" $*"
+debug_and_run "python3 \"${INFRASTRUCTURE_DIR}/run_example.py\" $*"

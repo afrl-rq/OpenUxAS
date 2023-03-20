@@ -63,7 +63,7 @@ def add_anod_files_to_fingerprint(
 
 class UxasEmptyJob(EmptyJob):
     def __init__(self, uid, data, notify_end, sandbox):
-        super(UxasEmptyJob, self).__init__(uid, data, notify_end)
+        super(UxasEmptyJob, self).__init__(uid, data, notify_end, ReturnValue.skip)
 
 
 class UxasJob(Job):
@@ -142,7 +142,6 @@ class UxasDownloadSource(UxasJob):
             self.run_status = ReturnValue.skip
         else:
             if builder.url.startswith("https://") or builder.url.startswith("http://"):
-
                 if os.path.isfile(os.path.join(cache_dir, builder.filename)):
                     rm(os.path.join(cache_dir, builder.filename))
                 if os.path.isfile(os.path.join(cache_dir, builder.filename + ".sha1")):
@@ -210,7 +209,6 @@ class UxasCreateSource(UxasJob):
 
 
 class UxasBuilder(Walk):
-
     JOB_CLASSES = {
         Build: UxasBuildJob,
         DownloadSource: UxasDownloadSource,

@@ -57,7 +57,7 @@ ZeroMqFabric::~ZeroMqFabric()
 };
 
 std::unique_ptr<zmq::socket_t>
-ZeroMqFabric::createSocket(ZeroMqSocketConfiguration& socketConfiguration)
+ZeroMqFabric::createSocket(const ZeroMqSocketConfiguration& socketConfiguration)
 {
     UXAS_LOG_DEBUGGING("ZeroMqFabric::createSocket method START");
     if(!m_zmqContext)
