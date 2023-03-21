@@ -1,0 +1,48 @@
+from e3.os.fs import unixpath
+from e3.fs import sync_tree
+from e3.anod.helper import Configure, Make
+from e3.anod.spec import Anod
+from e3.anod.loader import spec
+
+
+class XMLAda(spec("common")):
+    @property
+    def version(self):
+        return "22.0.0"
+
+    @property
+    def tarball(self):
+        return "xmlada-%s.tar.gz" % self.version
+
+    @property
+    def source_pkg_build(self):
+        return [
+            self.HTTPSSourceBuilder(
+                name=self.tarball,
+                url="https://github.com/AdaCore/xmlada/archive/v%s/%s"
+                % (self.version, self.tarball),
+            )
+        ]
+
+    @property
+    def build_source_list(self):
+        return [Anod.Source(name=self.tarball, publish=True, dest="")]
+
+    @property
+    def build_deps(self):
+        return [Anod.Dependency('compiler')]
+
+    @Anod.primitive()
+    def build(self):
+        configure = Configure(self, exec_dir=self["BUILD_DIR"])
+        configure.add("--prefix=" + unixpath(self["INSTALL_DIR"]))
+
+        make = Make(self)
+        make.set_var("PROCESSORS", str(self.jobs))
+
+        sync_tree(self["SRC_DIR"], self["BUILD_DIR"], delete=True)
+
+        configure()
+
+        make("static")
+        make("install-static", jobs=1)
