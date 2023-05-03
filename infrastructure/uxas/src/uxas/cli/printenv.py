@@ -76,7 +76,7 @@ def do_printenv(m: Main, set_prog: bool = True) -> int:
         env=BaseEnv.from_env(),
     ).anod_instance
 
-    saved_env = {k: v for k, v in os.environ.items()}
+    saved_env = dict(os.environ.items())
 
     if m.args.build_env:
         if hasattr(anod_instance, "build_setenv"):
