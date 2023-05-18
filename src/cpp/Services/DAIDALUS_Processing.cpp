@@ -1319,7 +1319,6 @@ bool DAIDALUS_Processing::processReceivedLmcpMessage(std::unique_ptr<uxas::commu
                 m_action_time_threshold_s = DetectionConfiguration->getAlertTime3();
             }
             
-            m_priority_time_threshold_s = m_action_time_threshold_s / 2.0;
             m_heading_interval_buffer_deg = m_trk_step_deg / 2.0;
             m_groundspeed_interval_buffer_mps = m_gs_step_mps / 2.0;
             m_verticalspeed_interval_buffer_mps = m_vs_step_mps / 2.0;
