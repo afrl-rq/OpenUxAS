@@ -1,7 +1,7 @@
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
-// 
+//
 // Copyright (c) 2017 Government of the United State of America, as represented by
 // the Secretary of the Air Force.  No copyright is claimed in the United States under
 // Title 17, U.S. Code.  All Other Rights Reserved.
@@ -58,12 +58,12 @@ ServiceManager::getInstance()
         UXAS_LOG_INFORM(s_typeName(), "::getInstance static ServiceBase subclass initialization started");
         // force initialization of classes and their static class members
 
-        //// <editor-fold defaultstate="collapsed" desc="trigger static Service class initialization"> 
+        //// <editor-fold defaultstate="collapsed" desc="trigger static Service class initialization">
         // REGISTER SERVICES
         #define REGISTER_SERVICE_CODE
-        #include "00_ServiceList.h"        
+        #include "00_ServiceList.h"
         //// </editor-fold>
-        
+
         UXAS_LOG_INFORM(s_typeName(), "::getInstance static Service class initialization succeeded");
 
         s_instance.reset(new ServiceManager);
@@ -262,7 +262,7 @@ ServiceManager::initialize()
 
 uint32_t
 ServiceManager::removeTerminatedServices() // lock m_servicesByIdMutex before invoking
-{   
+{
     uint32_t runningSvcCnt{0};
     uint32_t terminatedSvcCnt{0};
     for (auto svcIt = m_servicesById.begin(); svcIt != m_servicesById.end();)
@@ -280,10 +280,10 @@ ServiceManager::removeTerminatedServices() // lock m_servicesByIdMutex before in
             svcIt++;
         }
     }
-    
+
     // check to see if bridges are ready for termination
     uxas::communications::LmcpObjectNetworkBridgeManager::getInstance().removeTerminatedBridges(runningSvcCnt, terminatedSvcCnt);
-    
+
     UXAS_LOG_INFORM(s_typeName(), "::removeTerminatedServices retained [", runningSvcCnt, "] services and removed [", terminatedSvcCnt, "] services");
     return (runningSvcCnt);
 };
@@ -291,16 +291,16 @@ ServiceManager::removeTerminatedServices() // lock m_servicesByIdMutex before in
 bool
 ServiceManager::createService(const std::string& serviceXml, int64_t newServiceId)
 {
-    // TODO REVIEW 
-    // Q1: if serviceXml only contains the service type, then merge 
+    // TODO REVIEW
+    // Q1: if serviceXml only contains the service type, then merge
     // default config XML from local file?
-    // 
+    //
     // Q2: is valid case to create a service without any XML config values
     // (using hard-coded values exclusively)?
     bool isSuccess{false};
 
     pugi::xml_document xmlDoc;
-    pugi::xml_parse_result xmlParseSuccess = xmlDoc.load(serviceXml.c_str());
+    pugi::xml_parse_result xmlParseSuccess = xmlDoc.load_string(serviceXml.c_str());
     if (xmlParseSuccess)
     {
         if (uxas::common::StringConstant::UxAS().compare(xmlDoc.root().name()) == 0)
@@ -331,7 +331,7 @@ bool
 ServiceManager::createService(const pugi::xml_node& serviceXmlNode, int64_t newServiceId)
 {
     // 20150904 RJT - currently accepting either:
-    // (a) "Component" node (legacy code requesting service via CreateNewService message) 
+    // (a) "Component" node (legacy code requesting service via CreateNewService message)
     // (b) "Service" node (new service code)
     if (uxas::common::StringConstant::Service().compare(serviceXmlNode.name()) == 0)
     {
@@ -404,7 +404,7 @@ ServiceManager::instantiateConfigureInitializeStartService(const pugi::xml_node&
 {
     UXAS_LOG_INFORM(s_typeName(), "::instantiateConfigureInitializeStartService - START");
     std::unique_ptr<ServiceBase> newServiceFinal;
-    
+
     std::string serviceType;
     if ((uxas::common::StringConstant::Component().compare(serviceXmlNode.name()) == 0 // Component node
             || uxas::common::StringConstant::Service().compare(serviceXmlNode.name()) == 0) // Service node
@@ -419,7 +419,7 @@ ServiceManager::instantiateConfigureInitializeStartService(const pugi::xml_node&
         UXAS_LOG_ERROR(s_typeName(), "::createService not processing ", serviceXmlNode.name(), " XML node since node name is empty, invalid or disallowed", uxas::common::StringConstant::Type());
         return (newServiceFinal);
     }
-    
+
     std::unique_ptr<ServiceBase> newService = ServiceBase::instantiateService(serviceType);
 
     if (newService)
@@ -442,7 +442,7 @@ ServiceManager::instantiateConfigureInitializeStartService(const pugi::xml_node&
                 entityIdLocal = entityId;
                 isPassedInID = true;
             }
-            
+
             if (isPassedInID)
             {
                 std::string originalUnicastAddress = LmcpObjectNetworkClientBase::getNetworkClientUnicastAddress(newService->m_entityId, newService->m_networkId);
@@ -475,7 +475,7 @@ ServiceManager::instantiateConfigureInitializeStartService(const pugi::xml_node&
     {
         UXAS_LOG_ERROR(s_typeName(), "::instantiateConfigureInitializeStartService failed to instantiate ", serviceType);
     }
-    
+
     UXAS_LOG_INFORM(s_typeName(), "::instantiateConfigureInitializeStartService - END");
     return (newServiceFinal);
 };
@@ -539,7 +539,7 @@ ServiceManager::processReceivedLmcpMessage(std::unique_ptr<uxas::communications:
     else if (uxas::messages::uxnative::isKillService(receivedLmcpMessage->m_object.get()))
     {
         auto killService = std::static_pointer_cast<uxas::messages::uxnative::KillService>(receivedLmcpMessage->m_object);
-//        std::cout << std::endl << "******ServiceManager::processReceivedLmcpMessage::m_networkId[" 
+//        std::cout << std::endl << "******ServiceManager::processReceivedLmcpMessage::m_networkId["
 //                << m_networkId << "]  killService->getServiceID[" << killService->getServiceID() << "] !! ******" << std::endl << std::endl;
         if (killService->getServiceID() == m_networkId)
         {
@@ -562,7 +562,7 @@ ServiceManager::terminateAllServices()
 {
     // Kill all bridges first
     uxas::communications::LmcpObjectNetworkBridgeManager::getInstance().terminateAllBridges();
-    
+
     // send KillService message to any non-terminated services
     std::lock_guard<std::mutex> lock(m_servicesByIdMutex);
     for (auto svcIt = m_servicesById.cbegin(), serviceItEnd = m_servicesById.cend(); svcIt != serviceItEnd; svcIt++)
