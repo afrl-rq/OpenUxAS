@@ -1198,7 +1198,7 @@ package body Route_Aggregator with SPARK_Mode is
                         toc.InitialTaskOption := taskpair.prevTaskOption;
                         toc.TimeToGo := routeplan.Cost;
                         toc.VehicleID := taskpair.vehicleId;
-                        pragma Assume (Length (matrix.CostMatrix) < Count_Type'Last, "we still have room in the matrix");
+                        pragma Assume (Length (matrix.CostMatrix) < To_Big_Integer (Positive'Last), "we still have room in the matrix");
                         matrix.CostMatrix := Add (matrix.CostMatrix, toc);
                      end;
 
@@ -1248,7 +1248,7 @@ package body Route_Aggregator with SPARK_Mode is
 
          --  Number of elements added to response.Routes
 
-         pragma Loop_Invariant (Length (Response.Routes) < Int_Set_P.Get (Positions (PlanResponses), Cu));
+         pragma Loop_Invariant (Length (Response.Routes) < To_Big_Integer (Integer (Int_Set_P.Get (Positions (PlanResponses), Cu))));
 
          --  We have removed all elements of PlanResponses from routePlanResponses
          --  up to Cu.

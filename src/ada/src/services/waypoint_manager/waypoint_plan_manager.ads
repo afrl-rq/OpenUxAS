@@ -60,9 +60,7 @@ package Waypoint_Plan_Manager with SPARK_Mode is
    procedure Handle_MissionCommand
      (State : in out Waypoint_Plan_Manager_State;
       MC : MissionCommand)
-     with Pre =>
-       Length (MC.WaypointList) <= Max and then
-       MC.FirstWaypoint > 0;
+     with Pre => MC.FirstWaypoint > 0;
 
    procedure Produce_Segment
      (State : in out Waypoint_Plan_Manager_State;

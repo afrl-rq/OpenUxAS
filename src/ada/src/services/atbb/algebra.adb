@@ -184,7 +184,7 @@ package body Algebra with SPARK_Mode is
                   if not Encounter_Executed_Out then
                      for J in 1 .. Num_Children loop
                         for TaskOptionId of Children_Results (J) loop
-                           pragma Assume (Length (ResultThis) < Count_Type'Last);
+                           pragma Assume (Length (ResultThis) < To_Big_Integer (Positive'Last));
                            ResultThis := Add (ResultThis, TaskOptionId);
                         end loop;
                      end loop;
@@ -200,7 +200,7 @@ package body Algebra with SPARK_Mode is
 
                      --  All actions are candidate in a parallel assignment
                      for TaskOptionId of Children_Results (J) loop
-                        pragma Assume (Length (ResultThis) < Count_Type'Last);
+                        pragma Assume (Length (ResultThis) < To_Big_Integer (Positive'Last));
                         ResultThis := Add (ResultThis, TaskOptionId);
                      end loop;
 

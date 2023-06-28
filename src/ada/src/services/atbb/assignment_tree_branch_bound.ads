@@ -1,5 +1,6 @@
 with SPARK.Containers.Formal.Unbounded_Hashed_Maps;
 with SPARK.Containers.Functional.Maps;
+with SPARK.Big_Integers;                         use SPARK.Big_Integers;
 with Ada.Containers;                             use Ada.Containers;
 with Ada.Strings.Unbounded;                      use Ada.Strings.Unbounded;
 with Assignment_Tree_Branch_Bound_Communication; use Assignment_Tree_Branch_Bound_Communication;

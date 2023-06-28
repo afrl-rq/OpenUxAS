@@ -235,8 +235,6 @@ package body Waypoint_Plan_Manager with SPARK_Mode is
                -- WP.TurnType := Config.TurnType;
                WP_List := Add (WP_List, WP);
             end if;
-            pragma Loop_Invariant
-              (Integer (Length (WP_List)) <= I - First_Index (State.Segment) + 1);
          end loop;
          MC_Out.WaypointList := WP_List;
          sendBroadcastMessage (Mailbox, MC_Out);

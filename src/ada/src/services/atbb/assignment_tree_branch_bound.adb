@@ -553,7 +553,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
          Result : Int64_Seq;
       begin
          for J in TO_Sequences.First .. Last (Assignment.Assignment_Sequence) loop
-            pragma Assume (Length (Result) < Count_Type'Last);
+            pragma Assume (Length (Result) < To_Big_Integer (Positive'Last));
             Result :=
               Add (Result,
                    Get_TaskOptionID
@@ -1248,7 +1248,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
         Pre  =>
           Valid_TaskPlanOptions (TaskPlanOptions_Map)
             and then Valid_Assignment (Assignment, TaskPlanOptions_Map, Automation_Request)
-            and then Length (Assignment.Assignment_Sequence) < Count_Type'Last
+            and then Length (Assignment.Assignment_Sequence) < To_Big_Integer (Positive'Last)
             and then TaskOpt.TaskID in 0 .. 99_999
             and then TaskOpt.OptionID in 0 .. 99_999
             and then Result.Assignment_Sequence = Add (Assignment.Assignment_Sequence,
@@ -1273,7 +1273,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       procedure Prove_Initial_Value_Is_Valid with
         Ghost,
         Pre  =>
-          Length (Assignment.Assignment_Sequence) < Count_Type'Last
+          Length (Assignment.Assignment_Sequence) < To_Big_Integer (Positive'Last)
             and then TaskOpt.TaskID in 0 .. 99_999
             and then TaskOpt.OptionID in 0 .. 99_999
             and then
@@ -1430,7 +1430,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
    begin
       --  The assignment sequence is the enclosing assignment sequence with
       --  the new TaskAssignment added at the end.
-      pragma Assume (Length (Assignment.Assignment_Sequence) < Count_Type'Last);
+      pragma Assume (Length (Assignment.Assignment_Sequence) < To_Big_Integer (Positive'Last));
       Result.Assignment_Sequence :=
         Add (Assignment.Assignment_Sequence,
              (TaskOpt.TaskID,

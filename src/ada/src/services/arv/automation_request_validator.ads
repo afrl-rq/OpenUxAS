@@ -2,6 +2,7 @@ with SPARK.Containers.Formal.Doubly_Linked_Lists;
 with SPARK.Containers.Formal.Hashed_Maps;
 with SPARK.Containers.Functional.Maps;
 with SPARK.Containers.Types;                     use SPARK.Containers.Types;
+with SPARK.Big_Integers;                         use SPARK.Big_Integers;
 with Ada.Strings.Unbounded;                      use Ada.Strings.Unbounded;
 with Automation_Request_Validator_Communication; use Automation_Request_Validator_Communication;
 with Common;                                     use Common;

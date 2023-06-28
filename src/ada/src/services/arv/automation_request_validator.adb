@@ -248,7 +248,7 @@ package body Automation_Request_Validator with SPARK_Mode is
                else
                   for Id of Configurations loop
                      if Contains (States, Id) then
-                        pragma Assume (Length (EntityList) < Count_Type'Last, "we have less than Count_Type'Last vehicles");
+                        pragma Assume (Length (EntityList) < To_Big_Integer (Positive'Last), "we have less than Count_Type'Last vehicles");
                         EntityList := Add (EntityList, Id);
                      end if;
                      pragma Loop_Invariant (IsReady = IsReady'Loop_Entry);
