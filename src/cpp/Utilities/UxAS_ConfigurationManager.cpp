@@ -1,7 +1,7 @@
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
-// 
+//
 // Copyright (c) 2017 Government of the United State of America, as represented by
 // the Secretary of the Air Force.  No copyright is claimed in the United States under
 // Title 17, U.S. Code.  All Other Rights Reserved.
@@ -129,7 +129,7 @@ ConfigurationManager::loadXml(const std::string& xml, bool isFile, bool isBaseXm
         }
         else
         {
-            xmlParseSuccess = m_baseXmlDoc.load(xml.c_str());
+            xmlParseSuccess = m_baseXmlDoc.load_string(xml.c_str());
         }
         m_isBaseXmlDocLoaded = true;
 #ifdef DEBUG_VERBOSE_LOGGING_ENABLED
@@ -431,7 +431,7 @@ void ConfigurationManager::loadUtilityValuesFromXmlNode(const pugi::xml_node& xm
                 {
                     pathToFiles = std::string(currentXmlNode.attribute("PathToFiles").value());
                     // make sure it ends with a '/'
-                    pathToFiles = (*(pathToFiles.rbegin()) == '/') ? (pathToFiles) : (pathToFiles + "/"); 
+                    pathToFiles = (*(pathToFiles.rbegin()) == '/') ? (pathToFiles) : (pathToFiles + "/");
                 }
                 for (auto dtedFileXmlNode = currentXmlNode.first_child(); dtedFileXmlNode; dtedFileXmlNode = dtedFileXmlNode.next_sibling())
                 {
@@ -548,8 +548,8 @@ void ConfigurationManager::loadUtilityValuesFromXmlNode(const pugi::xml_node& xm
 ////            UXAS_LOG_INFORM(s_typeName(), "::buildUxasMasterFile t_cmpntsNode.name() ", t_cmpntsNode.name(), " FILE ", path); // GOOD
 ////            pugi::xml_node t_firstCmpntNode = t_cmpntsNode.first_child();
 ////            UXAS_LOG_INFORM(s_typeName(), "::buildUxasMasterFile t_firstCmpntNode.name() ", t_firstCmpntNode.name(), " FILE ", path); // GOOD
-//            
-//            pugi::xml_node cmpntNodes = xmlDoc.child(StringConstant::UxAS().c_str()).child(StringConstant::Components().c_str());            
+//
+//            pugi::xml_node cmpntNodes = xmlDoc.child(StringConstant::UxAS().c_str()).child(StringConstant::Components().c_str());
 //
 //            for (pugi::xml_node uxasChildNode = uxasNode.first_child(); uxasChildNode; uxasChildNode = uxasChildNode.next_sibling())
 //            {
@@ -559,7 +559,7 @@ void ConfigurationManager::loadUtilityValuesFromXmlNode(const pugi::xml_node& xm
 //
 //
 ////                for (pugi::xml_node ndCurrent = ndConfigurationEntries.first_child(); ndCurrent; ndCurrent = ndCurrent.next_sibling())
-//                
+//
 //
 //                for (pugi::xml_node cmpntsChildNode = uxasChildNode.first_child(); cmpntsChildNode; cmpntsChildNode = cmpntsChildNode.next_sibling())
 //                {
@@ -630,14 +630,14 @@ void ConfigurationManager::loadUtilityValuesFromXmlNode(const pugi::xml_node& xm
 //            UXAS_LOG_WARN(s_typeName(), "::buildUxasMasterFile failed to parse XML from ", path);
 //        }
 //    }
-// 
+//
 //    UXAS_LOG_INFORM(s_typeName(), "::buildUxasMasterFile component XML SUMMARY START ");
 //    UXAS_LOG_INFORM(s_typeName(), "::buildUxasMasterFile component XML SUMMARY START ");
 //    UXAS_LOG_INFORM(s_typeName(), "::buildUxasMasterFile component XML SUMMARY START ");
 //    UXAS_LOG_INFORM(s_typeName(), "::buildUxasMasterFile component types ", cmpntTypesStrStrm.str());
 //
 //    UXAS_LOG_INFORM("");
-//    
+//
 //    for (auto itCmpntCnt = cmpntCntByType.cbegin(), itEndCmpntCnt = cmpntCntByType.cend(); itCmpntCnt != itEndCmpntCnt; itCmpntCnt++)
 //    {
 //        UXAS_LOG_INFORM(s_typeName(), "::buildUxasMasterFile component type ", itCmpntCnt->first, " occurrence count is ", itCmpntCnt->second);
@@ -645,9 +645,9 @@ void ConfigurationManager::loadUtilityValuesFromXmlNode(const pugi::xml_node& xm
 //    UXAS_LOG_INFORM(s_typeName(), "::buildUxasMasterFile component XML SUMMARY END ");
 //    UXAS_LOG_INFORM(s_typeName(), "::buildUxasMasterFile component XML SUMMARY END ");
 //    UXAS_LOG_INFORM(s_typeName(), "::buildUxasMasterFile component XML SUMMARY END ");
-//    
+//
 //    UXAS_LOG_INFORM("");
-//    
+//
 ////    std::unordered_map<std::string, uint32_t> uniqueCmpntXmlCnt;
 ////    for (auto itCmpntXml = cmpntXmlByType.cbegin(), itEndCmpntXml = cmpntXmlByType.cend(); itCmpntXml != itEndCmpntXml; itCmpntXml++)
 ////    {
@@ -675,13 +675,13 @@ void ConfigurationManager::loadUtilityValuesFromXmlNode(const pugi::xml_node& xm
 ////    UXAS_LOG_INFORM(s_typeName(), "::buildUxasMasterFile component types ", cmpntTypesStrStrm.str());
 ////
 ////    UXAS_LOG_INFORM("");
-////    
+////
 ////    for (auto itUniqueXmlCnt = uniqueCmpntXmlCnt.cbegin(), itUniqueXmlCntEnd = cmpntCntByType.cend(); itUniqueXmlCnt != itUniqueXmlCntEnd; itUniqueXmlCnt++)
 ////    {
 ////        UXAS_LOG_INFORM(s_typeName(), "::buildUxasMasterFile component XML unique occurrence count is ", itUniqueXmlCnt->second);
 ////    }
 ////    UXAS_LOG_INFORM("");
-////    
+////
 ////    for (auto itUniqueXmlCnt = uniqueCmpntXmlCnt.cbegin(), itUniqueXmlCntEnd = cmpntCntByType.cend(); itUniqueXmlCnt != itUniqueXmlCntEnd; itUniqueXmlCnt++)
 ////    {
 ////        UXAS_LOG_INFORM(s_typeName(), "::buildUxasMasterFile component XML unique occurrence count is ", itUniqueXmlCnt->second, " for XML ", itUniqueXmlCnt->first);
@@ -689,7 +689,7 @@ void ConfigurationManager::loadUtilityValuesFromXmlNode(const pugi::xml_node& xm
 ////    UXAS_LOG_INFORM(s_typeName(), "::buildUxasMasterFile component XML CONCLUSION END ");
 ////    UXAS_LOG_INFORM(s_typeName(), "::buildUxasMasterFile component XML CONCLUSION END ");
 ////    UXAS_LOG_INFORM(s_typeName(), "::buildUxasMasterFile component XML CONCLUSION END ");
-////    
+////
 ////    UXAS_LOG_INFORM("");
 //
 //    for (auto _cTypeIt = uniqueSingleCmpntXmlByType.cbegin(), _cTypeItEnd = uniqueSingleCmpntXmlByType.cend(); _cTypeIt != _cTypeItEnd; _cTypeIt++)
@@ -701,7 +701,7 @@ void ConfigurationManager::loadUtilityValuesFromXmlNode(const pugi::xml_node& xm
 //    }
 //
 //
-//    
+//
 //    return (true);
 //};
  */

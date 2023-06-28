@@ -52,6 +52,15 @@ CXX=$(ANODENV)g++
 # Default C++ compilation flags
 CXX_FLAGS:=-fPIC -std=c++11
 
+# Note: we suppress boost deprecation warnings because they are triggering only
+#       on boost-internal headers.
+CXX_FLAGS+=-DBOOST_ALLOW_DEPRECATED_HEADERS
+
+# Note: also suppress the warning about geometry needing C++14. This means we
+#       need to change language versions if we update boost or we don't update
+#       boost
+CXX_FLAGS+=-DBOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING
+
 # Enable all warnings
 ifeq ($(ENABLE_WARNINGS),true)
     CXX_FLAGS+=-Wall
@@ -111,7 +120,7 @@ endef
 #
 define GENERATE_COMPILE_RULE
 
-$(OBJECT_DIR)/$1: $2 
+$(OBJECT_DIR)/$1: $2
 	$$(call COMPILE_CXX,$$@,$$<)
 
 endef

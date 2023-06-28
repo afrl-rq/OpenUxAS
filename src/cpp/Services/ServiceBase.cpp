@@ -1,7 +1,7 @@
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
-// 
+//
 // Copyright (c) 2017 Government of the United State of America, as represented by
 // the Secretary of the Air Force.  No copyright is claimed in the United States under
 // Title 17, U.S. Code.  All Other Rights Reserved.
@@ -31,7 +31,7 @@ namespace service
 
     ServiceBase::~ServiceBase()
     {
-//        UXAS_LOG_INFORM_ASSIGNMENT(m_serviceType, "::~ServiceBase()");     
+//        UXAS_LOG_INFORM_ASSIGNMENT(m_serviceType, "::~ServiceBase()");
     };
 
 
@@ -39,7 +39,7 @@ bool
 ServiceBase::configureService(const std::string& parentOfWorkDirectory, const std::string& serviceXml)
 {
     pugi::xml_document xmlDoc;
-    if (xmlDoc.load(serviceXml.c_str()))
+    if (xmlDoc.load_string(serviceXml.c_str()))
     {
     	return (configureService(parentOfWorkDirectory, xmlDoc.root()));
 	}
@@ -55,7 +55,7 @@ ServiceBase::configureService(const std::string& parentWorkDirectory, const pugi
 
     if (!m_workDirectoryName.empty())
     {
-        
+
         m_workDirectoryPath = parentWorkDirectory + ((*(parentWorkDirectory.rbegin()) == '/') ? "" : "/")
                 + m_workDirectoryName + ((*(m_workDirectoryName.rbegin()) == '/') ? "" : "/");
 
@@ -89,7 +89,7 @@ ServiceBase::configureService(const std::string& parentWorkDirectory, const pugi
     {
         UXAS_LOG_INFORM(m_serviceType, "::configureService did not find ", uxas::common::StringConstant::MessageGroup(), " value in XML configuration");
     }
-    
+
     if (isSuccess)
     {
         m_isConfigured = true;
