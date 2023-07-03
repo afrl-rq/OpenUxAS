@@ -1,5 +1,6 @@
 with SPARK.Containers.Functional.Vectors;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with AFRL.CMASI.Enumerations; use AFRL.CMASI.Enumerations;
 with Common;                use Common;
 
 package LMCP_Messages with SPARK_Mode is
@@ -11,6 +12,7 @@ package LMCP_Messages with SPARK_Mode is
    type AltitudeTypeEnum is (AGL, MSL);
    type SpeedTypeEnum is (Airspeed, Groundspeed);
    type TurnTypeEnum is (TurnShort, FlyOver);
+   type LoiterTypeEnum is (VehicleDefault, Circular, Racetrack, FigureEight, Hover);
 
    type Location3D is tagged record
       -- Latitude
@@ -27,6 +29,12 @@ package LMCP_Messages with SPARK_Mode is
       Id : Int64 := 0;
       Location : Location3D;
       Heading : Real32 := 0.0;
+      Time : Int64;
+      GroundSpeed : Real32;
+      isGroundVehicleState : Boolean := False;
+      isAirVehicleState : Boolean := False;
+      isStationarySensorState : Boolean := False;
+      isSurfaceVehicleState : Boolean := False;
    end record;
 
    type PlanningState is record
@@ -73,6 +81,10 @@ package LMCP_Messages with SPARK_Mode is
       -- A list of tasks that are associated with this action. A length of zero denotes no associated tasks. This field is for analysis purposes. The automation service should associate a list of tasks with each action to enable analysis of the allocation of tasks to vehicles.
       --
       AssociatedTaskList : Int64_Seq;
+      LoiterAction : Boolean := False;
+      LoiterType : LoiterTypeEnum;
+      Radius : Real32 := 0.0;
+      Location : Location3D;
    end record;
 
    package VA_Sequences is new SPARK.Containers.Functional.Vectors
@@ -132,7 +144,7 @@ package LMCP_Messages with SPARK_Mode is
       Element_Type => MissionCommand);
    type MissionCommand_Seq is new MC_Sequences.Sequence;
 
-   type KeyValuePair is record
+   type KeyValuePair is new Message_Root with record
       -- A key (name) for the property
       Key : Unbounded_String := To_Unbounded_String ("");
       -- A value for the property
@@ -357,6 +369,68 @@ package LMCP_Messages with SPARK_Mode is
       OperatingRegion : Int64 := 0;
       -- Ordered list of tasks to be completed
       TaskList : TaskAssignment_Sequence;
+   end record;
+
+   type SpeedAltPair is new Message_Root with record
+      -- ID of vehicle for which altitude and speed is attached
+      VehicleID : Int64 := 0;
+      -- ID of task for which altitude and speed is attached. If TaskID is zero, then alt/speed setting applies to all tasks in the automation request
+      TaskID : Int64 := 0;
+      -- The speed attached to this vehicle
+      Speed : Real32 := 0.0;
+      -- Altitude attached to this vehicle
+      Altitude : Real32 := 0.0;
+      -- Altitude type for specified altitude
+      AltitudeType : AltitudeTypeEnum := AGL;
+   end record;
+
+   type TaskImplementationRequest is new Message_Root with record
+      -- Request ID for correlating to matching response
+      RequestID : Int64 := 0;
+      -- This task implementation request is part of fulfilling a unique automation request
+      CorrespondingAutomationRequestID : Int64 := 0;
+      -- Starting waypoint ID that task must use when building response. Note that Plan Builder reserves all values greater than 1,000,000,000. Therefore all *internal* task waypoints must be less than 1e9 and can be obtained from the reported waypoint number by "waypoint->getNumber()%1e9" .
+      StartingWaypointID : Int64 := 0;
+      -- Assigned vehicle ID
+      VehicleID : Int64 := 0;
+      -- Initial position of entity before task. A valid TaskImplementationRequest must define StartPosition (null not allowed).
+      StartPosition : Location3D;
+      -- Initial heading of entity before task
+      StartHeading : Real32 := 0.0;
+      -- Time when vehicle is at the starting location
+      StartTime : Int64 := 0;
+      -- ID for full region in which entity should plan
+      RegionID : Int64 := 0;
+      -- Task ID to be completed
+      TaskID : Int64 := 0;
+      -- Using option ID to complete this task
+      OptionID : Int64 := 0;
+      -- Time before which this task cannot begin
+      TimeThreshold : Int64 := 0;
+      -- Predicted locations and headings of all other entities at the point in the mission when this option is to be conducted.
+      NeighborLocations : PlanningState_Seq;
+   end record;
+
+   type TaskImplementationResponse is new Message_Root with record
+      -- Response ID that matches the initial request
+      ResponseID : Int64 := 0;
+      -- This task implementation response is part of fulfilling a unique automation request
+      CorrespondingAutomationRequestID : Int64 := 0;
+      -- Task ID
+      TaskID : Int64 := 0;
+      -- Option ID that was selected for this task
+      OptionID : Int64 := 0;
+      -- Vehicle ID
+      VehicleID : Int64 := 0;
+      -- Waypoints that implement this task for the indicated vehicle
+      TaskWaypoints : WP_Seq;
+      -- Vehicle location when this task is complete. A valid TaskImplementationResponse must define FinalLocation (null not allowed).
+      FinalLocation : Location3D;
+      -- Vehicle heading when this task is complete
+      FinalHeading : Real32 := 0.0;
+      -- Time when vehicle is at the final location
+      FinalTime : Int64 := 0;
+
    end record;
 
 end LMCP_Messages;

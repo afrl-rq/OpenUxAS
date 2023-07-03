@@ -1,24 +1,29 @@
 with LMCP_Messages;
 
-with AFRL.CMASI.AutomationRequest;                    use AFRL.CMASI.AutomationRequest;
-with AFRL.CMASI.EntityState;                          use AFRL.CMASI.EntityState;
-with AFRL.CMASI.KeyValuePair;                         use AFRL.CMASI.KeyValuePair;
-with AFRL.CMASI.Location3D;                           use AFRL.CMASI.Location3D;
-with AFRL.CMASI.MissionCommand;                       use AFRL.CMASI.MissionCommand;
-with AFRL.CMASI.VehicleAction;                        use AFRL.CMASI.VehicleAction;
-with AFRL.CMASI.Waypoint;                             use AFRL.CMASI.Waypoint;
-with AFRL.Impact.ImpactAutomationRequest;             use AFRL.Impact.ImpactAutomationRequest;
+with AFRL.CMASI.AutomationRequest;                       use AFRL.CMASI.AutomationRequest;
+with AFRL.CMASI.EntityState;                             use AFRL.CMASI.EntityState;
+with AFRL.CMASI.KeyValuePair;                            use AFRL.CMASI.KeyValuePair;
+with AFRL.CMASI.Location3D;                              use AFRL.CMASI.Location3D;
+with AFRL.CMASI.MissionCommand;                          use AFRL.CMASI.MissionCommand;
+with AFRL.CMASI.VehicleAction;                           use AFRL.CMASI.VehicleAction;
+with AFRL.CMASI.Waypoint;                                use AFRL.CMASI.Waypoint;
+with AFRL.Impact.ImpactAutomationRequest;                use AFRL.Impact.ImpactAutomationRequest;
+with AFRL.Impact.SpeedAltPair;                           use AFRL.Impact.SpeedAltPair;
+with UxAS.Messages.lmcptask.TaskImplementationResponse;  use UxAS.Messages.lmcptask.TaskImplementationResponse;
+with UxAS.Messages.lmcptask.TaskImplementationRequest;   use UxAS.Messages.lmcptask.TaskImplementationRequest;
 with AVTAS.LMCP.Object;
-with UxAS.Messages.lmcptask.AssignmentCostMatrix;     use UxAS.Messages.lmcptask.AssignmentCostMatrix;
-with UxAS.Messages.lmcptask.TaskAutomationRequest;    use UxAS.Messages.lmcptask.TaskAutomationRequest;
-with UxAS.Messages.lmcptask.TaskPlanOptions;          use UxAS.Messages.lmcptask.TaskPlanOptions;
-with UxAS.Messages.lmcptask.UniqueAutomationRequest;  use UxAS.Messages.lmcptask.UniqueAutomationRequest;
-with UxAS.Messages.lmcptask.UniqueAutomationResponse; use UxAS.Messages.lmcptask.UniqueAutomationResponse;
-with UxAS.Messages.Route.RouteConstraints;            use UxAS.Messages.Route.RouteConstraints;
-with UxAS.Messages.Route.RoutePlan;                   use UxAS.Messages.Route.RoutePlan;
-with UxAS.Messages.Route.RoutePlanRequest;            use UxAS.Messages.Route.RoutePlanRequest;
-with UxAS.Messages.Route.RoutePlanResponse;           use UxAS.Messages.Route.RoutePlanResponse;
-with UxAS.Messages.Route.RouteRequest;                use UxAS.Messages.Route.RouteRequest;
+with UxAS.Messages.lmcptask.AssignmentCostMatrix;        use UxAS.Messages.lmcptask.AssignmentCostMatrix;
+with UxAS.Messages.lmcptask.TaskAutomationRequest;       use UxAS.Messages.lmcptask.TaskAutomationRequest;
+with UxAS.Messages.lmcptask.TaskAssignmentSummary;       use UxAS.Messages.lmcptask.TaskAssignmentSummary;
+with UxAS.Messages.lmcptask.TaskAssignment;              use UxAS.Messages.lmcptask.TaskAssignment;
+with UxAS.Messages.lmcptask.TaskPlanOptions;             use UxAS.Messages.lmcptask.TaskPlanOptions;
+with UxAS.Messages.lmcptask.UniqueAutomationRequest;     use UxAS.Messages.lmcptask.UniqueAutomationRequest;
+with UxAS.Messages.lmcptask.UniqueAutomationResponse;    use UxAS.Messages.lmcptask.UniqueAutomationResponse;
+with UxAS.Messages.Route.RouteConstraints;               use UxAS.Messages.Route.RouteConstraints;
+with UxAS.Messages.Route.RoutePlan;                      use UxAS.Messages.Route.RoutePlan;
+with UxAS.Messages.Route.RoutePlanRequest;               use UxAS.Messages.Route.RoutePlanRequest;
+with UxAS.Messages.Route.RoutePlanResponse;              use UxAS.Messages.Route.RoutePlanResponse;
+with UxAS.Messages.Route.RouteRequest;                   use UxAS.Messages.Route.RouteRequest;
 
 package LMCP_Message_Conversions is
 
@@ -59,5 +64,17 @@ package LMCP_Message_Conversions is
    function As_MissionCommand_Message (Msg : not null MissionCommand_Acc) return LMCP_Messages.MissionCommand;
 
    function As_Object_Any (Msg : LMCP_Messages.Message_Root'Class) return AVTAS.LMCP.Object.Object_Any;
+
+   function As_TaskAssignmentSummary_Message (Msg : not null TaskAssignmentSummary_Any) return LMCP_Messages.TaskAssignmentSummary;
+
+   function As_TaskAssignment_Message (Msg : TaskAssignment_Acc) return LMCP_Messages.TaskAssignment;
+
+   function As_Location3D_Any (Msg : LMCP_Messages.Location3D) return Location3D_Any;
+
+   function As_SpeedAltPair_Message (Msg : not null SpeedAltPair_Acc) return LMCP_Messages.SpeedAltPair;
+
+   function As_TaskImplementationRequest_Message (Msg : not null TaskImplementationRequest_Any) return LMCP_Messages.TaskImplementationRequest;
+
+   function As_TaskImplementationReponse_Message (Msg : not null TaskImplementationResponse_Any) return LMCP_Messages.TaskImplementationResponse;
 
 end LMCP_Message_Conversions;
