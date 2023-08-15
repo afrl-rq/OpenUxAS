@@ -1,16 +1,16 @@
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
-// 
+//
 // Copyright (c) 2017 Government of the United State of America, as represented by
 // the Secretary of the Air Force.  No copyright is claimed in the United States under
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-/* 
+/*
  * File:   Task_EscortTask.cpp
  * Author: derek
- * 
+ *
  * Created on March 7, 2016, 3:03 PM
  */
 
@@ -153,7 +153,6 @@ bool EscortTaskService::processRecievedLmcpMessageDynamicTask(std::shared_ptr<av
         m_linesOfInterest[loi->getLineID()] = loi;
     }
     return (false); // always false implies never terminating service from here
-    int64_t optionId(TaskOptionClass::m_firstOptionId);
 }
 
 
