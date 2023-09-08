@@ -15,12 +15,12 @@
  */
 
 #include "RouteAggregatorService.h"
-
 #include "UxAS_Log.h"
-#include "pugixml.hpp"
 #include "UnitConversions.h"
 #include "DRand.h"
 #include "Constants/UxAS_String.h"
+
+#include "pugixml.hpp"
 
 #include <map>
 

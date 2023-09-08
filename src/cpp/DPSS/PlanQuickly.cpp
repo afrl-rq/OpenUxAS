@@ -8,7 +8,9 @@
 // ===============================================================================
 
 #include "Dpss.h"
+
 using namespace std;
+using namespace Dpss_Data_n;
 
 void Dpss::PlanQuickly(std::vector<xyPoint>& xyPoints, int maxWps)
 {

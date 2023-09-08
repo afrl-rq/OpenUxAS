@@ -37,11 +37,11 @@
 /****************************************************
 *                    Includes                        *
 *****************************************************/
+//#include "GlobalDefines.h"    //V_INT_t, V_POSITION_t
+#include "Position.h"
+
 #include <vector>
 #include <string>
-//#include "GlobalDefines.h"    //V_INT_t, V_POSITION_t
-using namespace std;
-#include "Position.h"
 
 /* test if a & b are within epsilon.  Favors cases where a < b */
 #define Near(a,b,eps)    ( ((b)-(eps)<(a)) && ((a)-(eps)<(b)) )
@@ -65,8 +65,8 @@ private:
         CPosition VertexB;
     };    //Only create if needed...
     
-    typedef vector<CellData> VData;
-    typedef vector<CellData>::iterator VDataIterator;
+    typedef std::vector<CellData> VData;
+    typedef std::vector<CellData>::iterator VDataIterator;
     
     VDataIterator DIndex;
     VDataIterator DUpperBound;
@@ -78,8 +78,8 @@ private:
         VData *Data ;                            // make pointer because doesn't always exist
     };    // always create 
     
-    typedef vector<Cell> VCell;
-    typedef vector<Cell>::iterator VCellIterator;
+    typedef std::vector<Cell> VCell;
+    typedef std::vector<Cell>::iterator VCellIterator;
     
     VCell VGrid;
     VCellIterator    Index;
@@ -124,10 +124,10 @@ private:
     *************************************************/
 private:
     
-    void Setup_Corner_Value(stringstream &sstrErrorMessage);
+    void Setup_Corner_Value(std::stringstream &sstrErrorMessage);
     
     bool Setup_GridData(Cell &Cur_Cell, double xa, double ya, double xb, double yb, 
-        CPosition &vtxa, CPosition &vtxb, stringstream &sstrErrorMessage);
+        CPosition &vtxa, CPosition &vtxb, std::stringstream &sstrErrorMessage);
     
     void Print();
     
@@ -144,11 +144,11 @@ public:
     // default constructor
     CGrid(std::vector<int32_t>& viVerticies,V_POSITION_t& vposVertexContainer, int x_grid_resolution, 
         int y_grid_resolution, CPosition &min, CPosition &max,
-        stringstream &sstrErrorMessage );
+        std::stringstream &sstrErrorMessage );
     
     ~CGrid();                                                //Destructor
     
-    bool InPolygon(double x, double y, double z, const CPosition &min, stringstream &sstrErrorMessage);
+    bool InPolygon(double x, double y, double z, const CPosition &min, std::stringstream &sstrErrorMessage);
     
     };
 

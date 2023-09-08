@@ -10,8 +10,9 @@
 #ifndef UXAS_MESSAGE_TRANSPORT_ZERO_MQ_SOCKET_CONFIGURATION_H
 #define UXAS_MESSAGE_TRANSPORT_ZERO_MQ_SOCKET_CONFIGURATION_H
 
-#include <cstdint>
 #include "SocketConfiguration.h"
+
+#include <cstdint>
 
 namespace uxas
 {

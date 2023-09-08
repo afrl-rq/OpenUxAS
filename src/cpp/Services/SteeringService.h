@@ -11,10 +11,10 @@
 #define UXAS_STEERING_SERVICE_H
 
 #include "ServiceBase.h"
-
-#include "afrl/cmasi/Waypoint.h"
 #include "Constants/Constant_Strings.h"
 #include "visilibity.h"
+
+#include "afrl/cmasi/Waypoint.h"
 
 #include <memory>
 #include <unordered_map>

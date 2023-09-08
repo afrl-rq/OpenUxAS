@@ -16,9 +16,16 @@
 
 
 #include "MultiVehicleWatchTaskService.h"
-
 #include "Position.h"
 #include "UnitConversions.h"
+#include "Constants/Convert.h"
+#include "DpssDataTypes.h"
+
+#include "uxas/messages/task/TaskImplementationResponse.h"
+#include "uxas/messages/task/TaskOption.h"
+#include "uxas/messages/route/RouteRequest.h"
+#include "uxas/messages/route/RouteResponse.h"
+#include "uxas/messages/route/RouteConstraints.h"
 
 #include "avtas/lmcp/LmcpXMLReader.h"
 #include "afrl/cmasi/VehicleActionCommand.h"
@@ -29,15 +36,8 @@
 #include "afrl/cmasi/AirVehicleConfiguration.h"
 #include "afrl/vehicles/GroundVehicleConfiguration.h"
 #include "afrl/vehicles/SurfaceVehicleConfiguration.h"
-#include "uxas/messages/task/TaskImplementationResponse.h"
-#include "uxas/messages/task/TaskOption.h"
-#include "uxas/messages/route/RouteRequest.h"
-#include "uxas/messages/route/RouteResponse.h"
-#include "uxas/messages/route/RouteConstraints.h"
 
 #include "pugixml.hpp"
-#include "Constants/Convert.h"
-#include "DpssDataTypes.h"
 
 #include <sstream>      //std::stringstream
 #include <iostream>     // std::cout, cerr, etc

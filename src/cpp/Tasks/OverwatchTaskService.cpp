@@ -16,21 +16,22 @@
 
 
 #include "OverwatchTaskService.h"
-
 #include "Position.h"
 #include "FlatEarth.h"
+
+#include "uxas/messages/task/TaskOption.h"
 
 #include "avtas/lmcp/LmcpXMLReader.h"
 #include "afrl/cmasi/VehicleActionCommand.h"
 #include "afrl/cmasi/GimbalStareAction.h"
 #include "afrl/cmasi/GimbalConfiguration.h"
 #include "afrl/cmasi/LoiterAction.h"
-#include "uxas/messages/task/TaskOption.h"
+
+#include "boost/filesystem.hpp"
 
 #include <sstream>      //std::stringstream
 #include <iostream>     // std::cout, cerr, etc
 #include <fstream>
-#include "boost/filesystem.hpp"
 
 namespace uxas
 {

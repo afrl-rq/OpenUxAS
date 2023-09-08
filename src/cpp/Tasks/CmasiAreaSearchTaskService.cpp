@@ -16,17 +16,11 @@
 
 
 #include "CmasiAreaSearchTaskService.h"
-
 #include "Position.h"
 #include "FileSystemUtilities.h"
 #include "Polygon.h"
+#include "Constants/Convert.h"
 
-#include "afrl/cmasi/Circle.h"
-#include "afrl/cmasi/Polygon.h"
-#include "afrl/cmasi/Rectangle.h"
-#include "afrl/cmasi/VehicleActionCommand.h"
-#include "afrl/cmasi/GimbalAngleAction.h"
-#include "afrl/cmasi/GimbalConfiguration.h"
 #include "uxas/messages/task/SensorFootprintResponse.h"
 #include "uxas/messages/task/FootprintRequest.h"
 #include "uxas/messages/task/SensorFootprintRequests.h"
@@ -36,8 +30,14 @@
 #include "uxas/messages/route/RouteConstraints.h"
 #include "uxas/messages/uxnative/VideoRecord.h"
 
+#include "afrl/cmasi/Circle.h"
+#include "afrl/cmasi/Polygon.h"
+#include "afrl/cmasi/Rectangle.h"
+#include "afrl/cmasi/VehicleActionCommand.h"
+#include "afrl/cmasi/GimbalAngleAction.h"
+#include "afrl/cmasi/GimbalConfiguration.h"
+
 #include "pugixml.hpp"
-#include "Constants/Convert.h"
 
 #include <sstream>      //std::stringstream
 #include <iostream>     // std::cout, cerr, etc

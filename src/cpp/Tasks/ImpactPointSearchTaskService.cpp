@@ -14,28 +14,26 @@
  * Created on February 12, 2015, 6:17 PM
  */
 
-
 #include "ImpactPointSearchTaskService.h"
-
 #include "Position.h"
 #include "UnitConversions.h"
+#include "Constants/Convert.h"
+#include "BatchSummaryService.h"
 
-#include "afrl/cmasi/VehicleActionCommand.h"
-#include "afrl/cmasi/GimbalStareAction.h"
 #include "uxas/messages/task/TaskOption.h"
 #include "uxas/messages/route/RouteRequest.h"
 #include "uxas/messages/route/RouteResponse.h"
 #include "uxas/messages/route/RouteConstraints.h"
 
+#include "afrl/cmasi/VehicleActionCommand.h"
+#include "afrl/cmasi/GimbalStareAction.h"
+#include "afrl/cmasi/GimbalConfiguration.h"
+#include "avtas/lmcp/LmcpXMLReader.h"
+
 #include "pugixml.hpp"
-#include "Constants/Convert.h"
 
 #include <sstream>      //std::stringstream
 #include <iostream>     // std::cout, cerr, etc
-#include <afrl/cmasi/GimbalConfiguration.h>
-#include <avtas/lmcp/LmcpXMLReader.h>
-#include <BatchSummaryService.h>
-
 
 #define COUT_FILE_LINE_MSG(MESSAGE) std::cout << "IMPCT_PS-IMPCT_PS-IMPCT_PS-IMPCT_PS:: ImpactPointSearch:" << __FILE__ << ":" << __LINE__ << ":" << MESSAGE << std::endl;std::cout.flush();
 #define CERR_FILE_LINE_MSG(MESSAGE) std::cerr << "IMPCT_PS-IMPCT_PS-IMPCT_PS-IMPCT_PS:: ImpactPointSearch:" << __FILE__ << ":" << __LINE__ << ":" << MESSAGE << std::endl;std::cerr.flush();

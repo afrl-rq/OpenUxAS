@@ -20,18 +20,19 @@
 #include "Position.h"
 #include "UnitConversions.h"
 #include "FileSystemUtilities.h"
+#include "Constants/Convert.h"
 
-#include "afrl/cmasi/VehicleActionCommand.h"
-#include "afrl/cmasi/GimbalStareAction.h"
-#include "afrl/cmasi/GimbalConfiguration.h"
 #include "uxas/messages/task/TaskImplementationResponse.h"
 #include "uxas/messages/task/TaskOption.h"
 #include "uxas/messages/route/RouteRequest.h"
 #include "uxas/messages/route/RouteConstraints.h"
 #include "uxas/messages/uxnative/VideoRecord.h"
 
+#include "afrl/cmasi/VehicleActionCommand.h"
+#include "afrl/cmasi/GimbalStareAction.h"
+#include "afrl/cmasi/GimbalConfiguration.h"
+
 #include "pugixml.hpp"
-#include "Constants/Convert.h"
 
 #include <sstream>      //std::stringstream
 #include <iostream>     // std::cout, cerr, etc
@@ -42,6 +43,7 @@
 #define COUT_FILE_LINE_MSG(MESSAGE) std::cout << "CMLS-CMLS-CMLS-CMLS:: CmasiLineSearch:" << __FILE__ << ":" << __LINE__ << ":" << MESSAGE << std::endl;std::cout.flush();
 #define CERR_FILE_LINE_MSG(MESSAGE) std::cerr << "CMLS-CMLS-CMLS-CMLS:: CmasiLineSearch:" << __FILE__ << ":" << __LINE__ << ":" << MESSAGE << std::endl;std::cerr.flush();
 
+using namespace Dpss_Data_n;
 
 namespace uxas
 {

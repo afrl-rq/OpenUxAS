@@ -21,19 +21,18 @@
 
 #include "ServiceBase.h"
 
-#include "afrl/cmasi/EntityState.h"
-#include "afrl/cmasi/Task.h"
-#include "afrl/cmasi/OperatingRegion.h"
-#include "afrl/cmasi/AbstractZone.h"
-
-#include "afrl/impact/AreaOfInterest.h"
-#include "afrl/impact/LineOfInterest.h"
-#include "afrl/impact/PointOfInterest.h"
-
 #include "uxas/messages/task/SensorFootprintRequests.h"
 #include "uxas/messages/task/SensorFootprint.h"
 #include "uxas/messages/task/UniqueAutomationRequest.h"
 #include "uxas/messages/task/UniqueAutomationResponse.h"
+
+#include "afrl/cmasi/EntityState.h"
+#include "afrl/cmasi/Task.h"
+#include "afrl/cmasi/OperatingRegion.h"
+#include "afrl/cmasi/AbstractZone.h"
+#include "afrl/impact/AreaOfInterest.h"
+#include "afrl/impact/LineOfInterest.h"
+#include "afrl/impact/PointOfInterest.h"
 
 #include <set>
 #include <cstdint> // int64_t

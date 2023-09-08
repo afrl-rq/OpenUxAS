@@ -14,16 +14,12 @@
  * Created on October 19, 2015, 6:17 PM
  */
 
-
 #include "AngledAreaSearchTaskService.h"
-
 #include "Position.h"
 #include "FileSystemUtilities.h"
 #include "Polygon.h"
+#include "Constants/Convert.h"
 
-#include "afrl/cmasi/Circle.h"
-#include "afrl/cmasi/Polygon.h"
-#include "afrl/cmasi/Rectangle.h"
 #include "uxas/messages/task/SensorFootprintResponse.h"
 #include "uxas/messages/task/FootprintRequest.h"
 #include "uxas/messages/task/SensorFootprintRequests.h"
@@ -31,15 +27,16 @@
 #include "uxas/messages/route/ROUTE.h"
 #include "uxas/messages/route/RouteConstraints.h"
 
-#include "Constants/Convert.h"
+#include "afrl/cmasi/Circle.h"
+#include "afrl/cmasi/Polygon.h"
+#include "afrl/cmasi/Rectangle.h"
+#include "afrl/cmasi/ServiceStatus.h"
 
 #include <sstream>      //std::stringstream
 #include <iomanip>  //setfill
-#include "afrl/cmasi/ServiceStatus.h"
 
 #define STRING_XML_LANE_SPACING_MIN "SearchLaneWidthMin_m"
 #define STRING_XML_LANE_SPACING_MAX "SearchLaneWidthMax_m"
-
 
 namespace uxas
 {

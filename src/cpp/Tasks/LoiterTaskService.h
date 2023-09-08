@@ -18,14 +18,15 @@
 #define UXAS_SERVICE_TASK_LOITER_TASK_SERVICE_H
 
 #include "UnitConversions.h"
+#include "TaskServiceBase.h"
+
+#include "uxas/messages/route/RouteRequest.h"
 
 #include "afrl/cmasi/MustFlyTask.h"
-#include "uxas/messages/route/RouteRequest.h"
+#include "afrl/cmasi/LoiterTask.h"
 
 #include <cstdint> // int64_t
 #include <unordered_map>
-#include "TaskServiceBase.h"
-#include "afrl/cmasi/LoiterTask.h"
 
 namespace uxas
 {

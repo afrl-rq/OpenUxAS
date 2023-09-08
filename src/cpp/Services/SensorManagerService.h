@@ -21,9 +21,10 @@
 
 #include "ServiceBase.h"
 
-#include "afrl/cmasi/EntityConfiguration.h"
 #include "uxas/messages/task/SensorFootprintRequests.h"
 #include "uxas/messages/task/SensorFootprint.h"
+
+#include "afrl/cmasi/EntityConfiguration.h"
 
 #include <set>
 #include <cstdint> // int64_t

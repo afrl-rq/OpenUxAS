@@ -1,10 +1,12 @@
 #ifndef RouteExtension_H
 #define RouteExtension_H
 
-#include <vector>
+#include "FlatEarth.h"
+
 #include "afrl/cmasi/Waypoint.h"
 #include "afrl/cmasi/MissionCommand.h"
-#include "FlatEarth.h"
+
+#include <vector>
 
 namespace uxas
 {

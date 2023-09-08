@@ -10,10 +10,10 @@
 #ifndef UXAS_MESSAGE_DATA_SERIAL_HELPER_H
 #define UXAS_MESSAGE_DATA_SERIAL_HELPER_H
 
+#include "stdUniquePtr.h"
+
 #include "afrl/cmasi/KeyValuePair.h"
 #include "afrl/cmasi/ServiceStatus.h"
-
-#include "stdUniquePtr.h"
 
 #include <sstream>
 

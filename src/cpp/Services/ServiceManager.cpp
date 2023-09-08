@@ -9,23 +9,18 @@
 
 #include "ServiceManager.h"
 #include "LmcpObjectNetworkBridgeManager.h"
-
 #define INCLUDE_SERVICE_HEADERS //this switches 00_ServiceList.h to load the service headers
 #include "00_ServiceList.h"
+#include "UxAS_ConfigurationManager.h"
+#include "Constants/UxAS_String.h"
+#include "UxAS_Log.h"
+#include "stdUniquePtr.h"
+#include "Constants/Constant_Strings.h"
+#include "FileSystemUtilities.h"
 
 #include "uxas/messages/uxnative/CreateNewService.h"
 #include "uxas/messages/uxnative/KillService.h"
 #include "uxas/messages/uxnative/StartupComplete.h"
-
-#include "UxAS_ConfigurationManager.h"
-#include "Constants/UxAS_String.h"
-#include "UxAS_Log.h"
-
-#include "stdUniquePtr.h"
-
-#include "Constants/Constant_Strings.h"
-
-#include "FileSystemUtilities.h"
 
 #if (defined(__APPLE__) && defined(__MACH__))
 #define OSX

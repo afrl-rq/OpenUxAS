@@ -13,6 +13,8 @@
 
 #include "Waypoint.h"
 
+using namespace std;
+
 namespace n_FrameworkLib
 {
 

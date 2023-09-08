@@ -14,12 +14,17 @@
  * Created on February 26, 2016, 6:17 PM
  */
 
-
 #include "BlockadeTaskService.h"
-
 #include "Position.h"
 #include "UnitConversions.h"
+#include "Constants/Convert.h"
+#include "DpssDataTypes.h"
 
+#include "uxas/messages/task/TaskImplementationResponse.h"
+#include "uxas/messages/task/TaskOption.h"
+#include "uxas/messages/route/RouteRequest.h"
+#include "uxas/messages/route/RouteResponse.h"
+#include "uxas/messages/route/RouteConstraints.h"
 #include "avtas/lmcp/LmcpXMLReader.h"
 #include "afrl/cmasi/VehicleActionCommand.h"
 #include "afrl/cmasi/GimbalStareAction.h"
@@ -29,19 +34,11 @@
 #include "afrl/cmasi/AirVehicleConfiguration.h"
 #include "afrl/vehicles/GroundVehicleConfiguration.h"
 #include "afrl/vehicles/SurfaceVehicleConfiguration.h"
-#include "uxas/messages/task/TaskImplementationResponse.h"
-#include "uxas/messages/task/TaskOption.h"
-#include "uxas/messages/route/RouteRequest.h"
-#include "uxas/messages/route/RouteResponse.h"
-#include "uxas/messages/route/RouteConstraints.h"
 
 #include "pugixml.hpp"
-#include "Constants/Convert.h"
-#include "DpssDataTypes.h"
 
 #include <sstream>      //std::stringstream
 #include <iostream>     // std::cout, cerr, etc
-
 
 #define STRING_XML_ENTITY_STATES "EntityStates" //TODO:: define this in some global place
 

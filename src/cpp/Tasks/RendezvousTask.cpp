@@ -18,12 +18,13 @@
 #include "RendezvousTask.h"
 #include "FlatEarth.h"
 #include "RouteExtension.h"
-#include "afrl/cmasi/AirVehicleConfiguration.h"
-#include "afrl/cmasi/AirVehicleState.h"
+
 #include "uxas/messages/task/RendezvousTask.h"
-#include "afrl/cmasi/VehicleActionCommand.h"
 #include "uxas/messages/uxnative/SpeedOverrideAction.h"
 
+#include "afrl/cmasi/AirVehicleConfiguration.h"
+#include "afrl/cmasi/AirVehicleState.h"
+#include "afrl/cmasi/VehicleActionCommand.h"
 #ifdef AFRL_INTERNAL_ENABLED
 #include "afrl/famus/PlanningState.h"
 #endif

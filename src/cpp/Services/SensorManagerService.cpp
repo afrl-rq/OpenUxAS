@@ -16,17 +16,18 @@
 
 
 #include "SensorManagerService.h"
+#include "Constants/Convert.h"
+
+#include "uxas/messages/task/SensorFootprintResponse.h"
+#include "uxas/messages/task/SensorFootprint.h"
 
 #include "afrl/cmasi/EntityConfiguration.h"
 #include "afrl/cmasi/EntityConfigurationDescendants.h"
 #include "afrl/cmasi/GimbalConfiguration.h"
 #include "afrl/cmasi/CameraConfiguration.h"
 #include "afrl/cmasi/RemoveTasks.h"
-#include "uxas/messages/task/SensorFootprintResponse.h"
-#include "uxas/messages/task/SensorFootprint.h"
 
 #include "pugixml.hpp"
-#include "Constants/Convert.h"
 
 #include <sstream>      //std::stringstream
 #include <iostream>     // std::cout, cerr, etc

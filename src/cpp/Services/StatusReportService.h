@@ -17,11 +17,13 @@
 #ifndef UXAS_STATUSREPORTSERVICE_H
 #define UXAS_STATUSREPORTSERVICE_H
 
-#include <mutex>
-#include <unordered_set>
 #include "ServiceBase.h"
 #include "CallbackTimer.h"
+
 #include "uxas/messages/uxnative/OnboardStatusReport.h"
+
+#include <mutex>
+#include <unordered_set>
 
 namespace uxas
 {

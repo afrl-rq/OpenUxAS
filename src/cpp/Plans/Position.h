@@ -142,7 +142,6 @@ namespace n_FrameworkLib
         };
 
         double relativeDistance2D_m(const CPosition& posPoint) {
-            using namespace std;
 
             // returns the distance between this point and another
             double dNorth = m_north_m - posPoint.m_north_m;
@@ -152,7 +151,6 @@ namespace n_FrameworkLib
         };
 
         double relativeDistance2D_m(const CPosition& posPoint)const {
-            using namespace std;
 
             // returns the distance between this point and another
             double dNorth = m_north_m - posPoint.m_north_m;
@@ -162,7 +160,6 @@ namespace n_FrameworkLib
         };
 
         double manhattanDistance_m(const CPosition& posPoint)const {
-            using namespace std;
 
             // returns the Manhattan distance between this point and another
             double north_m = m_north_m - posPoint.m_north_m;

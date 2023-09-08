@@ -16,18 +16,17 @@
 
 
 #include "AssignmentTreeBranchBoundBase.h"
-
 #include "TimeUtilities.h"
 #include "Constants/Constant_Strings.h"
 
-#include "afrl/cmasi/ServiceStatus.h"
 #include "uxas/messages/task/TaskAssignmentSummary.h"
 #ifdef AFRL_INTERNAL_ENABLED
 #include "uxas/project/pisr/PSIR_AssignmentType.h"
 #endif
 
-#include "pugixml.hpp"
+#include "afrl/cmasi/ServiceStatus.h"
 
+#include "pugixml.hpp"
 
 #include <sstream>      //std::stringstream
 #include <iostream>     // std::cout, cerr, etc

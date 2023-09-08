@@ -9,22 +9,19 @@
 
 #include "LmcpObjectNetworkBridgeManager.h"
 #include "ServiceManager.h"
-
 #include "LmcpObjectNetworkSerialBridge.h"
 #include "LmcpObjectNetworkTcpBridge.h"
 #include "LmcpObjectNetworkSubscribePushBridge.h"
 #include "LmcpObjectNetworkPublishPullBridge.h"
 #include "LmcpObjectNetworkZeroMqZyreBridge.h"
-
 #include "UxAS_ConfigurationManager.h"
 #include "Constants/UxAS_String.h"
 #include "UxAS_Log.h"
-#include "uxas/messages/uxnative/KillService.h"
-
 #include "stdUniquePtr.h"
-
 #include "LmcpObjectNetworkSerialBridge.h"
 #include "ImpactSubscribePushBridge.h"
+
+#include "uxas/messages/uxnative/KillService.h"
 
 #include <fstream>
 #include <stdexcept>

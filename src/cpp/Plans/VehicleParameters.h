@@ -563,7 +563,7 @@ namespace n_FrameworkLib
     };
 
 
-    ostream &operator <<(ostream &os, const CVehicleParameters& vehprmRhs);
+    std::ostream &operator <<(std::ostream &os, const CVehicleParameters& vehprmRhs);
 
 
 } //namespace n_FrameworkLib

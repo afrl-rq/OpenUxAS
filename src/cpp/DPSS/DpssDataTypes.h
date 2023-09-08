@@ -108,5 +108,3 @@ public:
 
 
 };    //namespace Dpss_Data
-
-using namespace Dpss_Data_n;
