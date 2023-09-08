@@ -32,11 +32,9 @@
 //#include "TrajectoryDefinitions.h"
 #include "BaseObject.h"
 #include "Waypoint.h"
-
 #include "TaskAssignment.h"
 
 #include <assert.h>
-
 namespace n_FrameworkLib
 {
 
@@ -139,12 +137,12 @@ namespace n_FrameworkLib
             return (iIndex);
         }
 
-        bool bSaveWaypointsToMatlabMatrix(ofstream& ofstrMatlabFile) {
+        bool bSaveWaypointsToMatlabMatrix(std::ofstream& ofstrMatlabFile) {
             bool bReturn(false); //will return true if there are any waypoints to print
             if (!vwayGetWaypoints().empty()) {
                 ofstrMatlabFile << " [ ...";
                 for (V_WAYPOINT_CONST_IT_t itWaypoint = itGetWaypointBegin(); itWaypoint != itGetWaypointEnd(); itWaypoint++) {
-                    ofstrMatlabFile << endl << *itWaypoint;
+                    ofstrMatlabFile << std::endl << *itWaypoint;
                 }
                 ofstrMatlabFile << "]";
                 bReturn = true;

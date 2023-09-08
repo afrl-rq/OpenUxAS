@@ -8,20 +8,20 @@
 // ===============================================================================
 
 #include "SendMessagesService.h"
+#include "TimeUtilities.h"
+#include "SendMessagesService.h"
+#include "Constants/Constant_Strings.h"
+#include "UxAS_ConfigurationManager.h"
+#include "UxAS_Time.h"
 
-#include "avtas/lmcp/LmcpXMLReader.h"
 #include "uxas/messages/uxnative/StartupComplete.h"
 #include "uxas/messages/route/GraphRegion.h"
 #ifdef AFRL_INTERNAL_ENABLED
 #include "uxas/project/isolate/UgsManagementTask.h"
 #endif
 
-#include "TimeUtilities.h"
-#include "SendMessagesService.h"
-#include "Constants/Constant_Strings.h"
+#include "avtas/lmcp/LmcpXMLReader.h"
 
-#include "UxAS_ConfigurationManager.h"
-#include "UxAS_Time.h"
 
 #include <sstream>
 #include <iostream>

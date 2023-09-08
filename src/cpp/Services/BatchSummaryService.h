@@ -14,25 +14,23 @@
  * Created on Oct 25, 2015, 3:56 PM
  */
 
-
-
 #ifndef UXAS_SERVICE_BATCH_SUMMARY_SERVICE_H
 #define UXAS_SERVICE_BATCH_SUMMARY_SERVICE_H
 
 #include "ServiceBase.h"
+#include "visilibity.h"
+
+#include "uxas/messages/route/ROUTE.h"
+#include "uxas/messages/task/TaskAutomationResponse.h"
+#include "uxas/messages/task/TaskAutomationRequest.h"
 #include "afrl/cmasi/CMASI.h"
 #include "afrl/impact/IMPACT.h"
-#include "uxas/messages/route/ROUTE.h"
-
-#include "visilibity.h"
 
 #include <memory>
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <cstdint>
-#include "uxas/messages/task/TaskAutomationResponse.h"
-#include "uxas/messages/task/TaskAutomationRequest.h"
 
 namespace uxas
 {

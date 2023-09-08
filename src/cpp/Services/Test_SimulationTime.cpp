@@ -8,11 +8,10 @@
 // ===============================================================================
 
 #include "Test_SimulationTime.h"
+#include "UxAS_Time.h"
 
 #include "afrl/cmasi/EntityState.h"
 #include "afrl/cmasi/EntityStateDescendants.h"
-
-#include "UxAS_Time.h"
 
 //#define STRING_XML_NUMBER_PLANS_MAX "NumberPlansMax"
 

@@ -17,13 +17,14 @@
 #ifndef UXAS_SERVICE_TASK_MUST_FLY_TASK_SERVICE_H
 #define UXAS_SERVICE_TASK_MUST_FLY_TASK_SERVICE_H
 
+#include "TaskServiceBase.h"
 #include "UnitConversions.h"
 
-#include "afrl/cmasi/MustFlyTask.h"
 #include "uxas/messages/route/RouteRequest.h"
 
+#include "afrl/cmasi/MustFlyTask.h"
+
 #include <cstdint> // int64_t
-#include "TaskServiceBase.h"
 
 namespace uxas
 {

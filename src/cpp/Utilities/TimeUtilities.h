@@ -17,14 +17,13 @@
 #ifndef TIMEUTILITIES_H
 #define TIMEUTILITIES_H
 
-#include <cstdint> // uint32_t
-
-#include <chrono>       // time functions
-
-//#include <mutex>
-
 #include "boost/date_time/gregorian/gregorian.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
+
+#include <cstdint> // uint32_t
+#include <chrono>       // time functions
+//#include <mutex>
+
 namespace n_POSIX_TIME = boost::posix_time;
 
 namespace uxas

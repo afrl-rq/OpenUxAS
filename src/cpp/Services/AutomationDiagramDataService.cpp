@@ -16,8 +16,12 @@
 
 
 #include "AutomationDiagramDataService.h"
-
 #include "FileSystemUtilities.h"
+#include "TimeUtilities.h"
+#include "Constants/Convert.h"
+
+#include "uxas/messages/task/SensorFootprintResponse.h"
+#include "uxas/messages/task/SensorFootprint.h"
 
 #include "afrl/cmasi/EntityState.h"
 #include "afrl/cmasi/EntityStateDescendants.h"
@@ -25,19 +29,11 @@
 #include "afrl/cmasi/KeepInZone.h"
 #include "afrl/cmasi/KeepOutZone.h"
 #include "afrl/cmasi/CameraConfiguration.h"
-
 #include "afrl/cmasi/Task.h"
 #include "afrl/cmasi/TaskDescendants.h"  
-
-#include "uxas/messages/task/SensorFootprintResponse.h"
-#include "uxas/messages/task/SensorFootprint.h"
-
 #include "afrl/impact/PointOfInterest.h"
 #include "afrl/impact/LineOfInterest.h"
 #include "afrl/impact/AreaOfInterest.h"
-
-#include "TimeUtilities.h"
-#include "Constants/Convert.h"
 
 #include "pugixml.hpp"
 

@@ -9,6 +9,7 @@
 
 #include "Dpss.h"
 using namespace std;
+using namespace Dpss_Data_n;
 
 int Dpss::UavWpToVscsWp(int uavWp)
 {

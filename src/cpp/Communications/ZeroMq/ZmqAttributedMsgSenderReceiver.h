@@ -13,6 +13,7 @@
 #include "ZmqProxy.h"
 #include "AddressedAttributedMessage.h"
 #include "IMsgSenderReceiver.h"
+#include "UxAS_SentinelSerialBuffer.h"
 
 #include <string>
 #include <thread>

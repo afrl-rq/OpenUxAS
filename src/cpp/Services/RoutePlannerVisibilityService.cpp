@@ -14,25 +14,19 @@
  * Created on February 19, 2015, 4:47 PM
  *
  */
-
-
 #include "RoutePlannerVisibilityService.h"
-
 #include "Position.h"   //V_POSITION_t
 #include "Waypoint.h"
 #include "TrajectoryParameters.h"
 #include "PathInformation.h"
-
 #include "UnitConversions.h"
 #include "Constants/UxAS_String.h"
 
 #include "afrl/cmasi/KeepInZone.h"
 #include "afrl/cmasi/KeepOutZone.h"
-
 #include "afrl/cmasi/Circle.h"
 #include "afrl/cmasi/Polygon.h"
 #include "afrl/cmasi/Rectangle.h"
-
 #include "afrl/cmasi/EntityConfiguration.h"
 #include "afrl/cmasi/EntityConfigurationDescendants.h"
 #include "afrl/cmasi/EntityState.h"
@@ -44,11 +38,7 @@
 #include <chrono>       // time functions
 
 //TODO:: read in a open street map and calculate it's visibility graph
-
-
-
 #define STRING_COMPONENT_NAME "RoutePlannerVisibility"
-
 #define STRING_XML_COMPONENT "Component"
 #define STRING_XML_TYPE "Type"
 #define STRING_XML_COMPONENT_TYPE "RoutePlannerVisibility"
@@ -58,13 +48,12 @@
 #define STRING_XML_IS_ROUTE_AGGREGATOR "isRoutAggregator"
 #define STRING_XML_OSM_FILE_NAME "OsmFileName"
 #define STRING_XML_MINIMUM_WAYPOINT_SEPARATION_M "MinimumWaypointSeparation_m"
-
-
 #define COUT_INFO_MSG(MESSAGE) std::cout << "<>RoutePlannerVisibility::" << MESSAGE << std::endl;std::cout.flush();
 #define COUT_FILE_LINE_MSG(MESSAGE) std::cout << "<>RoutePlannerVisibility.:: " << __FILE__ << ":" << __LINE__ << ":" << MESSAGE << std::endl;std::cout.flush();
 #define CERR_FILE_LINE_MSG(MESSAGE) std::cerr << "<>RoutePlannerVisibility.:: " << __FILE__ << ":" << __LINE__ << ":" << MESSAGE << std::endl;std::cerr.flush();
-
 #define CIRCLE_BOUNDARY_INCREMENT (n_Const::c_Convert::dPiO10())
+
+using namespace std;
 
 namespace uxas
 {

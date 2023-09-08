@@ -17,12 +17,12 @@
 
 
 #include "SimpleWaypointPlanManagerService.h"
+#include "UnitConversions.h"
 
 #include "afrl/cmasi/AutomationResponse.h"
 #include "afrl/cmasi/AirVehicleConfiguration.h"
 #include "afrl/vehicles/SurfaceVehicleConfiguration.h"
 
-#include "UnitConversions.h"
 
 #define STRING_XML_VEHICLE_ID "VehicleID"
 

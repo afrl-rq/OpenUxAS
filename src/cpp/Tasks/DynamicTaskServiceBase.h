@@ -20,15 +20,16 @@
 #include "TimeUtilities.h"
 #include "visilibity.h"
 #include "UnitConversions.h"
+#include "BatchSummaryService.h"
+
 #include "afrl/cmasi/GimbalStareAction.h"
 #include "afrl/cmasi/LoiterAction.h"
-#include "afrl/vehicles/GroundVehicleState.h"
 #include "afrl/cmasi/GimbalConfiguration.h"
-#include "afrl/vehicles/GroundVehicleConfiguration.h"
-#include "afrl/vehicles/SurfaceVehicleConfiguration.h"
 #include "afrl/cmasi/AirVehicleConfiguration.h"
 #include "afrl/cmasi/OperatingRegion.h"
-#include "BatchSummaryService.h"
+#include "afrl/vehicles/GroundVehicleState.h"
+#include "afrl/vehicles/GroundVehicleConfiguration.h"
+#include "afrl/vehicles/SurfaceVehicleConfiguration.h"
 
 namespace uxas
 {

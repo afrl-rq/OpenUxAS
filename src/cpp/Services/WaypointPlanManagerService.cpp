@@ -17,17 +17,16 @@
 
 
 #include "WaypointPlanManagerService.h"
-
 #include "UnitConversions.h"
 #include "UxAS_TimerManager.h"
 
+#include "uxas/messages/uxnative/IncrementWaypoint.h"
+
 #include "afrl/cmasi/AirVehicleState.h"
 #include "afrl/cmasi/AirVehicleStateDescendants.h"
-
 #include "afrl/cmasi/AutomationResponse.h"
 #include "afrl/cmasi/GimbalAngleAction.h"
 #include "afrl/cmasi/LoiterAction.h"
-#include "uxas/messages/uxnative/IncrementWaypoint.h"
 
 #include "pugixml.hpp"
 

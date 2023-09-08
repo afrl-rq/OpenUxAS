@@ -7,12 +7,12 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
+#include "ZmqAttributedMsgSenderReceiver.h"
 #include "MsgSenderSentinel.h"
 #include "MsgReceiverSentinel.h"
 #include "ZmqPullReceiver.h"
 #include "ZmqPushSender.h"
 #include "ZmqTcpSenderReceiver.h"
-#include "ZmqAttributedMsgSenderReceiver.h"
 
 #include "UxAS_ConfigurationManager.h"
 

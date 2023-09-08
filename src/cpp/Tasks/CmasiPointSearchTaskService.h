@@ -17,16 +17,16 @@
 #ifndef UXAS_SERVICE_TASK_CMASI_POINT_SEARCH_TASK_SERVICE_H
 #define UXAS_SERVICE_TASK_CMASI_POINT_SEARCH_TASK_SERVICE_H
 
-
 #include "TaskServiceBase.h"
+
+#include "uxas/messages/task/TaskPlanOptions.h"
+#include "uxas/messages/task/TaskImplementationRequest.h"
+#include "uxas/messages/route/RoutePlan.h"
 
 #include "afrl/cmasi/AutomationRequest.h"
 #include "afrl/cmasi/PointSearchTask.h"
 #include "afrl/cmasi/EntityConfiguration.h"
 #include "afrl/cmasi/EntityState.h"
-#include "uxas/messages/task/TaskPlanOptions.h"
-#include "uxas/messages/task/TaskImplementationRequest.h"
-#include "uxas/messages/route/RoutePlan.h"
 
 #include <cstdint> // int64_t
 #include <unordered_set>

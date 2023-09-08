@@ -9,11 +9,13 @@
 
 #include "Dpss.h"
 #include "DRand.h"
+
 #include <iostream>
 #include <fstream>
 //#include <direct.h> //_mkdir
 
 using namespace std;
+using namespace Dpss_Data_n;
 
 double Dpss::DistanceToCurrentSegment(VehicleTelemetry& uav)
 {

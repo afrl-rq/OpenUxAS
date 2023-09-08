@@ -10,12 +10,11 @@
 #ifndef UXAS_MESSAGE_TRANSPORT_ZERO_MQ_ADDRESSED_ATTRIBUTED_MESSAGE_RECEIVER_H
 #define UXAS_MESSAGE_TRANSPORT_ZERO_MQ_ADDRESSED_ATTRIBUTED_MESSAGE_RECEIVER_H
 
-#include <deque>
 #include "ZeroMqReceiverBase.h"
-
 #include "AddressedAttributedMessage.h"
-
 #include "UxAS_SentinelSerialBuffer.h"
+
+#include <deque>
 
 namespace uxas
 {
