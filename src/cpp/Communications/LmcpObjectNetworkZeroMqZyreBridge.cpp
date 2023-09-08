@@ -8,17 +8,14 @@
 // ===============================================================================
 
 #include "LmcpObjectNetworkZeroMqZyreBridge.h"
+#include "UxAS_Log.h"
+#include "Constants/UxAS_String.h"
+#include "stdUniquePtr.h"
+#include "Constants/Constant_Strings.h"
+#include "Constants/Constants_Control.h"
 
 #include "uxas/messages/uxnative/EntityJoin.h"
 #include "uxas/messages/uxnative/EntityExit.h"
-
-#include "UxAS_Log.h"
-#include "Constants/UxAS_String.h"
-
-#include "stdUniquePtr.h"
-
-#include "Constants/Constant_Strings.h"
-#include "Constants/Constants_Control.h"
 
 #include <stdio.h>
 #include <stdlib.h>

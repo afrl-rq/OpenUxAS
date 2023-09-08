@@ -39,6 +39,7 @@
 
 #include <pugixml.hpp>
 
+using namespace std;
 
 namespace n_FrameworkLib
 {

@@ -8,16 +8,16 @@
 // ===============================================================================
 
 #include "LmcpObjectNetworkClientBase.h"
-
-#include "avtas/lmcp/ByteBuffer.h"
-#include "avtas/lmcp/Factory.h"
-#include "uxas/messages/uxnative/KillService.h"
-
 #include "UxAS_ConfigurationManager.h"
 #include "UxAS_Log.h"
 #include "Constants/UxAS_String.h"
-
 #include "stdUniquePtr.h"
+
+#include "uxas/messages/uxnative/KillService.h"
+
+#include "avtas/lmcp/ByteBuffer.h"
+#include "avtas/lmcp/Factory.h"
+
 
 namespace uxas
 {

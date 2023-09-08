@@ -18,10 +18,12 @@
 #define UXAS_RENDEZVOUS_TASK_H
 
 #include "TaskServiceBase.h"
-#include "afrl/cmasi/AirVehicleConfiguration.h"
+
 #include "uxas/messages/task/TaskImplementationRequest.h"
 #include "uxas/messages/task/TaskAssignmentSummary.h"
 #include "uxas/messages/task/AssignmentCostMatrix.h"
+
+#include "afrl/cmasi/AirVehicleConfiguration.h"
 
 #include <unordered_map>
 

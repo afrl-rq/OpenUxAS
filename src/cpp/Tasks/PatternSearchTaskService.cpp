@@ -14,13 +14,20 @@
  * Created on February 16, 2016, 6:17 PM
  */
 
-
 #include "PatternSearchTaskService.h"
-
 #include "Position.h"
 #include "FileSystemUtilities.h"
 #include "Polygon.h"
 #include "Constants/Convert.h"
+
+#include "uxas/messages/task/SensorFootprintResponse.h"
+#include "uxas/messages/task/FootprintRequest.h"
+#include "uxas/messages/task/SensorFootprintRequests.h"
+#include "uxas/messages/task/TaskImplementationResponse.h"
+#include "uxas/messages/task/TaskOption.h"
+#include "uxas/messages/route/ROUTE.h"
+#include "uxas/messages/route/RouteConstraints.h"
+#include "uxas/messages/uxnative/VideoRecord.h"
 
 #include "afrl/cmasi/Circle.h"
 #include "afrl/cmasi/Polygon.h"
@@ -31,14 +38,6 @@
 #include "afrl/cmasi/GimbalAngleAction.h"
 #include "afrl/cmasi/GimbalConfiguration.h"
 #include "afrl/cmasi/CameraConfiguration.h"
-#include "uxas/messages/task/SensorFootprintResponse.h"
-#include "uxas/messages/task/FootprintRequest.h"
-#include "uxas/messages/task/SensorFootprintRequests.h"
-#include "uxas/messages/task/TaskImplementationResponse.h"
-#include "uxas/messages/task/TaskOption.h"
-#include "uxas/messages/route/ROUTE.h"
-#include "uxas/messages/route/RouteConstraints.h"
-#include "uxas/messages/uxnative/VideoRecord.h"
 
 #include "pugixml.hpp"
 

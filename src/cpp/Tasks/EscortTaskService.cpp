@@ -14,11 +14,14 @@
  * Created on March 7, 2016, 3:03 PM
  */
 
-
 #include "EscortTaskService.h"
-
 #include "Position.h"
 #include "UnitConversions.h"
+#include "Constants/Convert.h"
+#include "DpssDataTypes.h"
+#include "TimeUtilities.h"
+
+#include "uxas/messages/task/TaskOption.h"
 
 #include "avtas/lmcp/LmcpXMLReader.h"
 #include "afrl/cmasi/VehicleActionCommand.h"
@@ -32,17 +35,9 @@
 #include "afrl/vehicles/SurfaceVehicleConfiguration.h"
 #include "afrl/vehicles/GroundVehicleState.h"
 #include "afrl/vehicles/SurfaceVehicleState.h"
-#include "uxas/messages/task/TaskOption.h"
-
-
-#include "Constants/Convert.h"
-#include "DpssDataTypes.h"
-#include "TimeUtilities.h"
 
 #include <sstream>      //std::stringstream
 #include <iostream>     // std::cout, cerr, etc
-
-
 
 namespace uxas
 {

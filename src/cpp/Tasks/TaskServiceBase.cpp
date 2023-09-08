@@ -15,20 +15,19 @@
  */
 
 #include "TaskServiceBase.h"
-
 #include "UnitConversions.h"
 #include "FileSystemUtilities.h"
-
 #include "Dpss.h"    //from OHARA
 
+#include "uxas/messages/task/TaskComplete.h"
+#include "uxas/messages/task/TaskInitialized.h"
+#include "uxas/messages/task/TaskActive.h"
+
+#include "avtas/lmcp/LmcpXMLReader.h"
 #include "afrl/cmasi/EntityConfiguration.h"
 #include "afrl/cmasi/EntityConfigurationDescendants.h"
 #include "afrl/cmasi/EntityState.h"
 #include "afrl/cmasi/EntityStateDescendants.h"
-#include "avtas/lmcp/LmcpXMLReader.h"
-#include "uxas/messages/task/TaskComplete.h"
-#include "uxas/messages/task/TaskInitialized.h"
-#include "uxas/messages/task/TaskActive.h"
 
 #include <algorithm>      //std::find_if
 #include <sstream>      //std::stringstream

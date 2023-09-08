@@ -19,14 +19,13 @@
 
 // include header for this service
 #include "AssignmentCoordinatorTaskService.h"
-
 #include "UxAS_Time.h"
 
+#include "uxas/messages/task/TaskAutomationRequest.h"
+#include "uxas/messages/task/TaskAutomationResponse.h"
 
 #include "afrl/cmasi/AirVehicleState.h"
 #include "afrl/cmasi/AirVehicleStateDescendants.h"
-#include "uxas/messages/task/TaskAutomationRequest.h"
-#include "uxas/messages/task/TaskAutomationResponse.h"
 
 #include <iostream>     // std::cout, cerr, etc
 

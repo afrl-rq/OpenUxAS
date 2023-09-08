@@ -16,20 +16,20 @@
 
 
 #include "LoiterTaskService.h"
-
 #include "Position.h"
 #include "FileSystemUtilities.h"
 #include "Polygon.h"
 
-#include "afrl/cmasi/Circle.h"
 #include "uxas/messages/task/SensorFootprintResponse.h"
 #include "uxas/messages/task/TaskImplementationResponse.h"
 #include "uxas/messages/task/TaskOption.h"
 #include "uxas/messages/route/ROUTE.h"
 
+#include "afrl/cmasi/Circle.h"
+#include "afrl/cmasi/LoiterAction.h"
+
 #include <sstream>      //std::stringstream
 #include <iomanip>  //setfill
-#include "afrl/cmasi/LoiterAction.h"
 
 
 

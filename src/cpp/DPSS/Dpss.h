@@ -17,6 +17,7 @@
 #include "VehicleTelemetry.h"
 #include "VehiclePoint.h"
 #include "UnitConversions.h"
+
 #include <string>
 #include <vector>
 #include <time.h>
@@ -55,7 +56,7 @@ public:
   void SetObjective(DpssWaypoint pathPoints[], int numPathPoints, DpssWaypoint planPoints[], int numPlanPoints, ObjectiveParameters* op);
 
   // overloaded function to allow for direct xy access
-  void SetObjective(std::vector<xyPoint>& path, std::vector<xyPoint>& plan,    ObjectiveParameters* op);
+  void SetObjective(std::vector<Dpss_Data_n::xyPoint>& path, std::vector<Dpss_Data_n::xyPoint>& plan,    ObjectiveParameters* op);
 
   //  Adds the vehicles specified in the vehicleIds array to the system.
   //
@@ -120,15 +121,15 @@ public:
 
   
   // take optimized central plan and offset for look angle
-  void OffsetPlanForward(std::vector<xyPoint> &xyPlanPoints, std::vector<xyPoint> &forwardPlan);
-  void OffsetPlanReverse(std::vector<xyPoint> &xyPlanPoints, std::vector<xyPoint> &reversePlan);
+  void OffsetPlanForward(std::vector<Dpss_Data_n::xyPoint> &xyPlanPoints, std::vector<Dpss_Data_n::xyPoint> &forwardPlan);
+  void OffsetPlanReverse(std::vector<Dpss_Data_n::xyPoint> &xyPlanPoints, std::vector<Dpss_Data_n::xyPoint> &reversePlan);
 
   // builds x,y road from lat/lon coordinates and removes nonsense segments
-  void PreProcessPath(DpssWaypoint pathPoints[], int numPoints, std::vector<xyPoint>& xyPathPoints);
-  void PreProcessPath(std::vector<xyPoint>& xyPathPoints);
+  void PreProcessPath(DpssWaypoint pathPoints[], int numPoints, std::vector<Dpss_Data_n::xyPoint>& xyPathPoints);
+  void PreProcessPath(std::vector<Dpss_Data_n::xyPoint>& xyPathPoints);
 
   // greedy method for selecting center waypoints from a given road input
-  void PlanQuickly(std::vector<xyPoint> &xyPoints, int maxWps);
+  void PlanQuickly(std::vector<Dpss_Data_n::xyPoint> &xyPoints, int maxWps);
 
 #ifdef AFRL_INTERNAL_ENABLED
   // accurate method for selecting center waypoints from a given road input
@@ -136,11 +137,11 @@ public:
 #endif
 
   // removes road points that lie outside of comm range
-  void RemoveRoadPointsOutOfCommRange(std::vector<xyPoint>& xyPathPoints);
+  void RemoveRoadPointsOutOfCommRange(std::vector<Dpss_Data_n::xyPoint>& xyPathPoints);
 
   // cuts waypoints that are within 'threshold' distance of other waypoints
   // basically, declutters the plan
-  void PostProcessPlan(std::vector<xyPoint>& plan, double threshold);
+  void PostProcessPlan(std::vector<Dpss_Data_n::xyPoint>& plan, double threshold);
 
   // alerts the algorithm that the path is circular not linear
   void SetSingleDirectionPlanning(bool val);
@@ -149,13 +150,13 @@ public:
   bool GetSingleDirectionPlanning();
 
   // helper function to break large road task into smaller sub-tasks
-  void RoadPosToWpSegments(xyPoint roadPt, xyPoint& forwardPt, xyPoint& reversePt, int& forwardIndexA, int& forwardIndexB, int& reverseIndexA, int& reverseIndexB);
+  void RoadPosToWpSegments(Dpss_Data_n::xyPoint roadPt, Dpss_Data_n::xyPoint& forwardPt, Dpss_Data_n::xyPoint& reversePt, int& forwardIndexA, int& forwardIndexB, int& reverseIndexA, int& reverseIndexB);
 
   // uses mapping to steer camera
   void CalculateStarePoint(VehiclePoint &starePoint, VehicleTelemetry &vehiclePosition);
 
   // overloaded for xypoints, forces global search
-  void CalculateStarePoint(xyPoint &starePoint, xyPoint &vehiclePosition);
+  void CalculateStarePoint(Dpss_Data_n::xyPoint &starePoint, Dpss_Data_n::xyPoint &vehiclePosition);
 
   void SetNominalAzimuth_rad(double& dNominalAzimuth_rad)
   {
@@ -176,16 +177,16 @@ private:
     void UpdateLinearization(DpssWaypoint points[], int numPoints);
 
     // removes redundant points from a list - guarantees no zero length segments
-    void RemoveZeroLengthSegments(std::vector<xyPoint> &xyPoints);
+    void RemoveZeroLengthSegments(std::vector<Dpss_Data_n::xyPoint> &xyPoints);
 
     // build full plan from forward and reverse plans and format in lat/lon
-    void CombinePlans(std::vector<xyPoint> &forwardPlan, std::vector<xyPoint> &reversePlan, DpssWaypoint* outputPoints, int* numOutputPoints);
+    void CombinePlans(std::vector<Dpss_Data_n::xyPoint> &forwardPlan, std::vector<Dpss_Data_n::xyPoint> &reversePlan, DpssWaypoint* outputPoints, int* numOutputPoints);
 
     // assumes uniform speed camera motion and generates stare points for all waypoints
-    void CorrespondingStarePoints(std::vector<xyPoint>& plan, std::vector<xyPoint>& road, std::vector<xyPoint>& starePoints);
+    void CorrespondingStarePoints(std::vector<Dpss_Data_n::xyPoint>& plan, std::vector<Dpss_Data_n::xyPoint>& road, std::vector<Dpss_Data_n::xyPoint>& starePoints);
 
     // cuts waypoints that cause stare point crossing
-    void CleanUpStareAngles(std::vector<xyPoint>& plan, std::vector<xyPoint>& road);
+    void CleanUpStareAngles(std::vector<Dpss_Data_n::xyPoint>& plan, std::vector<Dpss_Data_n::xyPoint>& road);
 
     // Sets up optimization class to find center waypoints in normalized coordinates
     double PathOptimization(std::vector<double>& x);
@@ -200,7 +201,7 @@ private:
     double AngleToCurrentSegment(VehicleTelemetry& uav);
 
     // helper function to translate from telemetry to xy plane
-    int CurrentSegmentAndXYPosition(VehicleTelemetry& uav, xyPoint& xyPos, Segment& currentSegment);
+    int CurrentSegmentAndXYPosition(VehicleTelemetry& uav, Dpss_Data_n::xyPoint& xyPos, Dpss_Data_n::Segment& currentSegment);
 
     // coordinate transformations
     int UavWpToVscsWp(int uavWp);
@@ -215,18 +216,18 @@ private:
     double RoadIndexToNormalizedRoadPos(int roadIndex);
     int NormalizedRoadPosToClosestRoadIndex(double normalizedRoadPos);
 
-    double NormalizedRoadPosToVehiclePos(xyPoint& p, double normalizedRoadPos, int direction);
-    double VehiclePosToNormalizedRoadPos(xyPoint& vehiclePos);
+    double NormalizedRoadPosToVehiclePos(Dpss_Data_n::xyPoint& p, double normalizedRoadPos, int direction);
+    double VehiclePosToNormalizedRoadPos(Dpss_Data_n::xyPoint& vehiclePos);
     
-    void RoadIndexToVehiclePos(xyPoint& p, int roadIndex, int direction);
-    int VehiclePosToRoadIndex(xyPoint& vehiclePos);
+    void RoadIndexToVehiclePos(Dpss_Data_n::xyPoint& p, int roadIndex, int direction);
+    int VehiclePosToRoadIndex(Dpss_Data_n::xyPoint& vehiclePos);
 
     // specialized coordinate transformations
-    int NormalizedRoadPosToXyRoadPos(xyPoint& p, double x);
+    int NormalizedRoadPosToXyRoadPos(Dpss_Data_n::xyPoint& p, double x);
     double CorrespondingNormalizedRoadLocation(VehicleTelemetry &pos);
 public:    //RAS
     unsigned short NormalizedRoadPosToVscsWp(double roadPos, int direction);
-    double CorrespondingNormalizedRoadLocation(xyPoint &pos);
+    double CorrespondingNormalizedRoadLocation(Dpss_Data_n::xyPoint &pos);
 private:    //RAS
 
     // Central method to whole operation
@@ -237,12 +238,12 @@ private:    //RAS
     // methods for optimizing look angle mapping for input road and waypoints
     double SensorPointingCostForward(std::vector<double>& x);
     double SensorPointingCostReverse(std::vector<double>& x);
-    double ComputeSeperation(double& beta, xyPoint& a, xyPoint& b, xyPoint& c);
+    double ComputeSeperation(double& beta, Dpss_Data_n::xyPoint& a, Dpss_Data_n::xyPoint& b, Dpss_Data_n::xyPoint& c);
     double MaxDeviation(double a, double b);
     
     // debug functions for showing results of calculations
-    void PrintRoadXY(char fileName[], std::vector<xyPoint> &road);
-    void PrintRoadXYZ(char fileName[], std::vector<xyPoint> &road);
+    void PrintRoadXY(char fileName[], std::vector<Dpss_Data_n::xyPoint> &road);
+    void PrintRoadXYZ(char fileName[], std::vector<Dpss_Data_n::xyPoint> &road);
     void PrintRoadLatLon(char fileName[], DpssWaypoint* wp, int numWps);
     void FullDebugPlan();
     
@@ -269,11 +270,11 @@ private:    //RAS
 
     double m_LreLatitudeInRadians;
     double m_LreLongitudeInRadians;
-    xyPoint m_LaunchRecoveryPoint;
+    Dpss_Data_n::xyPoint m_LaunchRecoveryPoint;
 
     double m_LostCommPointLatitudeInRadians;
     double m_LostCommPointLongitudeInRadians;
-    xyPoint m_LostCommPoint;
+    Dpss_Data_n::xyPoint m_LostCommPoint;
 
 
     /////// Bookkeeping:Planning ///////
@@ -285,7 +286,7 @@ private:    //RAS
     // full input road in x,y coordinates
     // initialized in PreProcessPath
     // used by CleanUpStareAngles
-    std::vector<xyPoint> m_PlanningRoad;
+    std::vector<Dpss_Data_n::xyPoint> m_PlanningRoad;
 
     // input road indices that correspond to points *not* removed in the quick planning stage
     // initialized in PlanQuickly
@@ -295,7 +296,7 @@ private:    //RAS
     // full input road in x,y coordinates
     // initialized in PlanPrecisely
     // used in CandidateCost to compute deviation from candidate and actual roads
-    std::vector<xyPoint> m_PrecisePlanRoad;
+    std::vector<Dpss_Data_n::xyPoint> m_PrecisePlanRoad;
 
     // mapping of input x,y road to normalized length [0...1]
     // initialized in PlanPrecisely
@@ -309,7 +310,7 @@ private:    //RAS
     std::vector<DpssWaypoint> m_LatLonWaypoints;
 
     // x,y coordinates of waypoints loaded to UAV
-    std::vector<xyPoint> m_TrueWaypoints;
+    std::vector<Dpss_Data_n::xyPoint> m_TrueWaypoints;
 
     // corresponding waypoint indices loaded to UAV
     std::vector<int> m_WpIDList;
@@ -318,7 +319,7 @@ private:    //RAS
     std::vector<DpssWaypoint> m_LatLonRoad;
 
     // actual x,y input road coordinates for steering
-    std::vector<xyPoint> m_TrueRoad;
+    std::vector<Dpss_Data_n::xyPoint> m_TrueRoad;
 
     // normalized coordinates along input road [0...1]
     std::vector<double> m_TrueRoadLengths;

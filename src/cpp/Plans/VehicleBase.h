@@ -68,7 +68,7 @@ public:
 				m_bUseTaskEligibility(false),
 				m_dHeadingInitial_rad(dPsi_rad)
     {
-        stringstream sstrFileName;
+        std::stringstream sstrFileName;
         sstrFileName << "V_" << iGetID();
         strGetBaseFileName() = sstrFileName.str();
     };
@@ -81,7 +81,7 @@ public:
 		m_bUseTaskEligibility(false),
 		m_dHeadingInitial_rad(0.0)
     {
-        stringstream sstrFileName;
+        std::stringstream sstrFileName;
         sstrFileName << "V_" << iGetID();
         strGetBaseFileName() = sstrFileName.str();
     };
@@ -94,7 +94,7 @@ public:
 		m_bUseTaskEligibility(false),
 		m_dHeadingInitial_rad(0.0)
     {
-        stringstream sstrFileName;
+        std::stringstream sstrFileName;
         sstrFileName << "V_" << iGetID();
         strGetBaseFileName() = sstrFileName.str();
     };
@@ -107,7 +107,7 @@ public:
 		m_bUseTaskEligibility(false),
 		m_dHeadingInitial_rad(0.0)
     {
-        stringstream sstrFileName;
+        std::stringstream sstrFileName;
         sstrFileName << "V_" << iGetID();
         strGetBaseFileName() = sstrFileName.str();
     };
@@ -140,7 +140,7 @@ public:
         vuiGetTaskEligibility() = rhs.vuiGetTaskEligibility();
         bGetUseTaskEligibility() = rhs.bGetUseTaskEligibility();
         strGetBaseFileName() = rhs.strGetBaseFileName();
-        stringstream sstrFileName;
+        std::stringstream sstrFileName;
         sstrFileName << "V_" << rhs.iGetID();
         strGetBaseFileName() = sstrFileName.str();
         dGetHeadingInitial_rad() = rhs.dGetHeadingInitial_rad();
@@ -243,11 +243,11 @@ public: //accessors
         return (m_bUseTaskEligibility);
     };
 
-    string& strGetBaseFileName() {
+    std::string& strGetBaseFileName() {
         return (m_strBaseFileName);
     };
 
-    const string& strGetBaseFileName()const {
+    const std::string& strGetBaseFileName()const {
         return (m_strBaseFileName);
     };
 

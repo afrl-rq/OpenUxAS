@@ -47,6 +47,7 @@
 
 //#pragma warning(disable: 4786)
 
+#include "Constants/Convert.h"
 
 #include <cmath>
 #include <cassert>
@@ -57,9 +58,6 @@
 #ifdef _WIN32
 #include <crtdbg.h>        //assert
 #endif//#ifndef WIN32
-
-#include "Constants/Convert.h"
-
 
 namespace uxas
 {

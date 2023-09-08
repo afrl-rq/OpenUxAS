@@ -19,20 +19,21 @@
 
 #include "TaskServiceBase.h"
 #include "ServiceBase.h"
+#include "DynamicTaskServiceBase.h"
 
-#include "afrl/cmasi/AutomationRequest.h"
-#include "afrl/impact/CommRelayTask.h"
-#include "afrl/cmasi/EntityConfiguration.h"
-#include "afrl/cmasi/EntityState.h"
-#include "afrl/cmasi/VehicleActionCommand.h"
 #include "uxas/messages/task/TaskPlanOptions.h"
 #include "uxas/messages/task/TaskImplementationRequest.h"
 #include "uxas/messages/route/RoutePlan.h"
 
+#include "afrl/impact/CommRelayTask.h"
+#include "afrl/cmasi/AutomationRequest.h"
+#include "afrl/cmasi/EntityConfiguration.h"
+#include "afrl/cmasi/EntityState.h"
+#include "afrl/cmasi/VehicleActionCommand.h"
+
 #include <cstdint> // int64_t
 #include <unordered_set>
 #include <unordered_map>
-#include "DynamicTaskServiceBase.h"
 
 namespace uxas
 {

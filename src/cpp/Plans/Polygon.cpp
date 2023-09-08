@@ -29,13 +29,14 @@
 //#pragma warning(disable:4786)
 #define DEBUG_FLAG 0
 #define METHOD_DEBUG 0
+
 #include "Polygon.h"
-#include <iostream>
-#include <sstream>
-#include <math.h>
 //#include "GlobalDefines.h"
 #include "CGrid.h"
 
+#include <iostream>
+#include <sstream>
+#include <math.h>
 using namespace std;
 
 namespace n_FrameworkLib

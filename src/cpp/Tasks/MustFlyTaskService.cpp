@@ -16,16 +16,16 @@
 
 
 #include "MustFlyTaskService.h"
-
 #include "Position.h"
 #include "FileSystemUtilities.h"
 #include "Polygon.h"
 #include "FlatEarth.h"
 
-#include "afrl/cmasi/Circle.h"
 #include "uxas/messages/task/SensorFootprintResponse.h"
 #include "uxas/messages/task/TaskOption.h"
 #include "uxas/messages/route/ROUTE.h"
+
+#include "afrl/cmasi/Circle.h"
 
 #ifdef AFRL_INTERNAL_ENABLED
 #include "afrl/famus/MustFlyTask.h"

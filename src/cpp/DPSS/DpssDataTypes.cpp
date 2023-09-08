@@ -9,6 +9,8 @@
 
 #include "DpssDataTypes.h"
 
+using namespace Dpss_Data_n;
+
 void xyPoint::Rotate(double th)
 {
     xyPoint t(x,y);

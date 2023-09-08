@@ -16,25 +16,25 @@
 
 
 #include "CmasiPointSearchTaskService.h"
-
 #include "Position.h"
 #include "UnitConversions.h"
+#include "Constants/Convert.h"
 
-#include "afrl/cmasi/VehicleActionCommand.h"
-#include "afrl/cmasi/GimbalStareAction.h"
-#include "afrl/cmasi/GimbalConfiguration.h"
 #include "uxas/messages/task/TaskImplementationResponse.h"
 #include "uxas/messages/task/TaskOption.h"
 #include "uxas/messages/route/RouteRequest.h"
 #include "uxas/messages/route/RouteResponse.h"
 #include "uxas/messages/route/RouteConstraints.h"
 
+#include "afrl/cmasi/VehicleActionCommand.h"
+#include "afrl/cmasi/GimbalStareAction.h"
+#include "afrl/cmasi/GimbalConfiguration.h"
+
 #ifdef AFRL_INTERNAL_ENABLED
 #include "afrl/famus/PointSearchTask.h"
 #endif
 
 #include "pugixml.hpp"
-#include "Constants/Convert.h"
 
 #include <sstream>      //std::stringstream
 #include <iostream>     // std::cout, cerr, etc

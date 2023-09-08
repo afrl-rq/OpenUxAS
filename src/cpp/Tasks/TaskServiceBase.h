@@ -20,15 +20,6 @@
 #include "ServiceBase.h"
 #include "Constants/Convert.h"
 
-#include "avtas/lmcp/Object.h"
-#include "afrl/cmasi/AltitudeType.h"
-#include "afrl/cmasi/Task.h"
-#include "afrl/cmasi/EntityConfiguration.h"
-#include "afrl/cmasi/EntityState.h"
-#include "afrl/cmasi/MissionCommand.h"
-#include "afrl/impact/AreaOfInterest.h"
-#include "afrl/impact/LineOfInterest.h"
-#include "afrl/impact/PointOfInterest.h"
 #include "uxas/messages/task/UniqueAutomationRequest.h"
 #include "uxas/messages/task/UniqueAutomationResponse.h"
 #include "uxas/messages/task/TaskImplementationResponse.h"
@@ -38,10 +29,20 @@
 #include "uxas/messages/route/RoutePlan.h"
 #include "uxas/messages/route/RoutePlanRequest.h"
 #include "uxas/messages/route/RoutePlanResponse.h"
+
+#include "avtas/lmcp/Object.h"
+#include "afrl/cmasi/AltitudeType.h"
+#include "afrl/cmasi/Task.h"
+#include "afrl/cmasi/EntityConfiguration.h"
+#include "afrl/cmasi/EntityState.h"
+#include "afrl/cmasi/MissionCommand.h"
 #include "afrl/cmasi/KeepInZone.h"
 #include "afrl/cmasi/KeepOutZone.h"
 #include "afrl/cmasi/OperatingRegion.h"
-#include <afrl/cmasi/SearchTask.h>
+#include "afrl/cmasi/SearchTask.h"
+#include "afrl/impact/AreaOfInterest.h"
+#include "afrl/impact/LineOfInterest.h"
+#include "afrl/impact/PointOfInterest.h"
 
 #include "pugixml.hpp"
 

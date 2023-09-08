@@ -18,12 +18,13 @@
 #define UXAS_SERVICE_TASK_TASK_TRACKER_SERVICE_H
 
 #include "ServiceBase.h"
+#include "visilibity.h"
+
+#include "uxas/messages/route/ROUTE.h"
+
 #include "afrl/cmasi/CMASI.h"
 #include "afrl/impact/IMPACT.h"
 #include "afrl/vehicles/VEHICLES.h"
-#include "uxas/messages/route/ROUTE.h"
-
-#include "visilibity.h"
 
 #include <memory>
 #include <tuple>

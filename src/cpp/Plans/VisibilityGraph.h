@@ -27,9 +27,7 @@
 
 #pragma once
 
-
 #include "Polygon.h"
-
 #include "VehicleBase.h"
 #include "PlanningParameters.h"
 #include "TrajectoryParameters.h"
@@ -43,14 +41,12 @@
 #include "boost/graph/dijkstra_shortest_paths.hpp"
 #include "boost/graph/johnson_all_pairs_shortest.hpp"
 
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <ostream>
-using std::ostream;
 #include <complex>
-using std::complex;
-
 #include <memory>       //std::shared_ptr
 
 namespace n_FrameworkLib
@@ -95,7 +91,7 @@ namespace n_FrameworkLib
         typedef std::deque<CPosition>::const_iterator D_POSITION_CONST_IT_t;
         typedef std::shared_ptr<D_POSITION_t> PTR_DEQUE_POSITION_t;
 
-        typedef complex<double> COMPLEX_D_t;
+        typedef std::complex<double> COMPLEX_D_t;
 
         typedef std::shared_ptr<uxas::messages::route::GraphRegion> PTR_GRAPH_REGION_t;
         typedef std::map<uint32_t, PTR_GRAPH_REGION_t> M_UI32_PTR_GRAPH_REGION_t;
@@ -147,7 +143,7 @@ namespace n_FrameworkLib
         enError errExpandAndMergePolygons(void);
         enError errBuildVisibilityGraph(void);
         enError errBuildVisibilityGraph(PTR_GRAPH_REGION_t& ptr_GraphRegion);
-        enError errBuildVisibilityGraphWithOsm(const string& osmFile);
+        enError errBuildVisibilityGraphWithOsm(const std::string& osmFile);
         
 
         bool isFindPath(std::shared_ptr<CPathInformation>& pathInformation);
@@ -166,7 +162,7 @@ namespace n_FrameworkLib
 
         
         enError errInitializeGraphBase();
-        bool bBoundaryViolationExists(const V_WAYPOINT_t& vWaypoints, stringstream& sstrErrorMessage);
+        bool bBoundaryViolationExists(const V_WAYPOINT_t& vWaypoints, std::stringstream& sstrErrorMessage);
 
         enError errSmoothPath(D_POSITION_t& dposPath, const double& dTurnRadius_m,
                 double& dHeadingInitial_rad, double& dHeadingFinal_rad, V_WAYPOINT_t& vwayWaypoints);
@@ -281,7 +277,7 @@ namespace n_FrameworkLib
             return (errReturn);
         };
 
-        void StreamPolygons(ostream &os) {
+        void StreamPolygons(std::ostream &os) {
             os << "{";
             for (V_POLYGON_IT_t itPolygon = vplygnGetPolygons().begin(); itPolygon != vplygnGetPolygons().end(); itPolygon++) {
                 os << "[";
@@ -292,7 +288,7 @@ namespace n_FrameworkLib
             os << "}";
         };
 
-        void StreamPolygonsPython(ostream &os) {
+        void StreamPolygonsPython(std::ostream &os) {
             for (V_POLYGON_IT_t itPolygon = vplygnGetPolygons().begin(); itPolygon != vplygnGetPolygons().end(); itPolygon++) {
                 //os << "[";
                 itPolygon->StreamPolygonPython(os, vposGetVerticiesBase());
@@ -300,14 +296,14 @@ namespace n_FrameworkLib
             }
         };
 
-        void StreamPolygonsCPP(ostream &os) {
-            os << endl;
+        void StreamPolygonsCPP(std::ostream &os) {
+            os << std::endl;
             for (V_POLYGON_IT_t itPolygon = vplygnGetPolygons().begin(); itPolygon != vplygnGetPolygons().end(); itPolygon++) {
                 itPolygon->StreamPolygonCPP(os, vposGetVerticiesBase());
                 os << std::endl;
                 ;
             }
-            os << endl;
+            os << std::endl;
         };
 
         //void StreamEdgesCurrent(ostream &os)
@@ -326,8 +322,8 @@ namespace n_FrameworkLib
         //    os << "]";
         //};
 
-        void SaveGraphVizFileShortestPaths(const int& iIndexVertex, const string& strPathOutput, const string& strFileName = string("VisibilityGraphShortestPath.dot")) {
-            string strPathFileName = strPathOutput + "\\" + strFileName;
+        void SaveGraphVizFileShortestPaths(const int& iIndexVertex, const std::string& strPathOutput, const std::string& strFileName = "VisibilityGraphShortestPath.dot") {
+            std::string strPathFileName = strPathOutput + "\\" + strFileName;
             std::ofstream dot_file(strPathFileName.c_str());
 
             dot_file << "digraph D {\n"
@@ -339,7 +335,7 @@ namespace n_FrameworkLib
 
             boost::graph_traits < GRAPH_LIST_VEC_t >::vertex_iterator vi, vend;
 #if !defined(WIN32)
-            for (tie(vi, vend) = vertices(edglstvecGetGraph()); vi != vend; ++vi)
+            for (std::tie(vi, vend) = vertices(edglstvecGetGraph()); vi != vend; ++vi)
 #else
             for (std::tie(vi, vend) = vertices(edglstvecGetGraph()); vi != vend; ++vi)
 #endif
@@ -356,8 +352,8 @@ namespace n_FrameworkLib
             dot_file << "}";
         }
 
-        void SaveGraphVizFileFull(const string& strPathOutput, const string& strFileName = string("VisibilityGraphFull.dot")) {
-            string strPathFileName = strPathOutput + "\\" + strFileName;
+        void SaveGraphVizFileFull(const std::string& strPathOutput, const std::string& strFileName = "VisibilityGraphFull.dot") {
+            std::string strPathFileName = strPathOutput + "\\" + strFileName;
             std::ofstream dot_file(strPathFileName.c_str());
 
             dot_file << "digraph D {\n"
@@ -794,6 +790,6 @@ namespace n_FrameworkLib
         int m_iLengthSegmentMinimum;
     };
 
-    ostream &operator<<(ostream &os, const CVisibilityGraph& visgRhs);
+    std::ostream &operator<<(std::ostream &os, const CVisibilityGraph& visgRhs);
 
 }; //namespace n_FrameworkLib

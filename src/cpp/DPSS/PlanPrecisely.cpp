@@ -8,8 +8,11 @@
 // ===============================================================================
 
 #include "Dpss.h"
+
 #include <algorithm>
+
 using namespace std;
+using namespace Dpss_Data_n;
 
 double Dpss::PlanCost(std::vector<double>& x)
 {

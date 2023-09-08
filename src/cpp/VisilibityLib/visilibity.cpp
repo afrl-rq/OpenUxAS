@@ -34,6 +34,10 @@ License along with VisiLibity.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "visilibity.h"  //VisiLibity header
+
+#include "boost/geometry/algorithms/is_valid.hpp"
+#include "boost/geometry/algorithms/validity_failure_type.hpp"
+
 #include <cmath>         //math functions in std namespace
 #include <vector>
 #include <queue>         //queue and priority_queue
@@ -50,8 +54,6 @@ License along with VisiLibity.  If not, see <http://www.gnu.org/licenses/>.
 #include <cassert>       //assertions
 #include <iso646.h>      //aliases for boolean operators
 
-#include "boost/geometry/algorithms/is_valid.hpp"
-#include "boost/geometry/algorithms/validity_failure_type.hpp"
 
 ///Hide helping functions in unnamed namespace (local to .C file).
 namespace

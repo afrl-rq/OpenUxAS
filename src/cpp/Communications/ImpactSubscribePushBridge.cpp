@@ -8,6 +8,8 @@
 // ===============================================================================
 
 
+#include "ImpactSubscribePushBridge.h"
+#include "ZeroMqFabric.h"
 #include "UxAS_ConfigurationManager.h"
 #include "UxAS_Log.h"
 #include "Constants/UxAS_String.h"
@@ -17,8 +19,6 @@
 #include <sstream>
 #include <iostream>
 #include <locale>
-#include "ZeroMqFabric.h"
-#include "ImpactSubscribePushBridge.h"
 
 #define STRING_XML_SUBSCRIBE_TO_EXTERNAL_MESSAGE "SubscribeToExternalMessage"
 

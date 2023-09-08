@@ -19,11 +19,8 @@
 
 #include "Position.h"
 #include "Edge.h"
-
-
 #include "VisibilityGraph.h"
 #include "FlatEarth.h"
-
 #include "ServiceBase.h"
 #include "Constants/Constants_Control.h"
 
@@ -183,7 +180,7 @@ protected:
     bool isProcessRoadPointsRequest(const std::shared_ptr<uxas::messages::route::RoadPointsRequest>& roadPointsRequest,
                                     std::shared_ptr<uxas::messages::route::RoadPointsResponse>& roadPointsResponse);
     bool isGetRoadPoints(const int64_t& startNodeId,const int64_t& endNodeId,int32_t& pathCost,std::deque<int64_t>& pathNodeIds);
-    bool isBuildRoadGraphWithOsm(const string& osmFile);
+    bool isBuildRoadGraphWithOsm(const std::string& osmFile);
     bool isFindShortestRoute(const int64_t& startNodeId, const int64_t& endNodeId,
             int32_t& pathCost, std::deque<int64_t>& pathNodes);
     bool isProcessHighwayNodes(const std::unordered_map<int64_t, bool>& nodeIdVs_isPlanningNode,

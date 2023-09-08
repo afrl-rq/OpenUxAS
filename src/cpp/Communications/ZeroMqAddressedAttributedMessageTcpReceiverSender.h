@@ -10,13 +10,15 @@
 #ifndef UXAS_MESSAGE_TRANSPORT_ZERO_MQ_ADDRESSED_ATTRIBUTED_MESSAGE_TCP_RECEIVER_SENDER_H
 #define UXAS_MESSAGE_TRANSPORT_ZERO_MQ_ADDRESSED_ATTRIBUTED_MESSAGE_TCP_RECEIVER_SENDER_H
 
-#include <deque>
-#include <vector>
-#include <mutex>
-#include "czmq.h"
 #include "ZeroMqReceiverBase.h"
 #include "AddressedAttributedMessage.h"
 #include "UxAS_SentinelSerialBuffer.h"
+
+#include "czmq.h"
+
+#include <deque>
+#include <vector>
+#include <mutex>
 
 namespace uxas
 {

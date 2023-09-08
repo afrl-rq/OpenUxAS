@@ -7,9 +7,9 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
+#include "ZmqSocketInitializer.h"
 #include "ZeroMqFabric.h"
 #include "TransportBase.h"
-#include "ZmqSocketInitializer.h"
 #include "UxAS_Log.h"
 
 namespace uxas {

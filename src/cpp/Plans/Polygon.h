@@ -36,23 +36,24 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-//#include "GlobalDefines.h"    //V_INT_t
 
+
+
+
+//#include "GlobalDefines.h"    //V_INT_t
 #include "Position.h"
 #include "Edge.h"
 #include "CGrid.h"
 #include "visilibity.h"     //polygon expansion
 
-
 #include "afrl/cmasi/AbstractZone.h"
-#
+
+#include "boost/dynamic_bitset.hpp"    //use  id bits for local ID
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #endif//_WIN32
-
-#include "boost/dynamic_bitset.hpp"    //use  id bits for local ID
 #include <unordered_map>
 #include <list>
 #include <utility>    //pair
@@ -248,14 +249,14 @@ public:    //typedefs
 
     typedef CPolygonType::enPolygonType enPolygonType;
 
-    typedef vector<CPolygon> V_POLYGON_t;
-    typedef vector<CPolygon>::iterator V_POLYGON_IT_t;
-    typedef vector<CPolygon>::const_iterator V_POLYGON_CONST_IT_t;
+    typedef std::vector<CPolygon> V_POLYGON_t;
+    typedef std::vector<CPolygon>::iterator V_POLYGON_IT_t;
+    typedef std::vector<CPolygon>::const_iterator V_POLYGON_CONST_IT_t;
 
-    typedef pair <int,V_POLYGON_IT_t> PAIR_INT_ITPOLYGON_t;
-    typedef multimap<int,V_POLYGON_IT_t> MMAP_INT_ITPOLYGON_t;
-    typedef multimap<int,V_POLYGON_IT_t>::iterator MMAP_INT_ITPOLYGON_IT_t;
-    typedef multimap<int,V_POLYGON_IT_t>::const_iterator MMAP_INT_ITPOLYGON_CONST_IT_t;
+    typedef std::pair <int,V_POLYGON_IT_t> PAIR_INT_ITPOLYGON_t;
+    typedef std::multimap<int,V_POLYGON_IT_t> MMAP_INT_ITPOLYGON_t;
+    typedef std::multimap<int,V_POLYGON_IT_t>::iterator MMAP_INT_ITPOLYGON_IT_t;
+    typedef std::multimap<int,V_POLYGON_IT_t>::const_iterator MMAP_INT_ITPOLYGON_CONST_IT_t;
 
     typedef boost::dynamic_bitset<> DYNAMIC_BITSET_t;
 
@@ -359,7 +360,7 @@ public:    //constructors/destructors
 
 public:    //methods/functions
 
-    void StreamPolygonPython(ostream &os, V_POSITION_t& vposVerticiesBase)
+    void StreamPolygonPython(std::ostream &os, V_POSITION_t& vposVerticiesBase)
     {
         for (CEdge::V_EDGE_CONST_IT_t itEdge = veGetPolygonEdges().begin(); itEdge != veGetPolygonEdges().end(); itEdge++)
         {
@@ -380,7 +381,7 @@ public:    //methods/functions
         }
     };
 
-    void StreamPolygonMatlab(ostream &os, V_POSITION_t& vposVerticiesBase)
+    void StreamPolygonMatlab(std::ostream &os, V_POSITION_t& vposVerticiesBase)
     {
         for (CEdge::V_EDGE_CONST_IT_t itEdge = veGetPolygonEdges().begin(); itEdge != veGetPolygonEdges().end(); itEdge++)
         {
@@ -401,19 +402,19 @@ public:    //methods/functions
         }
     };
 
-    void StreamPolygonCPP(ostream &os, V_POSITION_t& vposVerticiesBase)
+    void StreamPolygonCPP(std::ostream &os, V_POSITION_t& vposVerticiesBase)
     {
-        os << "//add polygon ID:[" << iGetID() <<"]" << endl;
-        os << "vposVerticies.clear();" << endl;
-        os << "iID = " << iGetID() << ";" << endl;
+        os << "//add polygon ID:[" << iGetID() <<"]" << std::endl;
+        os << "vposVerticies.clear();" << std::endl;
+        os << "iID = " << iGetID() << ";" << std::endl;
         for(CEdge::V_EDGE_CONST_IT_t itEdge=veGetPolygonEdges().begin();itEdge!=veGetPolygonEdges().end();itEdge++)
         {
             os << "vposVerticies.push_back(CPosition(" << vposVerticiesBase[static_cast<unsigned int>(itEdge->first)].m_north_m 
                 << "," 
-                << vposVerticiesBase[static_cast<unsigned int>(itEdge->first)].m_east_m << "));" << endl;
+                << vposVerticiesBase[static_cast<unsigned int>(itEdge->first)].m_east_m << "));" << std::endl;
         }
-        os << "errAddPolygon = visibilityGraph.errAddPolygon(iID,vposVerticies.begin(),vposVerticies.end());" << endl;
-        os << "visibilityGraph.vplygnGetPolygons().back().plytypGetPolygonType().bGetKeepIn() = false;" << endl << endl;
+        os << "errAddPolygon = visibilityGraph.errAddPolygon(iID,vposVerticies.begin(),vposVerticies.end());" << std::endl;
+        os << "visibilityGraph.vplygnGetPolygons().back().plytypGetPolygonType().bGetKeepIn() = false;" << std::endl << std::endl;
     };
 
     void ResetPolygon()
@@ -723,7 +724,7 @@ private:
     *                Private Member Functions        *
     *************************************************/
 private:
-    void GridTest(const double x, const double y,const double z,V_POSITION_t& vposVertexContainer,stringstream &sstrErrorMessage);
+    void GridTest(const double x, const double y,const double z,V_POSITION_t& vposVertexContainer,std::stringstream &sstrErrorMessage);
     // copy constructor - make unusable to prevent bad things from happening
     //CPolygon(const CPolygon& Polygon) {};
     //// assignment operator - make unusable to prevent bad things from happening
@@ -735,17 +736,17 @@ private:
     *************************************************/
 public:    
     bool InPolygon(const double x, const double y, 
-        const double z,V_POSITION_t& vposVertexContainer, stringstream &sstrErrorMessage);
+        const double z,V_POSITION_t& vposVertexContainer, std::stringstream &sstrErrorMessage);
 
-    void FindPolygonBoundingBox(V_POSITION_t& vposVertexContainer,stringstream &sstrErrorMessage);
+    void FindPolygonBoundingBox(V_POSITION_t& vposVertexContainer,std::stringstream &sstrErrorMessage);
 
     bool PointInBoundingBox(const double x, const double y, 
-        const double z, stringstream &sstrErrorMessage); 
+        const double z, std::stringstream &sstrErrorMessage); 
 
 };
 
 
-ostream &operator << (ostream &os,const CPolygon& polyRhs);
+std::ostream &operator << (std::ostream &os,const CPolygon& polyRhs);
 
 };      ///namespace n_FrameworkLib
 
