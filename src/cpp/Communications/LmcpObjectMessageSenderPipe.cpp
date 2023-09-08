@@ -8,17 +8,14 @@
 // ===============================================================================
 
 #include "LmcpObjectMessageSenderPipe.h"
+#include "ZeroMqSocketConfiguration.h"
+#include "SerialHelper.h"
+#include "Constants/UxAS_String.h"
+#include "stdUniquePtr.h"
 
 #include "avtas/lmcp/ByteBuffer.h"
 #include "avtas/lmcp/Factory.h"
 
-#include "ZeroMqSocketConfiguration.h"
-
-#include "SerialHelper.h"
-
-#include "Constants/UxAS_String.h"
-
-#include "stdUniquePtr.h"
 
 namespace uxas
 {

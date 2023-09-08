@@ -9,15 +9,13 @@
 
 #include "LmcpObjectNetworkTcpBridge.h"
 #include "ZmqAttributedMsgSenderReceiver.h"
-
-#include "avtas/lmcp/Factory.h"
-
 #include "UxAS_ConfigurationManager.h"
 #include "UxAS_Log.h"
 #include "Constants/UxAS_String.h"
 #include "UxAS_Time.h"
-
 #include "stdUniquePtr.h"
+
+#include "avtas/lmcp/Factory.h"
 
 #include <chrono>
 #include <sstream>

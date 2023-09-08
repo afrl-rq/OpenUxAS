@@ -14,32 +14,28 @@
  * Created on August 31, 2015, 6:17 PM
  */
 
-
 #include "TaskManagerService.h"
 #include "TaskServiceBase.h"
 
+#include "uxas/messages/task/UniqueAutomationRequest.h"
+#include "uxas/messages/uxnative/CreateNewService.h"
+#include "uxas/messages/uxnative/KillService.h"
 
+#include "avtas/lmcp/LmcpXMLReader.h"
 #include "afrl/cmasi/EntityConfiguration.h"
 #include "afrl/cmasi/EntityConfigurationDescendants.h"
 #include "afrl/cmasi/EntityState.h"
 #include "afrl/cmasi/EntityStateDescendants.h"
 #include "afrl/cmasi/AutomationRequest.h"
 #include "afrl/cmasi/AutomationResponse.h"
-#include "uxas/messages/task/UniqueAutomationRequest.h"
 #include "afrl/cmasi/Task.h"
 #include "afrl/cmasi/TaskDescendants.h"
 #include "afrl/cmasi/RemoveTasks.h"
 #include "afrl/cmasi/FollowPathCommand.h"
-#include "uxas/messages/uxnative/CreateNewService.h"
-#include "uxas/messages/uxnative/KillService.h"
-#include "avtas/lmcp/LmcpXMLReader.h"
 #include "afrl/cmasi/FollowPathCommand.h"      
-
 #include "afrl/impact/PointOfInterest.h"
 #include "afrl/impact/LineOfInterest.h"
 #include "afrl/impact/AreaOfInterest.h"
-
-
 
 #include "pugixml.hpp"
 
@@ -48,7 +44,6 @@
 #include <fstream>     // std::ifstream
 #include <cstdint>
 #include <memory>      //int64_t
-
 
 #define STRING_XML_TYPE "Type"
 #define STRING_XML_TASKOPTIONS "TaskOptions"

@@ -10,10 +10,10 @@
 // DRand.cpp : Various random number generators
 // Contributed by Derek Kingston
 
-#include <cmath>
-#include <ctime> 
 #include "DRand.h"
 
+#include <cmath>
+#include <ctime> 
 // generates a value in [0,1] distributed uniformly
 double randu() { return (rand() + 0.0)/RAND_MAX; }
 

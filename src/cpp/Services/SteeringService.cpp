@@ -8,6 +8,17 @@
 // ===============================================================================
 
 #include "SteeringService.h"
+#include "Constants/Convert.h"
+#include "Constants/UxAS_String.h"
+#include "FlatEarth.h"
+#include "UxAS_Log.h"
+#include "UxAS_Time.h"
+#include "stdUniquePtr.h"
+
+#include "uxas/messages/uxnative/SafeHeadingAction.h"
+#include "uxas/messages/task/UniqueAutomationRequest.h"
+#include "uxas/messages/task/UniqueAutomationResponse.h"
+#include "uxas/messages/uxnative/SpeedOverrideAction.h"
 
 #include "afrl/cmasi/AirVehicleConfiguration.h"
 #include "afrl/cmasi/AirVehicleConfigurationDescendants.h"
@@ -21,22 +32,9 @@
 #include "afrl/cmasi/SpeedType.h"
 #include "afrl/cmasi/VehicleAction.h"
 #include "afrl/cmasi/VehicleActionCommand.h"
-#include "uxas/messages/uxnative/SafeHeadingAction.h"
-#include "uxas/messages/task/UniqueAutomationRequest.h"
-#include "uxas/messages/task/UniqueAutomationResponse.h"
-#include "uxas/messages/uxnative/SpeedOverrideAction.h"
-
-#include "Constants/Convert.h"
-#include "Constants/UxAS_String.h"
-#include "FlatEarth.h"
-#include "UxAS_Log.h"
-#include "UxAS_Time.h"
-
-#include "stdUniquePtr.h"
 
 #include <algorithm>
 #include <vector>
-
 #include <cassert>
 #include <cmath>
 

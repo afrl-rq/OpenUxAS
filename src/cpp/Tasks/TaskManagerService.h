@@ -21,13 +21,14 @@
 
 #include "afrl/cmasi/EntityConfiguration.h"
 #include "afrl/cmasi/EntityState.h"
-#include "afrl/impact/AreaOfInterest.h"
-#include "afrl/impact/LineOfInterest.h"
-#include "afrl/impact/PointOfInterest.h"
 #include "afrl/cmasi/MissionCommand.h"
 #include "afrl/cmasi/KeepInZone.h"
 #include "afrl/cmasi/KeepOutZone.h"
 #include "afrl/cmasi/OperatingRegion.h"
+#include "afrl/impact/AreaOfInterest.h"
+#include "afrl/impact/LineOfInterest.h"
+#include "afrl/impact/PointOfInterest.h"
+
 #include <set>
 #include <cstdint> // int64_t
 

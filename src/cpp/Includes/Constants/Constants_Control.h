@@ -17,8 +17,8 @@
 #ifndef CONSTANTS_CONTROL_H
 #define    CONSTANTS_CONTROL_H
 
-#include <string>
 #include "Constants/Constant_Strings.h"
+#include <string>
 
 namespace n_Const
 {   

@@ -15,15 +15,14 @@
  */
 
 #include "RoutePlannerService.h"
-
 #include "UxAS_Log.h"
 #include "UnitConversions.h"
 #include "Constants/Convert.h"
 #include "Constants/UxAS_String.h"
 
+#include "uxas/messages/route/ROUTE.h"
 #include "afrl/cmasi/CMASI.h"
 #include "afrl/impact/IMPACT.h"
-#include "uxas/messages/route/ROUTE.h"
 
 #include "pugixml.hpp"
 

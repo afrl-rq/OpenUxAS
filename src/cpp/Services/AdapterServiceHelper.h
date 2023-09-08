@@ -10,6 +10,8 @@
 #ifndef UXAS_SERVICE_ADAPTER_ADAPTER_SERVICE_HELPER_H
 #define UXAS_SERVICE_ADAPTER_ADAPTER_SERVICE_HELPER_H
 
+#include "stdUniquePtr.h"
+
 #include "afrl/cmasi/AirVehicleConfiguration.h"
 #include "afrl/cmasi/AirVehicleState.h"
 #include "afrl/cmasi/KeyValuePair.h"
@@ -17,9 +19,6 @@
 #include "afrl/cmasi/MissionCommand.h"
 #include "afrl/cmasi/ServiceStatus.h"
 
-#include "../../common/log/Log.h"
-
-#include "../../stduxas/stdUniquePtr.h"
 
 namespace uxas
 {

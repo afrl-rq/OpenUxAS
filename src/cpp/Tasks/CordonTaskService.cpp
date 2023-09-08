@@ -16,9 +16,10 @@
 
 
 #include "CordonTaskService.h"
-
 #include "Position.h"
 #include "FileSystemUtilities.h"
+#include "Constants/Convert.h"
+#include "Permute.h"
 
 #include "uxas/messages/task/TaskImplementationResponse.h"
 #include "uxas/messages/task/TaskOption.h"
@@ -28,8 +29,6 @@
 #include "uxas/messages/route/EgressRouteResponse.h"
 
 #include "pugixml.hpp"
-#include "Constants/Convert.h"
-#include "Permute.h"
 
 #include <sstream>      //std::stringstream
 #include <iostream>     // std::cout, cerr, etc

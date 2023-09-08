@@ -21,10 +21,11 @@
 #include "ServiceBase.h"
 #include "CallbackTimer.h"
 
-#include "afrl/cmasi/OperatingRegion.h"
-#include "afrl/cmasi/Task.h"
 #include "uxas/messages/task/UniqueAutomationRequest.h"
 #include "uxas/messages/task/UniqueAutomationResponse.h"
+
+#include "afrl/cmasi/OperatingRegion.h"
+#include "afrl/cmasi/Task.h"
 
 #include <memory>
 #include <deque>

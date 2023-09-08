@@ -14,11 +14,15 @@
  * Created on March 7, 2016, 6:17 PM
  */
 
-
 #include "CommRelayTaskService.h"
-
 #include "Position.h"
 #include "UnitConversions.h"
+#include "Constants/Convert.h"
+#include "DpssDataTypes.h"
+#include "TimeUtilities.h"
+
+#include "uxas/messages/task/TaskImplementationResponse.h"
+#include "uxas/messages/task/TaskOption.h"
 
 #include "avtas/lmcp/LmcpXMLReader.h"
 #include "afrl/cmasi/VehicleActionCommand.h"
@@ -31,17 +35,8 @@
 #include "afrl/vehicles/SurfaceVehicleConfiguration.h"
 #include "afrl/impact/RadioTowerConfiguration.h"
 #include "afrl/impact/RadioTowerState.h"
-#include "uxas/messages/task/TaskImplementationResponse.h"
-#include "uxas/messages/task/TaskOption.h"
-
-
-#include "Constants/Convert.h"
-#include "DpssDataTypes.h"
-#include "TimeUtilities.h"
 
 #include <sstream>      //std::stringstream
-
-
 
 namespace uxas
 {

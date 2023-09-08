@@ -26,13 +26,14 @@
 #include "uxas/messages/task/TaskImplementationRequest.h"
 #include "uxas/messages/task/TaskImplementationResponse.h"
 #include "uxas/messages/task/PlanningState.h"
+
 #include "afrl/cmasi/EntityState.h"
 #include "afrl/cmasi/GimbalState.h"
 #include "afrl/cmasi/GimbalAngleAction.h"
+#include "afrl/cmasi/LoiterAction.h"
 #include "afrl/impact/SpeedAltPair.h"
-#include <afrl/cmasi/LoiterAction.h>
-#include <afrl/impact/ImpactAutomationRequest.h>
-#include <afrl/impact/ImpactAutomationResponse.h>
+#include "afrl/impact/ImpactAutomationRequest.h"
+#include "afrl/impact/ImpactAutomationResponse.h"
 
 #include <cstdint> // int64_t
 #include <deque>

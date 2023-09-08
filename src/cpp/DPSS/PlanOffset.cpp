@@ -9,6 +9,7 @@
 
 #include "Dpss.h"
 using namespace std;
+using namespace Dpss_Data_n;
 
 void Dpss::OffsetPlanForward(std::vector<xyPoint> &xyPlanPoints, std::vector<xyPoint> &forwardPlan)
 {

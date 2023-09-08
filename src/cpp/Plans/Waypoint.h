@@ -28,41 +28,36 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-
-#include <limits>
-using namespace std;
-
-#include <memory>    //std::shared_ptr
-#include "afrl/cmasi/Waypoint.h"
-
-
 //#include "GlobalDefines.h"
 #include "UnitConversions.h"
 #include "Position.h"
 #include "Circle.h"
 
+#include "afrl/cmasi/Waypoint.h"
+
+#include <limits>
 #include <ostream>
-//using std::ostream;
 #include <map>
+#include <memory>    //std::shared_ptr
 
 // TODO: remove all waypoint mangling
 #define TASK_ID_MULTIPLIER 10000    // use this to make the waypoint index visible in the mangeled id (up to 9999 waypoints)
 
 namespace n_FrameworkLib
 {
-    
+
     typedef std::shared_ptr<afrl::cmasi::Waypoint> PTR_CMASI_WAYPOINT_t;
 
 class CWaypoint;
 
-typedef vector<CWaypoint> V_WAYPOINT_t;
+typedef std::vector<CWaypoint> V_WAYPOINT_t;
 typedef V_WAYPOINT_t::iterator V_WAYPOINT_IT_t;
 typedef V_WAYPOINT_t::const_iterator V_WAYPOINT_CONST_IT_t;
 typedef V_WAYPOINT_t::reverse_iterator V_WAYPOINT_REVERSE_IT_t;
 
-typedef map<int,CWaypoint> M_I_WAYPOINT_t;
-typedef map<int,CWaypoint>::iterator M_I_WAYPOINT_IT_t;
-typedef map<int,CWaypoint>::const_iterator M_I_WAYPOINT_CONST_IT_t;
+typedef std::map<int,CWaypoint> M_I_WAYPOINT_t;
+typedef std::map<int,CWaypoint>::iterator M_I_WAYPOINT_IT_t;
+typedef std::map<int,CWaypoint>::const_iterator M_I_WAYPOINT_CONST_IT_t;
 
 class CDataPoint : public CPosition
 {
@@ -206,13 +201,12 @@ public:    //member functions
 
     double reRelativeDistance2D(const CWaypointSmall& wayPoint )
     {
-        using namespace std;
 
         // returns the distance between this waypoint and another
         double dX = m_north_m - wayPoint.m_north_m; 
         double dY = m_east_m - wayPoint.m_east_m; 
 
-        return(sqrt((dX*dX) + (dY*dY)));
+        return(std::sqrt((dX*dX) + (dY*dY)));
     };
 
 
@@ -300,9 +294,9 @@ public:
     };
 
 public:
-    typedef numeric_limits<double> NUMERIC_LIMITS_double;
+    typedef std::numeric_limits<double> NUMERIC_LIMITS_double;
 
-    typedef vector<CWaypoint> V_WAYPOINT_t;
+    typedef std::vector<CWaypoint> V_WAYPOINT_t;
     typedef V_WAYPOINT_t::iterator V_WAYPOINT_IT_t;
     typedef V_WAYPOINT_t::const_iterator V_WAYPOINT_CONST_IT_t;
 
@@ -496,7 +490,7 @@ public:    //constructors
         CWaypointSmall::operator =(rhs);
     };
     
-    void osStreamWaypointHeadings(ostream &os); 
+    void osStreamWaypointHeadings(std::ostream &os); 
     
 
     bool bIsWaypointEligibleForRemoval()
@@ -510,9 +504,9 @@ public:    //constructors
         return(bReturn);
     }
 
-    string strGetType()
+    std::string strGetType()
     {
-        string strWaypointType("wayTypeUnknown");
+        std::string strWaypointType("wayTypeUnknown");
         switch(typeGetWaypoint())
         {
         case waytypeSearch:
@@ -800,7 +794,7 @@ public:
 };
 
 
-ostream &operator << (ostream &os,const CWaypoint& wayRhs);
+std::ostream &operator << (std::ostream &os,const CWaypoint& wayRhs);
 
 };      //namespace n_FrameworkLib
 

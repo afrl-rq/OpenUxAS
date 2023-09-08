@@ -17,9 +17,9 @@
 #ifndef UXAS_TYPEDEFS_ZEROMQ_H
 #define    UXAS_TYPEDEFS_ZEROMQ_H
 
-#include <memory>       //std::shared_ptr
-
 #include "zmq.hpp"
+
+#include <memory>       //std::shared_ptr
 
 namespace n_Typedefs
 {

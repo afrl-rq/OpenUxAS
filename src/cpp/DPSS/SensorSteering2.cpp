@@ -8,11 +8,14 @@
 // ===============================================================================
 
 #include "Dpss.h"
+
 #include <algorithm>
 #include <functional>
 #include <iostream>
 #include <fstream>
+
 using namespace std;
+using namespace Dpss_Data_n;
 
 void Dpss::CalculateStarePoint(VehiclePoint &starePoint, VehicleTelemetry &vehiclePosition)
 {

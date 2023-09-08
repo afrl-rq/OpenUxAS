@@ -7,8 +7,6 @@
 // Title 17, U.S. Code.  All Other Rights Reserved.
 // ===============================================================================
 
-#include "afrl/cmasi/AirVehicleState.h"
-#include "afrl/impact/AreaOfInterest.h"
 
 #include "LmcpObjectNetworkBridgeManager.h"
 #include "LmcpObjectNetworkServer.h"
@@ -21,15 +19,15 @@
 #include "UxAS_Log.h"
 #include "UxAS_LogManagerDefaultInitializer.h"
 #include "UxAS_StringUtil.h"
+#include "stdUniquePtr.h"
+#include "FileSystemUtilities.h"
 
+#include "afrl/cmasi/AirVehicleState.h"
+#include "afrl/impact/AreaOfInterest.h"
 #ifdef AFRL_INTERNAL_ENABLED
 #include "afrl/famus/PointSearchTask.h"
 //#include "UxAS_SerialPortEmulator.h"
 #endif
-
-#include "stdUniquePtr.h"
-
-#include "FileSystemUtilities.h"
 
 #include <iostream>
 #include <memory>

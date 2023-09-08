@@ -15,7 +15,6 @@
  */
 
 #include "AutomationRequestValidatorService.h"
-
 #include "TimeUtilities.h"
 #include "UxAS_Log.h"
 #include "UxAS_TimerManager.h"
@@ -24,14 +23,9 @@
 #include "uxas/messages/task/TaskAutomationRequest.h"
 #include "uxas/messages/task/TaskAutomationResponse.h"
 #include "uxas/messages/task/UniqueAutomationResponse.h"
+
 #include "afrl/cmasi/AutomationRequest.h"
 #include "afrl/cmasi/AutomationResponse.h"
-#include "afrl/impact/ImpactAutomationRequest.h"
-#include "afrl/impact/ImpactAutomationResponse.h"
-#include "afrl/impact/PointOfInterest.h"
-#include "afrl/impact/LineOfInterest.h"
-#include "afrl/impact/AreaOfInterest.h"
-
 #include "afrl/cmasi/ServiceStatus.h"
 #include "afrl/cmasi/EntityConfiguration.h"
 #include "afrl/cmasi/EntityConfigurationDescendants.h"
@@ -40,10 +34,13 @@
 #include "afrl/cmasi/RemoveTasks.h"
 #include "afrl/cmasi/KeepInZone.h"
 #include "afrl/cmasi/KeepOutZone.h"
-
 #include "afrl/cmasi/Task.h"
 #include "afrl/cmasi/TaskDescendants.h"    
-
+#include "afrl/impact/ImpactAutomationRequest.h"
+#include "afrl/impact/ImpactAutomationResponse.h"
+#include "afrl/impact/PointOfInterest.h"
+#include "afrl/impact/LineOfInterest.h"
+#include "afrl/impact/AreaOfInterest.h"
 #include "afrl/impact/PointOfInterest.h"
 #include "afrl/impact/LineOfInterest.h"
 #include "afrl/impact/AreaOfInterest.h"

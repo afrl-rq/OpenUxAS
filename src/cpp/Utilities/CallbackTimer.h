@@ -17,14 +17,12 @@
 #ifndef CALLBACKTIMER_H
 #define CALLBACKTIMER_H
 
-#include <thread>
-#include <mutex>
-
-#include <functional>
-
 #include "TypeDefs/UxAS_TypeDefs_Thread.h"
 //#include "TypeDefs/UxAS_TypeDefs_ZeroMQ.h"
 
+#include <thread>
+#include <mutex>
+#include <functional>
 
 namespace uxas
 {

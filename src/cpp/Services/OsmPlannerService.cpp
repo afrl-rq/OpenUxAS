@@ -15,16 +15,13 @@
  *
  */
 
-
 #include "OsmPlannerService.h"
-
 #include "Position.h"   //V_POSITION_t
 #include "Waypoint.h"
 //#include "Vehicle.h"
 #include "PathInformation.h"
 #include "FileSystemUtilities.h"
 #include "Constants/UxAS_String.h"
-
 #include "Constants/Convert.h"
 
 #include "pugixml.hpp"
@@ -942,7 +939,7 @@ bool OsmPlannerService::isGetRoadPoints(const int64_t& startNodeId,const int64_t
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
 
-bool OsmPlannerService::isBuildRoadGraphWithOsm(const string & osmFile)
+bool OsmPlannerService::isBuildRoadGraphWithOsm(const std::string & osmFile)
 {
     bool isSuccess(true);
 
@@ -1877,8 +1874,8 @@ bool OsmPlannerService::isGetNodesOnSegment(const std::pair<int64_t, int64_t>& s
 
 void OsmPlannerService::savePythonPlotCode()
 {
-    string pythonFile = m_strSavePath + "/" + "PlotOSM_Paths.py";
-    ofstream pythonFileStream(pythonFile.c_str());
+    std::string pythonFile = m_strSavePath + "/" + "PlotOSM_Paths.py";
+    std::ofstream pythonFileStream(pythonFile.c_str());
 
     pythonFileStream << "#! /usr/bin/env python" << std::endl;
     pythonFileStream << std::endl;

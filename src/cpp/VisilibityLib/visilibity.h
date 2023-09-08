@@ -53,6 +53,10 @@ License along with VisiLibity.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef VISILIBITY_H
 #define VISILIBITY_H
 
+#include "boost/geometry.hpp"
+#include "boost/geometry/geometries/point_xy.hpp"
+#include "boost/geometry/geometries/polygon.hpp"
+
 #ifndef NAN
 #include <limits>
 #define NAN std::numeric_limits<double>::quiet_NaN()
@@ -83,10 +87,6 @@ License along with VisiLibity.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstring>    //C-string manipulation
 #include <string>     //string class
 #include <cassert>    //assertions
-
-#include "boost/geometry.hpp"
-#include "boost/geometry/geometries/point_xy.hpp"
-#include "boost/geometry/geometries/polygon.hpp"
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN

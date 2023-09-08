@@ -9,6 +9,8 @@
 
 #include "SegmentMap.h"
 
+using namespace Dpss_Data_n;
+
 SegmentMap::SegmentMap()
 {
     totalPlanLength = 0.0;
