@@ -3,6 +3,7 @@
     <Bridge Type="LmcpObjectNetworkTcpBridge" TcpAddress="tcp://127.0.0.1:5555" Server="FALSE">
         <SubscribeToMessage MessageType="afrl.cmasi.MissionCommand" />
         <SubscribeToMessage MessageType="afrl.cmasi.LineSearchTask" />
+        <SubscribeToMessage MessageType="afrl.cmasi.VehicleActionCommand" />
         <SubscribeToMessage MessageType="larcfm.DAIDALUS.DAIDALUSConfiguration" />
         <SubscribeToMessage MessageType="larcfm.DAIDALUS.WellClearViolationIntervals" />
     </Bridge>
