@@ -1235,11 +1235,6 @@ bool DAIDALUS_Processing::processReceivedLmcpMessage(std::unique_ptr<uxas::commu
                 m_isOnMission = true;
                 break;
             }
-            else 
-            {
-                m_MissionCommand = nullptr;
-                m_isOnMission = false;
-            }
         }
         m_isReadyToActMissionCommand = true;
     }
@@ -1253,11 +1248,6 @@ bool DAIDALUS_Processing::processReceivedLmcpMessage(std::unique_ptr<uxas::commu
         {
             m_MissionCommand = std::make_shared<afrl::cmasi::MissionCommand>(*(pMissionCommand->clone()));  //why doesn't this cause memory leaks from not getting cleaned up?
             m_isOnMission = true;
-        }
-        else 
-        {
-            m_MissionCommand = nullptr;
-            m_isOnMission = false;
         }
         m_isReadyToActMissionCommand = true;
     }
