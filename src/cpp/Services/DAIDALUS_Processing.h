@@ -52,7 +52,8 @@ namespace service
  * RecoveryStabilityTime"xx" MinHorizontalRecovery="xx" MinVerticalRecovery="xx" isRecoveryTack="true" isRecoveryGroundTracK="true" 
  * isRecoveryVerticalSpeed="true" isRecoveryAltitude="true" isCollisionAvoidance="false" CollisionAvoidanceFactor="xx"
  * HorizontalNMAC="xx" VerticalNMAC="xx" HorizontalContourThreshold="xx" TTHR="xx" RTCAAlertingLevels="x" AlertingTime1="xx" EarlyAlertingTime1="xx" 
- * AlertingTime2="xx" EarlyAlertingTime2="xx" AlertingTime3="xx" EarlyAlertingTime3="xx" HorizontalDetectionType="TAUMOD" />
+ * AlertingTime2="xx" EarlyAlertingTime2="xx" AlertingTime3="xx" EarlyAlertingTime3="xx" HorizontalDetectionType="TAUMOD" 
+ * AutomaticResponseStatus = "ON" PrioritySwitchTime="xx" VehicleID="xx"/>
  * 
  * Options:
  *  - LookAheadTime - time horizon for all DAIDALUS functions
@@ -97,6 +98,7 @@ namespace service
  *  - HorizontalDetectionType - the type of time projection limit used in determination of WCV violation- TAUMOD, TCPA, or TEP
  *  - AutomaticResponseStatus - ON for response to detected violations causing changes to vehicle action commands. Otherwise no change to vehicle behavior
  *  - PrioritySwitchTime - time where the priority for modality of avoidance is switched
+ *  - VehicleID - ID assigned to vehicle designated as ownship for this instance of the DAIDALUS_Processing object
  * 
  * Design: The objective of DAIDALUS_Processing is interface with NASA's DAIDALUS code to detect projected violations of the well-clear volume for
  *         the ownship.  This service then reports any detections of projected violations to other services along with the configuration parameters 
