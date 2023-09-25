@@ -1,4 +1,8 @@
+with polygon_lemmas;
+
 package body polygon_attributes with SPARK_mode is
+
+  use polygon_lemmas;
 
   --   % To determine whether a point lies between the rays induced by two
   --   % edges, we differentiate the inward and outward cases.  The inward

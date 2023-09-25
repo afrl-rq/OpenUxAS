@@ -34,6 +34,7 @@ package vertex_injection with SPARK_Mode is
   --          ENDIF)}
   function injected_edge(e: segment_2d; B: simple_polygon_2d) return bounded_vertex_list
     with Pre => B.num_vertices <= (MAX_NUM_VERTICES / 2) - 1 and then
+    polygon_2d_constraint(B) and then -- should not be required
     (for all i in 0 .. B.num_vertices-1 =>
        segments_comparable(e, edges_of_polygon(B, i)))
     and then can_add(e.p1, vector_from_point_to_point(e.p1, e.p2));
@@ -48,8 +49,9 @@ package vertex_injection with SPARK_Mode is
   --     (FORALL (i: below(S`length)): member(S`seq(i), P)) AND
   --     (FORALL (i: below(S`length), j: below(i)):
   --        norm(S`seq(j) - e`p1) < norm(S`seq(i) - e`p1))}
-  function injected_edge_seq(e: segment_2d; P: bounded_vertex_list) return bounded_vertex_list;
-  --TODO: Add precondition
+  function injected_edge_seq(e: segment_2d; P: bounded_vertex_list) return bounded_vertex_list
+    with Pre => (for all k in 0..P.num_vertices-1 => can_subtract(P.vertices(k), e.p1)),
+      Post => is_vertex(injected_edge_seq'Result, e.p2);
 
   --From vertex_injection.pvs:
   --  injected_vertices(A, B: simple_polygon_2d,
@@ -61,6 +63,11 @@ package vertex_injection with SPARK_Mode is
   --                injected_edge_seq(e, injected_edge(e, B))
   --    ENDIF
   --    MEASURE index
-  function injected_vertices(A, B: simple_polygon_2d) return bounded_vertex_list;
+  function injected_vertices(A, B: simple_polygon_2d) return bounded_vertex_list
+    with Pre => (B.num_vertices <= MAX_NUM_VERTICES / 2 - 1),
+    Post => (uniq_vertex_list_pred(injected_vertices'Result.num_vertices,
+             injected_vertices'Result.vertices)) and then
+    (for all i in 0 .. A.num_vertices-1 =>
+       (is_vertex(injected_vertices'Result, A.vertices(i))));
 
 end vertex_injection;

@@ -56,7 +56,10 @@ package topleft_vertex with SPARK_Mode is
     Post =>
       (for all idx in 0 .. p.num_vertices-1 =>
          (if (p.vertices(idx).x = leftmost_vertex_val(p)) then
-            topleft_vertex_val'Result >= p.vertices(idx).y));
+            topleft_vertex_val'Result >= p.vertices(idx).y)) and
+      (for some idx in 0 .. p.num_vertices-1 =>
+         (p.vertices(idx).x = leftmost_vertex_val(p) and
+            p.vertices(idx).y = topleft_vertex_val'Result));
 
   --  % Index value of the topmost vertex in the set of leftmost vertices.
   --  topleft_vertex_idx(p: simple_polygon_2d):

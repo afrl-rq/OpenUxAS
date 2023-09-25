@@ -22,7 +22,11 @@ package injection_props with SPARK_Mode is
 
   function bounded_vertex_list_to_polygon(bvlist: bounded_vertex_list) return simple_polygon_2d is
     (simple_polygon_2d'(num_vertices => bvlist.num_vertices,
-                        vertices => bvlist.vertices));
+                        vertices => bvlist.vertices))
+    with Pre =>
+      (uniq_vertex_list_pred(bvlist.num_vertices, bvlist.vertices)) and then
+      (polygon_2d_constraint(bvlist));
+
   -----------------------------------------------------------------------------
   -- end retrenchment
   -----------------------------------------------------------------------------
@@ -35,7 +39,22 @@ package injection_props with SPARK_Mode is
     -- A.num_vertices is passed in as counter for recursive function but the
     -- recursive function is converted to a loop and no longer needs this value
     -- passed in
-    (bounded_vertex_list_to_polygon(injected_vertices(A, B)));
+    (bounded_vertex_list_to_polygon(injected_vertices(A, B)))
+    with
+      Pre => (B.num_vertices <= MAX_NUM_VERTICES / 2 - 1) and then
+        ((uniq_vertex_list_pred(injected_vertices(A, B).num_vertices, injected_vertices(A, B).vertices)) and then
+           (polygon_2d_constraint(injected_vertices(A, B)))),
+        Post => (for all i in 0 .. A.num_vertices-1 =>
+                   (is_vertex(inject_post_condition'Result, A.vertices(i))));
+
+  function inject_vertices_into_polygon_pre(A, B: simple_polygon_2d) return Boolean is
+    ((B.num_vertices <= MAX_NUM_VERTICES / 2 - 1) and then
+         (A.num_vertices <= MAX_NUM_VERTICES / 2 - 1) and then
+         (uniq_vertex_list_pred(injected_vertices(A, B).num_vertices, injected_vertices(A, B).vertices)) and then
+         (polygon_2d_constraint(injected_vertices(A, B))) and then
+         (uniq_vertex_list_pred(injected_vertices(B, A).num_vertices, injected_vertices(B, A).vertices)) and then
+         (polygon_2d_constraint(injected_vertices(B, A))))
+      with Ghost;
 
   -- From injection_props.pvs:
   --  inject_vertices_into_polygon(A: simple_polygon_2d,
@@ -43,7 +62,12 @@ package injection_props with SPARK_Mode is
   --   [(inject_post_condition?(A, B)), (inject_post_condition?(B, A))];
   function inject_vertices_into_polygon(A, B: simple_polygon_2d) return polygon_pair is
     (polygon_pair'(Am => inject_post_condition(A, B),
-                   Bm => inject_post_condition(B, A)));
+                   Bm => inject_post_condition(B, A)))
+    with Pre => inject_vertices_into_polygon_pre(A, B),
+      Post => ((for all i in 0 .. A.num_vertices-1 =>
+                       (is_vertex(inject_vertices_into_polygon'Result.Am, A.vertices(i)))) and
+                    (for all i in 0 .. B.num_vertices-1 =>
+                         (is_vertex(inject_vertices_into_polygon'Result.Bm, B.vertices(i)))));
   --TODO: Add precondition
 
 end injection_props;

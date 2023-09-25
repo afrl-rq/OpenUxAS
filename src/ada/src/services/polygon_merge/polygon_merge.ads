@@ -7,6 +7,7 @@ with vectors_2d;
 with polygons_2d;
 with vertex_list;
 with topleft_vertex;
+with injection_props;
 
 -- Declaration of types and functions on segments.
 package polygon_merge with SPARK_Mode is
@@ -14,6 +15,7 @@ package polygon_merge with SPARK_Mode is
   use polygons_2d;
   use vertex_list;
   use topleft_vertex;
+  use injection_props;
 
   -- From polygon_merge.pvs:
   --  point_AB_vtx?(Am, Bm: simple_polygon_2d)(p: point_2d): bool =
@@ -58,7 +60,9 @@ package polygon_merge with SPARK_Mode is
   --        Bm`vertices(next_index(Bm, idx_B))
   --      ENDIF
   function next_merge_vertex(Am, Bm: simple_polygon_2d; vertex, prev_vtx: point_2d) return point_2d
-    with Pre => (is_point_AB_vtx(Am, Bm, vertex)),
+    with Pre => (is_point_AB_vtx(Am, Bm, vertex) and can_compare(Am, Bm) and
+                   (for all i in 0 .. Bm.num_vertices-1 =>
+                        can_subtract(prev_vtx, Bm.vertices(i)))),
       Post => (is_point_AB_vtx(Am, Bm, next_merge_vertex'Result));
 
   -- From polygon_merge.pvs:
@@ -97,6 +101,12 @@ package polygon_merge with SPARK_Mode is
   function prev_0(topleft: point_2d) return point_2d is
     (topleft + (x => -1.0, y => 0.0));
 
+  function merge_seq_pre(A, B: simple_polygon_2d) return Boolean is
+    ((inject_vertices_into_polygon_pre(A, B)) and (can_compare(A, B) and
+       (for all i in 0 .. B.num_vertices-1 =>
+          can_subtract(prev_0(first_vertex_merge(A, B)), B.vertices(i)))))
+  with Ghost;
+
   -- Fn TODO:
   -- From polygon_merge.pvs:
   --   merge_helper(Am: simple_polygon_2d, Bm: simple_polygon_2d,
@@ -124,7 +134,8 @@ package polygon_merge with SPARK_Mode is
   --    LET first_vtx = first_vertex_merge(A, B) IN
   --      singleton_seq(first_vtx) o
   --        merge_helper(Am, Bm, first_vtx, first_vtx, prev_0(first_vtx), 0)
-  function merge_seq(A, B: simple_polygon_2d) return bounded_vertex_list;
+  function merge_seq(A, B: simple_polygon_2d) return bounded_vertex_list
+    with Pre => merge_seq_pre(A, B);
   -- with Pre => merge_pre_condition(A, B); TODO
 
 end polygon_merge;

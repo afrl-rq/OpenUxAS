@@ -4,10 +4,12 @@
 -- -----------------------------------------------------------------------------
 with floats;
 with prelude;
+with Lemmas;
 
 package body segments_2d with SPARK_MODE is
   use floats;
   use prelude;
+  use Lemmas;
 
   --  segment_intersect_kernel(s1, s2: segment_2d):
   --      [segment_intersection_type, point_2d] =
@@ -76,6 +78,8 @@ package body segments_2d with SPARK_MODE is
         pragma Assert(t_by_r_cross_s / r_cross_s <= 1.0);
         -- Making this explicit to make it easier for the prover
         ui_factor := t_by_r_cross_s / r_cross_s; -- unit interval factor
+        -- Follows from last half of function precondition:
+        -- can_add(s1.p1, vector_from_point_to_point(s1.p1, s1.p2))
         pragma Assert(can_add(p, r));
         pragma Assert(can_add(p.x, r.x));
         pragma Assert(can_add(p.y, r.y));
@@ -85,11 +89,41 @@ package body segments_2d with SPARK_MODE is
         pragma Assert(vector_2d_constraint(r.x, r.y));
         pragma Assert(multiply_constraint(r.x, r.x));
         pragma Assert(multiply_constraint(r.y, r.y));
-        pragma Assert(can_add(p.x * p.x, r.x * r.x));
-        pragma Assert(can_add(p.y * p.y, r.y * r.y));
+        pragma Assert(can_add(p, r)); -- already proved on line 79
+        -- verbatim copy of can_add, but with p1 -> p, p2 -> r:
+        pragma Assert(can_add(p.x, r.x) and then can_add(p.y, r.y) and then
+                      vector_2d_constraint(p.x + r.x, p.y + r.y));
+        -- Duplicate of first part of prior conjunction assert
+        pragma Assert(can_add(p.x, r.x));
+        pragma Assert((p.x + r.x) >= vector_float_type'First);
+        pragma Assert((p.x + r.x) <= vector_float_type'Last);
+        -- Duplicate of middle part of prior conjunction assert
+        pragma Assert(can_add(p.y, r.y));
+        pragma Assert((p.y + r.y) >= vector_float_type'First);
+        pragma Assert((p.y + r.y) <= vector_float_type'Last);
+        -- Duplicate of last part of prior conjunction assert
         pragma Assert(vector_2d_constraint(p.x + r.x, p.y + r.y));
+        -- verbatim copy of vector_2d_constraint, but with x -> p.x + r.x, y -> p.y + r.y:
+        pragma Assert(multiply_constraint(p.x + r.x, p.x + r.x) and then multiply_constraint(p.y + r.y, p.y + r.y) and then
+                      add_constraint((p.x + r.x) * (p.x + r.x), (p.y + r.y) * (p.y + r.y)));
+        -- Duplicate of first part of prior conjunction assert
+        pragma Assert(multiply_constraint(p.x + r.x, p.x + r.x));
+        -- Duplicate of middle part of prior conjunction assert
+        pragma Assert(multiply_constraint(p.y + r.y, p.y + r.y));
+        -- Duplicate of last part of above conjunction
+--        pragma Assert(add_constraint((p.x + r.x) * (p.x * r.x), (p.y + r.y) * (p.y * r.y)));
+        pragma Assert(multiply_constraint(p.x, p.x)); -- can multiply to fit in float
+        pragma Assert(multiply_constraint(r.x, r.x));
+        pragma Assert(can_add(p.x * p.x, r.x * r.x)); -- can multiply to fit in vector_float_type
+        pragma Assert(multiply_constraint(p.y, p.y));
+        pragma Assert(multiply_constraint(r.y, r.y));
+        pragma Assert(can_add(p.y * p.y, r.y * r.y));
+        pragma Assert(vector_2d_constraint(p.x, p.y));
+        pragma Assert(vector_2d_constraint(p.x + r.x, p.y + r.y));
+        Lemma_Between_Two_Values_With_Sum(p.x, r.x, ui_factor);
         pragma Assert(vector_float_type'First <= p.x + ui_factor * r.x);
         pragma Assert(p.x + ui_factor * r.x <= vector_float_type'Last);
+        Lemma_Between_Two_Values_With_Sum(p.y, r.y, ui_factor);
         pragma Assert(vector_float_type'First <= p.y + ui_factor * r.y);
         pragma Assert(p.y + ui_factor * r.y <= vector_float_type'Last);
         -- The following "axiom" will be proven externally via PVS

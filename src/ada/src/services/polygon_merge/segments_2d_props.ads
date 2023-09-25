@@ -28,7 +28,9 @@ package segments_2d_props with SPARK_Mode is
     (not segments_share_an_endpoint(s1, s2) and
          segment_intersect_kernel(s1, s2).intersect_result = Collinear_Overlapping)
       with Pre => segments_comparable(s1, s2) and then
-      can_add(s1.p1, vector_from_point_to_point(s1.p1, s1.p2));
+      can_add(s1.p1, vector_from_point_to_point(s1.p1, s1.p2)) and then
+      can_add(s1.p1.x * s1.p1.x, vector_from_point_to_point(s1.p1, s1.p2).x * vector_from_point_to_point(s1.p1, s1.p2).x) and then
+      can_add(s1.p1.y * s1.p1.y, vector_from_point_to_point(s1.p1, s1.p2).y * vector_from_point_to_point(s1.p1, s1.p2).y);
 
   --  % Closest overlapping point to the initial vertex of s1
   --  min_overlap_point(s1: segment_2d,
@@ -41,10 +43,12 @@ package segments_2d_props with SPARK_Mode is
     (if is_point_on_segment(s1.p1, s2) then s1.p1
      elsif normalize(s1) = normalize(s2) then s2.p1
      else s2.p2)
-  with
+    with
       Pre => segments_comparable(s1, s2)
-    and then can_add(s1.p1, vector_from_point_to_point(s1.p1, s1.p2))
-    and then (are_segments_overlapping(s1, s2));
+      and then can_add(s1.p1, vector_from_point_to_point(s1.p1, s1.p2))
+      and then can_add(s1.p1.x * s1.p1.x, vector_from_point_to_point(s1.p1, s1.p2).x * vector_from_point_to_point(s1.p1, s1.p2).x)
+      and then can_add(s1.p1.y * s1.p1.y, vector_from_point_to_point(s1.p1, s1.p2).y * vector_from_point_to_point(s1.p1, s1.p2).y)
+      and then (are_segments_overlapping(s1, s2));
 
   --  % Farthest overlapping point from the initial vertex of s1
   --  max_overlap_point(s1: segment_2d,
@@ -57,9 +61,11 @@ package segments_2d_props with SPARK_Mode is
     (if is_point_on_segment(s1.p2, s2) then s1.p2
      elsif normalize(s1) = normalize(s2) then s2.p2
      else s2.p1)
-  with
+    with
       Pre => segments_comparable(s1, s2)
-    and then can_add(s1.p1, vector_from_point_to_point(s1.p1, s1.p2))
-    and then (are_segments_overlapping(s1, s2));
+      and then can_add(s1.p1, vector_from_point_to_point(s1.p1, s1.p2))
+      and then can_add(s1.p1.x * s1.p1.x, vector_from_point_to_point(s1.p1, s1.p2).x * vector_from_point_to_point(s1.p1, s1.p2).x)
+      and then can_add(s1.p1.y * s1.p1.y, vector_from_point_to_point(s1.p1, s1.p2).y * vector_from_point_to_point(s1.p1, s1.p2).y)
+      and then (are_segments_overlapping(s1, s2));
 
 end segments_2d_props;

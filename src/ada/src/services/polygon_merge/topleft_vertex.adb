@@ -43,6 +43,9 @@ package body topleft_vertex with SPARK_Mode is
         ctr := ctr + 1;
         result.num_vertices := ctr;
       end if;
+      pragma Loop_Invariant(for all jdx in (idx +1) .. p.num_vertices-1 =>
+                              (for all kdx in 0 .. ctr-1 =>
+                                p.vertices(jdx) /= result.vertices(kdx)));
       pragma Loop_Invariant(ctr = result.num_vertices);
       pragma Loop_Invariant((ctr > 0) or
                               (for some jdx in (idx+1) .. p.num_vertices-1 =>
@@ -105,7 +108,18 @@ package body topleft_vertex with SPARK_Mode is
       pragma Loop_Invariant(for all jdx in 0 .. idx =>
                               (if p.vertices(jdx).x = leftmost_val then
                                    result >= p.vertices(jdx).y));
+      pragma Loop_Invariant(if any_found then
+                              (for some jdx in 0 .. idx =>
+                                 (p.vertices(jdx).x = leftmost_vertex_val(p) and
+                                      p.vertices(jdx).y = result)));
     end loop;
+    pragma Assert(any_found);
+    pragma Assert(for all idx in 0 .. p.num_vertices-1 =>
+                    (if (p.vertices(idx).x = leftmost_vertex_val(p)) then
+                       result >= p.vertices(idx).y));
+    pragma Assert(for some idx in 0 .. p.num_vertices-1 =>
+                    (p.vertices(idx).x = leftmost_vertex_val(p) and
+                         p.vertices(idx).y = result));
     return result;
   end topleft_vertex_val;
 
@@ -119,11 +133,10 @@ package body topleft_vertex with SPARK_Mode is
     leftmost_val: vector_float_type := leftmost_vertex_val(p);
     topleftmost_val: vector_float_type := topleft_vertex_val(p);
   begin
+    pragma Assert(for some jdx in 0 .. p.num_vertices-1 =>
+                    (p.vertices(jdx).x = leftmost_vertex_val(p) and
+                         p.vertices(jdx).y = topleft_vertex_val(p)));
     for idx in 0 .. p.num_vertices-1 loop
-      -- The following assume corresponds to topleft_vertex_val_TCC1
-      pragma Assume(for some jdx in 0 .. p.num_vertices-1 =>
-                      (p.vertices(jdx).x = leftmost_vertex_val(p) and
-                           p.vertices(jdx).y = topleft_vertex_val(p)));
       if p.vertices(idx).x = leftmost_val then
         if p.vertices(idx).y = topleftmost_val then
           result := idx;
@@ -136,8 +149,10 @@ package body topleft_vertex with SPARK_Mode is
       pragma Loop_Invariant(for all jdx in 0 .. idx =>
                               not (p.vertices(jdx).x = leftmost_vertex_val(p) and
                                     p.vertices(jdx).y = topleft_vertex_val(p)));
-      -- Thus, from the assume above, we know one of the remaining vertices must be it
       pragma Loop_Invariant(for some jdx in idx+1 .. p.num_vertices-1 =>
+                              (p.vertices(jdx).x = leftmost_vertex_val(p) and
+                                   p.vertices(jdx).y = topleft_vertex_val(p)));
+      pragma Loop_Invariant(for some jdx in 0 .. p.num_vertices-1 =>
                               (p.vertices(jdx).x = leftmost_vertex_val(p) and
                                    p.vertices(jdx).y = topleft_vertex_val(p)));
     end loop;

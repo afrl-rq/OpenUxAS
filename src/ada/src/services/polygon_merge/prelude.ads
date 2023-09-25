@@ -61,7 +61,7 @@ package prelude with SPARK_Mode is
 
 -- From real_props theory in prelude.pvs
 --   both_sides_times_pos_le1_imp: LEMMA x <= y IMPLIES x * nnw <= y * nnw
-   procedure both_sides_times_pos_le1_imp(x, y: in Float; nnw: in nn_float) with
+   procedure Lemma_both_sides_times_pos_le1_imp(x, y: in Float; nnw: in nn_float) with
      Ghost,
      Global => null,
      Pre => x <= y and multiply_constraint(x, nnw) and multiply_constraint(y, nnw),
@@ -69,7 +69,7 @@ package prelude with SPARK_Mode is
 
 -- From real_props theory in prelude.pvs
 --   both_sides_times_neg_le1_imp: LEMMA y <= x IMPLIES x * npw <= y * npw
-   procedure both_sides_times_neg_le1_imp(x, y: in Float; npw: in np_float) with
+   procedure Lemma_both_sides_times_neg_le1_imp(x, y: in Float; npw: in np_float) with
      Ghost,
      Global => null,
      Pre => y <= x and multiply_constraint(x, npw) and multiply_constraint(y, npw),

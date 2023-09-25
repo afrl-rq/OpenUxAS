@@ -24,32 +24,43 @@ package vectors_2d with SPARK_Mode is
   is
     (multiply_constraint(x, x) and then multiply_constraint(y, y) and then
        add_constraint(x * x, y * y))
-      with Post => True;
+      with Ghost, Post => True;
+
+   -- This seems like a useless function, but it's for helping the prover to know this
+   -- fact in other places where it's needed in order to speed up proof that floats
+   -- do not overflow
+   function in_vector_float_range(a: Float) return Boolean is
+      (vector_float_type'First <= a and a <= vector_float_type'Last);
 
   -- Because of absorption, it's possible for a <= vector_float_type'Last - b but
   -- not b <= vector_float_type'Last - a or vice-versa, e.g., if
   -- b = vector_float_type'Last and a = 1.0. However, if at least one of these
   -- two conditions is true, then a + b <= vector_float_type'Last, which is what
   -- we really care about. Similar logic applies to vector_float_type'First.
-  function can_add(a: vector_float_type; b: vector_float_type) return boolean
+  function can_add(a: Float; b: Float) return boolean
   is
-    ((((a >= 0.0 and then b >= 0.0) and then
-         ((a <= vector_float_type'Last - b) or else
-            (b <= vector_float_type'Last - a))) or else
-       (a >= 0.0 and then b < 0.0) or else
-       (a < 0.0 and then b >= 0.0) or else
-       ((a < 0.0 and then b < 0.0) and then
-            ((a >= vector_float_type'First - b) or else
-               (b >= vector_float_type'First - a)))) and then
-       ((a + b) >= vector_float_type'First) and then
-         ((a + b) <= vector_float_type'Last))
-        with Post => True;
+    (add_constraint(a, b) and then
+     in_vector_float_range(a + b))
+      with Ghost;
+
+    --  ((((a >= 0.0 and then b >= 0.0) and then
+    --       ((a <= vector_float_type'Last - b) or else
+    --          (b <= vector_float_type'Last - a))) or else
+    --     (a >= 0.0 and then b < 0.0) or else
+    --     (a < 0.0 and then b >= 0.0) or else
+    --     ((a < 0.0 and then b < 0.0) and then
+    --          ((a >= vector_float_type'First - b) or else
+    --             (b >= vector_float_type'First - a)))) and then
+    --     ((a + b) >= vector_float_type'First) and then
+    --       ((a + b) <= vector_float_type'Last))
+    --      with Post => True;
 
   -- SPARK doesn't allow us to use Float'Epsilon. So ... We'll define our
   -- own.
   --
   -- TODO: make this smaller?
   vector_float_eps: constant vector_float_type := 0.000_000_000_1;
+  -- TODO: Make lemma that vector_float_eps^2 > 0
 
   -----------------------------------------------------------------------------
   -- end retrenchment section
@@ -66,7 +77,7 @@ package vectors_2d with SPARK_Mode is
     x: vector_float_type;
     y: vector_float_type;
   end record with
-    Predicate => vector_2d_constraint(Vect2.x, Vect2.y);
+    Ghost_Predicate => vector_2d_constraint(Vect2.x, Vect2.y);
 
   -----------------------------------------------------------------------------
   -- end vectors@vectors_2D.pvs types
@@ -79,25 +90,23 @@ package vectors_2d with SPARK_Mode is
   function can_add(p1: Vect2; p2: Vect2) return Boolean is
     (can_add(p1.x, p2.x) and then can_add(p1.y, p2.y) and then
      vector_2d_constraint(p1.x + p2.x, p1.y + p2.y))
-      with Post => True;
+      with Ghost, Post => True;
 
   -- Predicate that p2 can be subtracted from p1
   function can_subtract(p1: Vect2; p2: Vect2) return Boolean is
     (can_add(p1.x, -p2.x) and then can_add(p1.y, -p2.y) and then
      vector_2d_constraint(p1.x - p2.x, p1.y - p2.y))
-      with Post => True; -- Per Johannes Kanig helps prover to use expression function as post-condition
+      with Ghost, Post => True; -- Per Johannes Kanig helps prover to use expression function as post-condition
 
   function can_multiply(a: vector_float_type; v: Vect2) return Boolean is
-    (((-1.0 <= a and then a <= 1.0) or else
-     (vector_float_type'First / a < v.x and then v.x < vector_float_type'Last / a and then
-        vector_float_type'First / a < v.y and then v.y < vector_float_type'Last / a)) and then
-       (vector_float_type'First <= a * v.x and then a * v.x <= vector_float_type'Last and then
-        vector_float_type'First <= a * v.y and then a * v.y <= vector_float_type'Last) and then
-    vector_2d_constraint(a * v.x, a * v.y));
+    (in_vector_float_range(a * v.x) and then in_vector_float_range(a * v.y) and then
+     vector_2d_constraint(a * v.x, a * v.y))
+      with Ghost;
 
   -- An epsilon vector.
   eps_vector: constant Vect2 := Vect2'(x => vector_float_eps,
                                        y => vector_float_eps);
+  -- TODO: Add lemma that norm(eps_vector) > 0
   -----------------------------------------------------------------------------
   -- end retrenchment section 2
   -----------------------------------------------------------------------------
@@ -146,7 +155,7 @@ package vectors_2d with SPARK_Mode is
   -- begin retrenchment section 3
   -----------------------------------------------------------------------------
   function non_zeroish(v: Vect2) return Boolean is
-    (v * v > 0.0);
+    (v * v > 0.0); -- TODO: Check to see if Ghost
   -----------------------------------------------------------------------------
   -- end retrenchment section 3
   -----------------------------------------------------------------------------
@@ -209,6 +218,18 @@ package vectors_2d with SPARK_Mode is
 
   -----------------------------------------------------------------------------
   -- end vectors_2d.pvs types
+  -----------------------------------------------------------------------------
+
+  -----------------------------------------------------------------------------
+  -- begin retrenchment section 4
+  -----------------------------------------------------------------------------
+  function Real_Eq(p1, p2 : point_2d) return Boolean with
+    Global => null,
+    Ghost,
+    Import,
+    Annotate => (GNATprove, Logical_Equal);
+  -----------------------------------------------------------------------------
+  -- end retrenchment section 4
   -----------------------------------------------------------------------------
 
   -----------------------------------------------------------------------------

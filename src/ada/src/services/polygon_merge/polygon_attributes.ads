@@ -6,7 +6,6 @@ with polygons_2d;
 with vectors_2d;
 with segments_2d;
 with between_rays;
-with lemmas;
 with prelude;
 with topleft_vertex;
 
@@ -15,7 +14,6 @@ package polygon_attributes with SPARK_Mode is
   use vectors_2d;
   use segments_2d;
   use between_rays;
-  use lemmas;
   use prelude;
   use topleft_vertex;
 
@@ -53,7 +51,7 @@ package polygon_attributes with SPARK_Mode is
     (point_between_edges(true, G, topleft_vertex_idx(G),
      G.vertices(topleft_vertex_idx(G)) - (x => 1.0, y => 0.0)))
     with Pre =>
-      (can_subtract(G.vertices(topleft_vertex_idx(G)), (x => 1.0, y => 0.0))) and then
+      (can_subtract(G.vertices(topleft_vertex_idx(G)), Vect2'(x => 1.0, y => 0.0))) and then
       (for all i in 0 .. G.num_vertices-1 =>
          can_subtract(G.vertices(i), G.vertices(topleft_vertex_idx(G)) - (x => 1.0, y => 0.0)) and
            can_subtract(G.vertices(topleft_vertex_idx(G)) - (x => 1.0, y => 0.0), G.vertices(i)));

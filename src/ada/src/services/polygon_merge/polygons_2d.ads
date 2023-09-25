@@ -14,42 +14,9 @@ package polygons_2d with SPARK_Mode is
   use vectors_cross_2d;
   use segments_2d;
   use vertex_list;
+  
   -- Require that the number of vertices be above 2.
   subtype vertex_count_type is Positive range 3 .. 100;
-
-  -- TODO: change to upfrom
-  function polygon_2d_constraint(uvl: uniq_vertex_list) return Boolean is
-    ((uvl.num_vertices > 2) and then
-       -- Retrenchment below
-       (for all i in 0 .. uvl.num_vertices-2 =>
-            segment_2d_constraint(uvl.vertices(i), uvl.vertices(i+1))
-       ) and then 
-         (
-          segment_2d_constraint(uvl.vertices(uvl.num_vertices-1),
-            uvl.vertices(0))
-         ) and then
-       (for all i in 0 .. uvl.num_vertices-1 =>
-            (for all j in 0 .. uvl.num_vertices-1 =>
-                 (can_subtract(uvl.vertices(j), uvl.vertices(i)) and then
-                  can_add(uvl.vertices(i), 
-                    vector_from_point_to_point(uvl.vertices(i), 
-                      uvl.vertices(j))))
-            )
-       ));
-
-   -- Represent a 2D polygon without holes by its vertices, which are assumed
-   -- to be given in CCW order.
-   -- From polygons_2d.pvs:
-   --   polygon_2d: NONEMPTY_TYPE =
-   --    [#
-   --      num_vertices: upfrom(2),
-   --      vertices: uniq_vertex_list(num_vertices)
-   --     #];
-   subtype polygon_2d is uniq_vertex_list with
-    Predicate =>
-      (uniq_vertex_list_pred(polygon_2d.num_vertices, 
-       polygon_2d.vertices)) and then
-    (polygon_2d_constraint(polygon_2d));
 
   -- From polygons_2d.pvs
   --  prev_index(p: polygon_2d, cur_index: below(p`num_vertices)):
@@ -59,7 +26,7 @@ package polygons_2d with SPARK_Mode is
   --    ELSE
   --      cur_index - 1
   --    ENDIF;
-  function prev_index(p: polygon_2d; cur_index: nat)
+  function prev_index(p: bounded_vertex_list; cur_index: nat)
                       return nat is
     (if (cur_index = 0) 
      then
@@ -96,7 +63,7 @@ package polygons_2d with SPARK_Mode is
    --    LAMBDA(p: point_2d):
    --      EXISTS(i: below(polygon`num_vertices)):
    --        polygon`vertices(i) = p;
-   function is_vertex(polygon: polygon_2d; p: point_2d) return Boolean is
+   function is_vertex(polygon: bounded_vertex_list; p: point_2d) return Boolean is
      (for some i in 0 .. polygon.num_vertices-1 =>
         polygon.vertices(i) = p);
 
@@ -113,15 +80,61 @@ package polygons_2d with SPARK_Mode is
        p2 => polygon.vertices(next_index(polygon, i))))
      with
       Pre => (below(polygon.num_vertices, i)),
-      Post => True;
+      Post => weak_edges_of_polygon'Result = (p1 => polygon.vertices(i),
+                                         p2 => polygon.vertices(next_index(polygon, i)));
+
+  -- TODO: change to upfrom
+  function polygon_2d_constraint(uvl: uniq_vertex_list) return Boolean is
+    ((uvl.num_vertices > 2) and then
+       -- Retrenchment below
+       (for all i in 0 .. uvl.num_vertices-2 =>
+            segment_2d_constraint(uvl.vertices(i), uvl.vertices(i+1))
+       ) and then 
+         (
+          segment_2d_constraint(uvl.vertices(uvl.num_vertices-1),
+            uvl.vertices(0))
+         ) and then
+       (for all i in 0 .. uvl.num_vertices-1 =>
+            (for all j in 0 .. uvl.num_vertices-1 =>
+                 (can_subtract(uvl.vertices(j), uvl.vertices(i)) and then
+                  can_add(uvl.vertices(i), 
+                    vector_from_point_to_point(uvl.vertices(i), 
+                      uvl.vertices(j))) and then
+                 segments_comparable(weak_edges_of_polygon(uvl, i),
+                 weak_edges_of_polygon(uvl, j)))
+            )
+       ))
+      with Ghost, Post=>True;
+
+   -- Represent a 2D polygon without holes by its vertices, which are expected
+   -- to be given in CCW order.
+   -- From polygons_2d.pvs:
+   --   polygon_2d: NONEMPTY_TYPE =
+   --    [#
+   --      num_vertices: upfrom(2),
+   --      vertices: uniq_vertex_list(num_vertices)
+   --     #];
+   subtype polygon_2d is uniq_vertex_list with
+    Ghost_Predicate =>
+      (uniq_vertex_list_pred(polygon_2d.num_vertices, 
+       polygon_2d.vertices)) and then
+    (polygon_2d_constraint(polygon_2d));
+
    -- This is the version with the correct types
-   function edges_of_polygon(polygon: polygon_2d; i: nat) return segment_2d is
-     ((p1 => polygon.vertices(i),
-       p2 => polygon.vertices(next_index(polygon, i))))
-     with
-      Pre => (below(polygon.num_vertices, i)),
-      Post => True;
-   
+  function edges_of_polygon(polygon: polygon_2d; i: nat) return segment_2d with
+    Pre => (below(polygon.num_vertices, i)),
+    Post => Real_Eq(edges_of_polygon'Result, weak_edges_of_polygon(polygon, i))
+    and (for all i2 in 0 .. polygon.num_vertices-1 =>
+           segments_comparable(edges_of_polygon'Result, weak_edges_of_polygon(polygon, i2))
+         and segments_comparable(weak_edges_of_polygon(polygon, i2), edges_of_polygon'Result))
+    and (Real_Eq(edges_of_polygon'Result.p1, polygon.vertices(i)))
+    and (Real_Eq(edges_of_polygon'Result.p2, polygon.vertices(next_index(polygon, i))));
+  
+  procedure Lemma_Edges_Of_Polygon_Same_When_Weak(p: polygon_2d; i:nat) with
+    Ghost,
+    Pre => (below(p.num_vertices, i)),
+    Post => edges_of_polygon(p, i) = weak_edges_of_polygon(p, i);
+
    -- From polygons_2d.pvs:
    --   % Curried predicate useful for creating types
    --   edge_of_polygon?(polygon: polygon_2d): pred[segment_2d] =
@@ -176,6 +189,27 @@ package polygons_2d with SPARK_Mode is
       with Pre =>
         below(n, i) AND below(n, j);
 
+  function cond_pre(p : polygon_2d) return Boolean is
+    (for all i2 in 0 .. p.num_vertices-1 =>
+       (for all j2 in 0 .. p.num_vertices-1 =>
+            segments_comparable(edges_of_polygon(p, i2),
+          edges_of_polygon(p, j2))
+       )
+    ) with Post => True, Ghost;
+
+  function cond(p: polygon_2d; i, j : nat) return Boolean is
+    (
+       (i = j) or -- Corresponds to n /= i in PVS spec
+         (if equal_or_adjacent_edge(p.num_vertices, i, j) then
+                not (normalize(edges_of_polygon(p, i)) =
+            -normalize(edges_of_polygon(p, j)))
+          else
+          -- see assert hash #f4c800 above to show satisfaction of precondition
+            not are_segments_intersecting(edges_of_polygon(p, i),
+              edges_of_polygon(p, j))))
+      with Pre => i in 0 .. p.num_vertices - 1 and then j in 0 .. p.num_vertices - 1 and then cond_pre (p),
+    Post => True;
+
   --  polygon_edges_do_not_cross?(p: polygon_2d): bool =
   --    FORALL (i, j: below(p`num_vertices)):
   --      LET ei = edges_of_polygon(p)(i), ej = edges_of_polygon(p)(j) IN
@@ -198,17 +232,12 @@ package polygons_2d with SPARK_Mode is
   --    FORALL(p: polygon_2d):
   --      polygon_edges_do_not_cross?(p) IFF
   --        polygon_edges_do_not_cross?_alt(p)
-  function polygon_edges_do_not_cross(p: polygon_2d) return Boolean is
-    (for all i in 0 .. p.num_vertices-1 =>
-       (for all j in 0 .. p.num_vertices-1 =>
-            (i = j) or -- Corresponds to n /= i in PVS spec
-            (if equal_or_adjacent_edge(p.num_vertices, i, j) then
-                   not (normalize(edges_of_polygon(p, i)) =
-               -normalize(edges_of_polygon(p, j)))
-             else
-               not are_segments_intersecting(edges_of_polygon(p, i),
-                 edges_of_polygon(p, j)))))
-      with Post=>True;
+  function polygon_edges_do_not_cross(p: polygon_2d) return Boolean 
+    with Post =>
+      polygon_edges_do_not_cross'Result =
+      (for all i in 0 .. p.num_vertices-1 =>
+         (for all j in 0 .. p.num_vertices-1 =>
+                  cond(p, i, j)));
 
    -- From polygons_2d.pvs:
    --   point_on_polygon_perimeter?(G: polygon_2d)(p: point_2d): bool =
@@ -220,8 +249,10 @@ package polygons_2d with SPARK_Mode is
      (for some i in 0 .. G.num_vertices-1 =>
          is_point_on_segment(p, edges_of_polygon(G, i)))
      with Pre =>
+       --  (for all i in 0 .. G.num_vertices-1 =>
+       --     can_subtract(p, G.vertices(i)));
        (for all i in 0 .. G.num_vertices-1 =>
-          can_subtract(p, G.vertices(i)));
+          can_subtract(p, edges_of_polygon(G, i).p1));
 
   --  % Copied from
   --  % http://web.archive.org/web/20120323102807/http://local.wasp.uwa.edu.au/~pbourke/geometry/insidepoly/
@@ -281,8 +312,17 @@ package polygons_2d with SPARK_Mode is
   --NOTE: Changing recursive function into iteration
   function is_point_in_polygon_exclusive(polygon: polygon_2d; point: point_2d) return Boolean
     with Pre =>
+      --  (for all i in 0 .. polygon.num_vertices-1 =>
+      --     can_subtract(point, polygon.vertices(i)));
       (for all i in 0 .. polygon.num_vertices-1 =>
-         can_subtract(point, polygon.vertices(i)));
+         can_subtract(point, edges_of_polygon(polygon, i).p1));
+
+  function can_compare(A, B: polygon_2d) return Boolean is
+    (for all i in 0 .. A.num_vertices-1 =>
+       (for all j in 0 .. B.num_vertices-1 =>
+            can_subtract(A.vertices(i), B.vertices(j)) and
+          can_subtract(B.vertices(j), A.vertices(i))))
+      with Ghost;
 
   --  % A simple polygon has to
   --  % 1. Have at least 3 vertices (and hence 3 edges)
@@ -296,8 +336,8 @@ package polygons_2d with SPARK_Mode is
   --  simple_polygon_2d: NONEMPTY_TYPE = (simple_polygon_2d?)
   --   CONTAINING example_right_triangle;
   subtype simple_polygon_2d is polygon_2d with
-    Predicate => 
+    Ghost_Predicate => 
     (uniq_vertex_list_pred(simple_polygon_2d.num_vertices, 
-                           simple_polygon_2d.vertices)) and then
+     simple_polygon_2d.vertices)) and then
     (polygon_2d_constraint(simple_polygon_2d));
 end polygons_2d;

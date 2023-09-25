@@ -24,7 +24,7 @@ package vertex_list with SPARK_Mode is
       vertices: bounded_vertex_array;
    end record
      with
-       Predicate =>
+       Ghost_Predicate =>
          ((num_vertices = 0) or else
             (for all i in 0 .. num_vertices-1 =>
                (for all j in 0 .. num_vertices - 1 =>

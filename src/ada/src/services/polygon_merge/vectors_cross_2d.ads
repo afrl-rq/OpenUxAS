@@ -26,7 +26,7 @@ package vectors_cross_2d with SPARK_Mode is
   function vector_from_point_to_point(p1: point_2d;
                                       p2: point_2d) return vector_2d is
     ((x => p2.x - p1.x, y => p2.y - p1.y)) with
-      Pre => can_subtract(p2, p1) and
+      Pre => can_subtract(p2, p1) and then
       vector_2d_constraint(p2.x - p1.x, p2.y - p1.y);
 
   -- PVS:

@@ -31,20 +31,24 @@ package floats with SPARK_Mode is
    --    Rewrite: In the case of finite real floats, the second term is covered by the first, 
    --       but by representing it directly, it is more easily extracted by symbolic analysis
    --       as stating that all addition of finite numbers are in range if the precondition holds: Restate
-   function add_constraint(a, b: Float) return Boolean
-   is
-      ((
-        -- Case 1: both a and b are positive: a + b is definitely larger than min float, so
-        -- verify the sum is less than or equal to max float  
-        ((a >= 0.0 and then b >= 0.0) and then (a <= Float'Last - 2.0**(127-23) - b)) or else
-        -- Case 2 and 3: a and b are of opposite sign: adding won't overflow
-        (a >= 0.0 and then b < 0.0) or else
-        (a < 0.0 and then b >= 0.0) or else
-        -- Case 4: both a and b are negative: a + b is definitely smaller than max float, so
-        -- verify the sum is greater than or equal to than min float  
-        ((a < 0.0 and then b < 0.0) and then (a >= Float'First +  2.0**(127-23) - b))) and then
-        in_float_range(a + b));
-   -- with Ghost; Have to remove ghost because predicates don't allow it?
+  function add_constraint(a, b: Float) return Boolean
+  is
+    ((
+       -- Case 0: either a or b are zero
+       (a = 0.0 or else b = 0.0) or else
+       -- Case 1: both a and b are positive: a + b is definitely larger than min float, so
+     -- verify the sum is less than or equal to max float
+       ((a > 0.0 and then b > 0.0) and then (a < Float'Last - b) and then (a + b <= Float'Last)) or else
+       -- Case 2 and 3: a and b are of opposite sign: adding won't overflow
+       (a > 0.0 and then b < 0.0) or else
+       (a < 0.0 and then b > 0.0) or else
+     -- Case 4: both a and b are negative: a + b is definitely smaller than max float, so
+     -- verify the sum is greater than or equal to than min float  
+       ((a < 0.0 and then b < 0.0) and then (a > Float'First - b) and then (a + b >= Float'First))) and then
+     in_float_range(a + b))
+      with Ghost;
+  -- Cannot make Ghost because add_constraint is used in vector_2d_constraint, and vector_2d_constraint
+  -- is used as a predicate on the Vect2 type. Evidently, type predicates cannot be Ghost
 
    -- Can b be subtracted from a
    function subtract_constraint(a, b: Float) return Boolean
