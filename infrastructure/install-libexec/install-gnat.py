@@ -1,10 +1,10 @@
 #! /usr/bin/env python3
 
 """
-Install GNAT script.
+Install GNAT FSF script.
 
-This script automates the download and install of GNAT and gnatprove, which are
-required to build the Ada services for OpenUxAS.
+This script automates the download and install of GNAT FSF and gnatprove FSF,
+which are required to build the Ada services for OpenUxAS.
 
 Run this script via `infrastructure/install` from the root of your repository,
 like this:
@@ -62,8 +62,8 @@ ALR_BIN = os.path.join("bin", "alr")
 
 
 ALR_DOWNLOAD_LINK = (
-    "https://github.com/alire-project/alire/releases/download/v1.2.1/"
-    "alr-1.2.1-bin-x86_64-linux.zip"
+    "https://github.com/alire-project/alire/releases/download/v1.2.2/"
+    "alr-1.2.2-bin-x86_64-linux.zip"
 )
 ALR_DOWNLOAD_FILE = "alr.zip"
 ALR_DOWNLOAD_CMD = Command(
@@ -91,9 +91,9 @@ ALR_TOOLCHAIN_CMD = Command(
         "-c",
         ALR_CONFIG_DIR,
         "toolchain",
-        "-i",
-        "gnat_native=12.2.1",
-        "gprbuild=22.0.1",
+        "-i",  # TODO: change to --select
+        "gnat_native^13",
+        "gprbuild^22",
     ],
     description="Install GNAT toolchain using alr",
     cwd=ALR_DIR,
@@ -106,7 +106,7 @@ ALR_GNATPROVE_CMD = Command(
         "-c",
         ALR_CONFIG_DIR,
         "get",
-        "gnatprove",
+        "gnatprove^13",
     ],
     description="Install GNATprove using alr",
     cwd=ALR_DIR,
@@ -128,9 +128,9 @@ ALR_GNATPROVE_DIRNAME_CMD = Command(
 
 
 DESCRIPTION = """\
-This script automates the installation of GNAT and gnatprove, which is required
-to build the Ada services for OpenUxAS and run the proofs. You should run this
-script like this:
+This script automates the installation of GNAT FSF and gnatprove FSF, which is
+required to build the Ada services for OpenUxAS and run the proofs. You should
+run this script like this:
 
     OpenUxAS$ infrastructure/install
 """
@@ -164,9 +164,9 @@ if __name__ == "__main__":
             logging.warning(
                 log_wrap(
                     """\
-                GNAT appears to have already been installed; skipping this
+                GNAT FSF appears to have already been installed; skipping this
                 step. Remove it manually or use `--force` if you wish to
-                reinstall GNAT and gnatprove.\
+                reinstall GNAT FSF and gnatprove FSF.\
                 """
                 )
             )
@@ -183,7 +183,8 @@ if __name__ == "__main__":
 
     if args.install_packages and (
         not args.interactive
-        or input("Install packages needed for GNAT Community install? [Y/n] ") != "n"
+        or input("Install packages needed for GNAT FSF install using apt? [Y/n] ")
+        != "n"
     ):
         run_command_and_exit_on_fail(APT_INSTALL, args.dry_run)
 
