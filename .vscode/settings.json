@@ -8,5 +8,11 @@
         "**/.hg/store/**": true,
         "**/sbx/**": true,
         "**/software/**": true,
-    }
+    },
+    "terminal.integrated.env.linux": {
+        "GPR_PROJECT_PATH": "${workspaceFolder}/infrastructure/software/alr/gnatprove/lib/gnat:${workspaceFolder}/infrastructure/sbx/x86_64-linux/xmlada/install/share/gpr:${workspaceFolder}/infrastructure/sbx/x86_64-linux/uxas-lmcp-ada/install/share/gpr:${workspaceFolder}/infrastructure/sbx/x86_64-linux/zeromqada/install/share/gpr:${env:GPR_PROJECT_PATH}",
+        "SPARKLIB_OBJECT_DIR": "${workspaceFolder}/infrastructure/software/sparklib_objs",
+        "PATH": "${workspaceFolder}/infrastructure/software/alr/config/cache/dependencies/gprbuild_22.0.1_24dfc1b5/bin:${workspaceFolder}/infrastructure/software/alr/gnatprove/bin:${workspaceFolder}/infrastructure/software/alr/config/cache/dependencies/gnat_native_13.2.1_788a01f9/bin:${env:PATH}",
+    },
+    "ada.projectFile": "src/ada/afrl_ada_dev.gpr"
 }
