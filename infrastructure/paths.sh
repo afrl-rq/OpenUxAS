@@ -114,6 +114,7 @@ function ensure_gnat {
 
                 exit 1
             fi
+            export SPARKLIB_OBJECT_DIR=${OPENUXAS_ROOT}/infrastructure/software/sparklib_objs
         else
             echo "For this step, you need an Ada compiler to continue."
             echo "Let's install the GNAT FSF compiler and support on which it depends using Alire."
@@ -130,7 +131,8 @@ function ensure_gnat {
                 debug_and_run "${INFRASTRUCTURE_DIR}/install --no-anod --no-java --automatic"
 
                 if [ -d "${ALR_DIR}" ]; then
-                    debug_and_run "eval \"\$( cd \"${ALR_DIR}/gnatprove\" && ${ALR_DIR}/bin/alr printenv )\""
+                    debug_and_run "eval \"\$( cd \"${ALR_DIR}/gnatprove\" && ${ALR_DIR}/bin/alr -c ${ALR_DIR}/config printenv )\""
+                    export SPARKLIB_OBJECT_DIR=${OPENUXAS_ROOT}/infrastructure/software/sparklib_objs
                 else
                     echo "Installing GNAT appears to have failed."
                     exit 1

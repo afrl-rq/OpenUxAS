@@ -57,6 +57,19 @@ APT_INSTALL = Command(
 )
 
 
+# Temporary hack around Alire bug:
+ALR_GLOBAL_CONFIG_DIR = os.path.expanduser("~/.config/alire")
+CONFIG_CONTENTS = """\
+[toolchain]
+assistant = false
+[toolchain.external]
+gnat = "FALSE"
+gprbuild = "FALSE"
+[toolchain.use]
+gnat = "gnat_native=13.2.1"
+gprbuild = "gprbuild=22.0.1"
+"""
+
 ALR_CONFIG_DIR = os.path.join(ALR_DIR, "config")
 ALR_BIN = os.path.join("bin", "alr")
 
@@ -191,11 +204,26 @@ if __name__ == "__main__":
     if args.dry_run:
         # This is a bit awkward, but illustrates what we will do.
         print("mkdir -p " + os.path.relpath(ALR_DIR, OPENUXAS_ROOT))
+
     else:
         pathlib.Path(ALR_DIR).mkdir(parents=True, exist_ok=True)
+        pathlib.Path(ALR_CONFIG_DIR).mkdir(parents=True, exist_ok=True)
 
     run_command_and_exit_on_fail(ALR_DOWNLOAD_CMD, args.dry_run)
     run_command_and_exit_on_fail(ALR_UNZIP_CMD, args.dry_run)
+
+    # Hack around Alire bug:
+    if args.dry_run:
+        print("mkdir -p " + ALR_GLOBAL_CONFIG_DIR)
+        print("writing global config file to " + ALR_GLOBAL_CONFIG_DIR)
+    else:
+        pathlib.Path(ALR_GLOBAL_CONFIG_DIR).mkdir(parents=True, exist_ok=True)
+
+        with open(
+            os.path.join(ALR_GLOBAL_CONFIG_DIR, "config.toml"), "w", encoding="utf-8"
+        ) as config_file:
+            config_file.write(CONFIG_CONTENTS)
+
     run_command_and_exit_on_fail(ALR_TOOLCHAIN_CMD, args.dry_run)
 
     # Now install gnatprove
