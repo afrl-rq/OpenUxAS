@@ -97,6 +97,17 @@ function activate_venv {
     fi
 }
 
+ALR_PRINTENV_CMD="( cd \"${ALR_DIR}/gnatprove\" && \"${ALR_DIR}/bin/alr\" -c \"${ALR_DIR}/config\" printenv )"
+
+# Print the environment variables needed to use GNAT FSF (but don't eval them).
+function print_gnat_fsf_paths {
+    which gnat >/dev/null 2>&1
+
+    if [ $? -ne 0 ]; then
+        debug_and_run "${ALR_PRINTENV_CMD}"
+    fi
+}
+
 # Make sure gnat is on the path or put a local GNAT CE on the path.
 #
 # Check for gnat availability with which. If this fails, check to see if
@@ -107,7 +118,7 @@ function ensure_gnat {
 
     if [ $? -ne 0 ]; then
         if [ -d "${ALR_DIR}" ]; then
-            debug_and_run "eval \"\$( cd \"${ALR_DIR}/gnatprove\" && ${ALR_DIR}/bin/alr -c ${ALR_DIR}/config printenv )\""
+            debug_and_run "eval \"\$${ALR_PRINTENV_CMD}\""
             if [ $? -ne 0 ]; then
                 echo "Failed to add GNAT FSF to your environment with Alire."
                 echo "Try running your last command with \`-vv\` to see more information."
@@ -131,7 +142,7 @@ function ensure_gnat {
                 debug_and_run "${INFRASTRUCTURE_DIR}/install --no-anod --no-java --automatic"
 
                 if [ -d "${ALR_DIR}" ]; then
-                    debug_and_run "eval \"\$( cd \"${ALR_DIR}/gnatprove\" && ${ALR_DIR}/bin/alr -c ${ALR_DIR}/config printenv )\""
+                    debug_and_run "eval \"\$${ALR_PRINTENV_CMD}\""
                     export SPARKLIB_OBJECT_DIR=${OPENUXAS_ROOT}/infrastructure/software/sparklib_objs
                 else
                     echo "Installing GNAT appears to have failed."
