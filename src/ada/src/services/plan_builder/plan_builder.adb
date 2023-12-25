@@ -1,9 +1,7 @@
 with Ada.Text_IO; use Ada.Text_IO;
-with LMCP_Message_Conversions; use LMCP_Message_Conversions;
 with Ada.Numerics.Generic_Elementary_Functions;
 with Unit_Conversion_Utilities;
 with Common; use Common;
-with LMCP_Messages; use LMCP_Messages;
 with Ada.Strings.Unbounded; use  Ada.Strings.Unbounded;
 with SPARK.Big_Integers; use SPARK.Big_Integers;
 with SPARK.Containers.Types;               use SPARK.Containers.Types;
@@ -36,21 +34,23 @@ package body Plan_Builder with SPARK_Mode is
       Mailbox          : in out Plan_Builder_Mailbox;
       Received_Message : LMCP_Messages.TaskAssignmentSummary)
    is
-      ReqId : Int64 := Received_Message.CorrespondingAutomationRequestID;
-      AReq : UniqueAutomationRequest;
-      AResp : UniqueAutomationResponse;
+      Request_Id : Int64 := Received_Message.CorrespondingAutomationRequestID;
+      Corresponding_Automation_Request : UniqueAutomationRequest;
+      In_Progress_Response : UniqueAutomationResponse;
       Planning_State : LMCP_Messages.PlanningState;
       North_M : Real64;
       East_M : Real64;
       Latitude_Deg : Real64;
       Longitude_Deg : Real64;
+      Projected_State : ProjectedState;
+      Converter : Unit_Converter := (m_dLatitudeInitial_rad => 0.0, m_dLongitudeInitial_rad => 0.0, m_dRadiusMeridional_m => 0.0, m_dRadiusTransverse_m => 0.0, m_dRadiusSmallCircleLatitude_m => 0.0);
    begin
 
-      if Contains (State.m_uniqueAutomationRequests, ReqId) then
-         AReq := Element (State.m_uniqueAutomationRequests, ReqId);
+      if Contains (State.m_uniqueAutomationRequests, Request_Id) then
+         Corresponding_Automation_Request := Element (State.m_uniqueAutomationRequests, Request_Id);
       else
          declare
-            Message : Ada.Strings.Unbounded.Unbounded_String := To_Unbounded_String ("ERROR::processTaskAssignmentSummary: Corresponding Unique Automation Request ID [" & ReqId'Image & "] not found!");
+            Message : Ada.Strings.Unbounded.Unbounded_String := To_Unbounded_String ("ERROR::processTaskAssignmentSummary: Corresponding Unique Automation Request ID [" & Request_Id'Image & "] not found!");
          begin
             sendErrorMessage (Mailbox, Message);
          end;
@@ -59,14 +59,14 @@ package body Plan_Builder with SPARK_Mode is
 
       if Length (Received_Message.TaskList) = 0 then
          declare
-            Message : Ada.Strings.Unbounded.Unbounded_String := To_Unbounded_String ("No assignments found for request " & ReqId'Image);
+            Message : Ada.Strings.Unbounded.Unbounded_String := To_Unbounded_String ("No assignments found for request " & Request_Id'Image);
          begin
             sendErrorMessage (Mailbox, Message);
          end;
          return;
       end if;
 
-      for VehicleId of AReq.EntityList loop
+      for VehicleId of Corresponding_Automation_Request.EntityList loop
          if not Has_Key (State.m_currentEntityStates, VehicleId) then
             declare
                Message : Ada.Strings.Unbounded.Unbounded_String := To_Unbounded_String ("ERROR::processTaskAssignmentSummary: Corresponding Unique Automation Request included vehicle ID [" & VehicleId'Image & "] which does not have a corresponding current state!");
@@ -77,166 +77,107 @@ package body Plan_Builder with SPARK_Mode is
          end if;
       end loop;
 
-      -- initialize state tracking maps with this corresponding request IDs
-      -- m_assignmentSummaries[taskAssignmentSummary->getCorrespondingAutomationRequestID()] = taskAssignmentSummary;
-      Insert (State.m_assignmentSummaries, ReqId, Received_Message);
+      Insert (State.m_assignmentSummaries, Request_Id, Received_Message);
 
-      declare
-         ProjectedState : ProjectedState_Seq;
-      begin
-         -- m_projectedEntityStates[taskAssignmentSummary->getCorrespondingAutomationRequestID()] = std::vector< std::shared_ptr<ProjectedState> >();
-         State.m_projectedEntityStates := Int64_PS_Maps.Add (State.m_projectedEntityStates, ReqId, ProjectedState);
-      end;
+      In_Progress_Response.ResponseID := Request_Id;
+      Insert (State.m_inProgressResponse, Request_Id, In_Progress_Response);
 
-      declare
-         UniqueAutReq_List : TaskAssignment_Sequence;
-      begin
-         -- m_remainingAssignments[taskAssignmentSummary->getCorrespondingAutomationRequestID()] = std::deque< std::shared_ptr<uxas::messages::task::TaskAssignment> >();
-         Insert (State.m_remainingAssignments, ReqId, UniqueAutReq_List);
-      end;
-
-    -- m_inProgressResponse[taskAssignmentSummary->getCorrespondingAutomationRequestID()] = std::make_shared<uxas::messages::task::UniqueAutomationResponse>();
-    -- m_inProgressResponse[taskAssignmentSummary->getCorrespondingAutomationRequestID()]->setResponseID(taskAssignmentSummary->getCorrespondingAutomationRequestID());
-
-      AResp.ResponseID := ReqId;
-      Insert (State.m_inProgressResponse, ReqId, AResp);
-
-      if Length (AReq.EntityList) = 0 then
+      if Length (Corresponding_Automation_Request.EntityList) = 0 then
          for S of State.m_currentEntityStates loop
-            AReq.EntityList := Add (AReq.EntityList, S);
+            Corresponding_Automation_Request.EntityList := Add (Corresponding_Automation_Request.EntityList, S);
          end loop;
       end if;
 
-      for VehicleID of AReq.EntityList loop
+      declare
+         Projected_States : ProjectedState_Seq;
+      begin
+         State.m_projectedEntityStates := Add(State.m_projectedEntityStates, Request_Id, Projected_States);
+      end;
+
+      for VehicleID of Corresponding_Automation_Request.EntityList loop
          declare
-            Entity_State : LMCP_Messages.EntityState := ES_Maps.Get (State.m_currentEntityStates, VehicleID);
-            Projected_State : ProjectedState;
             Found_State : Boolean := False;
-            Converter : Unit_Converter;
          begin
-            for P_State of AReq.PlanningStates loop
-               if P_State.EntityID = VehicleID then
+            for P in 1 .. Last (Corresponding_Automation_Request.PlanningStates) loop
+               pragma Loop_Invariant (Length (Get (State.m_projectedEntityStates, Request_Id)) = To_Big_Integer(P - 1)
+               and Has_Key (State.m_projectedEntityStates, Request_Id));
+               if Get (Corresponding_Automation_Request.PlanningStates, P).EntityID = VehicleID then
                   Found_State := True;
-                  Projected_State.State := P_State;
+                  Projected_State.State := Get (Corresponding_Automation_Request.PlanningStates, P);
                end if;
                if not Found_State then
                   Planning_State.EntityID := VehicleID;
-                  Planning_State.PlanningPosition := Entity_State.Location;
-                  Planning_State.PlanningHeading := Entity_State.Heading;
-                  Convert_LatLong_Degrees_To_NorthEast_Meters (Converter, Entity_State.Location.Latitude, Entity_State.Location.Longitude, North_M, East_M);
-                  North_M := North_M + Config.m_assignmentStartPointLead_m * (Cos (Real64 (Entity_State.Heading)) * dDegreesToRadians);
-                  East_M := East_M + Config.m_assignmentStartPointLead_m * (Sin (Real64 (Entity_State.Heading)) * dDegreesToRadians);
+                  Planning_State.PlanningPosition := Get (State.m_currentEntityStates, VehicleID).Location;
+                  Planning_State.PlanningHeading := Get (State.m_currentEntityStates, VehicleID).Heading;
+                  Convert_LatLong_Degrees_To_NorthEast_Meters (Converter, Get (State.m_currentEntityStates, VehicleID).Location.Latitude, Get (State.m_currentEntityStates, VehicleID).Location.Longitude, North_M, East_M);
+                  North_M := North_M + Config.m_assignmentStartPointLead_m * (Cos (Real64 (Get (State.m_currentEntityStates, VehicleID).Heading)) * dDegreesToRadians);
+                  East_M := East_M + Config.m_assignmentStartPointLead_m * (Sin (Real64 (Get (State.m_currentEntityStates, VehicleID).Heading)) * dDegreesToRadians);
                   Convert_NorthEast_Meters_To_LatLong_Degrees (Converter, North_M, East_M, Latitude_Deg, Longitude_Deg);
                   Planning_State.PlanningPosition.Latitude := Latitude_Deg;
                   Planning_State.PlanningPosition.Longitude := Longitude_Deg;
                   Projected_State.State := Planning_State;
-                  Projected_State.Time := Entity_State.Time;
+                  Projected_State.Time := Get (State.m_currentEntityStates, VehicleID).Time;
                end if;
-               declare
-                  Proj : ProjectedState_Seq := Int64_PS_Maps.Get (State.m_projectedEntityStates, ReqId);
-               begin
-                  Proj := Add (Proj, Projected_State);
-               end;
+               State.m_projectedEntityStates := Set (State.m_projectedEntityStates,
+                     Request_Id,
+                     Add (Get (State.m_projectedEntityStates, Request_Id), Projected_State));
             end loop;
          end;
       end loop;
+      Insert (State.m_remainingAssignments, Request_Id, Received_Message.TaskList);
 
-      for T of Received_Message.TaskList loop
-         declare
-            Assign : TaskAssignment_Sequence := Element (State.m_remainingAssignments, ReqId);
-         begin
-            Assign := Add (Assign, T);
-         end;
-      end loop;
-      Send_Next_Task_Implementation_Request (ReqId, Mailbox, State, Config);
+      Send_Next_Task_Implementation_Request (Request_Id, Mailbox, State, Config);
    end Process_Task_Assignment_Summary;
 
    procedure Send_Next_Task_Implementation_Request
-     (uniqueRequestID : Int64;
+     (Unique_Request_Id : Int64;
       Mailbox          : in out Plan_Builder_Mailbox;
       State : in out Plan_Builder_State;
       Config : in out Plan_Builder_Configuration_Data)
    is
    begin
-    --  if(m_uniqueAutomationRequests.find(uniqueRequestID) == m_uniqueAutomationRequests.end())
-    --      return false;
-      if Contains (State.m_uniqueAutomationRequests, uniqueRequestID) then
-    --  if(m_remainingAssignments[uniqueRequestID].empty())
-    --      return false;
-         if Length (Element (State.m_remainingAssignments, uniqueRequestID)) = 0 then
+      if Contains (State.m_uniqueAutomationRequests, Unique_Request_Id) then
+         if Length (Element (State.m_remainingAssignments, Unique_Request_Id)) = 0 then
             return;
          end if;
 
          declare
-            --  auto taskAssignment = m_remainingAssignments[uniqueRequestID].front();
-            taskAssignment : LMCP_Messages.TaskAssignment := Get (Element (State.m_remainingAssignments, uniqueRequestID), TaskAssignment_Sequences.First);
-            --  auto taskImplementationRequest = std::make_shared<uxas::messages::task::TaskImplementationRequest>();
+            taskAssignment : LMCP_Messages.TaskAssignment := Get (Element (State.m_remainingAssignments, Unique_Request_Id), TaskAssignment_Sequences.First);
             taskImplementationRequest : LMCP_Messages.TaskImplementationRequest;
-            -- TODO
-    --  auto planState = std::find_if(m_projectedEntityStates[uniqueRequestID].begin(), m_projectedEntityStates[uniqueRequestID].end(),
-    --                                [&](std::shared_ptr<ProjectedState> state)
-    --                                { return( (!state || !(state->state)) ? false : (state->state->getEntityID() == taskAssignment->getAssignedVehicle()) ); });
             planState : ProjectedState;
          begin
-            for PE of Int64_PS_Maps.Get (State.m_projectedEntityStates, uniqueRequestID) loop
+            for PE of Int64_PS_Maps.Get (State.m_projectedEntityStates, Unique_Request_Id) loop
                if PE.State.EntityID = taskAssignment.AssignedVehicle then
-                  planState := PE; -- This has to exist, it could be a spark property to prove.
+                  planState := PE;
                   exit;
                end if;
             end loop;
 
-            --  if(planState == m_projectedEntityStates[uniqueRequestID].end())
-            --      return false;
-            --  if(!( (*planState)->state ) )
-            --      return false;
-
-            --  taskImplementationRequest->setCorrespondingAutomationRequestID(uniqueRequestID);
-            taskImplementationRequest.CorrespondingAutomationRequestID := uniqueRequestID;
-            --  m_expectedResponseID[m_taskImplementationId] = uniqueRequestID;
-            --  taskImplementationRequest->setRequestID(m_taskImplementationId++);
+            taskImplementationRequest.CorrespondingAutomationRequestID := Unique_Request_Id;
             taskImplementationRequest.RequestID := Config.m_taskImplementationId;
             Config.m_taskImplementationId := Config.m_taskImplementationId + 1;
-            --  taskImplementationRequest->setStartingWaypointID( (*planState)->finalWaypointID + 1 );
             taskImplementationRequest.StartingWaypointID := planState.FinalWaypointID + 1;
-            --  taskImplementationRequest->setVehicleID(taskAssignment->getAssignedVehicle());
             taskImplementationRequest.VehicleID := taskAssignment.AssignedVehicle;
-            --  taskImplementationRequest->setTaskID(taskAssignment->getTaskID());
             taskImplementationRequest.TaskID := taskAssignment.TaskID;
-            --  taskImplementationRequest->setOptionID(taskAssignment->getOptionID());
             taskImplementationRequest.OptionID := taskAssignment.OptionID;
-            --  taskImplementationRequest->setRegionID(m_uniqueAutomationRequests[uniqueRequestID]->getOriginalRequest()->getOperatingRegion());
-            taskImplementationRequest.RegionID := Element (State.m_uniqueAutomationRequests, uniqueRequestID).OperatingRegion;
-            --  taskImplementationRequest->setTimeThreshold(taskAssignment->getTimeThreshold());
+            taskImplementationRequest.RegionID := Element (State.m_uniqueAutomationRequests, Unique_Request_Id).OperatingRegion;
             taskImplementationRequest.TimeThreshold := taskAssignment.TimeThreshold;
-            --  taskImplementationRequest->setStartHeading((*planState)->state->getPlanningHeading());
             taskImplementationRequest.StartHeading := planState.State.PlanningHeading;
-            --  taskImplementationRequest->setStartPosition((*planState)->state->getPlanningPosition()->clone());
             taskImplementationRequest.StartPosition := planState.State.PlanningPosition;
-            --  taskImplementationRequest->setStartTime((*planState)->time);
             taskImplementationRequest.StartTime := planState.Time;
-            --  for(auto neighbor : m_projectedEntityStates[uniqueRequestID])
-            --  {
-            for neighbor of Int64_PS_Maps.Get (State.m_projectedEntityStates, uniqueRequestID) loop
-               --      if(neighbor && neighbor->state && neighbor->state->getEntityID() != (*planState)->state->getEntityID())
-               --      {
-               --          taskImplementationRequest->getNeighborLocations().push_back(neighbor->state->clone());
-               declare
-                  NeighborLocation : LMCP_Messages.PlanningState := neighbor.State;
-               begin
-                  taskImplementationRequest.NeighborLocations := Add (taskImplementationRequest.NeighborLocations, NeighborLocation);
-               end;
-               --      }
-               --  }
+            for N in 1 .. Last (Get (State.m_projectedEntityStates, Unique_Request_Id)) loop
+               pragma Loop_Invariant (Length (taskImplementationRequest.NeighborLocations) = To_Big_Integer (N -1));
+               taskImplementationRequest.NeighborLocations := Add (taskImplementationRequest.NeighborLocations,
+               Get (Get (State.m_projectedEntityStates, Unique_Request_Id), N).State);
             end loop;
 
-            --  m_remainingAssignments[uniqueRequestID].pop_front();
             declare
-               RemainingAssignments : TaskAssignment_Sequence := Element (State.m_remainingAssignments, uniqueRequestID);
+               RemainingAssignments : TaskAssignment_Sequence := Element (State.m_remainingAssignments, Unique_Request_Id);
             begin
                RemainingAssignments := Remove (RemainingAssignments, TaskAssignment_Sequences.First);
+               Replace (State.m_remainingAssignments, Unique_Request_Id, RemainingAssignments);
             end;
 
-            --  sendSharedLmcpObjectBroadcastMessage(taskImplementationRequest);
             sendBroadcastMessage (Mailbox, taskImplementationRequest);
          end;
       end if;
@@ -246,151 +187,175 @@ package body Plan_Builder with SPARK_Mode is
      (State            : in out Plan_Builder_State;
       Config           : in out Plan_Builder_Configuration_Data;
       Mailbox          : in out Plan_Builder_Mailbox;
-      Received_Message : LMCP_Messages.TaskImplementationResponse)
+      Received_Message : in out LMCP_Messages.TaskImplementationResponse)
    is
-      uniqueRequestID : Int64;
       Resp_ID : Int64 := Received_Message.ResponseID;
+      Unique_Request_Id : Int64 := Element (State.m_expectedResponseID, Resp_ID);
       Vehicle_ID : Int64 := Received_Message.VehicleID;
       corrMish : MissionCommand;
+      Position : Integer;
+      Response_In_Progress : UniqueAutomationResponse := Element (State.m_inProgressResponse, Unique_Request_Id);
+      MissionCo_List : MissionCommand_Seq := Response_In_Progress.MissionCommandList;
+      WP : LMCP_Messages.Waypoint;
    begin
 
-      if Contains (State.m_expectedResponseID, Resp_ID) then
-         uniqueRequestID := Element (State.m_expectedResponseID, Resp_ID);
-         if (not Contains (State.m_inProgressResponse, uniqueRequestID)) or (not Contains (State.m_inProgressResponse, uniqueRequestID)) or (Length (Element (State.m_inProgressResponse, uniqueRequestID).MissionCommandList) = 0) then
-            return;
-         end if;
-
-         if Length (Received_Message.TaskWaypoints) = 0 then
-            declare
-               Error_Msg : Unbounded_String;
-            begin
-               Error_Msg := Error_Msg & To_Unbounded_String ("Task [" & Received_Message.TaskID'Image & "]");
-               Error_Msg := Error_Msg & To_Unbounded_String (" option [" & Received_Message.OptionID'Image & "]");
-               Error_Msg := Error_Msg & To_Unbounded_String (" assigned to vehicle [" & Received_Message.VehicleID'Image & "]");
-               Error_Msg := Error_Msg & To_Unbounded_String (" reported an empty waypoint list for implementation!");
-               sendErrorMessage (Mailbox, Error_Msg);
-
-               Check_Next_Task_Implementation_Request (uniqueRequestID, Mailbox, State, Config);
-               return;
-            end;
-         end if;
-             --  auto corrMish = std::find_if(m_inProgressResponse[uniqueRequestID]->getOriginalResponse()->getMissionCommandList().begin(), m_inProgressResponse[uniqueRequestID]->getOriginalResponse()->getMissionCommandList().end(),
-             --                     [&](afrl::cmasi::MissionCommand* mish) { return mish->getVehicleID() == taskImplementationResponse->getVehicleID(); });
+      if Length (Received_Message.TaskWaypoints) = 0 then
          declare
-            MissionCo_List : MissionCommand_Seq := Element (State.m_inProgressResponse, uniqueRequestID).MissionCommandList;
-            Found : Boolean := False;
+            Error_Msg : Unbounded_String;
          begin
-            for MC of MissionCo_List loop
-               if MC.VehicleId = Vehicle_ID then
-                  corrMish := MC;
-                  Found := True;
-               end if;
-            end loop;
-
-            if Found then
-               if Length (corrMish.WaypointList) /= 0 then
-                  declare
-                     WP : LMCP_Messages.Waypoint :=  Get (corrMish.WaypointList, Last (corrMish.WaypointList));
-                     Task_WP : LMCP_Messages.Waypoint := Get (Received_Message.TaskWaypoints, WP_Sequences.First);
-                  begin
-                     WP.NextWaypoint := Common.Int64 (Task_WP.Number);
-                  end;
-               end if;
-               for WayPoint of Received_Message.TaskWaypoints loop
-                  corrMish.WaypointList := Add (corrMish.WaypointList, WayPoint);
-               end loop;
-
-            else
-
-               for ReqID of State.m_reqeustIDVsOverrides loop
-                  for Speed_Alt_Pair of Element (State.m_reqeustIDVsOverrides, ReqID) loop
-                     if ((Speed_Alt_Pair.VehicleID = Vehicle_ID) and (Speed_Alt_Pair.TaskID = Received_Message.TaskID)) or (Speed_Alt_Pair.TaskID = 0) then
-                        for I in WP_Sequences.First .. Last (Received_Message.TaskWaypoints) loop
-                           declare
-                              Way_Point : Waypoint := Get (Received_Message.TaskWaypoints, I);
-                           begin
-                              Way_Point.Altitude := Speed_Alt_Pair.Altitude;
-                              Way_Point.Speed := Speed_Alt_Pair.Speed;
-                              Way_Point.AltitudeType := Speed_Alt_Pair.AltitudeType;
-
-                              for J in VA_Sequences.First .. Last (Way_Point.VehicleActionList) loop
-                                 declare
-                                    Action : VehicleAction := Get (Way_Point.VehicleActionList, J);
-                                 begin
-                                    if Action.LoiterAction then
-                                       Action.Location.Altitude := Speed_Alt_Pair.Altitude;
-                                    end if;
-                                 end;
-                              end loop;
-                           end;
-                        end loop;
-                     end if;
-                  end loop;
-               end loop;
-            end if;
+            Error_Msg := Error_Msg & To_Unbounded_String ("Task [" & Received_Message.TaskID'Image & "]");
+            Error_Msg := Error_Msg & To_Unbounded_String (" option [" & Received_Message.OptionID'Image & "]");
+            Error_Msg := Error_Msg & To_Unbounded_String (" assigned to vehicle [" & Received_Message.VehicleID'Image & "]");
+            Error_Msg := Error_Msg & To_Unbounded_String (" reported an empty waypoint list for implementation!");
+            sendErrorMessage (Mailbox, Error_Msg);
+               
+            pragma Assert (Contains (State.m_inProgressResponse, Unique_Request_Id) and then Contains (State.m_reqeustIDVsOverrides, Unique_Request_Id));
+            Check_Next_Task_Implementation_Request (Unique_Request_Id, Mailbox, State, Config);
+            return;
          end;
-
       end if;
 
+      declare
+         Found : Boolean := False;
+      begin
+         for I in MC_Sequences.First .. Last (MissionCo_List) loop
+            if Get (MissionCo_List, I).VehicleId = Vehicle_ID then
+               pragma Assert (for some Mission_Co of MissionCo_List => Mission_Co.VehicleId = Vehicle_ID);
+               corrMish := Get (MissionCo_List, I);
+               Position := I;
+               Found := True;
+
+               if Length (corrMish.WaypointList) /= 0 then
+                  WP :=  Get (corrMish.WaypointList, Last (corrMish.WaypointList));
+                  WP.NextWaypoint := Common.Int64 (Get (Received_Message.TaskWaypoints, WP_Sequences.First).Number);
+                  corrMish.WaypointList := Set (corrMish.WaypointList, Last (corrMish.WaypointList), WP);
+               else
+                  for W in 1 .. Last (Received_Message.TaskWaypoints) loop
+                     pragma Loop_Invariant (Length (corrMish.WaypointList) = To_Big_Integer (W - 1));
+                     corrMish.WaypointList := Add (corrMish.WaypointList, Get (Received_Message.TaskWaypoints, W));
+                  end loop;
+               end if;
+               pragma Assert (Position in MC_Sequences.First .. Last (MissionCo_List));
+               MissionCo_List := Set (MissionCo_List, Position, corrMish);
+               Response_In_Progress.MissionCommandList := MissionCo_List;
+               Replace (State.m_inProgressResponse, Unique_Request_Id, Response_In_Progress);
+               exit;
+            end if;
+            pragma Loop_Invariant
+               (for all K in 1 .. I => Get (MissionCo_List, K).VehicleId /= Vehicle_ID);
+         end loop;
+
+         if not Found then
+            for Request_Id of State.m_reqeustIDVsOverrides loop
+               declare
+                  Overrides : SpeedAltPair_Sequence := Element (State.m_reqeustIDVsOverrides, Request_Id);
+               begin
+                  for I in SpeedAltPair_Sequences.First .. Last (Overrides) loop
+                     declare
+                        Speed_Alt_Pair : SpeedAltPair := Get (Overrides, I);
+                     begin
+                        if ((Speed_Alt_Pair.VehicleID = Vehicle_ID) and (Speed_Alt_Pair.TaskID = Received_Message.TaskID)) or (Speed_Alt_Pair.TaskID = 0) then
+                           for I in WP_Sequences.First .. Last (Received_Message.TaskWaypoints) loop
+                              pragma Loop_Invariant (Length (Received_Message.TaskWaypoints)'Loop_Entry = Length (Received_message.TaskWaypoints));
+                              declare
+                                 Way_Point : Waypoint := Get (Received_Message.TaskWaypoints, I);
+                              begin
+                                 Way_Point.Altitude := Speed_Alt_Pair.Altitude;
+                                 Way_Point.Speed := Speed_Alt_Pair.Speed;
+                                 Way_Point.AltitudeType := Speed_Alt_Pair.AltitudeType;
+                                 for J in VA_Sequences.First .. Last (Way_Point.VehicleActionList) loop
+                                    pragma Loop_Invariant (Length (Way_Point.VehicleActionList)'Loop_Entry = Length (Way_Point.VehicleActionList));
+                                    declare
+                                       Action : VehicleAction := Get (Way_Point.VehicleActionList, J);
+                                    begin
+                                       if Action.LoiterAction then
+                                          Action.Location.Altitude := Speed_Alt_Pair.Altitude;
+                                          Way_Point.VehicleActionList := Set (Way_Point.VehicleActionList, J, Action);
+                                       end if;
+                                    end;
+                                 end loop;
+                                 Received_Message.TaskWaypoints := Set (Received_Message.TaskWaypoints, I, Way_Point);
+                              end;
+                           end loop;
+                        end if;
+                     end;
+                  end loop;
+               end;
+            end loop;
+         end if;
+      end;
    end Process_Task_Implementation_Response;
 
    procedure Check_Next_Task_Implementation_Request
-     (uniqueRequestID : Int64;
+     (Unique_Request_Id : Int64;
       Mailbox : in out Plan_Builder_Mailbox;
       State : in out Plan_Builder_State;
       Config : in out Plan_Builder_Configuration_Data)
    is
-      Response : UniqueAutomationResponse := Element (State.m_inProgressResponse, uniqueRequestID);
+      Response : UniqueAutomationResponse := Element (State.m_inProgressResponse, Unique_Request_Id);
       Service_Status : ServiceStatus;
       Key_Value_Pair : KeyValuePair;
+      In_Progress_Response : UniqueAutomationResponse := Element (State.m_inProgressResponse, Unique_Request_Id);
    begin
-      if Contains (State.m_remainingAssignments, uniqueRequestID) then
-         if Length (Element (State.m_remainingAssignments, uniqueRequestID)) = 0 then
-            if Has_Key (State.m_projectedEntityStates, uniqueRequestID) then
-               for E of Int64_PS_Maps.Get (State.m_projectedEntityStates, uniqueRequestID) loop
-                  -- TODO        if(e && e->state)
-                  declare
-                     UnAResp : UniqueAutomationResponse := Element (State.m_inProgressResponse, uniqueRequestID);
-                  begin
-                     UnAResp.FinalStates := Add (UnAResp.FinalStates, E.State);
-                  end;
-                  -- end if;
+   
+      if Contains (State.m_remainingAssignments, Unique_Request_Id) then
+         if Length (Element (State.m_remainingAssignments, Unique_Request_Id)) = 0 then
+            if Has_Key (State.m_projectedEntityStates, Unique_Request_Id) then
+            pragma Assert (Length (In_Progress_Response.FinalStates) = 0);
+               for E in 1 .. Last (Get (State.m_projectedEntityStates, Unique_Request_Id)) loop
+                  pragma Loop_Invariant (Contains (State.m_inProgressResponse, Unique_Request_Id)
+                     and Length (In_Progress_Response.FinalStates) = To_Big_Integer (E -1)
+                     and E < Integer'Last);
+                  In_Progress_Response.FinalStates := Add (In_Progress_Response.FinalStates, Get (Get (State.m_projectedEntityStates, Unique_Request_Id), E).State);
+                  Replace (State.m_inProgressResponse, Unique_Request_Id, In_Progress_Response);
                end loop;
             end if;
 
             if Config.m_addLoiterToEndOfMission then
-               Add_Loiters_To_Mission_Commands (State, Config, Mailbox, Response);
+               pragma Assert (Length (Response.MissionCommandList) /= 0 and then Length (Get (Response.MissionCommandList, Last (Response.MissionCommandList)).WaypointList) /= 0);
+               Add_Loiters_To_Mission_Commands (State, Config, Response);
             end if;
 
             if Config.m_overrideTurnType then
-               for Mission of Response.MissionCommandList loop
-                  for I in Mission.WaypointList loop
-                     declare
-                        WP : LMCP_Messages.Waypoint := Get (Mission.WaypointList, I);
-                     begin
-                        WP.TurnType := Config.m_turnType;
-                     end;
-                  end loop;
-
+               for J in MC_Sequences.First .. Last (Response.MissionCommandList) loop
+                  pragma Loop_Invariant (Length (Response.MissionCommandList)'Loop_Entry = Length (Response.MissionCommandList));
+                  declare
+                     Mission : MissionCommand := Get (Response.MissionCommandList, J);
+                  begin
+                     for I in Mission.WaypointList loop
+                        declare
+                           WP : LMCP_Messages.Waypoint := Get (Mission.WaypointList, I);
+                        begin
+                           WP.TurnType := Config.m_turnType;
+                           Mission.WaypointList := Set (Mission.WaypointList, I, WP);
+                        end;
+                     end loop;
+                     Response.MissionCommandList := Set (Response.MissionCommandList, J, Mission);
+                  end;
                end loop;
             end if;
 
             sendBroadcastMessage (Mailbox, Response);
 
-            Delete (State.m_inProgressResponse, uniqueRequestID);
-            Delete (State.m_reqeustIDVsOverrides, uniqueRequestID);
+            Delete (State.m_inProgressResponse, Unique_Request_Id);
+            Delete (State.m_reqeustIDVsOverrides, Unique_Request_Id);
 
             Service_Status.StatusType := Information;
 
             declare
-               Message : Unbounded_String := To_Unbounded_String ("UniqueAutomationResponse[" & uniqueRequestID'Image & "] - sent");
+               Message : Unbounded_String := To_Unbounded_String ("UniqueAutomationResponse[" & Unique_Request_Id'Image & "] - sent");
             begin
                Key_Value_Pair.Key := Message;
                Service_Status.Info := Add (Service_Status.Info, Key_Value_Pair);
-               sendBroadcastMessage (Mailbox, Key_Value_Pair);
+               sendBroadcastMessage (Mailbox, Service_Status);
             end;
          else
-            Send_Next_Task_Implementation_Request (uniqueRequestID, Mailbox, State, Config);
+            pragma Assert (
+               Has_Key (State.m_projectedEntityStates, Unique_Request_Id)
+               and then Contains (State.m_remainingAssignments, Unique_Request_Id)
+               and then Length (Get (State.m_projectedEntityStates, Unique_Request_Id)) < To_Big_Integer (Integer'Last)
+               and then Config.m_taskImplementationId < Int64'Last);
+            Send_Next_Task_Implementation_Request (Unique_Request_Id, Mailbox, State, Config);
          end if;
 
       end if;
@@ -399,16 +364,16 @@ package body Plan_Builder with SPARK_Mode is
 
    -------------------------------------
    -- Add_Loiters_To_Mission_Commands --
-   -------------------------------------
+   -------------------------------------                                                                                                                                                                                                                     
 
    procedure Add_Loiters_To_Mission_Commands
-     (State : in out Plan_Builder_State;
-      Config : in out Plan_Builder_Configuration_Data;
-      Mailbox : in out Plan_Builder_Mailbox;
-      Response : UniqueAutomationResponse)
+     (State : in Plan_Builder_State;
+      Config : in Plan_Builder_Configuration_Data;
+      Response : in out UniqueAutomationResponse)
    is
       Contains_Loiter : Boolean := False;
-      Target_Vehicle : Int64 := Get (Response.MissionCommandList, MC_Sequences.First).VehicleId;
+      Command : MissionCommand := Get (Response.MissionCommandList, MC_Sequences.First);
+      Target_Vehicle : Int64 := Command.VehicleId;
    begin
 
       for Mission of Response.MissionCommandList loop
@@ -436,7 +401,8 @@ package body Plan_Builder with SPARK_Mode is
       if Has_Key (State.m_currentEntityStates, Target_Vehicle) then
          declare
             Entity_State : EntityState := ES_Maps.Get (State.m_currentEntityStates, Target_Vehicle);
-            Wp_List : WP_Seq := Get (Response.MissionCommandList, Last (Response.MissionCommandList)).WaypointList;
+            Last_Mission_Command : MissionCommand := Get (Response.MissionCommandList, Last (Response.MissionCommandList));
+            Wp_List : WP_Seq := Last_Mission_Command.WaypointList;
             Back_El : LMCP_Messages.Waypoint := Get (Wp_List, Last (Wp_List));
             Loiter_Action : VehicleAction;
          begin
@@ -447,8 +413,11 @@ package body Plan_Builder with SPARK_Mode is
                Loiter_Action.Radius := Config.m_deafultLoiterRadius;
             end if;
             Loiter_Action.Location := (Back_El.Latitude, Back_El.Longitude, Back_El.Altitude, Back_El.AltitudeType);
-            --  Loiter_Action-Airspeed := Back_El.GroundSpeed; TODO
+            --  Loiter_Action.Airspeed := Back_El.GroundSpeed;
             Back_El.VehicleActionList := Add (Back_El.VehicleActionList, Loiter_Action);
+            Wp_List := Set (Wp_List, Last(Wp_List), Back_El);
+            Last_Mission_Command.WaypointList := Wp_List;
+            Response.MissionCommandList := Set (Response.MissionCommandList, Last (Response.MissionCommandList), Last_Mission_Command);
          end;
       end if;
    end Add_Loiters_To_Mission_Commands;

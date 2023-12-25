@@ -4,6 +4,10 @@ with SPARK.Containers.Formal.Unbounded_Ordered_Maps;
 with SPARK.Containers.Functional.Maps;
 with SPARK.Containers.Functional.Vectors;
 with SPARK.Containers.Formal.Doubly_Linked_Lists;
+with Ada.Containers; use Ada.Containers;
+with LMCP_Messages; use LMCP_Messages;
+with LMCP_Message_Conversions; use LMCP_Message_Conversions;
+with Ada.Numerics.Big_Numbers.Big_Integers; use Ada.Numerics.Big_Numbers.Big_Integers;
 
 with Common;                              use Common;
 with LMCP_Messages;                       use LMCP_Messages;
@@ -114,34 +118,85 @@ package Plan_Builder with SPARK_Mode is
       m_commandId                      : Int64        := 1;
    end record;
 
+   function Valid_Automation_Request (State : Plan_Builder_State; ReqId : Int64) return Boolean is
+      (Contains (State.m_uniqueAutomationRequests, ReqId)
+      and then Has_Key (State.m_projectedEntityStates, ReqId)
+      and then Length (Element (State.m_uniqueAutomationRequests, ReqId).EntityList) = 0)
+   with Ghost;
+
+   function Valid_InProgress_Response
+      (State            : Plan_Builder_State;
+       Received_Message : LMCP_Messages.TaskImplementationResponse) return Boolean
+   is (Contains (State.m_expectedResponseID, Received_Message.ResponseID)
+      and then Contains (State.m_reqeustIDVsOverrides, Element (State.m_expectedResponseID, Received_Message.ResponseID))
+      and then Contains (State.m_inProgressResponse, Element (State.m_expectedResponseID, Received_Message.ResponseID))
+      and then Contains (State.m_inProgressResponse, Element (State.m_expectedResponseID, Received_Message.ResponseID))
+      and then Length (Element (State.m_inProgressResponse,  Element (State.m_expectedResponseID, Received_Message.ResponseID)).MissionCommandList) > 0)
+   with Ghost;
+
    procedure Process_Task_Implementation_Response
      (State            : in out Plan_Builder_State;
       Config           : in out Plan_Builder_Configuration_Data;
       Mailbox          : in out Plan_Builder_Mailbox;
-      Received_Message : LMCP_Messages.TaskImplementationResponse);
+      Received_Message : in out LMCP_Messages.TaskImplementationResponse)
+      with Pre => Valid_InProgress_Response (State, Received_Message)
+      and then Length (Received_Message.TaskWaypoints) < To_Big_Integer (Integer'Last);
 
    procedure Send_Next_Task_Implementation_Request
-     (uniqueRequestID : Int64;
+     (Unique_Request_Id : Int64;
       Mailbox          : in out Plan_Builder_Mailbox;
       State : in out Plan_Builder_State;
-      Config : in out Plan_Builder_Configuration_Data);
+      Config : in out Plan_Builder_Configuration_Data)
+      with Pre => Has_Key (State.m_projectedEntityStates, Unique_Request_Id)
+      and then Contains (State.m_remainingAssignments, Unique_Request_Id)
+      and then Length (Get (State.m_projectedEntityStates, Unique_Request_Id)) < To_Big_Integer (Integer'Last)
+      and then Config.m_taskImplementationId < Int64'Last;
+
+   function State_Not_Full (State : Plan_Builder_State) return Boolean is
+      (Length (State.m_assignmentSummaries) < Count_Type'Last
+         and then Length (State.m_inProgressResponse) < Count_Type'Last
+         and then Length (State.m_projectedEntityStates) < To_Big_Integer (Integer'Last)
+         and then Length (State.m_remainingAssignments) < Count_Type'Last)
+   with Ghost;
 
    procedure Process_Task_Assignment_Summary
      (State            : in out Plan_Builder_State;
       Config           : in out Plan_Builder_Configuration_Data;
       Mailbox          : in out Plan_Builder_Mailbox;
-      Received_Message : TaskAssignmentSummary);
+      Received_Message : TaskAssignmentSummary)
+      with Pre => State_Not_Full (State)
+      and then Valid_Automation_Request(State, Received_Message.CorrespondingAutomationRequestID)
+      and then not Contains (State.m_assignmentSummaries, Received_Message.CorrespondingAutomationRequestID)
+      and then not Has_Key (State.m_projectedEntityStates, Received_Message.CorrespondingAutomationRequestID)
+      and then not Contains (State.m_remainingAssignments, Received_Message.CorrespondingAutomationRequestID)
+      and then not Contains (State.m_inProgressResponse, Received_Message.CorrespondingAutomationRequestID)
+      and then Length (Received_Message.TaskList) < To_Big_Integer (Integer'Last)
+      and then Length (Get (State.m_projectedEntityStates, Received_Message.CorrespondingAutomationRequestID)) < To_Big_Integer (Integer'Last)
+      and then Length (Element (State.m_uniqueAutomationRequests, Received_Message.CorrespondingAutomationRequestID).EntityList) < To_Big_Integer (Integer'Last) - Length (State.m_currentEntityStates),
+      Post => Contains (State.m_assignmentSummaries, Received_Message.CorrespondingAutomationRequestID)
+      and then Has_Key (State.m_projectedEntityStates, Received_Message.CorrespondingAutomationRequestID)
+      and then Contains (State.m_remainingAssignments, Received_Message.CorrespondingAutomationRequestID)
+      and then Contains (State.m_inProgressResponse, Received_Message.CorrespondingAutomationRequestID);
 
    procedure Check_Next_Task_Implementation_Request
-     (uniqueRequestID : Int64;
+     (Unique_Request_Id : Int64;
       Mailbox : in out Plan_Builder_Mailbox;
       State : in out Plan_Builder_State;
-      Config : in out Plan_Builder_Configuration_Data);
+      Config : in out Plan_Builder_Configuration_Data)
+      with Pre => Contains (State.m_inProgressResponse, Unique_Request_Id)
+      and then Contains (State.m_reqeustIDVsOverrides, Unique_Request_Id)
+      and then Has_Key (State.m_projectedEntityStates, Unique_Request_Id)
+      and then Length (Element (State.m_inProgressResponse, Unique_Request_Id).FinalStates) = 0
+      and then Length (Element (State.m_inProgressResponse, Unique_Request_Id).MissionCommandList) /= 0
+      and then Length (Get (State.m_projectedEntityStates, Unique_Request_Id)) < To_Big_Integer (Integer'Last),
+      Post => not Contains (State.m_remainingAssignments, Unique_Request_Id) or (Contains (State.m_remainingAssignments, Unique_Request_Id) and then not Contains (State.m_inProgressResponse, Unique_Request_Id)
+      and then not Contains (State.m_reqeustIDVsOverrides, Unique_Request_Id));
 
    procedure Add_Loiters_To_Mission_Commands
-     (State : in out Plan_Builder_State;
-      Config : in out Plan_Builder_Configuration_Data;
-      Mailbox : in out Plan_Builder_Mailbox;
-      Response : UniqueAutomationResponse);
+     (State : in Plan_Builder_State;
+      Config : in Plan_Builder_Configuration_Data;
+      Response : in out UniqueAutomationResponse)
+     with Pre => Length (Response.MissionCommandList) /= 0
+     and then Length (Get (Response.MissionCommandList, Last (Response.MissionCommandList)).WaypointList) /= 0;
 
 end Plan_Builder;

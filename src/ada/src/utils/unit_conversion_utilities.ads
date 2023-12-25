@@ -4,7 +4,19 @@ generic
    type Real is digits <>;
 package Unit_Conversion_Utilities is
 
-   type Unit_Converter is tagged private;
+   type Unit_Converter is record
+      --  static double m_dLatitudeInitial_rad;
+      m_dLatitudeInitial_rad : Real;
+      --  static double m_dLongitudeInitial_rad;
+      m_dLongitudeInitial_rad : Real;
+      --  static double m_dRadiusMeridional_m;
+      m_dRadiusMeridional_m : Real;
+      --  static double m_dRadiusTransverse_m;
+      m_dRadiusTransverse_m : Real;
+      --  static double m_dRadiusSmallCircleLatitude_m;
+      m_dRadiusSmallCircleLatitude_m : Real;
+   end record;
+
 
    procedure Initialize
      (This              : out Unit_Converter;
@@ -14,7 +26,7 @@ package Unit_Conversion_Utilities is
    --  FROM LAT/LONG TO NORTH/EAST
 
    procedure Convert_LatLong_Degrees_To_NorthEast_Meters
-     (This          : in out Unit_Converter;
+     (This          : in Unit_Converter;
       Latitude_Deg  : Real;
       Longitude_Deg : Real;
       North         : out Real;
@@ -22,7 +34,7 @@ package Unit_Conversion_Utilities is
 
    --  FROM NORTH/EAST TO LAT/LONG
    procedure Convert_NorthEast_Meters_To_LatLong_Degrees
-     (This          : in out Unit_Converter;
+     (This          : in Unit_Converter;
       North         : Real;
       East          : Real;
       Latitude_Deg  : out Real;
@@ -36,22 +48,5 @@ package Unit_Conversion_Utilities is
    dEccentricitySquared : constant := 6.694379990096503e-003;
 
    dDegreesToRadians : constant Real := 3.14 / 180.0;
-
-private
-
-   type Unit_Converter is tagged record
-      --  static double m_dLatitudeInitial_rad;
-      m_dLatitudeInitial_rad : Real;
-      --  static double m_dLongitudeInitial_rad;
-      m_dLongitudeInitial_rad : Real;
-      --  static double m_dRadiusMeridional_m;
-      m_dRadiusMeridional_m : Real;
-      --  static double m_dRadiusTransverse_m;
-      m_dRadiusTransverse_m : Real;
-      --  static double m_dRadiusSmallCircleLatitude_m;
-      m_dRadiusSmallCircleLatitude_m : Real;
-      --  Static Bool M_BInitialized;
-      Initialized : Boolean := False;
-   end record;
 
 end Unit_Conversion_Utilities;

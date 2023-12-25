@@ -20,8 +20,6 @@ package body Unit_Conversion_Utilities is
 
       function Pow (Base, Exp : Real) return Real renames Real_Elementary_Fuctions."**";
    begin
-      --  if (!m_bInitialized)
-      if not This.Initialized then
          --  //assumes that the conversions will all take place within the local area of the initial latitude/longitude.
          --  m_dLatitudeInitial_rad = dLatitudeInit_rad;
          This.m_dLatitudeInitial_rad := LatitudeInit_Rad;
@@ -42,10 +40,6 @@ package body Unit_Conversion_Utilities is
          This.m_dRadiusTransverse_m := (if dDenominatorTransverse <= 0.0 then 0.0 else (dRadiusEquatorial_m / dDenominatorTransverse));
          --  m_dRadiusSmallCircleLatitude_m = m_dRadiusTransverse_m * cos(dLatitudeInit_rad);
          This.m_dRadiusSmallCircleLatitude_m := This.m_dRadiusTransverse_m * Cos (LatitudeInit_Rad);
-
-         --  m_bInitialized = true;
-         This.Initialized := True;
-      end if;
    end Initialize;
 
    -------------------------------------------------
@@ -53,7 +47,7 @@ package body Unit_Conversion_Utilities is
    -------------------------------------------------
 
    procedure Convert_LatLong_Degrees_To_NorthEast_Meters
-     (This          : in out Unit_Converter;
+     (This          : in Unit_Converter;
       Latitude_Deg  : Real;
       Longitude_Deg : Real;
       North         : out Real;
@@ -71,10 +65,6 @@ package body Unit_Conversion_Utilities is
       --  {
       --      Initialize(dLatitude_rad, dLongitude_rad);
       --  }
-      if not This.Initialized then
-         This.Initialize (LatitudeInit_Rad => Latitude_Rad, LongitudeInit_Rad => Longitude_Rad);
-      end if;
-
       --  dNorth_m = m_dRadiusMeridional_m * (dLatitude_rad - m_dLatitudeInitial_rad);
       North := This.m_dRadiusMeridional_m * (Latitude_Rad - This.m_dLatitudeInitial_rad);
       --  dEast_m = m_dRadiusSmallCircleLatitude_m * (dLongitude_rad - m_dLongitudeInitial_rad);
@@ -86,16 +76,13 @@ package body Unit_Conversion_Utilities is
    -------------------------------------------------
 
    procedure Convert_NorthEast_Meters_To_LatLong_Degrees
-     (This          : in out Unit_Converter;
+     (This          : in Unit_Converter;
       North         : Real;
       East          : Real;
       Latitude_Deg  : out Real;
       Longitude_Deg : out Real)
    is
       RadiansToDegrees : constant := Ada.Numerics.Pi / 180.0;
-
-      dLatitude_deg : Real;
-      dLongitude_deg : Real;
 
    begin
 
@@ -113,4 +100,5 @@ package body Unit_Conversion_Utilities is
 
    end Convert_NorthEast_Meters_To_LatLong_Degrees;
 
+   u_Converter : Unit_Converter := (0.0, 0.0, 0.0, 0.0, 0.0);
 end Unit_Conversion_Utilities;
