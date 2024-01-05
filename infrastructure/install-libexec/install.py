@@ -167,9 +167,7 @@ if __name__ == "__main__":
 
     if args.install_gnat and (
         not args.interactive
-        or input(
-            "Install GNAT FSF (optional; needed to build Ada services)? [Y/n] "
-        )
+        or input("Install GNAT FSF (optional; needed to build Ada services)? [Y/n] ")
         != "n"
     ):
         command = pass_args(GNAT_INSTALL)

@@ -57,26 +57,15 @@ APT_INSTALL = Command(
 )
 
 
-# Temporary hack around Alire bug:
-ALR_GLOBAL_CONFIG_DIR = os.path.expanduser("~/.config/alire")
-CONFIG_CONTENTS = """\
-[toolchain]
-assistant = false
-[toolchain.external]
-gnat = "FALSE"
-gprbuild = "FALSE"
-[toolchain.use]
-gnat = "gnat_native=13.2.1"
-gprbuild = "gprbuild=22.0.1"
-"""
-
 ALR_CONFIG_DIR = os.path.join(ALR_DIR, "config")
 ALR_BIN = os.path.join("bin", "alr")
 
 
 ALR_DOWNLOAD_LINK = (
-    "https://github.com/alire-project/alire/releases/download/v1.2.2/"
-    "alr-1.2.2-bin-x86_64-linux.zip"
+    # This should be adjusted when there's a stable release that has the fix
+    # for non-local config directory.
+    "https://github.com/alire-project/alire/releases/download/nightly/"
+    "alr-nightly-bin-x86_64-linux.zip"
 )
 ALR_DOWNLOAD_FILE = "alr.zip"
 ALR_DOWNLOAD_CMD = Command(
@@ -104,7 +93,7 @@ ALR_TOOLCHAIN_CMD = Command(
         "-c",
         ALR_CONFIG_DIR,
         "toolchain",
-        "-i",  # TODO: change to --select
+        "--select",
         "gnat_native^13",
         "gprbuild^22",
     ],
@@ -211,19 +200,6 @@ if __name__ == "__main__":
 
     run_command_and_exit_on_fail(ALR_DOWNLOAD_CMD, args.dry_run)
     run_command_and_exit_on_fail(ALR_UNZIP_CMD, args.dry_run)
-
-    # Hack around Alire bug:
-    if args.dry_run:
-        print("mkdir -p " + ALR_GLOBAL_CONFIG_DIR)
-        print("writing global config file to " + ALR_GLOBAL_CONFIG_DIR)
-    else:
-        pathlib.Path(ALR_GLOBAL_CONFIG_DIR).mkdir(parents=True, exist_ok=True)
-
-        with open(
-            os.path.join(ALR_GLOBAL_CONFIG_DIR, "config.toml"), "w", encoding="utf-8"
-        ) as config_file:
-            config_file.write(CONFIG_CONTENTS)
-
     run_command_and_exit_on_fail(ALR_TOOLCHAIN_CMD, args.dry_run)
 
     # Now install gnatprove
