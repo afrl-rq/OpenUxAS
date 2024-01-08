@@ -458,10 +458,25 @@ package body Route_Aggregator with SPARK_Mode is
          pragma Loop_Invariant (All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses));
 
          declare
-            isFulfilled : constant Boolean :=
-              (for all J of Element (State.m_pendingAutoReq, i) =>
-                   Contains (State.m_routePlanResponses, J));
+            isFulfilled : Boolean := True;
+            Formal_Set  : Int64_Formal_Set renames Element (State.m_pendingAutoReq, i);
+            C : Int64_Formal_Sets.Cursor := First (Formal_Set);
          begin
+            while Has_Element (Formal_Set, C) loop
+               pragma Loop_Invariant
+                 ((for all K in 1 .. Int_Set_P.Get (Positions (Formal_Set), C) - 1 =>
+                      Contains (State.m_routePlanResponses, Int_Set_E.Get (Elements (Formal_Set), K)))
+                  = isFulfilled);
+               if not Contains (State.m_routePlanResponses, Element (Formal_Set, C)) then
+                  isFulfilled := False;
+               end if;
+               Next (Formal_Set, C);
+            end loop;
+
+            pragma Assert
+              (isFulfilled
+               = (for all J of Element (State.m_pendingAutoReq, i) =>
+                   Contains (State.m_routePlanResponses, J)));
             if isFulfilled then
                SendMatrix (Mailbox,
                            State.m_uniqueAutomationRequests,
@@ -553,10 +568,25 @@ package body Route_Aggregator with SPARK_Mode is
          pragma Loop_Invariant (All_Pending_Plans_Sent (State.m_pendingRoute, State.m_routePlanResponses));
 
          declare
-            isFulfilled : constant Boolean :=
-              (for all J of Element (State.m_pendingRoute, i) =>
-                   Contains (State.m_routePlanResponses, J));
+            isFulfilled : Boolean := True;
+            Formal_Set  : Int64_Formal_Set renames Element (State.m_pendingRoute, i);
+            C : Int64_Formal_Sets.Cursor := First (Formal_Set);
          begin
+            while Has_Element (Formal_Set, C) loop
+               pragma Loop_Invariant
+                 ((for all K in 1 .. Int_Set_P.Get (Positions (Formal_Set), C) - 1 =>
+                      Contains (State.m_routePlanResponses, Int_Set_E.Get (Elements (Formal_Set), K)))
+                  = isFulfilled);
+               if not Contains (State.m_routePlanResponses, Element (Formal_Set, C)) then
+                  isFulfilled := False;
+               end if;
+               Next (Formal_Set, C);
+            end loop;
+
+            pragma Assert
+              (isFulfilled
+               = (for all J of Element (State.m_pendingRoute, i) =>
+                   Contains (State.m_routePlanResponses, J)));
             if isFulfilled then
                SendRouteResponse (Mailbox, State.m_pendingRoute, State.m_pendingAutoReq, State.m_routePlanResponses, State.m_routePlans, Key (State.m_pendingRoute, i));
 

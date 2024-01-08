@@ -236,23 +236,30 @@ package body Automation_Request_Validator with SPARK_Mode is
            and then not Is_Empty (States)
          then
             declare
-               IsFoundAMatch : constant Boolean :=
-                 (for some Id1 of Configurations =>
-                    (for some Id2 of States => Id1 = Id2));
+               IsFoundAMatch : Boolean := False;
+               Id : Int64;
+               use Int64_Sets;
             begin
+               for S in Iterate (Configurations) loop
+                  pragma Loop_Invariant
+                    (IsFoundAMatch
+                     = (for some I of Configurations =>
+                            (not Contains (S, I) and then Contains (States, I))));
+                  Id := Int64_Sets.Choose (S);
+                  if Contains (States, Id) then
+                     pragma Assume (Length (EntityList) < Count_Type'Last, "we have less than Count_Type'Last vehicles");
+                     EntityList := Add (EntityList, Id);
+                     IsFoundAMatch := True;
+                  end if;
+               end loop;
+
+               pragma Assert (IsFoundAMatch = (for some I of Configurations => Contains (States, I)));
+
                if not IsFoundAMatch then
                   Append_To_Msg (Msg  => ReasonForFailure,
                                  Tail => "- No EntityStates that match EntityConfigurations"
                                  & " are available.");
                   IsReady := False;
-               else
-                  for Id of Configurations loop
-                     if Contains (States, Id) then
-                        pragma Assume (Length (EntityList) < Count_Type'Last, "we have less than Count_Type'Last vehicles");
-                        EntityList := Add (EntityList, Id);
-                     end if;
-                     pragma Loop_Invariant (IsReady = IsReady'Loop_Entry);
-                  end loop;
                end if;
             end;
          else

@@ -1141,10 +1141,60 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
 
          if not Error then
             declare
+               function Action_In_TaskPlanOptions_Map (TaskOptionId : Int64)
+                                                       return Boolean
+               with
+                 Pre  => TaskOptionId in 0 .. 9_999_999_999,
+                 Post =>
+                   (not Action_In_TaskPlanOptions_Map'Result)
+                     = (for all TaskId of TaskPlanOptions_Map =>
+                          (for all TaskOption of Get (TaskPlanOptions_Map, TaskId).Options =>
+                             (TaskId /= TaskOption.TaskID
+                              or else TaskOption.TaskID /= Get_TaskID (TaskOptionId)
+                              or else TaskOption.OptionID /= Get_OptionID (TaskOptionId))));
+
                procedure Check_Actions_In_Map_Rec (Tree : not null access constant Algebra_Tree_Cell) with
                  Post => (if not Error then All_Actions_In_Map (Tree, TaskPlanOptions_Map)),
-                 Subprogram_Variant => (Structural => Tree);
-               pragma Annotate (GNATprove, Always_Return, Check_Actions_In_Map_Rec);
+                 Subprogram_Variant => (Structural => Tree),
+                 Annotate => (GNATprove, Always_Return);
+
+               function Action_In_TaskPlanOptions_Map (TaskOptionId : Int64)
+                                                       return Boolean
+               is
+                  TaskId  : Int64;
+                  TaskOpt : TaskOption;
+                  use all type Int64_TPO_Map;
+               begin
+                  for M in Iterate (TaskPlanOptions_Map) loop
+                     pragma Loop_Invariant
+                       (for all TaskI of TaskPlanOptions_Map =>
+                          (if not Int64_TaskPlanOptions_Maps.Has_Key (M, TaskI) then
+                             (for all TaskOption of Get (TaskPlanOptions_Map, TaskI).Options =>
+                               (TaskI /= TaskOption.TaskID
+                                or else TaskOption.TaskID /= Get_TaskID (TaskOptionId)
+                                or else TaskOption.OptionID /= Get_OptionID (TaskOptionId)))));
+                     TaskId := Int64_TaskPlanOptions_Maps.Choose (M);
+                     for J in TO_Sequences.First .. Last (Get (TaskPlanOptions_Map, TaskId).Options) loop
+                        TaskOpt := Get (Get (TaskPlanOptions_Map, TaskId).Options, J);
+                        if TaskId = TaskOpt.TaskID
+                          and then TaskOpt.TaskID = Get_TaskID (TaskOptionId)
+                          and then TaskOpt.OptionID = Get_OptionID (TaskOptionId)
+                        then
+                           return True;
+                        end if;
+                        pragma Loop_Invariant
+                          (for all K in TO_Sequences.First .. J =>
+                             (declare
+                              TempTaskOpt : constant TaskOption := Get (Get (TaskPlanOptions_Map, TaskId).Options, K);
+                              begin
+                              TaskId /= TempTaskOpt.TaskID
+                              or else TempTaskOpt.TaskID /= Get_TaskID (TaskOptionId)
+                              or else TempTaskOpt.OptionID /= Get_OptionID (TaskOptionId)));
+                     end loop;
+                  end loop;
+                  return False;
+               end Action_In_TaskPlanOptions_Map;
+
                procedure Check_Actions_In_Map_Rec (Tree : not null access constant Algebra_Tree_Cell) is
                begin
                   case Tree.all.Node_Kind is
@@ -1157,13 +1207,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
                         return;
                      end if;
 
-                     if
-                       (for all TaskId of TaskPlanOptions_Map =>
-                          (for all TaskOption of Get (TaskPlanOptions_Map, TaskId).Options =>
-                               (TaskId /= TaskOption.TaskID
-                                or else TaskOption.TaskID /= Get_TaskID (Tree.TaskOptionId)
-                                or else TaskOption.OptionID /= Get_OptionID (Tree.TaskOptionId))))
-                     then
+                     if not Action_In_TaskPlanOptions_Map (Tree.TaskOptionId) then
                         Append_To_Msg (Message, "OptionId ");
                         Append_To_Msg (Message, Print_Int64 (Get_OptionID (Tree.TaskOptionId)));
                         Append_To_Msg (Message, " does not exist for TaskId ");

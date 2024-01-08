@@ -1,7 +1,7 @@
 with "xmlada";
 with "zmq.gpr";
 with "lmcp_generated_messages.gpr";
-with "sparklib_internal";  -- This allows execution of for all over functional
+with "sparklib";  -- This allows execution of for all over functional
                            -- sets and maps, which is sound in our use case
                            -- because our sets and maps are over integers, for
                            -- which logical equality equals Ada equality.
