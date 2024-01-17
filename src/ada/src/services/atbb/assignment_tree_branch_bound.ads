@@ -1,3 +1,4 @@
+with SPARK.Big_Integers;                         use SPARK.Big_Integers;
 with SPARK.Containers.Formal.Unbounded_Hashed_Maps;
 with SPARK.Containers.Functional.Maps;
 with Ada.Containers;                             use Ada.Containers;
@@ -14,8 +15,7 @@ package Assignment_Tree_Branch_Bound with SPARK_Mode is
        (Key_Type     => Int64,
         Element_Type => UniqueAutomationRequest,
         Hash         => Int64_Hash);
-   subtype Int64_UniqueAutomationRequest_Map is
-     Int64_UAR_Maps.Map (Int64_UAR_Maps.Default_Modulus (10));
+   subtype Int64_UniqueAutomationRequest_Map is Int64_UAR_Maps.Map;
    use Int64_UAR_Maps;
 
    package Int64_TaskPlanOptions_Maps is new SPARK.Containers.Functional.Maps
@@ -27,8 +27,7 @@ package Assignment_Tree_Branch_Bound with SPARK_Mode is
      (Key_Type => Int64,
       Element_Type => Int64_TPO_Map,
       Hash  => Int64_Hash);
-   subtype Int64_TaskPlanOptions_Map_Map is
-     Int64_TPO_Map_Maps.Map (Int64_TPO_Map_Maps.Default_Modulus (10));
+   subtype Int64_TaskPlanOptions_Map_Map is Int64_TPO_Map_Maps.Map;
    use Int64_TPO_Map_Maps;
    --use Int64_TPO_Map_Maps.Formal_Model;
    package Int64_TaskPlanOptions_Map_Maps_P renames Int64_TPO_Map_Maps.Formal_Model.P;
@@ -38,8 +37,7 @@ package Assignment_Tree_Branch_Bound with SPARK_Mode is
        (Key_Type     => Int64,
         Element_Type => AssignmentCostMatrix,
         Hash         => Int64_Hash);
-   subtype Int64_AssignmentCostMatrix_Map is
-     Int64_ACM_Maps.Map (Int64_ACM_Maps.Default_Modulus (10));
+   subtype Int64_AssignmentCostMatrix_Map is Int64_ACM_Maps.Map;
    use Int64_ACM_Maps;
    --use Int64_ACM_Maps.Formal_Model;
    package Int64_AssignmentCostMatrix_Maps_P renames Int64_ACM_Maps.Formal_Model.P;

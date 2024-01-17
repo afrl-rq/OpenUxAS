@@ -1,6 +1,8 @@
 with Ada.Containers;             use Ada.Containers;
 with AVTAS.LMCP.Types;
 with UxAS.Comms.LMCP_Net_Client; use UxAS.Comms.LMCP_Net_Client;
+with Common;
+use Common.Count_Type_To_Big_Integer_Conversions;
 
 package body Automation_Request_Validator with SPARK_Mode is
 
@@ -247,7 +249,7 @@ package body Automation_Request_Validator with SPARK_Mode is
                             (not Contains (S, I) and then Contains (States, I))));
                   Id := Int64_Sets.Choose (S);
                   if Contains (States, Id) then
-                     pragma Assume (Length (EntityList) < Count_Type'Last, "we have less than Count_Type'Last vehicles");
+                     pragma Assume (Length (EntityList) < To_Big_Integer (Count_Type'Last), "we have less than Count_Type'Last vehicles");
                      EntityList := Add (EntityList, Id);
                      IsFoundAMatch := True;
                   end if;
