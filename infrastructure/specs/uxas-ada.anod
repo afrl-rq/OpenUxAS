@@ -15,6 +15,7 @@ class UxasAda(spec('common')):
         return [Anod.Dependency('compiler'),
                 Anod.Dependency('uxas', require='source_pkg'),
                 Anod.Dependency('uxas-lmcp', qualifier='lang=ada'),
+                Anod.Dependency('xmlada'),
                 Anod.Dependency('zeromq'),
                 Anod.Dependency('zeromqada')]
 
@@ -35,6 +36,7 @@ class UxasAda(spec('common')):
     def build_setenv(self):
         self.deps['zeromqada'].setenv()
         self.deps['uxas-lmcp'].setenv()
+        self.deps['xmlada'].setenv()
         self.deps['zeromq'].setenv()
 
     def setenv(self):

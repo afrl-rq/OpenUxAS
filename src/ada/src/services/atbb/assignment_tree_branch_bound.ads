@@ -1,5 +1,5 @@
-with Ada.Containers.Formal_Hashed_Maps;
-with Ada.Containers.Functional_Maps;
+with SPARK.Containers.Formal.Unbounded_Hashed_Maps;
+with SPARK.Containers.Functional.Maps;
 with Ada.Containers;                             use Ada.Containers;
 with Ada.Strings.Unbounded;                      use Ada.Strings.Unbounded;
 with Assignment_Tree_Branch_Bound_Communication; use Assignment_Tree_Branch_Bound_Communication;
@@ -10,38 +10,38 @@ package Assignment_Tree_Branch_Bound with SPARK_Mode is
 
    type Cost_Function_Kind is (Minmax, Cumulative);
 
-   package Int64_UAR_Maps is new Ada.Containers.Formal_Hashed_Maps
+   package Int64_UAR_Maps is new SPARK.Containers.Formal.Unbounded_Hashed_Maps
        (Key_Type     => Int64,
         Element_Type => UniqueAutomationRequest,
         Hash         => Int64_Hash);
    subtype Int64_UniqueAutomationRequest_Map is
-     Int64_UAR_Maps.Map (10, Int64_UAR_Maps.Default_Modulus (10));
+     Int64_UAR_Maps.Map (Int64_UAR_Maps.Default_Modulus (10));
    use Int64_UAR_Maps;
 
-   package Int64_TaskPlanOptions_Maps is new Ada.Containers.Functional_Maps
+   package Int64_TaskPlanOptions_Maps is new SPARK.Containers.Functional.Maps
      (Key_Type     => Int64,
       Element_Type => TaskPlanOptions);
    type Int64_TPO_Map is new Int64_TaskPlanOptions_Maps.Map;
 
-   package Int64_TPO_Map_Maps is new Ada.Containers.Formal_Hashed_Maps
+   package Int64_TPO_Map_Maps is new SPARK.Containers.Formal.Unbounded_Hashed_Maps
      (Key_Type => Int64,
       Element_Type => Int64_TPO_Map,
       Hash  => Int64_Hash);
    subtype Int64_TaskPlanOptions_Map_Map is
-     Int64_TPO_Map_Maps.Map (10, Int64_TPO_Map_Maps.Default_Modulus (10));
+     Int64_TPO_Map_Maps.Map (Int64_TPO_Map_Maps.Default_Modulus (10));
    use Int64_TPO_Map_Maps;
-   use Int64_TPO_Map_Maps.Formal_Model;
+   --use Int64_TPO_Map_Maps.Formal_Model;
    package Int64_TaskPlanOptions_Map_Maps_P renames Int64_TPO_Map_Maps.Formal_Model.P;
    package Int64_TaskPlanOptions_Map_Maps_K renames Int64_TPO_Map_Maps.Formal_Model.K;
 
-   package Int64_ACM_Maps is new Ada.Containers.Formal_Hashed_Maps
+   package Int64_ACM_Maps is new SPARK.Containers.Formal.Unbounded_Hashed_Maps
        (Key_Type     => Int64,
         Element_Type => AssignmentCostMatrix,
         Hash         => Int64_Hash);
    subtype Int64_AssignmentCostMatrix_Map is
-     Int64_ACM_Maps.Map (10, Int64_ACM_Maps.Default_Modulus (10));
+     Int64_ACM_Maps.Map (Int64_ACM_Maps.Default_Modulus (10));
    use Int64_ACM_Maps;
-   use Int64_ACM_Maps.Formal_Model;
+   --use Int64_ACM_Maps.Formal_Model;
    package Int64_AssignmentCostMatrix_Maps_P renames Int64_ACM_Maps.Formal_Model.P;
    package Int64_AssignmentCostMatrix_Maps_K renames Int64_ACM_Maps.Formal_Model.K;
 
@@ -51,34 +51,34 @@ package Assignment_Tree_Branch_Bound with SPARK_Mode is
 
    function Valid_TaskPlanOptions
      (TaskPlanOptions_Map : Int64_TPO_Map)
-      return Boolean;
+      return Boolean with Post => True;
 
    function Valid_AssignmentCostMatrix
      (Assignment_Cost_Matrix : AssignmentCostMatrix)
-      return Boolean;
+      return Boolean with Post => True;
 
    function Travel_In_CostMatrix
      (VehicleId              : Int64;
       DestOption             : TaskOption;
       Assignment_Cost_Matrix : AssignmentCostMatrix)
-      return Boolean;
+      return Boolean with Post => True;
 
    function Travel_In_CostMatrix
      (VehicleId              : Int64;
       InitOption, DestOption : TaskOption;
       Assignment_Cost_Matrix : AssignmentCostMatrix)
-      return Boolean;
+      return Boolean with Post => True;
 
    function All_Travels_In_CostMatrix
      (Request             : UniqueAutomationRequest;
       TaskPlanOptions_Map : Int64_TPO_Map;
       Matrix              : AssignmentCostMatrix)
-      return Boolean;
+      return Boolean with Post => True;
 
    function All_EligibleEntities_In_EntityList
      (Request             : UniqueAutomationRequest;
       TaskPlanOptions_Map : Int64_TPO_Map)
-      return Boolean;
+      return Boolean with Post => True;
 
    ----------------------------------------
    -- Assignment Tree Branch Bound types --

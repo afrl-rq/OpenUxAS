@@ -1,9 +1,11 @@
-with Ada.Containers.Formal_Hashed_Maps;
-with Ada.Containers.Formal_Hashed_Sets;
-with Ada.Containers.Formal_Ordered_Maps;
-with Ada.Containers.Functional_Maps;
-with Ada.Containers.Functional_Vectors;
-with Ada.Containers;                     use Ada.Containers;
+with SPARK.Containers.Formal.Unbounded_Hashed_Maps;
+with SPARK.Containers.Formal.Unbounded_Hashed_Sets;
+with SPARK.Containers.Formal.Unbounded_Ordered_Maps;
+with SPARK.Containers.Functional.Maps;
+with SPARK.Containers.Functional.Vectors;
+with SPARK.Containers.Functional.Infinite_Sequences;
+with SPARK.Containers.Types;               use SPARK.Containers.Types;
+with SPARK.Big_Integers; use SPARK.Big_Integers;
 
 with Common;                         use Common;
 with LMCP_Messages;                  use LMCP_Messages;
@@ -18,7 +20,7 @@ package Route_Aggregator with SPARK_Mode is
    --  handled by the same primitives. We use functional containers, as it is
    --  not supposed to be modified often.
 
-   package ES_Maps is new Ada.Containers.Functional_Maps
+   package ES_Maps is new SPARK.Containers.Functional.Maps
      (Key_Type     => Int64,
       Element_Type => EntityState);
    use ES_Maps;
@@ -42,7 +44,7 @@ package Route_Aggregator with SPARK_Mode is
        (for all Id of m_entityStatesInfo =>
           (Contains (m_entityStates, Int64_Sequences.First, Last (m_entityStates), Id)));
 
-   package Int64_Formal_Sets is new Ada.Containers.Formal_Hashed_Sets
+   package Int64_Formal_Sets is new SPARK.Containers.Formal.Unbounded_Hashed_Sets
      (Element_Type => Int64,
       Hash         => Int64_Hash);
    use Int64_Formal_Sets;
@@ -52,22 +54,22 @@ package Route_Aggregator with SPARK_Mode is
    package Int_Set_M renames Int64_Formal_Sets.Formal_Model.M;
 
    subtype Int64_Formal_Set is Int64_Formal_Sets.Set
-     (200, Int64_Formal_Sets.Default_Modulus (200));
+     (Int64_Formal_Sets.Default_Modulus (200));
 
    --  Use ordered maps so that we can modify the container during iteration
 
-   package Int64_Formal_Set_Maps is new Ada.Containers.Formal_Ordered_Maps
+   package Int64_Formal_Set_Maps is new SPARK.Containers.Formal.Unbounded_Ordered_Maps
      (Key_Type     => Int64,
       Element_Type => Int64_Formal_Set);
    use Int64_Formal_Set_Maps;
    use Int64_Formal_Set_Maps.Formal_Model;
    package Int_Set_Maps_P renames Int64_Formal_Set_Maps.Formal_Model.P;
    package Int_Set_Maps_K renames Int64_Formal_Set_Maps.Formal_Model.K;
-   package Int_Set_Maps_M is new Ada.Containers.Functional_Maps
+   package Int_Set_Maps_M is new SPARK.Containers.Functional.Maps
      (Int64, Int64_Set);
    use type Int_Set_Maps_M.Map;
 
-   subtype Int64_Formal_Set_Map is Int64_Formal_Set_Maps.Map (200);
+   subtype Int64_Formal_Set_Map is Int64_Formal_Set_Maps.Map;
 
    function Same_Mappings
      (M : Int64_Formal_Set_Maps.Formal_Model.M.Map;
@@ -84,7 +86,7 @@ package Route_Aggregator with SPARK_Mode is
    --  sets to ease formal verification.
    --  Model cannot be ghost as it is used in a type predicate.
 
-   package Int64_RouteResponse_Maps is new Ada.Containers.Formal_Hashed_Maps
+   package Int64_RouteResponse_Maps is new SPARK.Containers.Formal.Unbounded_Hashed_Maps
      (Key_Type     => Int64,
       Element_Type => RoutePlanResponse,
       Hash         => Int64_Hash);
@@ -93,7 +95,7 @@ package Route_Aggregator with SPARK_Mode is
    package RR_Maps_M renames Int64_RouteResponse_Maps.Formal_Model.M;
 
    subtype Int64_RouteResponse_Map is Int64_RouteResponse_Maps.Map
-     (200, Int64_RouteResponse_Maps.Default_Modulus (200))
+     (Int64_RouteResponse_Maps.Default_Modulus (200))
    with Predicate =>
          (for all K of Int64_RouteResponse_Map =>
             Element (Int64_RouteResponse_Map, K).ResponseID = K);
@@ -104,7 +106,7 @@ package Route_Aggregator with SPARK_Mode is
       Cost : Int64 := -1;
    end record;
 
-   package Int64_IdPlanPair_Maps is new Ada.Containers.Formal_Hashed_Maps
+   package Int64_IdPlanPair_Maps is new SPARK.Containers.Formal.Unbounded_Hashed_Maps
      (Key_Type     => Int64,
       Element_Type => IdPlanPair,
       Hash         => Int64_Hash);
@@ -112,7 +114,7 @@ package Route_Aggregator with SPARK_Mode is
    use Int64_IdPlanPair_Maps.Formal_Model;
 
    subtype Int64_IdPlanPair_Map is Int64_IdPlanPair_Maps.Map
-     (200, Int64_IdPlanPair_Maps.Default_Modulus (200))
+     (Int64_IdPlanPair_Maps.Default_Modulus (200))
    with Predicate =>
          (for all K of Int64_IdPlanPair_Map =>
             Element (Int64_IdPlanPair_Map, K).Plan.RouteID = K);
@@ -129,12 +131,12 @@ package Route_Aggregator with SPARK_Mode is
       routeRequestId : Int64)
       return Boolean;
 
-   package UAR_Maps is new Ada.Containers.Formal_Ordered_Maps
+   package UAR_Maps is new SPARK.Containers.Formal.Unbounded_Ordered_Maps
      (Key_Type => Int64,
       Element_Type => UniqueAutomationRequest);
    use UAR_Maps;
 
-   subtype Int64_UniqueAutomationRequest_Map is UAR_Maps.Map (200);
+   subtype Int64_UniqueAutomationRequest_Map is UAR_Maps.Map;
 
    type TaskOptionPair is record
       vehicleId      : Int64 := 0;
@@ -144,24 +146,23 @@ package Route_Aggregator with SPARK_Mode is
       taskOption     : Int64 := 0;
    end record;
 
-   package Int64_TaskOptionPair_Maps is new Ada.Containers.Formal_Hashed_Maps
+   package Int64_TaskOptionPair_Maps is new SPARK.Containers.Formal.Unbounded_Hashed_Maps
      (Key_Type => Int64,
       Element_Type => TaskOptionPair,
       Hash => Int64_Hash);
    use Int64_TaskOptionPair_Maps;
 
-   subtype Int64_TaskOptionPair_Map is Int64_TaskOptionPair_Maps.Map (200, Int64_TaskOptionPair_Maps.Default_Modulus (200));
+   subtype Int64_TaskOptionPair_Map is Int64_TaskOptionPair_Maps.Map (Int64_TaskOptionPair_Maps.Default_Modulus (200));
 
-   package Int64_TaskPlanOptions_Maps is new Ada.Containers.Formal_Hashed_Maps
+   package Int64_TaskPlanOptions_Maps is new SPARK.Containers.Formal.Unbounded_Hashed_Maps
      (Key_Type        => Int64,
       Element_Type    => TaskPlanOptions,
       Hash            => Int64_Hash);
    use Int64_TaskPlanOptions_Maps;
 
-   subtype Int64_TaskPlanOptions_Map is Int64_TaskPlanOptions_Maps.Map
-     (200, Int64_TaskPlanOptions_Maps.Default_Modulus (200));
+   subtype Int64_TaskPlanOptions_Map is Int64_TaskPlanOptions_Maps.Map (Int64_TaskOptionPair_Maps.Default_Modulus (200));
 
-   package RPReq_Sequences is new Ada.Containers.Functional_Vectors
+   package RPReq_Sequences is new SPARK.Containers.Functional.Vectors
         (Index_Type   => Positive,
          Element_Type => RoutePlanRequest);
    type RPReq_Seq is new RPReq_Sequences.Sequence;
@@ -265,7 +266,7 @@ package Route_Aggregator with SPARK_Mode is
 
    package Message_History with
      Ghost,
-     Annotate => (GNATprove, Terminating)
+     Annotate => (GNATprove, Always_Return)
    is
       type Event_Kind is
         (Receive_RouteRequest, Send_PlanRequest, Receive_PlanResponse, Send_RouteResponse);
@@ -275,9 +276,8 @@ package Route_Aggregator with SPARK_Mode is
          Id   : Int64;
       end record;
 
-      package Event_Sequences is new Ada.Containers.Functional_Vectors
-        (Index_Type   => Positive,
-         Element_Type => Event);
+      package Event_Sequences is new SPARK.Containers.Functional.Infinite_Sequences
+        (Element_Type => Event);
       type History_Type is new Event_Sequences.Sequence;
 
       --  At the moment, History only stores message exchanges related to
@@ -499,7 +499,7 @@ package Route_Aggregator with SPARK_Mode is
    with
        Pre => State.m_autoRequestId < Int64'Last
        and then not Contains (State.m_uniqueAutomationRequests, State.m_autoRequestId + 1)
-       and then Length (State.m_uniqueAutomationRequests) < State.m_uniqueAutomationRequests.Capacity;
+       and then Length (State.m_uniqueAutomationRequests) < Count_Type'Last;
 
    procedure Check_All_Route_Plans
      (Mailbox : in out Route_Aggregator_Mailbox;

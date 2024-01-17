@@ -3,7 +3,7 @@
 with UxAS.Comms.Data.Addressed.Attributed;  use  UxAS.Comms.Data.Addressed.Attributed;
 with UxAS.Common.Sentinel_Serial_Buffers;   use UxAS.Common.Sentinel_Serial_Buffers;
 
-with Ada.Containers.Formal_Doubly_Linked_Lists;
+with SPARK.Containers.Formal.Doubly_Linked_Lists;
 
 package UxAS.Comms.Transport.Receiver.ZeroMQ.Addr_Attr_Msg_Receivers is
 
@@ -31,7 +31,7 @@ package UxAS.Comms.Transport.Receiver.ZeroMQ.Addr_Attr_Msg_Receivers is
 
 private
 
-   package Message_Lists is new Ada.Containers.Formal_Doubly_Linked_Lists
+   package Message_Lists is new SPARK.Containers.Formal.Doubly_Linked_Lists
      (Element_Type => Addressed_Attributed_Message_Ref);
 
    subtype Message_Ptr_Deque is Message_Lists.List (Capacity => Max_Message_Deque_Depth);

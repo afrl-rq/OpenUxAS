@@ -49,13 +49,7 @@ jobs:
             - name: Install infrastructure
               run: |
                   cd OpenUxAS
-                  infrastructure/install -vv --no-gnat --no-java -y
-
-            - name: Install GNAT CE 2021
-              if: ${{ matrix.component == 'uxas-ada' }}
-              uses: ada-actions/toolchain@ce2021
-              with:
-                  distrib: community
+                  infrastructure/install -vv --no-java -y
 
             - name: Build OpenUxAS Ada
               run: |
