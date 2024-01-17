@@ -1,6 +1,8 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with SPARK.Big_Integers; use SPARK.Big_Integers;
 with SPARK.Big_Intervals; use SPARK.Big_Intervals;
+with Common;
+use Common.Count_Type_To_Big_Integer_Conversions;
 
 package body Route_Aggregator with SPARK_Mode is
 

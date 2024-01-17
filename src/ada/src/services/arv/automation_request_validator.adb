@@ -2,6 +2,8 @@ with SPARK.Big_Integers;         use SPARK.Big_Integers;
 with Ada.Containers;             use Ada.Containers;
 with AVTAS.LMCP.Types;
 with UxAS.Comms.LMCP_Net_Client; use UxAS.Comms.LMCP_Net_Client;
+with Common;
+use Common.Count_Type_To_Big_Integer_Conversions;
 
 package body Automation_Request_Validator with SPARK_Mode is
 

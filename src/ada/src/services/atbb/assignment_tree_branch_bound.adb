@@ -6,6 +6,8 @@ with Ada.Text_IO;                        use Ada.Text_IO;
 with Algebra;                            use Algebra;
 with Bounded_Stack;
 with Int64_Parsing;                      use Int64_Parsing;
+with Common;
+use Common.Count_Type_To_Big_Integer_Conversions;
 
 package body Assignment_Tree_Branch_Bound with SPARK_Mode is
    use Common.Count_Type_To_Big_Integer_Conversions;

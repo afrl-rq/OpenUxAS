@@ -3,6 +3,8 @@ with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Strings;       use Ada.Strings;
 with Ada.Text_IO;       use Ada.Text_IO;
 with Int64_Parsing;     use Int64_Parsing;
+with Common;
+use Common.Count_Type_To_Big_Integer_Conversions;
 
 package body Algebra with SPARK_Mode is
 
