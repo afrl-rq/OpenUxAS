@@ -1,7 +1,7 @@
-with Ada.Containers.Formal_Doubly_Linked_Lists;
-with Ada.Containers.Formal_Hashed_Maps;
-with Ada.Containers.Functional_Maps;
-with Ada.Containers;                             use all type Ada.Containers.Count_Type;
+with SPARK.Containers.Formal.Doubly_Linked_Lists;
+with SPARK.Containers.Formal.Hashed_Maps;
+with SPARK.Containers.Functional.Maps;
+with SPARK.Containers.Types;                     use SPARK.Containers.Types;
 with Ada.Strings.Unbounded;                      use Ada.Strings.Unbounded;
 with Automation_Request_Validator_Communication; use Automation_Request_Validator_Communication;
 with Common;                                     use Common;
@@ -22,7 +22,7 @@ package Automation_Request_Validator with SPARK_Mode is
       KeepOutAreas : Int64_Seq;
    end record;
 
-   package Int64_Operating_Region_Maps is new Ada.Containers.Functional_Maps
+   package Int64_Operating_Region_Maps is new SPARK.Containers.Functional.Maps
      (Key_Type     => Int64,
       Element_Type => OperatingRegionAreas);
    type Operating_Region_Map is new Int64_Operating_Region_Maps.Map;
@@ -42,7 +42,7 @@ package Automation_Request_Validator with SPARK_Mode is
       end case;
    end record;
 
-   package Int64_Task_Maps is new Ada.Containers.Functional_Maps
+   package Int64_Task_Maps is new SPARK.Containers.Functional.Maps
      (Key_Type     => Int64,
       Element_Type => Task_Kind_And_Id);
    type Task_Map is new Int64_Task_Maps.Map;
@@ -80,22 +80,19 @@ package Automation_Request_Validator with SPARK_Mode is
       end case;
    end record;
 
-   package Int64_Request_Details_Maps is new Ada.Containers.Formal_Hashed_Maps
+   package Int64_Request_Details_Maps is new SPARK.Containers.Functional.Maps
      (Key_Type     => Int64,
-      Element_Type => Request_Details,
-      Hash         => Int64_Hash);
+      Element_Type => Request_Details);
 
-   Request_Details_Max_Capacity : constant := 200; -- arbitrary
-   subtype Request_Details_Map is Int64_Request_Details_Maps.Map
-     (Request_Details_Max_Capacity,
-      Int64_Request_Details_Maps.Default_Modulus (Request_Details_Max_Capacity));
+   type Request_Details_Map is new Int64_Request_Details_Maps.Map;
 
-   package UniqueAutomationRequest_Lists is new Ada.Containers.Formal_Doubly_Linked_Lists
+   package UniqueAutomationRequest_Lists is new SPARK.Containers.Formal.Doubly_Linked_Lists
      (Element_Type => UniqueAutomationRequest);
 
    Max_UniqueAutomationRequest_Deque_Depth : constant := 200; -- arbitrary
    subtype UniqueAutomationRequest_Ref_Deque is UniqueAutomationRequest_Lists.List
      (Capacity => Max_UniqueAutomationRequest_Deque_Depth);
+
    use UniqueAutomationRequest_Lists;
 
    type Automation_Request_Validator_State is record
@@ -123,7 +120,6 @@ package Automation_Request_Validator with SPARK_Mode is
    -------------------------------------
 
    use Int64_Request_Details_Maps;
-   use Int64_Request_Details_Maps.Formal_Model;
 
    --  In the specification, we can clearly separate the parts which are updated
    --  or not to simplify annotation.
@@ -134,15 +130,15 @@ package Automation_Request_Validator with SPARK_Mode is
       Mailbox : in out Automation_Request_Validator_Mailbox;
       Request : in out UniqueAutomationRequest;
       IsReady : out Boolean)
-     with Pre => Contains (Sandbox, Request.RequestID),
+     with Pre => Has_Key (Sandbox, Request.RequestID),
      Post =>
      --  Request was removed from Sandbox iff IsReady is False
 
-     Contains (Sandbox, Request.RequestID) = IsReady
-     and then Model (Sandbox) <= Model (Sandbox)'Old
-     and then M.Keys_Included_Except
-       (Left    => Model (Sandbox)'Old,
-        Right   => Model (Sandbox),
+     Has_Key (Sandbox, Request.RequestID) = IsReady
+     and then Sandbox <= Sandbox'Old
+     and then Keys_Included_Except
+       (Left    => Sandbox'Old,
+        Right   => Sandbox,
         New_Key => Request.RequestID)
 
      --  IsReady is true if the automation request is valid
@@ -167,7 +163,7 @@ package Automation_Request_Validator with SPARK_Mode is
       Mailbox : in out Automation_Request_Validator_Mailbox;
       Request : ImpactAutomationRequest)
    with
-     Pre => not Contains (State.Sandbox, Request.RequestID);
+     Pre => not Has_Key (State.Sandbox, Request.RequestID);
 
    procedure Handle_Task_Automation_Request
      (Config  : Automation_Request_Validator_Configuration_Data;
@@ -175,7 +171,7 @@ package Automation_Request_Validator with SPARK_Mode is
       Mailbox : in out Automation_Request_Validator_Mailbox;
       Request : TaskAutomationRequest)
    with
-     Pre => not Contains (State.Sandbox, Request.RequestID);
+     Pre => not Has_Key (State.Sandbox, Request.RequestID);
 
    procedure Handle_Automation_Response
      (State    : in out Automation_Request_Validator_State;

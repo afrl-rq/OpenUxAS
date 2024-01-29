@@ -1,10 +1,10 @@
 #! /usr/bin/env python3
 
 """
-Install GNAT script.
+Install GNAT FSF script.
 
-This script automates the download and install of GNAT Community, which is
-required to build the Ada services for OpenUxAS.
+This script automates the download and install of GNAT FSF and gnatprove FSF,
+which are required to build the Ada services for OpenUxAS.
 
 Run this script via `infrastructure/install` from the root of your repository,
 like this:
@@ -30,9 +30,13 @@ from support.arguments import (
     add_force_argument,
     add_dry_run_argument,
 )
-from support.commands import Command, run_command_and_exit_on_fail
+from support.commands import (
+    Command,
+    run_command_and_exit_on_fail,
+    run_command_getting_result_and_exit_on_fail,
+)
 from support.log import configure_logging, log_wrap
-from support.paths import OPENUXAS_ROOT, SOFTWARE_DIR, GNAT_DIR
+from support.paths import ALR_DIR, OPENUXAS_ROOT
 
 
 APT_UPDATE = Command(
@@ -46,55 +50,89 @@ APT_INSTALL = Command(
         "apt",
         "install",
         "-y",
-        "fontconfig",
-        "libx11-xcb1",
-        "libx11-6",
-        "libncurses5",
+        "unzip",
+        "libsodium-dev",  # TBD if we want this here
     ],
     description="Installing dependencies",
 )
 
-GNAT_DOWNLOAD_DIR = os.path.join(SOFTWARE_DIR, "gnat_community")
-GNAT_DOWNLOAD_FILE = "gnat-bin"
-GNAT_DOWNLOAD_LINK = (
-    "https://community.download.adacore.com/v1/"
-    "f3a99d283f7b3d07293b2e1d07de00e31e332325?"
-    "filename=gnat-2021-20210519-x86_64-linux-bin"
-)
 
-GNAT_DOWNLOAD = Command(
+ALR_CONFIG_DIR = os.path.join(ALR_DIR, "config")
+ALR_BIN = os.path.join("bin", "alr")
+
+
+ALR_DOWNLOAD_LINK = (
+    # This should be adjusted when there's a stable release that has the fix
+    # for non-local config directory.
+    "https://github.com/alire-project/alire/releases/download/nightly/"
+    "alr-nightly-bin-x86_64-linux.zip"
+)
+ALR_DOWNLOAD_FILE = "alr.zip"
+ALR_DOWNLOAD_CMD = Command(
     cmd=[
         "wget",
+        ALR_DOWNLOAD_LINK,
         "-O",
-        os.path.join(GNAT_DOWNLOAD_DIR, GNAT_DOWNLOAD_FILE),
-        GNAT_DOWNLOAD_LINK,
+        ALR_DOWNLOAD_FILE,
     ],
-    description="Downloading GNAT community",
+    description="Downloading alr",
+    cwd=ALR_DIR,
 )
 
-GNAT_INSTALLER_LINK = "https://github.com/AdaCore/gnat_community_install_script"
-GNAT_INSTALLER_DIR = os.path.join(SOFTWARE_DIR, "gnat_community_install_script")
-GNAT_INSTALLER_CLONE = Command(
-    cmd=["git", "clone", GNAT_INSTALLER_LINK],
-    description="Cloning GNAT community install script",
-    cwd=SOFTWARE_DIR,
-)
-GNAT_INSTALLER_BIN = "install_package.sh"
 
-GNAT_INSTALL = Command(
+ALR_UNZIP_CMD = Command(
+    cmd=["unzip", ALR_DOWNLOAD_FILE],
+    description="Unzipping alr",
+    cwd=ALR_DIR,
+)
+
+
+ALR_TOOLCHAIN_CMD = Command(
     cmd=[
-        "sh",
-        GNAT_INSTALLER_BIN,
-        os.path.join(GNAT_DOWNLOAD_DIR, GNAT_DOWNLOAD_FILE),
-        GNAT_DIR,
+        ALR_BIN,
+        "-c",
+        ALR_CONFIG_DIR,
+        "toolchain",
+        "--select",
+        "gnat_native^13",
+        "gprbuild^22",
     ],
-    description="Install GNAT community",
-    cwd=GNAT_INSTALLER_DIR,
+    description="Install GNAT toolchain using alr",
+    cwd=ALR_DIR,
 )
+
+
+ALR_GNATPROVE_CMD = Command(
+    cmd=[
+        ALR_BIN,
+        "-c",
+        ALR_CONFIG_DIR,
+        "get",
+        "gnatprove^13",
+    ],
+    description="Install GNATprove using alr",
+    cwd=ALR_DIR,
+)
+
+
+ALR_GNATPROVE_DIRNAME_CMD = Command(
+    cmd=[
+        ALR_BIN,
+        "-c",
+        ALR_CONFIG_DIR,
+        "get",
+        "--dirname",
+        "gnatprove",
+    ],
+    description="Get install directory of GNATprove using alr",
+    cwd=ALR_DIR,
+)
+
 
 DESCRIPTION = """\
-This script automates the installation of GNAT Community, which is required to
-build the Ada services for OpenUxAS. You should run this script like this:
+This script automates the installation of GNAT FSF and gnatprove FSF, which is
+required to build the Ada services for OpenUxAS and run the proofs. You should
+run this script like this:
 
     OpenUxAS$ infrastructure/install
 """
@@ -108,42 +146,8 @@ if __name__ == "__main__":
 
     add_dry_run_argument(argument_parser)
     add_force_argument(argument_parser)
-
     add_interactive_group(argument_parser)
-
     add_apt_group(argument_parser)
-
-    gnat_group = argument_parser.add_argument_group("gnat install control")
-    download_group = gnat_group.add_mutually_exclusive_group()
-    download_group.add_argument(
-        "--download-gnat",
-        dest="download_gnat",
-        action="store_true",
-        default=True,
-        help="download GNAT community",
-    )
-    download_group.add_argument(
-        "--no-download-gnat",
-        dest="download_gnat",
-        action="store_false",
-        help="do not download GNAT community",
-    )
-
-    clone_group = gnat_group.add_mutually_exclusive_group()
-    clone_group.add_argument(
-        "--clone-installer",
-        dest="clone_gnat_installer",
-        action="store_true",
-        default=True,
-        help="clone GNAT community installer",
-    )
-    clone_group.add_argument(
-        "--no-clone-installer",
-        dest="clone_gnat_installer",
-        action="store_false",
-        help="do not clone GNAT community installer",
-    )
-
     add_logging_group(argument_parser)
 
     (args, _) = argument_parser.parse_known_args()
@@ -152,19 +156,19 @@ if __name__ == "__main__":
 
     skip_install_gnat = False
 
-    if os.path.exists(GNAT_DIR):
+    if os.path.exists(ALR_DIR):
         if args.force:
             if args.dry_run:
-                print(f"rm -rf {GNAT_DIR}")
+                print(f"rm -rf {os.path.relpath(ALR_DIR, OPENUXAS_ROOT)}")
             else:
-                shutil.rmtree(GNAT_DIR)
+                shutil.rmtree(ALR_DIR)
         else:
             logging.warning(
                 log_wrap(
                     """\
-                GNAT Community appears to have already been installed; skipping
-                this step. Remove it manually or use `--force` if you wish to
-                reinstall GNAT Community.\
+                GNAT FSF appears to have already been installed; skipping this
+                step. Remove it manually or use `--force` if you wish to
+                reinstall GNAT FSF and gnatprove FSF.\
                 """
                 )
             )
@@ -172,66 +176,6 @@ if __name__ == "__main__":
 
     if skip_install_gnat:
         exit(0)
-
-    if args.dry_run:
-        # This is a bit awkward, but illustrates what we will do.
-        print("mkdir -p " + os.path.relpath(GNAT_DOWNLOAD_DIR, OPENUXAS_ROOT))
-    else:
-        pathlib.Path(GNAT_DOWNLOAD_DIR).mkdir(parents=True, exist_ok=True)
-
-    if args.download_gnat and (
-        not args.interactive or input("Download gnat? [Y/n] ") != "n"
-    ):
-        skip_gnat_download = False
-
-        gnat_bin_file = os.path.join(GNAT_DOWNLOAD_DIR, GNAT_DOWNLOAD_FILE)
-
-        if os.path.exists(gnat_bin_file):
-            if args.force:
-                if args.dry_run:
-                    print(f"rm {gnat_bin_file}")
-                else:
-                    os.remove(gnat_bin_file)
-            else:
-                logging.warning(
-                    log_wrap(
-                        """\
-                    GNAT Community seems to have already been downloaded;
-                    skipping this step. Remove it manually or use `--force` if
-                    you wish to redownload GNAT Community.\
-                    """
-                    )
-                )
-                skip_gnat_download = True
-
-        if not skip_gnat_download:
-            run_command_and_exit_on_fail(GNAT_DOWNLOAD, args.dry_run)
-
-    if args.clone_gnat_installer and (
-        not args.interactive or input("Clone gnat installer? [Y/n] ") != "n"
-    ):
-        skip_installer_download = False
-
-        if os.path.exists(GNAT_INSTALLER_DIR):
-            if args.force:
-                if args.dry_run:
-                    print(f"rm -rf {GNAT_INSTALLER_DIR}")
-                else:
-                    shutil.rmtree(GNAT_INSTALLER_DIR)
-            else:
-                logging.warning(
-                    log_wrap(
-                        """\
-                    The GNAT Community installer seems to have already been
-                    cloned; skipping this step. Remove it manually or use
-                    `--force` if you wish to re-clone the installer.\
-                    """
-                    )
-                )
-                skip_installer_download = True
-
-        if not skip_installer_download:
-            run_command_and_exit_on_fail(GNAT_INSTALLER_CLONE, args.dry_run)
 
     if args.update_apt and (
         not args.interactive
@@ -241,9 +185,38 @@ if __name__ == "__main__":
 
     if args.install_packages and (
         not args.interactive
-        or input("Install packages needed for GNAT Community install? " "[Y/n] ") != "n"
+        or input("Install packages needed for GNAT FSF install using apt? [Y/n] ")
+        != "n"
     ):
         run_command_and_exit_on_fail(APT_INSTALL, args.dry_run)
 
-    print("Installing GNAT Community Edition; this may take a while.")
-    run_command_and_exit_on_fail(GNAT_INSTALL, args.dry_run)
+    if args.dry_run:
+        # This is a bit awkward, but illustrates what we will do.
+        print("mkdir -p " + os.path.relpath(ALR_DIR, OPENUXAS_ROOT))
+
+    else:
+        pathlib.Path(ALR_DIR).mkdir(parents=True, exist_ok=True)
+        pathlib.Path(ALR_CONFIG_DIR).mkdir(parents=True, exist_ok=True)
+
+    run_command_and_exit_on_fail(ALR_DOWNLOAD_CMD, args.dry_run)
+    run_command_and_exit_on_fail(ALR_UNZIP_CMD, args.dry_run)
+    run_command_and_exit_on_fail(ALR_TOOLCHAIN_CMD, args.dry_run)
+
+    # Now install gnatprove
+    run_command_and_exit_on_fail(ALR_GNATPROVE_CMD, args.dry_run)
+
+    GNATPROVE_SRC_DIR = os.path.join(
+        ALR_DIR,
+        run_command_getting_result_and_exit_on_fail(
+            ALR_GNATPROVE_DIRNAME_CMD, args.dry_run
+        ).strip(),
+    )
+    GNATPROVE_DST_DIR = os.path.join(ALR_DIR, "gnatprove")
+
+    if args.dry_run:
+        print(
+            f"mv {os.path.relpath(GNATPROVE_SRC_DIR, OPENUXAS_ROOT)}"
+            f"{os.path.relpath(GNATPROVE_DST_DIR, OPENUXAS_ROOT)}"
+        )
+    else:
+        shutil.move(GNATPROVE_SRC_DIR, GNATPROVE_DST_DIR)

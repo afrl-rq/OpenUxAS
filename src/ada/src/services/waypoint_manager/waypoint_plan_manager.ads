@@ -1,5 +1,5 @@
-with Ada.Containers.Formal_Hashed_Maps;
-with Ada.Containers.Formal_Vectors;
+with SPARK.Containers.Formal.Hashed_Maps;
+with SPARK.Containers.Formal.Vectors;
 with Ada.Containers;                             use all type Ada.Containers.Count_Type;
 with Waypoint_Plan_Manager_Communication;        use Waypoint_Plan_Manager_Communication;
 with Common;                                     use Common;
@@ -16,13 +16,13 @@ package Waypoint_Plan_Manager with SPARK_Mode is
    function Pos64_Hash (X : Pos64) return Ada.Containers.Hash_Type is
      (Ada.Containers.Hash_Type'Mod (X));
 
-   package Pos64_WP_Maps is new Ada.Containers.Formal_Hashed_Maps (Pos64, Waypoint, Pos64_Hash);
+   package Pos64_WP_Maps is new SPARK.Containers.Formal.Hashed_Maps (Pos64, Waypoint, Pos64_Hash);
    type Pos64_WP_Map is new Pos64_WP_Maps.Map (Max, Pos64_WP_Maps.Default_Modulus (Max));
 
-   package Pos64_Nat64_Maps is new Ada.Containers.Formal_Hashed_Maps (Pos64, Nat64, Pos64_Hash);
+   package Pos64_Nat64_Maps is new SPARK.Containers.Formal.Hashed_Maps (Pos64, Nat64, Pos64_Hash);
    type Pos64_Nat64_Map is new Pos64_Nat64_Maps.Map (Max, Pos64_Nat64_Maps.Default_Modulus (Max));
 
-   package Pos64_Vectors is new Ada.Containers.Formal_Vectors (Positive, Pos64);
+   package Pos64_Vectors is new SPARK.Containers.Formal.Vectors (Positive, Pos64);
    type Pos64_Vector is new Pos64_Vectors.Vector (Max + 1);
 
    type Waypoint_Plan_Manager_Configuration_Data is record
