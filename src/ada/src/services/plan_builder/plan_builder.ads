@@ -14,6 +14,7 @@ with LMCP_Messages;                       use LMCP_Messages;
 with Plan_Builder_Communication;          use Plan_Builder_Communication;
 
 package Plan_Builder with SPARK_Mode is
+
    pragma Unevaluated_Use_Of_Old (Allow);
 
    pragma Assertion_Policy (Ignore);
@@ -165,7 +166,7 @@ package Plan_Builder with SPARK_Mode is
       Mailbox          : in out Plan_Builder_Mailbox;
       Received_Message : TaskAssignmentSummary)
       with Pre => State_Not_Full (State)
-      and then Valid_Automation_Request(State, Received_Message.CorrespondingAutomationRequestID)
+      and then Valid_Automation_Request (State, Received_Message.CorrespondingAutomationRequestID)
       and then not Contains (State.m_assignmentSummaries, Received_Message.CorrespondingAutomationRequestID)
       and then not Has_Key (State.m_projectedEntityStates, Received_Message.CorrespondingAutomationRequestID)
       and then not Contains (State.m_remainingAssignments, Received_Message.CorrespondingAutomationRequestID)
@@ -193,8 +194,8 @@ package Plan_Builder with SPARK_Mode is
       and then not Contains (State.m_reqeustIDVsOverrides, Unique_Request_Id));
 
    procedure Add_Loiters_To_Mission_Commands
-     (State : in Plan_Builder_State;
-      Config : in Plan_Builder_Configuration_Data;
+     (State : Plan_Builder_State;
+      Config : Plan_Builder_Configuration_Data;
       Response : in out UniqueAutomationResponse)
      with Pre => Length (Response.MissionCommandList) /= 0
      and then Length (Get (Response.MissionCommandList, Last (Response.MissionCommandList)).WaypointList) /= 0;

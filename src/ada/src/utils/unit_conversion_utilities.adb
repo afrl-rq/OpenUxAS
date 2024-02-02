@@ -1,5 +1,3 @@
-with Ada.Numerics.Generic_Elementary_Functions;
-
 package body Unit_Conversion_Utilities is
 
    package Real_Elementary_Fuctions is new Ada.Numerics.Generic_Elementary_Functions (Real);
@@ -47,13 +45,12 @@ package body Unit_Conversion_Utilities is
    -------------------------------------------------
 
    procedure Convert_LatLong_Degrees_To_NorthEast_Meters
-     (This          : in Unit_Converter;
+     (This          : Unit_Converter;
       Latitude_Deg  : Real;
       Longitude_Deg : Real;
       North         : out Real;
       East          : out Real)
    is
-      DegreesToRadians : constant := 180.0 / Ada.Numerics.Pi;
 
       --  double dLatitude_rad = dLatitude_deg * n_Const::c_Convert::dDegreesToRadians();
       Latitude_Rad : constant Real := Latitude_Deg * DegreesToRadians;
@@ -76,7 +73,7 @@ package body Unit_Conversion_Utilities is
    -------------------------------------------------
 
    procedure Convert_NorthEast_Meters_To_LatLong_Degrees
-     (This          : in Unit_Converter;
+     (This          : Unit_Converter;
       North         : Real;
       East          : Real;
       Latitude_Deg  : out Real;

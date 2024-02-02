@@ -91,7 +91,7 @@ package body Plan_Builder with SPARK_Mode is
       declare
          Projected_States : ProjectedState_Seq;
       begin
-         State.m_projectedEntityStates := Add(State.m_projectedEntityStates, Request_Id, Projected_States);
+         State.m_projectedEntityStates := Add (State.m_projectedEntityStates, Request_Id, Projected_States);
       end;
 
       for VehicleID of Corresponding_Automation_Request.EntityList loop
@@ -99,7 +99,7 @@ package body Plan_Builder with SPARK_Mode is
             Found_State : Boolean := False;
          begin
             for P in 1 .. Last (Corresponding_Automation_Request.PlanningStates) loop
-               pragma Loop_Invariant (Length (Get (State.m_projectedEntityStates, Request_Id)) = To_Big_Integer(P - 1)
+               pragma Loop_Invariant (Length (Get (State.m_projectedEntityStates, Request_Id)) = To_Big_Integer (P - 1)
                and Has_Key (State.m_projectedEntityStates, Request_Id));
                if Get (Corresponding_Automation_Request.PlanningStates, P).EntityID = VehicleID then
                   Found_State := True;
@@ -166,7 +166,7 @@ package body Plan_Builder with SPARK_Mode is
             taskImplementationRequest.StartPosition := planState.State.PlanningPosition;
             taskImplementationRequest.StartTime := planState.Time;
             for N in 1 .. Last (Get (State.m_projectedEntityStates, Unique_Request_Id)) loop
-               pragma Loop_Invariant (Length (taskImplementationRequest.NeighborLocations) = To_Big_Integer (N -1));
+               pragma Loop_Invariant (Length (taskImplementationRequest.NeighborLocations) = To_Big_Integer (N - 1));
                taskImplementationRequest.NeighborLocations := Add (taskImplementationRequest.NeighborLocations,
                Get (Get (State.m_projectedEntityStates, Unique_Request_Id), N).State);
             end loop;
@@ -256,7 +256,7 @@ package body Plan_Builder with SPARK_Mode is
                      begin
                         if ((Speed_Alt_Pair.VehicleID = Vehicle_ID) and (Speed_Alt_Pair.TaskID = Received_Message.TaskID)) or (Speed_Alt_Pair.TaskID = 0) then
                            for I in WP_Sequences.First .. Last (Received_Message.TaskWaypoints) loop
-                              pragma Loop_Invariant (Length (Received_Message.TaskWaypoints)'Loop_Entry = Length (Received_message.TaskWaypoints));
+                              pragma Loop_Invariant (Length (Received_Message.TaskWaypoints)'Loop_Entry = Length (Received_Message.TaskWaypoints));
                               declare
                                  Way_Point : Waypoint := Get (Received_Message.TaskWaypoints, I);
                               begin
@@ -301,10 +301,10 @@ package body Plan_Builder with SPARK_Mode is
       if Contains (State.m_remainingAssignments, Unique_Request_Id) then
          if Length (Element (State.m_remainingAssignments, Unique_Request_Id)) = 0 then
             if Has_Key (State.m_projectedEntityStates, Unique_Request_Id) then
-            pragma Assert (Length (In_Progress_Response.FinalStates) = 0);
+               pragma Assert (Length (In_Progress_Response.FinalStates) = 0);
                for E in 1 .. Last (Get (State.m_projectedEntityStates, Unique_Request_Id)) loop
                   pragma Loop_Invariant (Contains (State.m_inProgressResponse, Unique_Request_Id)
-                     and Length (In_Progress_Response.FinalStates) = To_Big_Integer (E -1)
+                     and Length (In_Progress_Response.FinalStates) = To_Big_Integer (E - 1)
                      and E < Integer'Last);
                   In_Progress_Response.FinalStates := Add (In_Progress_Response.FinalStates, Get (Get (State.m_projectedEntityStates, Unique_Request_Id), E).State);
                   Replace (State.m_inProgressResponse, Unique_Request_Id, In_Progress_Response);
@@ -367,8 +367,8 @@ package body Plan_Builder with SPARK_Mode is
    -------------------------------------                                                                                                                                                                                                                     
 
    procedure Add_Loiters_To_Mission_Commands
-     (State : in Plan_Builder_State;
-      Config : in Plan_Builder_Configuration_Data;
+     (State : Plan_Builder_State;
+      Config : Plan_Builder_Configuration_Data;
       Response : in out UniqueAutomationResponse)
    is
       Contains_Loiter : Boolean := False;
@@ -415,7 +415,7 @@ package body Plan_Builder with SPARK_Mode is
             Loiter_Action.Location := (Back_El.Latitude, Back_El.Longitude, Back_El.Altitude, Back_El.AltitudeType);
             --  Loiter_Action.Airspeed := Back_El.GroundSpeed;
             Back_El.VehicleActionList := Add (Back_El.VehicleActionList, Loiter_Action);
-            Wp_List := Set (Wp_List, Last(Wp_List), Back_El);
+            Wp_List := Set (Wp_List, Last (Wp_List), Back_El);
             Last_Mission_Command.WaypointList := Wp_List;
             Response.MissionCommandList := Set (Response.MissionCommandList, Last (Response.MissionCommandList), Last_Mission_Command);
          end;
