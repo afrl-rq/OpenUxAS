@@ -103,7 +103,7 @@ ALR_PRINTENV_CMD="( cd \"${ALR_DIR}/gnatprove\" && \"${ALR_DIR}/bin/alr\" -c \"$
 function print_gnat_fsf_paths {
     which gnat >/dev/null 2>&1
 
-    if [ $? -ne 0 ]; then
+    if [[ $? -ne 0 && -d "${ALR_DIR}/gnatprove" ]]; then
         debug_and_run "${ALR_PRINTENV_CMD}"
     fi
 }
