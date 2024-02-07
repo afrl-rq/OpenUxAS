@@ -30,9 +30,11 @@ function _anod {
     # Look ahead to see if we're building uxas-ada
     if is_first_positional_arg "$*" "build" && contains "$*" "uxas-ada"; then
         ensure_gnat
+
+    # Likewise, if we're running printenv for uxas-ada's build environment, we
+    # should try to put the alire-installed gnat on the path
     elif is_first_positional_arg "$*" "printenv" && contains "$*" "uxas-ada" && contains "$*" "--build-env"; then
         print_gnat_fsf_paths
-        ensure_gnat
     fi
 
     # Look ahead to process specific commands.
