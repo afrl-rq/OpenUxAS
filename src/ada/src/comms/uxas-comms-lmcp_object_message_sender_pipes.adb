@@ -154,7 +154,7 @@ package body UxAS.Comms.LMCP_Object_Message_Sender_Pipes is
       --  AVTAS::lmcp::ByteBuffer* lmcpByteBuffer = AVTAS::lmcp::Factory::packMessage(lmcpObject.get(), true);
       Buffer  : constant ByteBuffer := AVTAS.LMCP.Factory.packMessage (Message, enableChecksum => True);
       --  std::string serializedPayload = std::string(reinterpret_cast<char*>(lmcpByteBuffer->array()), lmcpByteBuffer->capacity());
-      Payload : constant String := Buffer.Raw_Bytes;
+      Payload : constant String := Raw_Bytes_As_String (Buffer);
    begin
       --  m_transportSender->sendMessage
       --   (castAddress,
@@ -206,7 +206,7 @@ package body UxAS.Comms.LMCP_Object_Message_Sender_Pipes is
       --  AVTAS::lmcp::ByteBuffer* lmcpByteBuffer = AVTAS::lmcp::Factory::packMessage(lmcpObject.get(), true);
       Buffer  : constant ByteBuffer := AVTAS.LMCP.Factory.packMessage (Message, enableChecksum => True);
       --  std::string serializedPayload = std::string(reinterpret_cast<char*>(lmcpByteBuffer->array()), lmcpByteBuffer->capacity());
-      Payload : constant String := Buffer.Raw_Bytes;
+      Payload : constant String := Raw_Bytes_As_String (Buffer);
    begin
       --  Note: this body is identical to the body of Send_LimitedCast_Message, per the C++ implementation
       --  TODO: see why

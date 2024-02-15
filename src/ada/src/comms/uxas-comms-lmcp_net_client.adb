@@ -143,10 +143,10 @@ package body UxAS.Comms.LMCP_Net_Client is
       --  PDR: note we don't just call Put_String because that would first put
       --  the length, which the C++ code doesn't do
       for C of Payload loop
-         Buffer.Put_Byte (Character'Pos (C));
+         Put_Byte (Buffer, Character'Pos (C));
       end loop;
       --  lmcpByteBuffer.rewind();
-      Buffer.Rewind;
+      Rewind (Buffer);
 
       --  lmcpObject.reset(AVTAS::lmcp::Factory::getObject(lmcpByteBuffer));
       AVTAS.LMCP.Factory.getObject (Buffer, Result);
