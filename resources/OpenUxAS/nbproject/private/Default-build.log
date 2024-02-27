@@ -1,0 +1,108 @@
+[Compiling src/cpp/Communications/AddressedAttributedMessage.cpp]
+[Compiling src/cpp/Communications/LmcpObjectMessageSenderPipe.cpp]
+[Compiling src/cpp/Communications/ImpactSubscribePushBridge.cpp]
+[Compiling src/cpp/Communications/LmcpObjectMessageReceiverPipe.cpp]
+[Compiling src/cpp/Communications/LmcpObjectMessageTcpReceiverSenderPipe.cpp]
+[Compiling src/cpp/Communications/LmcpObjectNetworkBridgeManager.cpp]
+[Compiling src/cpp/Communications/LmcpObjectNetworkClientBase.cpp]
+[Compiling src/cpp/Communications/LmcpObjectNetworkPublishPullBridge.cpp]
+[Compiling src/cpp/Communications/LmcpObjectNetworkSerialBridge.cpp]
+[Compiling src/cpp/Communications/LmcpObjectNetworkServer.cpp]
+[Compiling src/cpp/Communications/LmcpObjectNetworkSubscribePushBridge.cpp]
+[Compiling src/cpp/Communications/LmcpObjectNetworkTcpBridge.cpp]
+[Compiling src/cpp/Communications/LmcpObjectNetworkZeroMqZyreBridge.cpp]
+[Compiling src/cpp/Communications/TransportReceiverBase.cpp]
+[Compiling src/cpp/Communications/ZeroMqAddressedAttributedMessageReceiver.cpp]
+[Compiling src/cpp/Communications/ZeroMqAddressedAttributedMessageSender.cpp]
+[Compiling src/cpp/Communications/ZeroMqAddressedAttributedMessageTcpReceiverSender.cpp]
+[Compiling src/cpp/Communications/ZeroMqAddressStringReceiver.cpp]
+[Compiling src/cpp/Communications/ZeroMqAddressStringSender.cpp]
+[Compiling src/cpp/Communications/ZeroMqFabric.cpp]
+[Compiling src/cpp/Communications/ZeroMqReceiverBase.cpp]
+[Compiling src/cpp/Communications/ZeroMqSenderBase.cpp]
+[Compiling src/cpp/Communications/ZeroMqZyreBridge.cpp]
+[Compiling src/cpp/Communications/ZeroMq/Proxy/ZmqProxy.cpp]
+[Compiling src/cpp/Communications/ZeroMq/Proxy/ThreadRunnerBase.cpp]
+[Compiling src/cpp/Communications/ZeroMq/Receivers/MsgReceiverSentinel.cpp]
+[Compiling src/cpp/Communications/ZeroMq/Receivers/SetArrayClientList.cpp]
+[Compiling src/cpp/Communications/ZeroMq/Receivers/ZmqTcpReceiver.cpp]
+[Compiling src/cpp/Communications/ZeroMq/Receivers/ZmqGenericReceiver.cpp]
+[Compiling src/cpp/Communications/ZeroMq/Senders/MsgSenderSentinel.cpp]
+[Compiling src/cpp/Communications/ZeroMq/Senders/ZmqTcpSender.cpp]
+[Compiling src/cpp/Communications/ZeroMq/Sockets/ZmqSocketBase.cpp]
+[Compiling src/cpp/Communications/ZeroMq/Sockets/ZmqSocketInitializer.cpp]
+[Compiling src/cpp/Communications/ZeroMq/Sockets/ZmqTcpSocket.cpp]
+[Compiling src/cpp/Communications/ZeroMq/ZmqAttributedMsgSenderReceiver.cpp]
+[Compiling src/cpp/Communications/ZeroMq/ZmqPullReceiver.cpp]
+[Compiling src/cpp/Communications/ZeroMq/ZmqPushSender.cpp]
+[Compiling src/cpp/Communications/ZeroMq/ZmqTcpSenderReceiver.cpp]
+[Compiling src/cpp/Services/00_ServiceTemplate.cpp]
+[Compiling src/cpp/Services/01_HelloWorld.cpp]
+[Compiling src/cpp/Services/AssignmentTreeBranchBoundBase.cpp]
+[Compiling src/cpp/Services/AssignmentTreeBranchBoundService.cpp]
+[Compiling src/cpp/Services/AutomationDiagramDataService.cpp]
+[Compiling src/cpp/Services/DAIDALUS_Processing.cpp]
+[Compiling src/cpp/Services/AutomationRequestValidatorService.cpp]
+[Compiling src/cpp/Services/BatchSummaryService.cpp]
+[Compiling src/cpp/Services/LoiterLeash.cpp]
+[Compiling src/cpp/Services/MessageLoggerDataService.cpp]
+[Compiling src/cpp/Services/OsmPlannerService.cpp]
+In file included from src/cpp/Services/DAIDALUS_Processing.cpp:21:
+src/cpp/Services/DAIDALUS_Processing.h:23:10: fatal error: Daidalus.h: No such file or directory
+   23 | #include "Daidalus.h"
+      |          ^~~~~~~~~~~~
+compilation terminated.
+make: *** [Makefile:159: obj/cpp/src/cpp/Services/DAIDALUS_Processing.o] Error 1
+make: *** Waiting for unfinished jobs....
+[Compiling src/cpp/Services/OperatingRegionStateService.cpp]
+In file included from /home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/geometry/geometry.hpp:26,
+                 from /home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/geometry.hpp:17,
+                 from src/cpp/VisilibityLib/visilibity.h:87,
+                 from src/cpp/Services/BatchSummaryService.h:27,
+                 from src/cpp/Services/BatchSummaryService.cpp:17:
+/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/geometry/geometry.hpp:27:1: note: ‘#pragma message: CAUTION: Boost.Geometry in Boost 1.73 deprecates support for C++03 and will require C++14 from Boost 1.75 onwards.’
+   27 | BOOST_PRAGMA_MESSAGE("CAUTION: Boost.Geometry in Boost 1.73 deprecates support for C++03 and will require C++14 from Boost 1.75 onwards.")
+      | ^~~~~~~~~~~~~~~~~~~~
+/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/geometry/geometry.hpp:28:1: note: ‘#pragma message: CAUTION: Define BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING to suppress this message.’
+   28 | BOOST_PRAGMA_MESSAGE("CAUTION: Define BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING to suppress this message.")
+      | ^~~~~~~~~~~~~~~~~~~~
+/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/range/result_iterator.hpp:20:1: note: ‘#pragma message: This header is deprecated. Use <boost/range/iterator.hpp> instead.’
+   20 | BOOST_HEADER_DEPRECATED("<boost/range/iterator.hpp>")
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/range/const_reverse_iterator.hpp:20:1: note: ‘#pragma message: This header is deprecated. Use <boost/range/reverse_iterator.hpp> instead.’
+   20 | BOOST_HEADER_DEPRECATED("<boost/range/reverse_iterator.hpp>")
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/range/reverse_result_iterator.hpp:20:1: note: ‘#pragma message: This header is deprecated. Use <boost/range/reverse_iterator.hpp> instead.’
+   20 | BOOST_HEADER_DEPRECATED("<boost/range/reverse_iterator.hpp>")
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/geometry/geometry.hpp:26,
+                 from /home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/geometry.hpp:17,
+                 from src/cpp/VisilibityLib/visilibity.h:87,
+                 from src/cpp/Plans/Polygon.h:44,
+                 from src/cpp/Plans/VisibilityGraph.h:31,
+                 from src/cpp/Services/OsmPlannerService.h:24,
+                 from src/cpp/Services/OsmPlannerService.cpp:19:
+/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/geometry/geometry.hpp:27:1: note: ‘#pragma message: CAUTION: Boost.Geometry in Boost 1.73 deprecates support for C++03 and will require C++14 from Boost 1.75 onwards.’
+   27 | BOOST_PRAGMA_MESSAGE("CAUTION: Boost.Geometry in Boost 1.73 deprecates support for C++03 and will require C++14 from Boost 1.75 onwards.")
+      | ^~~~~~~~~~~~~~~~~~~~
+/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/geometry/geometry.hpp:28:1: note: ‘#pragma message: CAUTION: Define BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING to suppress this message.’
+   28 | BOOST_PRAGMA_MESSAGE("CAUTION: Define BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING to suppress this message.")
+      | ^~~~~~~~~~~~~~~~~~~~
+/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/range/result_iterator.hpp:20:1: note: ‘#pragma message: This header is deprecated. Use <boost/range/iterator.hpp> instead.’
+   20 | BOOST_HEADER_DEPRECATED("<boost/range/iterator.hpp>")
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/range/const_reverse_iterator.hpp:20:1: note: ‘#pragma message: This header is deprecated. Use <boost/range/reverse_iterator.hpp> instead.’
+   20 | BOOST_HEADER_DEPRECATED("<boost/range/reverse_iterator.hpp>")
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/range/reverse_result_iterator.hpp:20:1: note: ‘#pragma message: This header is deprecated. Use <boost/range/reverse_iterator.hpp> instead.’
+   20 | BOOST_HEADER_DEPRECATED("<boost/range/reverse_iterator.hpp>")
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/detail/no_exceptions_support.hpp:17:1: note: ‘#pragma message: This header is deprecated. Use <boost/core/no_exceptions_support.hpp> instead.’
+   17 | BOOST_HEADER_DEPRECATED("<boost/core/no_exceptions_support.hpp>")
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/detail/no_exceptions_support.hpp:17:1: note: ‘#pragma message: This header is deprecated. Use <boost/core/no_exceptions_support.hpp> instead.’
+   17 | BOOST_HEADER_DEPRECATED("<boost/core/no_exceptions_support.hpp>")
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/boost/install/include/boost/detail/iterator.hpp:13:1: note: ‘#pragma message: This header is deprecated. Use <iterator> instead.’
+   13 | BOOST_HEADER_DEPRECATED("<iterator>")
+      | ^~~~~~~~~~~~~~~~~~~~~~~
