@@ -1,4 +1,5 @@
 """Common path definitions for installing."""
+
 import os
 
 # Note that the utility of this particular variable is limited, because it will
