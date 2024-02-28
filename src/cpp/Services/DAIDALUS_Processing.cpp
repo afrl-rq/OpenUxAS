@@ -1669,12 +1669,43 @@ bool DAIDALUS_Processing::processReceivedLmcpMessage(std::unique_ptr<uxas::commu
                                         {
                                             //find pointer to the last next waypoint when still on mission. Then send MissionCommand that eliminates all points
                                             //more than 1 point prior to last known on mission waypoint due to WaypointManager's handling of Mission Commands.
-                                            afrl::cmasi::Waypoint* NextWaypoint = m_MissionCommand->getWaypointList()[m_NextWaypoint - 1];
+                                             int cutpoint_index = 0;
+                                            // for (auto waypoint_index = m_MissionCommand->getWaypointList().begin(); waypoint_index < m_MissionCommand->getWaypointList().end(); waypoint_index++)
+                                            for (auto waypoint_index : m_MissionCommand->getWaypointList())
+                                            {
+                                                if ((waypoint_index->getNumber()) == m_NextWaypoint)
+                                                {
+                                                    break;
+                                                }
+                                                cutpoint_index+= 1;
+                                            }
+                                            afrl::cmasi::Waypoint* NextWaypoint = m_MissionCommand->getWaypointList()[cutpoint_index];
                                             auto iCutPoint = std::find(m_MissionCommand->getWaypointList().begin(), m_MissionCommand->getWaypointList().end(), NextWaypoint);
-                                            if (iCutPoint != m_MissionCommand->getWaypointList().begin())
+                                             if (iCutPoint != m_MissionCommand->getWaypointList().end() && iCutPoint != m_MissionCommand->getWaypointList().begin())
                                                 {
                                                     m_MissionCommand->getWaypointList().erase(m_MissionCommand->getWaypointList().begin(), iCutPoint-1);
                                                 }
+                                             /*   int counter = 0;
+                                            for (auto waypoint_index2 : m_MissionCommand->getWaypointList())
+                                            {
+                                                if (counter < cutpoint_index)
+                                                {
+                                                    waypoint_index2->setAltitude(NextWaypoint->getAltitude());
+                                                    waypoint_index2->setAltitudeType(NextWaypoint->getAltitudeType());
+                                                    waypoint_index2->setLatitude(NextWaypoint->getLatitude());
+                                                    waypoint_index2->setLongitude(NextWaypoint->getLongitude());
+                                                    waypoint_index2->setNumber(NextWaypoint->getNumber());
+                                                    waypoint_index2->setNextWaypoint(NextWaypoint->getNextWaypoint());
+                                                    waypoint_index2->setSpeed(NextWaypoint->getSpeed());
+                                                    waypoint_index2->setSpeedType(NextWaypoint->getSpeedType());
+                                                    waypoint_index2->setClimbRate(NextWaypoint->getClimbRate());
+                                                    waypoint_index2->setTurnType(NextWaypoint->getTurnType());
+                                                    waypoint_index2->setContingencyWaypointA(NextWaypoint->getContingencyWaypointA());
+                                                    waypoint_index2->setContingencyWaypointB(NextWaypoint->getContingencyWaypointB());
+                                                }
+                                                counter +=1;
+                                                // std::cout << "Current iteration is " << counter << " Cut-off for repetition is " << cutpoint_index << std::endl;
+                                            } */
                                             m_MissionCommand->setFirstWaypoint(m_NextWaypoint);
                                             sendSharedLmcpObjectBroadcastMessage(m_MissionCommand);
                                             m_state = OnMission;

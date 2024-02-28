@@ -1,0 +1,1299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp" name="0">
+      <df name="Communications">
+        <df name="ZeroMq">
+          <df name="Proxy">
+            <in>ThreadRunnerBase.cpp</in>
+            <in>ZmqProxy.cpp</in>
+          </df>
+          <df name="Receivers">
+            <in>MsgReceiverSentinel.cpp</in>
+            <in>SetArrayClientList.cpp</in>
+            <in>ZmqGenericReceiver.cpp</in>
+            <in>ZmqTcpReceiver.cpp</in>
+          </df>
+          <df name="Senders">
+            <in>MsgSenderSentinel.cpp</in>
+            <in>ZmqTcpSender.cpp</in>
+          </df>
+          <df name="Sockets">
+            <in>ZmqSocketBase.cpp</in>
+            <in>ZmqSocketInitializer.cpp</in>
+            <in>ZmqTcpSocket.cpp</in>
+          </df>
+          <in>ZmqAttributedMsgSenderReceiver.cpp</in>
+          <in>ZmqPullReceiver.cpp</in>
+          <in>ZmqPushSender.cpp</in>
+          <in>ZmqTcpSenderReceiver.cpp</in>
+        </df>
+        <in>AddressedAttributedMessage.cpp</in>
+        <in>ImpactSubscribePushBridge.cpp</in>
+        <in>LmcpObjectMessageReceiverPipe.cpp</in>
+        <in>LmcpObjectMessageSenderPipe.cpp</in>
+        <in>LmcpObjectMessageTcpReceiverSenderPipe.cpp</in>
+        <in>LmcpObjectNetworkBridgeManager.cpp</in>
+        <in>LmcpObjectNetworkClientBase.cpp</in>
+        <in>LmcpObjectNetworkPublishPullBridge.cpp</in>
+        <in>LmcpObjectNetworkSerialBridge.cpp</in>
+        <in>LmcpObjectNetworkServer.cpp</in>
+        <in>LmcpObjectNetworkSubscribePushBridge.cpp</in>
+        <in>LmcpObjectNetworkTcpBridge.cpp</in>
+        <in>LmcpObjectNetworkZeroMqZyreBridge.cpp</in>
+        <in>TransportReceiverBase.cpp</in>
+        <in>ZeroMqAddressStringReceiver.cpp</in>
+        <in>ZeroMqAddressStringSender.cpp</in>
+        <in>ZeroMqAddressedAttributedMessageReceiver.cpp</in>
+        <in>ZeroMqAddressedAttributedMessageSender.cpp</in>
+        <in>ZeroMqAddressedAttributedMessageTcpReceiverSender.cpp</in>
+        <in>ZeroMqFabric.cpp</in>
+        <in>ZeroMqReceiverBase.cpp</in>
+        <in>ZeroMqSenderBase.cpp</in>
+        <in>ZeroMqZyreBridge.cpp</in>
+      </df>
+      <df name="DPSS">
+        <in>CoordinateConversions.cpp</in>
+        <in>DRand.cpp</in>
+        <in>Dpss.cpp</in>
+        <in>DpssApi.cpp</in>
+        <in>DpssDataTypes.cpp</in>
+        <in>DpssUtilities.cpp</in>
+        <in>PlanOffset.cpp</in>
+        <in>PlanPrecisely.cpp</in>
+        <in>PlanQuickly.cpp</in>
+        <in>SegmentMap.cpp</in>
+        <in>SensorSteering2.cpp</in>
+      </df>
+      <df name="Plans">
+        <in>CGrid.cpp</in>
+        <in>Edge.cpp</in>
+        <in>Polygon.cpp</in>
+        <in>Position.cpp</in>
+        <in>Trajectory.cpp</in>
+        <in>VisibilityGraph.cpp</in>
+        <in>Waypoint.cpp</in>
+      </df>
+      <df name="Services">
+        <in>00_ServiceTemplate.cpp</in>
+        <in>01_HelloWorld.cpp</in>
+        <in>AssignmentTreeBranchBoundBase.cpp</in>
+        <in>AssignmentTreeBranchBoundService.cpp</in>
+        <in>AutomationDiagramDataService.cpp</in>
+        <in>AutomationRequestValidatorService.cpp</in>
+        <in>BatchSummaryService.cpp</in>
+        <in>DAIDALUS_Processing.cpp</in>
+        <in>LoiterLeash.cpp</in>
+        <in>MessageLoggerDataService.cpp</in>
+        <in>OperatingRegionStateService.cpp</in>
+        <in>OsmPlannerService.cpp</in>
+        <in>PlanBuilderService.cpp</in>
+        <in>RouteAggregatorService.cpp</in>
+        <in>RoutePlannerService.cpp</in>
+        <in>RoutePlannerVisibilityService.cpp</in>
+        <in>SendMessagesService.cpp</in>
+        <in>SensorManagerService.cpp</in>
+        <in>SerialAutomationRequestTestService.cpp</in>
+        <in>ServiceBase.cpp</in>
+        <in>ServiceManager.cpp</in>
+        <in>SimpleWaypointPlanManagerService.cpp</in>
+        <in>StatusReportService.cpp</in>
+        <in>SteeringService.cpp</in>
+        <in>Test_SimulationTime.cpp</in>
+        <in>WaypointPlanManagerService.cpp</in>
+      </df>
+      <df name="Tasks">
+        <in>00_TaskTemplate.cpp</in>
+        <in>AngledAreaSearchTaskService.cpp</in>
+        <in>AssignmentCoordinatorTaskService.cpp</in>
+        <in>BlockadeTaskService.cpp</in>
+        <in>CmasiAreaSearchTaskService.cpp</in>
+        <in>CmasiLineSearchTaskService.cpp</in>
+        <in>CmasiPointSearchTaskService.cpp</in>
+        <in>CommRelayTaskService.cpp</in>
+        <in>CordonTaskService.cpp</in>
+        <in>DynamicTaskServiceBase.cpp</in>
+        <in>EscortTaskService.cpp</in>
+        <in>ImpactLineSearchTaskService.cpp</in>
+        <in>ImpactPointSearchTaskService.cpp</in>
+        <in>LoiterTaskService.cpp</in>
+        <in>MultiVehicleWatchTaskService.cpp</in>
+        <in>MustFlyTaskService.cpp</in>
+        <in>OverwatchTaskService.cpp</in>
+        <in>PatternSearchTaskService.cpp</in>
+        <in>RendezvousTask.cpp</in>
+        <in>TaskManagerService.cpp</in>
+        <in>TaskServiceBase.cpp</in>
+        <in>TaskTrackerService.cpp</in>
+      </df>
+      <df name="Utilities">
+        <in>Algebra.cpp</in>
+        <in>CallbackTimer.cpp</in>
+        <in>FileSystemUtilities.cpp</in>
+        <in>FlatEarth.cpp</in>
+        <in>Permute.cpp</in>
+        <in>RouteExtension.cpp</in>
+        <in>SensorSteering.cpp</in>
+        <in>TimeUtilities.cpp</in>
+        <in>UnitConversions.cpp</in>
+        <in>UxAS_ConfigurationManager.cpp</in>
+        <in>UxAS_ConsoleLogger.cpp</in>
+        <in>UxAS_DatabaseLogger.cpp</in>
+        <in>UxAS_DatabaseLoggerHelper.cpp</in>
+        <in>UxAS_FileLogger.cpp</in>
+        <in>UxAS_HeadLogDataDatabaseLogger.cpp</in>
+        <in>UxAS_LogManager.cpp</in>
+        <in>UxAS_SentinelSerialBuffer.cpp</in>
+        <in>UxAS_Time.cpp</in>
+        <in>UxAS_TimerManager.cpp</in>
+        <in>UxAS_ZeroMQ.cpp</in>
+      </df>
+      <df name="VisilibityLib">
+        <in>visilibity.cpp</in>
+      </df>
+      <in>UxAS_Main.cpp</in>
+    </df>
+    <df root="/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/cppzmq/install"
+        name="1">
+    </df>
+    <df root="/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/czmq/install"
+        name="2">
+    </df>
+    <df root="/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/pugixml/install"
+        name="3">
+    </df>
+    <df root="/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/serial/install"
+        name="4">
+    </df>
+    <df root="/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/sqlite/install"
+        name="5">
+    </df>
+    <df root="/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/sqlitecpp/install"
+        name="6">
+    </df>
+    <df root="/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/uxas-lmcp-cpp/install"
+        name="7">
+    </df>
+    <df root="/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/zeromq/install"
+        name="8">
+    </df>
+    <df root="/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/zyre/install"
+        name="9">
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>/home/rqqa/vvcas-sean/OpenUxAS/resources/OpenUxAS/nbproject/private/launcher.properties</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
+  <sourceRootList>
+    <Elem>/home/rqqa/vvcas-sean/OpenUxAS/src/cpp</Elem>
+    <Elem>/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/cppzmq/install</Elem>
+    <Elem>/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/czmq/install</Elem>
+    <Elem>/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/pugixml/install</Elem>
+    <Elem>/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/serial/install</Elem>
+    <Elem>/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/sqlite/install</Elem>
+    <Elem>/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/sqlitecpp/install</Elem>
+    <Elem>/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/uxas-lmcp-cpp/install</Elem>
+    <Elem>/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/zeromq/install</Elem>
+    <Elem>/home/rqqa/vvcas-sean/OpenUxAS/infrastructure/sbx/x86_64-linux/zyre/install</Elem>
+  </sourceRootList>
+  <projectmakefile></projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>false</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <flagsDictionary>
+        <element flagsID="0" commonFlags="-fPIC -std=c++11"/>
+      </flagsDictionary>
+      <codeAssistance>
+      </codeAssistance>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>/home/rqqa/vvcas-sean/OpenUxAS</buildCommandWorkingDir>
+          <buildCommand>make -j all</buildCommand>
+          <cleanCommand>make clean</cleanCommand>
+          <executablePath></executablePath>
+          <ccTool>
+            <incDir>
+              <pElem>../../src/cpp/Communications</pElem>
+              <pElem>../../src/cpp/Communications/ZeroMq/Proxy</pElem>
+              <pElem>../../src/cpp/Communications/ZeroMq/Receivers</pElem>
+              <pElem>../../src/cpp/Communications/ZeroMq/Senders</pElem>
+              <pElem>../../src/cpp/Communications/ZeroMq/Sockets</pElem>
+              <pElem>../../src/cpp/Communications/ZeroMq</pElem>
+              <pElem>../../src/cpp/Includes</pElem>
+              <pElem>../../src/cpp/Services</pElem>
+              <pElem>../../src/cpp/Tasks</pElem>
+              <pElem>../../src/cpp/DPSS</pElem>
+              <pElem>../../src/cpp/Plans</pElem>
+              <pElem>../../src/cpp/Utilities</pElem>
+              <pElem>../../src/cpp/VisilibityLib</pElem>
+              <pElem>../AutomationDiagramDataService</pElem>
+              <pElem>../..</pElem>
+            </incDir>
+          </ccTool>
+        </makeTool>
+        <preBuild>
+          <preBuildCommandWorkingDir>.</preBuildCommandWorkingDir>
+          <preBuildCommand></preBuildCommand>
+        </preBuild>
+      </makefileType>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/AddressedAttributedMessage.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ImpactSubscribePushBridge.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/LmcpObjectMessageReceiverPipe.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/LmcpObjectMessageSenderPipe.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/LmcpObjectMessageTcpReceiverSenderPipe.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/LmcpObjectNetworkBridgeManager.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/LmcpObjectNetworkClientBase.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/LmcpObjectNetworkPublishPullBridge.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/LmcpObjectNetworkSerialBridge.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/LmcpObjectNetworkServer.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/LmcpObjectNetworkSubscribePushBridge.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/LmcpObjectNetworkTcpBridge.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/LmcpObjectNetworkZeroMqZyreBridge.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/TransportReceiverBase.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMq/Proxy/ThreadRunnerBase.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMq/Proxy/ZmqProxy.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMq/Receivers/MsgReceiverSentinel.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMq/Receivers/SetArrayClientList.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMq/Receivers/ZmqGenericReceiver.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMq/Receivers/ZmqTcpReceiver.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMq/Senders/MsgSenderSentinel.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMq/Senders/ZmqTcpSender.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMq/Sockets/ZmqSocketBase.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMq/Sockets/ZmqSocketInitializer.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMq/Sockets/ZmqTcpSocket.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMq/ZmqAttributedMsgSenderReceiver.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMq/ZmqPullReceiver.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMq/ZmqPushSender.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMq/ZmqTcpSenderReceiver.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMqAddressStringReceiver.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMqAddressStringSender.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMqAddressedAttributedMessageReceiver.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMqAddressedAttributedMessageSender.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMqAddressedAttributedMessageTcpReceiverSender.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMqFabric.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMqReceiverBase.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMqSenderBase.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Communications/ZeroMqZyreBridge.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/DPSS/CoordinateConversions.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/DPSS/DRand.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/DPSS/Dpss.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/DPSS/DpssApi.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/DPSS/DpssDataTypes.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/DPSS/DpssUtilities.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/DPSS/PlanOffset.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/DPSS/PlanPrecisely.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/DPSS/PlanQuickly.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/DPSS/SegmentMap.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/DPSS/SensorSteering2.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Plans/CGrid.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Plans/Edge.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Plans/Polygon.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Plans/Position.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Plans/Trajectory.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Plans/VisibilityGraph.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Plans/Waypoint.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/00_ServiceTemplate.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/01_HelloWorld.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/AssignmentTreeBranchBoundBase.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/AssignmentTreeBranchBoundService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/AutomationDiagramDataService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/AutomationRequestValidatorService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/BatchSummaryService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/DAIDALUS_Processing.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/LoiterLeash.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/MessageLoggerDataService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/OperatingRegionStateService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/OsmPlannerService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/PlanBuilderService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/RouteAggregatorService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/RoutePlannerService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/RoutePlannerVisibilityService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/SendMessagesService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/SensorManagerService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/SerialAutomationRequestTestService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/ServiceBase.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/ServiceManager.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/SimpleWaypointPlanManagerService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/StatusReportService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/SteeringService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/Test_SimulationTime.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Services/WaypointPlanManagerService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/00_TaskTemplate.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/AngledAreaSearchTaskService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/AssignmentCoordinatorTaskService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/BlockadeTaskService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/CmasiAreaSearchTaskService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/CmasiLineSearchTaskService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/CmasiPointSearchTaskService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/CommRelayTaskService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/CordonTaskService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/DynamicTaskServiceBase.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/EscortTaskService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/ImpactLineSearchTaskService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/ImpactPointSearchTaskService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/LoiterTaskService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/MultiVehicleWatchTaskService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/MustFlyTaskService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/OverwatchTaskService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/PatternSearchTaskService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/RendezvousTask.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/TaskManagerService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/TaskServiceBase.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Tasks/TaskTrackerService.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/Algebra.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/CallbackTimer.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/FileSystemUtilities.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/FlatEarth.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/Permute.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/RouteExtension.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/SensorSteering.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/TimeUtilities.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/UnitConversions.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/UxAS_ConfigurationManager.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/UxAS_ConsoleLogger.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/UxAS_DatabaseLogger.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/UxAS_DatabaseLoggerHelper.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/UxAS_FileLogger.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/UxAS_HeadLogDataDatabaseLogger.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/UxAS_LogManager.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/UxAS_SentinelSerialBuffer.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/UxAS_Time.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/UxAS_TimerManager.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/Utilities/UxAS_ZeroMQ.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/UxAS_Main.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="/home/rqqa/vvcas-sean/OpenUxAS/src/cpp/VisilibityLib/visilibity.cpp"
+            ex="false"
+            tool="1"
+            flavor2="8">
+        <ccTool flags="0">
+        </ccTool>
+      </item>
+      <folder path="0/DPSS">
+        <ccTool>
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="0/Plans">
+        <ccTool>
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="0/Services">
+        <ccTool>
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="0/Tasks">
+        <ccTool>
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+      <folder path="0/VisilibityLib">
+        <ccTool>
+          <preprocessorList>
+            <Elem>BOOST_ALLOW_DEPRECATED_HEADERS</Elem>
+            <Elem>BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING</Elem>
+          </preprocessorList>
+        </ccTool>
+      </folder>
+    </conf>
+  </confs>
+</configurationDescriptor>
