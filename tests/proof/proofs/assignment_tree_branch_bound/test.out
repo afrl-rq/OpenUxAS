@@ -1,11 +1,64 @@
-assignment_tree_branch_bound.adb:271:08: medium: "All_Actions_In_Map" is recursive, terminating annotation could be incorrect
-assignment_tree_branch_bound.adb:437:19: medium: assertion might fail
-assignment_tree_branch_bound.adb:469:22: medium: "Prove_TaskOptionId_In_Map" is recursive, terminating annotation could be incorrect
-assignment_tree_branch_bound.adb:1071:15: medium: precondition might fail, cannot prove Has_Key (Container, Key)
-assignment_tree_branch_bound.adb:1294:69: medium: precondition might fail, cannot prove Has_Key (Container, Key)
-assignment_tree_branch_bound.adb:1301:17: medium: precondition might fail, cannot prove Has_Key (Container, Key)
-assignment_tree_branch_bound.adb:1352:25: medium: "Check_Actions_In_Map_Rec" is recursive, terminating annotation could be incorrect
-assignment_tree_branch_bound.adb:1571:19: medium: loop invariant might fail in first iteration, cannot prove Contains_Corresponding_TaskOption (Result.Assignment_Sequence, Element (Result.Vehicle_Assignments, Int64_VehicleAssignmentCost_Maps_K.Get (Keys (Result.Vehicle_Assignments), K)).Last_TaskOption)
-assignment_tree_branch_bound.adb:1919:07: warning: statement has no effect
-assignment_tree_branch_bound.adb:1919:18: warning: "Algebra" is set by "Free_Tree" but not used after the call
-algebra.ads:59:08: medium: "Is_Present" is recursive, terminating annotation could be incorrect
+assignment_tree_branch_bound.adb:1210:22: medium: call to "Action_In_TaskPlanOptions_Map" might be nonterminating, terminating annotation on "Check_Actions_In_Map_Rec" could be incorrect
+spark-containers-parameter_checks.ads:54:19: medium: call via dispatching operation, terminating annotation could be incorrect, in instantiation at spark-containers-functional-maps.ads:479, in instantiation at assignment_tree_branch_bound.adb:37
+spark-containers-parameter_checks.ads:54:19: medium: postcondition might fail, in instantiation at spark-containers-formal-unbounded_hashed_maps.ads:130, in instantiation at assignment_tree_branch_bound.ads:13
+spark-containers-parameter_checks.ads:54:19: medium: postcondition might fail, in instantiation at spark-containers-functional-maps.ads:479, in instantiation at assignment_tree_branch_bound.ads:21
+spark-containers-parameter_checks.ads:54:19: medium: postcondition might fail, in instantiation at spark-containers-functional-maps.ads:479, in instantiation at assignment_tree_branch_bound.adb:37
+spark-containers-parameter_checks.ads:58:19: medium: call via dispatching operation, terminating annotation could be incorrect, in instantiation at spark-containers-functional-maps.ads:479, in instantiation at assignment_tree_branch_bound.adb:37
+spark-containers-parameter_checks.ads:59:19: medium: call via dispatching operation, terminating annotation could be incorrect, in instantiation at spark-containers-functional-maps.ads:479, in instantiation at assignment_tree_branch_bound.adb:37
+spark-containers-parameter_checks.ads:59:19: medium: postcondition might fail, in instantiation at spark-containers-formal-unbounded_hashed_maps.ads:130, in instantiation at assignment_tree_branch_bound.ads:13
+spark-containers-parameter_checks.ads:59:19: medium: postcondition might fail, in instantiation at spark-containers-functional-maps.ads:479, in instantiation at assignment_tree_branch_bound.ads:21
+spark-containers-parameter_checks.ads:59:19: medium: postcondition might fail, in instantiation at spark-containers-formal-unbounded_hashed_maps.ads:130, in instantiation at assignment_tree_branch_bound.ads:26
+spark-containers-parameter_checks.ads:59:19: medium: postcondition might fail, in instantiation at spark-containers-functional-maps.ads:479, in instantiation at assignment_tree_branch_bound.adb:37
+spark-containers-parameter_checks.ads:63:29: medium: call via dispatching operation, terminating annotation could be incorrect, in instantiation at spark-containers-functional-maps.ads:479, in instantiation at assignment_tree_branch_bound.adb:37
+spark-containers-parameter_checks.ads:64:19: medium: call via dispatching operation, terminating annotation could be incorrect, in instantiation at spark-containers-functional-maps.ads:479, in instantiation at assignment_tree_branch_bound.adb:37
+spark-containers-parameter_checks.ads:64:19: medium: postcondition might fail, in instantiation at spark-containers-formal-unbounded_hashed_maps.ads:130, in instantiation at assignment_tree_branch_bound.ads:13
+spark-containers-parameter_checks.ads:64:19: medium: postcondition might fail, in instantiation at spark-containers-functional-maps.ads:479, in instantiation at assignment_tree_branch_bound.ads:21
+spark-containers-parameter_checks.ads:64:19: medium: postcondition might fail, in instantiation at spark-containers-formal-unbounded_hashed_maps.ads:130, in instantiation at assignment_tree_branch_bound.ads:26
+spark-containers-parameter_checks.ads:64:19: medium: postcondition might fail, in instantiation at spark-containers-functional-maps.ads:479, in instantiation at assignment_tree_branch_bound.adb:37
+spark-containers-parameter_checks.ads:86:21: medium: call via dispatching operation, terminating annotation could be incorrect, in instantiation at spark-containers-functional-maps.ads:498, in instantiation at assignment_tree_branch_bound.adb:37
+spark-containers-parameter_checks.ads:87:19: medium: call via dispatching operation, terminating annotation could be incorrect, in instantiation at spark-containers-functional-maps.ads:498, in instantiation at assignment_tree_branch_bound.adb:37
+spark-containers-parameter_checks.ads:94:19: medium: call via dispatching operation, terminating annotation could be incorrect, in instantiation at spark-containers-functional-maps.ads:498, in instantiation at assignment_tree_branch_bound.adb:37
+spark-containers-parameter_checks.ads:98:19: medium: call via dispatching operation, terminating annotation could be incorrect, in instantiation at spark-containers-functional-maps.ads:498, in instantiation at assignment_tree_branch_bound.adb:37
+spark-containers-parameter_checks.ads:99:19: medium: call via dispatching operation, terminating annotation could be incorrect, in instantiation at spark-containers-functional-maps.ads:498, in instantiation at assignment_tree_branch_bound.adb:37
+spark-containers-parameter_checks.ads:99:19: medium: postcondition might fail, in instantiation at spark-containers-functional-maps.ads:498, in instantiation at assignment_tree_branch_bound.ads:21
+spark-containers-parameter_checks.ads:99:19: medium: postcondition might fail, in instantiation at spark-containers-functional-maps.ads:498, in instantiation at assignment_tree_branch_bound.adb:37
+spark-containers-parameter_checks.ads:103:29: medium: call via dispatching operation, terminating annotation could be incorrect, in instantiation at spark-containers-functional-maps.ads:498, in instantiation at assignment_tree_branch_bound.adb:37
+spark-containers-parameter_checks.ads:104:19: medium: call via dispatching operation, terminating annotation could be incorrect, in instantiation at spark-containers-functional-maps.ads:498, in instantiation at assignment_tree_branch_bound.adb:37
+spark-containers-parameter_checks.ads:104:19: medium: postcondition might fail, in instantiation at spark-containers-functional-maps.ads:498, in instantiation at assignment_tree_branch_bound.ads:21
+spark-containers-parameter_checks.ads:104:19: medium: postcondition might fail, in instantiation at spark-containers-functional-maps.ads:498, in instantiation at assignment_tree_branch_bound.adb:37
+algebra.adb:239:07: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:240:10: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:243:79: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:247:07: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:255:07: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:258:15: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:260:07: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:263:15: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:265:07: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:268:15: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:270:07: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:273:10: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:274:18: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:275:13: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:277:18: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:283:13: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:315:41: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:317:16: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:324:25: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:326:52: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:327:94: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:330:56: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:331:31: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:342:31: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:350:31: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:358:58: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:369:52: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:383:16: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:388:53: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:389:28: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:391:28: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:403:43: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:414:16: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.adb:424:16: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.ads:49:31: medium: call via dispatching operation, terminating annotation could be incorrect
+algebra.ads:51:42: medium: call via dispatching operation, terminating annotation could be incorrect

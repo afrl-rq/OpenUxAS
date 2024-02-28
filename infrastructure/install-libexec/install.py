@@ -33,7 +33,7 @@ from support.paths import INSTALL_LIBEXEC_DIR
 
 GNAT_INSTALL = Command(
     cmd=[sys.executable, os.path.join(INSTALL_LIBEXEC_DIR, "install-gnat.py")],
-    description="Install gnat",
+    description="Install GNAT FSF",
 )
 
 VENV_INSTALL = Command(
@@ -85,20 +85,20 @@ if __name__ == "__main__":
 
     add_interactive_group(argument_parser)
 
-    meta_gnat_group = argument_parser.add_argument_group("GNAT Community installation")
+    meta_gnat_group = argument_parser.add_argument_group("GNAT FSF installation")
     gnat_group = meta_gnat_group.add_mutually_exclusive_group()
     gnat_group.add_argument(
         "--gnat",
         dest="install_gnat",
         action="store_true",
         default=True,
-        help="install GNAT community",
+        help="install GNAT FSF",
     )
     gnat_group.add_argument(
         "--no-gnat",
         dest="install_gnat",
         action="store_false",
-        help="do not install GNAT community",
+        help="do not install GNAT FSF",
     )
 
     meta_anod_group = argument_parser.add_argument_group(
@@ -167,9 +167,7 @@ if __name__ == "__main__":
 
     if args.install_gnat and (
         not args.interactive
-        or input(
-            "Install GNAT community (optional; needed to build Ada services)? [Y/n] "
-        )
+        or input("Install GNAT FSF (optional; needed to build Ada services)? [Y/n] ")
         != "n"
     ):
         command = pass_args(GNAT_INSTALL)

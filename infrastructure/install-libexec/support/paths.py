@@ -1,4 +1,5 @@
 """Common path definitions for installing."""
+
 import os
 
 # Note that the utility of this particular variable is limited, because it will
@@ -12,7 +13,6 @@ __ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 FALLBACK_REPO_DIR = os.path.realpath(
     os.path.join(
         __ROOT_DIR,
-        "..",
         "..",
         "..",
         "..",
@@ -31,6 +31,6 @@ INSTALL_LIBEXEC_DIR = os.environ.get(
 SOFTWARE_DIR = os.environ.get(
     "SOFTWARE_PATH", os.path.join(INFRASTRUCTURE_DIR, "software")
 )
-GNAT_DIR = os.environ.get("GNAT_DIR", os.path.join(SOFTWARE_DIR, "gnat"))
+ALR_DIR = os.environ.get("ALR_DIR", os.path.join(SOFTWARE_DIR, "alr"))
 
 VPYTHON_DIR = os.environ.get("VPYTHON_DIR", os.path.join(OPENUXAS_ROOT, ".vpython"))

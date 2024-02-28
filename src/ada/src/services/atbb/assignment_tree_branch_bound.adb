@@ -1,5 +1,4 @@
 with Ada.Containers;                     use Ada.Containers;
-with Ada.Containers.Formal_Ordered_Maps;
 with Ada.Strings.Fixed;                  use Ada.Strings.Fixed;
 with Ada.Strings;                        use Ada.Strings;
 with Ada.Text_IO;                        use Ada.Text_IO;
@@ -19,28 +18,23 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
    end record
    with Predicate => TotalTime >= 0;
 
-   package Int64_VehicleAssignmentCost_Maps is new Ada.Containers.Formal_Hashed_Maps
+   package Int64_VehicleAssignmentCost_Maps is new SPARK.Containers.Formal.Unbounded_Hashed_Maps
      (Key_Type     => Int64,
       Element_Type => VehicleAssignmentCost,
       Hash         => Int64_Hash);
    use Int64_VehicleAssignmentCost_Maps;
-   subtype Int64_VAC_Map is Int64_VehicleAssignmentCost_Maps.Map (10, Int64_VehicleAssignmentCost_Maps.Default_Modulus (10));
+   subtype Int64_VAC_Map is Int64_VehicleAssignmentCost_Maps.Map (Int64_VehicleAssignmentCost_Maps.Default_Modulus (10));
    package Int64_VehicleAssignmentCost_Maps_P renames Int64_VehicleAssignmentCost_Maps.Formal_Model.P;
    package Int64_VehicleAssignmentCost_Maps_K renames Int64_VehicleAssignmentCost_Maps.Formal_Model.K;
-   use Int64_VehicleAssignmentCost_Maps.Formal_Model;
 
    type Assignment_Info is record
       Assignment_Sequence : TaskAssignment_Sequence;
       Vehicle_Assignments : Int64_VAC_Map;
    end record;
 
-   package Assignment_Stack is new Bounded_Stack (Assignment_Info);
-
-   type Stack is new Assignment_Stack.Stack;
-
    type Children_Arr is array (Positive range <>) of Assignment_Info;
 
-   package Int64_Unbounded_String_Maps is new Ada.Containers.Functional_Maps
+   package Int64_Unbounded_String_Maps is new SPARK.Containers.Functional.Maps
      (Key_Type     => Int64,
       Element_Type => Unbounded_String);
    type Int64_Unbounded_String_Map is new Int64_Unbounded_String_Maps.Map;
@@ -164,9 +158,11 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
          (for some TOC of Assignment_Cost_Matrix.CostMatrix => TOC.VehicleID = VehicleId)
            and then
          (for some TaskId of TaskPlanOptions_Map =>
-            (for some Option of Get (TaskPlanOptions_Map, TaskId).Options =>
-               (TaskOpt = Option
-                  and then Is_Eligible (Automation_Request, TaskOpt, VehicleId))))
+            (declare
+               Options : TaskOption_Seq renames Get (TaskPlanOptions_Map, TaskId).Options;
+             begin
+                Contains (Options, TO_Sequences.First, Last (Options), TaskOpt)
+                  and then Is_Eligible (Automation_Request, TaskOpt, VehicleId)))
            and then
          (if Contains (Assignment.Vehicle_Assignments, VehicleId)
           then Travel_In_CostMatrix (VehicleId, Element (Assignment.Vehicle_Assignments, VehicleId).Last_TaskOption, TaskOpt, Assignment_Cost_Matrix)
@@ -185,8 +181,10 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
      (Algebra             : not null access constant Algebra_Tree_Cell;
       TaskPlanOptions_Map : Int64_TPO_Map)
       return Boolean
-   with Ghost;
-   pragma Annotate (GNATprove, Terminating, All_Actions_In_Map);
+   with Ghost,
+        Pre => True,
+        Subprogram_Variant => (Structural => Algebra);
+   pragma Annotate (GNATprove, Always_Return, All_Actions_In_Map);
 
    function TaskOptionId_In_Map
      (TaskOptionId        : Int64;
@@ -199,7 +197,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       TaskPlanOptions_Map : Int64_TPO_Map;
       Automation_Request  : UniqueAutomationRequest)
       return Boolean
-   with Ghost, Pre => Valid_TaskPlanOptions (TaskPlanOptions_Map);
+   with Ghost, Pre => Valid_TaskPlanOptions (TaskPlanOptions_Map), Post => True;
 
    ------------------------
    -- Useful subprograms --
@@ -221,10 +219,9 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       EntityId           : Int64)
       return Boolean
    is
-     (for some Option of Options =>
-        (Option = TaskOpt
-           and then
-         Is_Eligible (Automation_Request, TaskOpt, EntityId)));
+     (Contains (Options, TO_Sequences.First, Last (Options), TaskOpt)
+        and then
+      Is_Eligible (Automation_Request, TaskOpt, EntityId));
 
    function Contains_Corresponding_TaskOption
       (Automation_Request  : UniqueAutomationRequest;
@@ -338,12 +335,12 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
              (TaskOpt /= Element (Assignment.Vehicle_Assignments, EntityId).Last_TaskOption
                 and then
              (for some TaskId of TaskPlanOptions_Map =>
-                (for some Option of Get (TaskPlanOptions_Map, TaskId).Options =>
-                   (Option = Element (Assignment.Vehicle_Assignments, EntityId).Last_TaskOption
-                      and then
-                    Is_Eligible (Automation_Request,
-                                 Element (Assignment.Vehicle_Assignments, EntityId).Last_TaskOption,
-                                 EntityId))))));
+                (declare
+                   Options         : TaskOption_Seq renames Get (TaskPlanOptions_Map, TaskId).Options;
+                   Last_TaskOption : TaskOption renames Element (Assignment.Vehicle_Assignments, EntityId).Last_TaskOption;
+                 begin
+                   Contains (Options, TO_Sequences.First, Last (Options), Last_TaskOption)
+                     and then Is_Eligible (Automation_Request, Last_TaskOption, EntityId)))));
 
       procedure Prove_TaskOptionId_In_Map
         (ID  : Int64;
@@ -351,8 +348,9 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       with
         Ghost,
         Pre  => Is_Present (Alg, ID) and then All_Actions_In_Map (Alg, TaskPlanOptions_Map),
-        Post => ID in 0 .. 9_999_999_999 and then TaskOptionId_In_Map (ID, TaskPlanOptions_Map);
-      pragma Annotate (GNATprove, Terminating, Prove_TaskOptionId_In_Map);
+        Post => ID in 0 .. 9_999_999_999 and then TaskOptionId_In_Map (ID, TaskPlanOptions_Map),
+        Subprogram_Variant => (Structural => Alg);
+      pragma Annotate (GNATprove, Always_Return, Prove_TaskOptionId_In_Map);
 
       procedure Prove_Travel_In_CostMatrix
         (EntityId : Int64;
@@ -363,9 +361,11 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
           All_Travels_In_CostMatrix (Automation_Request, TaskPlanOptions_Map, Assignment_Cost_Matrix)
             and then
           (for some TaskId of TaskPlanOptions_Map =>
-             (for some Option of Get (TaskPlanOptions_Map, TaskId).Options =>
-                (TaskOpt = Option
-                   and then Is_Eligible (Automation_Request, TaskOpt, EntityId))))
+             (declare
+                Options : TaskOption_Seq renames Get (TaskPlanOptions_Map, TaskId).Options;
+              begin
+                Contains (Options, TO_Sequences.First, Last (Options), TaskOpt)
+                  and then Is_Eligible (Automation_Request, TaskOpt, EntityId)))
             and then
           Contains (Automation_Request.EntityList, TO_Sequences.First, Last (Automation_Request.EntityList), EntityId)
             and then
@@ -376,9 +376,12 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
              (TaskOpt /= Element (Assignment.Vehicle_Assignments, EntityId).Last_TaskOption
                 and then
              (for some TaskId of TaskPlanOptions_Map =>
-                (for some Option of Get (TaskPlanOptions_Map, TaskId).Options =>
-                   (Option = Element (Assignment.Vehicle_Assignments, EntityId).Last_TaskOption
-                      and then Is_Eligible (Automation_Request, Element (Assignment.Vehicle_Assignments, EntityId).Last_TaskOption, EntityId)))))),
+                (declare
+                   Options         : TaskOption_Seq renames Get (TaskPlanOptions_Map, TaskId).Options;
+                   Last_TaskOption : TaskOption renames Element (Assignment.Vehicle_Assignments, EntityId).Last_TaskOption;
+                 begin
+                   Contains (Options, TO_Sequences.First, Last (Options), Last_TaskOption)
+                     and then Is_Eligible (Automation_Request, Last_TaskOption, EntityId))))),
         Post =>
             (if not Contains (Assignment.Vehicle_Assignments, EntityId)
              then Travel_In_CostMatrix (EntityId,
@@ -418,10 +421,12 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
             begin
                pragma Assert
                  (for some TaskId of TaskPlanOptions_Map =>
-                    (for some Option of Get (TaskPlanOptions_Map, TaskId).Options =>
-                       (Option = Element (Assignment.Vehicle_Assignments, EntityId).Last_TaskOption
-                          and then
-                        Is_Eligible (Automation_Request, Element (Assignment.Vehicle_Assignments, EntityId).Last_TaskOption, EntityId))));
+                    (declare
+                       Options         : TaskOption_Seq renames Get (TaskPlanOptions_Map, TaskId).Options;
+                       Last_TaskOption : TaskOption renames Element (Assignment.Vehicle_Assignments, EntityId).Last_TaskOption;
+                     begin
+                       Contains (Options, TO_Sequences.First, Last (Options), Last_TaskOption)
+                         and then Is_Eligible (Automation_Request, Last_TaskOption, EntityId)));
                pragma Assert
                  (not Contains (To_Sequence_Of_TaskOptionId (Assignment),
                                 TO_Sequences.First,
@@ -509,17 +514,19 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
                                                             Assignment_Cost_Matrix)))))));
                pragma Assert
                  (for some TaskId of TaskPlanOptions_Map =>
-                    (for some Option of Get (TaskPlanOptions_Map, TaskId).Options =>
-                       (Option = Last_Option
-                        and then Is_Eligible (Automation_Request, Last_Option, EntityId)
-                        and then
-                          (for all TaskId_2 of TaskPlanOptions_Map =>
-                             (for all Option_2 of Get (TaskPlanOptions_Map, TaskId_2).Options =>
-                                (if Option /= Option_2 and then Is_Eligible (Automation_Request, Option_2, EntityId)
-                                 then Travel_In_CostMatrix (EntityId,
-                                                            Option,
-                                                            Option_2,
-                                                            Assignment_Cost_Matrix)))))));
+                    (declare
+                       Options : TaskOption_Seq renames Get (TaskPlanOptions_Map, TaskId).Options;
+                     begin
+                       Contains (Options, TO_Sequences.First, Last (Options), Last_Option)
+                         and then Is_Eligible (Automation_Request, Last_Option, EntityId)
+                         and then
+                           (for all TaskId_2 of TaskPlanOptions_Map =>
+                              (for all Option_2 of Get (TaskPlanOptions_Map, TaskId_2).Options =>
+                                 (if Last_Option /= Option_2 and then Is_Eligible (Automation_Request, Option_2, EntityId)
+                                  then Travel_In_CostMatrix (EntityId,
+                                                             Last_Option,
+                                                             Option_2,
+                                                             Assignment_Cost_Matrix))))));
                pragma Assert
                  (for all TaskId of TaskPlanOptions_Map =>
                     (for all Option of Get (TaskPlanOptions_Map, TaskId).Options =>
@@ -568,10 +575,8 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
            Algebra);
       TaskOpt        : TaskOption;
       --  List of TaskOptionIds to be assigned for the next iteration
-
    begin
       for Objective_ID of Objectives_IDs loop
-
          Prove_TaskOptionId_In_Map (Objective_ID, Algebra);
 
          pragma Assert (TaskOptionId_In_Map (Objective_ID, TaskPlanOptions_Map));
@@ -737,64 +742,9 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       State   : in out Assignment_Tree_Branch_Bound_State;
       Matrix  : AssignmentCostMatrix)
    is
-      Old_AssignmentCostMatrixes : constant Int64_AssignmentCostMatrix_Map := State.m_assignmentCostMatrixes with Ghost;
-
-      procedure Insert
-        (assignmentCostMatrixes   : in out Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
-      with
-        Pre =>
-            (for all ReqId of assignmentCostMatrixes =>
-               (Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, ReqId))
-                  and then
-                Contains (uniqueAutomationRequests, ReqId)
-                  and then
-                Contains (taskPlanOptions, ReqId)
-                  and then
-                All_Travels_In_CostMatrix
-                  (Element (uniqueAutomationRequests, ReqId),
-                   Element (taskPlanOptions, ReqId),
-                   Element (assignmentCostMatrixes, ReqId))))
-              and then
-            not Contains (assignmentCostMatrixes, Matrix.CorrespondingAutomationRequestID)
-              and then Valid_AssignmentCostMatrix (Matrix)
-              and then Contains (uniqueAutomationRequests, Matrix.CorrespondingAutomationRequestID)
-              and then Contains (taskPlanOptions, Matrix.CorrespondingAutomationRequestID)
-              and then
-            All_Travels_In_CostMatrix
-              (Element (uniqueAutomationRequests, Matrix.CorrespondingAutomationRequestID),
-               Element (taskPlanOptions, Matrix.CorrespondingAutomationRequestID),
-               Matrix),
-        Post =>
-          (for all ReqId of assignmentCostMatrixes =>
-             (Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, ReqId))
-                and then
-              Contains (uniqueAutomationRequests, ReqId)
-                and then
-              Contains (taskPlanOptions, ReqId)
-                and then
-              All_Travels_In_CostMatrix
-                (Element (uniqueAutomationRequests, ReqId),
-                 Element (taskPlanOptions, ReqId),
-                 Element (assignmentCostMatrixes, ReqId))));
-
-      ------------
-      -- Insert --
-      ------------
-
-      procedure Insert
-        (assignmentCostMatrixes   : in out Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
-      is
-         pragma SPARK_Mode (Off);
-      begin
-         Insert (assignmentCostMatrixes, Matrix.CorrespondingAutomationRequestID, Matrix);
-      end Insert;
-
    begin
-      Insert (State.m_assignmentCostMatrixes, State.m_taskPlanOptions, State.m_uniqueAutomationRequests);
+      pragma Assume (Length (State.m_assignmentCostMatrixes) < Count_Type'Last, "we have space for another assignment cost matrix");
+      Insert (State.m_assignmentCostMatrixes, Matrix.CorrespondingAutomationRequestID, Matrix);
       Check_Assignment_Ready (Mailbox, Data, State, Matrix.CorrespondingAutomationRequestID);
    end Handle_Assignment_Cost_Matrix;
 
@@ -815,6 +765,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
          taskPlanOptions          : in out Int64_TaskPlanOptions_Map_Map;
          uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
       with
+        Annotate => (GNATprove, Always_Return),
         Pre  =>
             (for all Req of taskPlanOptions =>
                (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
@@ -860,63 +811,6 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
                     Element (taskPlanOptions, Req),
                     Element (assignmentCostMatrixes, Req)));
 
-      procedure Insert_Empty_TPO_Map
-        (assignmentCostMatrixes   : Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : in out Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
-      with
-        Pre  =>
-          (for all Req of taskPlanOptions =>
-             (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
-                and then Contains (uniqueAutomationRequests, Req)
-                and then
-                  All_EligibleEntities_In_EntityList
-                    (Element (uniqueAutomationRequests, Req),
-                     Element (taskPlanOptions, Req))))
-             and then
-          (for all Req of assignmentCostMatrixes =>
-             Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, Req))
-               and then Contains (uniqueAutomationRequests, Req)
-               and then Contains (taskPlanOptions, Req)
-               and then
-                 All_Travels_In_CostMatrix
-                   (Element (uniqueAutomationRequests, Req),
-                    Element (taskPlanOptions, Req),
-                    Element (assignmentCostMatrixes, Req)))
-            and then
-          not Contains (taskPlanOptions, ReqId)
-            and then
-           Contains (uniqueAutomationRequests, ReqId)
-            and then
-              (for all Option of Options.Options =>
-                (for all EntityId of Option.EligibleEntities =>
-                   Contains (Element (uniqueAutomationRequests, ReqId).EntityList,
-                             TO_Sequences.First,
-                             Last (Element (uniqueAutomationRequests, ReqId).EntityList),
-                             EntityId))),
-        Post =>
-          (for all Req of taskPlanOptions =>
-             (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
-                and then Contains (uniqueAutomationRequests, Req)
-                and then
-                  All_EligibleEntities_In_EntityList
-                    (Element (uniqueAutomationRequests, Req),
-                     Element (taskPlanOptions, Req))))
-             and then
-          (for all Req of assignmentCostMatrixes =>
-             Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, Req))
-               and then Contains (uniqueAutomationRequests, Req)
-               and then Contains (taskPlanOptions, Req)
-               and then
-                 All_Travels_In_CostMatrix
-                   (Element (uniqueAutomationRequests, Req),
-                    Element (taskPlanOptions, Req),
-                    Element (assignmentCostMatrixes, Req)))
-             and then
-           Contains (taskPlanOptions, ReqId)
-             and then
-           not Has_Key (Element (taskPlanOptions, ReqId), Options.TaskID);
-
       ------------------------
       -- Add_TaskPlanOption --
       ------------------------
@@ -937,26 +831,11 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
             New_Int64_TPO_Map);
       end Add_TaskPlanOption;
 
-      --------------------------
-      -- Insert_Empty_TPO_Map --
-      --------------------------
-
-      procedure Insert_Empty_TPO_Map
-        (assignmentCostMatrixes   : Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : in out Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
-      is
-         pragma SPARK_Mode (Off);
-         Empty_Int64_TPO_Map : Int64_TPO_Map;
-      begin
-         Insert (taskPlanOptions, ReqId, Empty_Int64_TPO_Map);
-      end Insert_Empty_TPO_Map;
-
    begin
       if not Contains (State.m_taskPlanOptions, ReqId) then
-         Insert_Empty_TPO_Map (State.m_assignmentCostMatrixes, State.m_taskPlanOptions, State.m_uniqueAutomationRequests);
+         pragma Assume (Length (State.m_taskPlanOptions) < Count_Type'Last, "we have space for another map");
+         Insert (State.m_taskPlanOptions, ReqId, Empty_Map);
       end if;
-
       Add_TaskPlanOption (State.m_assignmentCostMatrixes, State.m_taskPlanOptions, State.m_uniqueAutomationRequests);
       Check_Assignment_Ready (Mailbox, Data, State, Options.CorrespondingAutomationRequestID);
    end Handle_Task_Plan_Options;
@@ -971,69 +850,9 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       State   : in out Assignment_Tree_Branch_Bound_State;
       Areq    : UniqueAutomationRequest)
    is
-
-      procedure Insert
-        (assignmentCostMatrixes   : Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : in out Int64_UniqueAutomationRequest_Map)
-        with
-          Pre =>
-            (for all ReqId of taskPlanOptions =>
-               (Valid_TaskPlanOptions (Element (taskPlanOptions, ReqId))
-                  and then Contains (uniqueAutomationRequests, ReqId)
-                  and then
-                    All_EligibleEntities_In_EntityList
-                      (Element (uniqueAutomationRequests, ReqId),
-                       Element (taskPlanOptions, ReqId))))
-               and then
-            (for all ReqId of assignmentCostMatrixes =>
-               Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, ReqId))
-                 and then Contains (uniqueAutomationRequests, ReqId)
-                 and then Contains (taskPlanOptions, ReqId)
-                 and then
-                   All_Travels_In_CostMatrix
-                     (Element (uniqueAutomationRequests, ReqId),
-                      Element (taskPlanOptions, ReqId),
-                      Element (assignmentCostMatrixes, ReqId)))
-               and then
-             not Contains (uniqueAutomationRequests, Areq.RequestID)
-               and then
-             not Contains (assignmentCostMatrixes, Areq.RequestID),
-          Post =>
-            (for all ReqId of taskPlanOptions =>
-               (Valid_TaskPlanOptions (Element (taskPlanOptions, ReqId))
-                  and then Contains (uniqueAutomationRequests, ReqId)
-                  and then
-                    All_EligibleEntities_In_EntityList
-                      (Element (uniqueAutomationRequests, ReqId),
-                       Element (taskPlanOptions, ReqId))))
-               and then
-            (for all ReqId of assignmentCostMatrixes =>
-               Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, ReqId))
-                 and then Contains (uniqueAutomationRequests, ReqId)
-                 and then Contains (taskPlanOptions, ReqId)
-                 and then
-                   All_Travels_In_CostMatrix
-                     (Element (uniqueAutomationRequests, ReqId),
-                      Element (taskPlanOptions, ReqId),
-                      Element (assignmentCostMatrixes, ReqId)));
-
-      ------------
-      -- Insert --
-      ------------
-
-      procedure Insert
-        (assignmentCostMatrixes   : Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : in out Int64_UniqueAutomationRequest_Map)
-      is
-         pragma SPARK_Mode (Off);
-      begin
-         Insert (uniqueAutomationRequests, Areq.RequestID, Areq);
-      end Insert;
-
    begin
-      Insert (State.m_assignmentCostMatrixes, State.m_taskPlanOptions, State.m_uniqueAutomationRequests);
+      pragma Assume (Length (State.m_uniqueAutomationRequests) < Count_Type'Last, "we have space for another request");
+      Insert (State.m_uniqueAutomationRequests, Areq.RequestID, Areq);
       Check_Assignment_Ready (Mailbox, Data, State, Areq.RequestID);
    end Handle_Unique_Automation_Request;
 
@@ -1057,127 +876,132 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       Message := Null_Unbounded_String;
       Error   := False;
 
-      for taskId of TaskPlanOptions_Map loop
-         if taskId not in 0 .. 99_999 then
-            Append_To_Msg (Message, "TaskID ");
-            Append_To_Msg (Message, Print_Int64 (taskId));
-            Append_To_Msg (Message, " should be in range 0 .. 99_999.");
-            Error := True;
-            return;
-         end if;
-
+      for M in Iterate (TaskPlanOptions_Map) loop
+         pragma Loop_Variant (Decreases => Int64_TaskPlanOptions_Maps.Length (M));
          declare
-            compositionString              : Unbounded_String :=
-              Get (TaskPlanOptions_Map, taskId).Composition;
-            algebraCompositionTaskOptionId : Unbounded_String :=
-              Unb.To_Unbounded_String ("");
-            isFinished                     : Boolean := False;
+            taskId : constant Int64 := Int64_TaskPlanOptions_Maps.Choose (M);
          begin
-            if Length (compositionString) = Natural'Last then
-               Append_To_Msg (Message, "Composition string of TaskID ");
+            if taskId not in 0 .. 99_999 then
+               Append_To_Msg (Message, "TaskID ");
                Append_To_Msg (Message, Print_Int64 (taskId));
-               Append_To_Msg (Message, " is too long.");
+               Append_To_Msg (Message, " should be in range 0 .. 99_999.");
                Error := True;
                return;
             end if;
-            while not isFinished loop
-               pragma Loop_Invariant (Length (compositionString) < Natural'Last);
-               if Length (compositionString) > 0 then
 
-                  declare
-                     position : Natural := Unb.Index (compositionString, "p");
-                  begin
-                     if position > 0 then
-                        if Length (algebraCompositionTaskOptionId) >= Natural'Last - position then
-                           Append_To_Msg (Message, "Composition string of TaskID ");
-                           Append_To_Msg (Message, Print_Int64 (taskId));
-                           Append_To_Msg (Message, " is too long.");
-                           Error := True;
-                           return;
-                        end if;
-                        algebraCompositionTaskOptionId :=
-                          algebraCompositionTaskOptionId
-                          & Unb.Slice (compositionString, 1, position);
+            declare
+               compositionString              : Unbounded_String :=
+                 Get (TaskPlanOptions_Map, taskId).Composition;
+               algebraCompositionTaskOptionId : Unbounded_String :=
+                 To_Unbounded_String ("");
+               isFinished                     : Boolean := False;
+            begin
+               if Length (compositionString) = Natural'Last then
+                  Append_To_Msg (Message, "Composition string of TaskID ");
+                  Append_To_Msg (Message, Print_Int64 (taskId));
+                  Append_To_Msg (Message, " is too long.");
+                  Error := True;
+                  return;
+               end if;
+               while not isFinished loop
+                  pragma Loop_Invariant (Length (compositionString) < Natural'Last);
+                  if Length (compositionString) > 0 then
 
-                        declare
-                           positionAfterId : Natural;
-                           positionSpace   : constant Natural :=
-                             Unb.Index (compositionString, " ", position);
-                           positionParen   : constant Natural :=
-                             Unb.Index (compositionString, ")", position);
-                        begin
-                           if positionSpace = 0 and then positionParen = 0 then
-                              Append_To_Msg (Message, "Substring " & '"');
-                              Append_To_Msg (Message, Unb.Slice (compositionString, position, Length (compositionString)));
-                              Append_To_Msg (Message, '"' & ": optionID after character 'p' should be followed by character ' ' or ')'.");
-                              Error := True;
-                              return;
-                           elsif positionSpace /= 0 and then positionParen /= 0 then
-                              positionAfterId := Natural'Min (positionSpace, positionParen);
-                           else
-                              positionAfterId := Natural'Max (positionSpace, positionParen);
-                           end if;
-
-                           if positionAfterId - 1 < position + 1 then
-                              Append_To_Msg (Message, "Substring " & '"');
-                              Append_To_Msg (Message, Unb.Slice (compositionString, position, Length (compositionString)));
-                              Append_To_Msg (Message, '"' & ": character 'p' should be followed by an optionID.");
+                     declare
+                        position : Natural := Unb.Index (compositionString, "p");
+                     begin
+                        if position > 0 then
+                           if Length (algebraCompositionTaskOptionId) >= Natural'Last - position then
+                              Append_To_Msg (Message, "Composition string of TaskID ");
+                              Append_To_Msg (Message, Print_Int64 (taskId));
+                              Append_To_Msg (Message, " is too long.");
                               Error := True;
                               return;
                            end if;
+                           algebraCompositionTaskOptionId :=
+                             algebraCompositionTaskOptionId
+                             & Unb.Slice (compositionString, 1, position);
 
                            declare
-                              optionId, taskOptionId : Int64;
-                              Parsing_Error          : Boolean;
+                              positionAfterId : Natural;
+                              positionSpace   : constant Natural :=
+                                Unb.Index (compositionString, " ", position);
+                              positionParen   : constant Natural :=
+                                Unb.Index (compositionString, ")", position);
                            begin
-                              Parse_Int64 (Unb.Slice (compositionString, position + 1, positionAfterId - 1), optionId, Parsing_Error);
-
-                              if Parsing_Error then
+                              if positionSpace = 0 and then positionParen = 0 then
                                  Append_To_Msg (Message, "Substring " & '"');
-                                 Append_To_Msg (Message, Unb.Slice (compositionString, position + 1, positionAfterId - 1));
-                                 Append_To_Msg (Message, '"' & ": does not correspond to an Int64.");
+                                 Append_To_Msg (Message, Unb.Slice (compositionString, position, Length (compositionString)));
+                                 Append_To_Msg (Message, '"' & ": optionID after character 'p' should be followed by character ' ' or ')'.");
+                                 Error := True;
+                                 return;
+                              elsif positionSpace /= 0 and then positionParen /= 0 then
+                                 positionAfterId := Natural'Min (positionSpace, positionParen);
+                              else
+                                 positionAfterId := Natural'Max (positionSpace, positionParen);
+                              end if;
+
+                              if positionAfterId - 1 < position + 1 then
+                                 Append_To_Msg (Message, "Substring " & '"');
+                                 Append_To_Msg (Message, Unb.Slice (compositionString, position, Length (compositionString)));
+                                 Append_To_Msg (Message, '"' & ": character 'p' should be followed by an optionID.");
                                  Error := True;
                                  return;
                               end if;
-
-                              if optionId not in 0 .. 99_999 then
-                                 Append_To_Msg (Message, "OptionID ");
-                                 Append_To_Msg (Message, Print_Int64 (optionId));
-                                 Append_To_Msg (Message, " should be in range 0 .. 99_999.");
-                                 Error := True;
-                                 return;
-                              end if;
-
-                              taskOptionId := Get_TaskOptionID (taskId, optionId);
 
                               declare
-                                 Image : String := Print_Int64 (taskOptionId);
+                                 optionId, taskOptionId : Int64;
+                                 Parsing_Error          : Boolean;
                               begin
-                                 if Length (algebraCompositionTaskOptionId) >= Natural'Last - Image'Length then
-                                    Append_To_Msg (Message, "Composition string of TaskID ");
-                                    Append_To_Msg (Message, Print_Int64 (taskId));
-                                    Append_To_Msg (Message, " is too long.");
+                                 Parse_Int64 (Unb.Slice (compositionString, position + 1, positionAfterId - 1), optionId, Parsing_Error);
+
+                                 if Parsing_Error then
+                                    Append_To_Msg (Message, "Substring " & '"');
+                                    Append_To_Msg (Message, Unb.Slice (compositionString, position + 1, positionAfterId - 1));
+                                    Append_To_Msg (Message, '"' & ": does not correspond to an Int64.");
                                     Error := True;
                                     return;
                                  end if;
-                                 algebraCompositionTaskOptionId :=
-                                   algebraCompositionTaskOptionId & Image;
+
+                                 if optionId not in 0 .. 99_999 then
+                                    Append_To_Msg (Message, "OptionID ");
+                                    Append_To_Msg (Message, Print_Int64 (optionId));
+                                    Append_To_Msg (Message, " should be in range 0 .. 99_999.");
+                                    Error := True;
+                                    return;
+                                 end if;
+
+                                 taskOptionId := Get_TaskOptionID (taskId, optionId);
+
+                                 declare
+                                    Image : String := Print_Int64 (taskOptionId);
+                                 begin
+                                    if Length (algebraCompositionTaskOptionId) >= Natural'Last - Image'Length then
+                                       Append_To_Msg (Message, "Composition string of TaskID ");
+                                       Append_To_Msg (Message, Print_Int64 (taskId));
+                                       Append_To_Msg (Message, " is too long.");
+                                       Error := True;
+                                       return;
+                                    end if;
+                                    algebraCompositionTaskOptionId :=
+                                      algebraCompositionTaskOptionId & Image;
+                                 end;
+                                 Delete (compositionString, 1, positionAfterId - 1);
                               end;
-                              Delete (compositionString, 1, positionAfterId - 1);
                            end;
-                        end;
-                     else
-                        algebraCompositionTaskOptionId :=
-                          algebraCompositionTaskOptionId & compositionString;
-                        taskIdVsAlgebraString :=
-                          Add (taskIdVsAlgebraString, taskId, algebraCompositionTaskOptionId);
-                        isFinished := True;
-                     end if;
-                  end;
-               else
-                  isFinished := True;
-               end if;
-            end loop;
+                        else
+                           algebraCompositionTaskOptionId :=
+                             algebraCompositionTaskOptionId & compositionString;
+                           taskIdVsAlgebraString :=
+                             Add (taskIdVsAlgebraString, taskId, algebraCompositionTaskOptionId);
+                           isFinished := True;
+                        end if;
+                     end;
+                  else
+                     isFinished := True;
+                  end if;
+               end loop;
+            end;
          end;
       end loop;
 
@@ -1290,7 +1114,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       else
 
          algebraString := algebraString & "|(";
-         for taskID of taskIdVsAlgebraString loop
+         for taskID of Iterate (taskIdVsAlgebraString) loop
             if Length (algebraString) >= Natural'Last - 1 - Length (Get (taskIdVsAlgebraString, taskID)) then
                Append_To_Msg (Message, "Algebra string is too long.");
                Error := True;
@@ -1317,10 +1141,61 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
 
          if not Error then
             declare
-               procedure Check_Actions_In_Map_Rec (Tree : not null Algebra_Tree) with
-                 Post => (if not Error then All_Actions_In_Map (Tree, TaskPlanOptions_Map));
-               pragma Annotate (GNATprove, Terminating, Check_Actions_In_Map_Rec);
-               procedure Check_Actions_In_Map_Rec (Tree : not null Algebra_Tree) is
+               function Action_In_TaskPlanOptions_Map (TaskOptionId : Int64)
+                                                       return Boolean
+               with
+                 Pre  => TaskOptionId in 0 .. 9_999_999_999,
+                 Post =>
+                   (not Action_In_TaskPlanOptions_Map'Result)
+                     = (for all TaskId of TaskPlanOptions_Map =>
+                          (for all TaskOption of Get (TaskPlanOptions_Map, TaskId).Options =>
+                             (TaskId /= TaskOption.TaskID
+                              or else TaskOption.TaskID /= Get_TaskID (TaskOptionId)
+                              or else TaskOption.OptionID /= Get_OptionID (TaskOptionId))));
+
+               procedure Check_Actions_In_Map_Rec (Tree : not null access constant Algebra_Tree_Cell) with
+                 Post => (if not Error then All_Actions_In_Map (Tree, TaskPlanOptions_Map)),
+                 Subprogram_Variant => (Structural => Tree),
+                 Annotate => (GNATprove, Always_Return);
+
+               function Action_In_TaskPlanOptions_Map (TaskOptionId : Int64)
+                                                       return Boolean
+               is
+                  TaskId  : Int64;
+                  TaskOpt : TaskOption;
+                  use all type Int64_TPO_Map;
+               begin
+                  for M in Iterate (TaskPlanOptions_Map) loop
+                     pragma Loop_Invariant
+                       (for all TaskI of TaskPlanOptions_Map =>
+                          (if not Int64_TaskPlanOptions_Maps.Has_Key (M, TaskI) then
+                             (for all TaskOption of Get (TaskPlanOptions_Map, TaskI).Options =>
+                               (TaskI /= TaskOption.TaskID
+                                or else TaskOption.TaskID /= Get_TaskID (TaskOptionId)
+                                or else TaskOption.OptionID /= Get_OptionID (TaskOptionId)))));
+                     TaskId := Int64_TaskPlanOptions_Maps.Choose (M);
+                     for J in TO_Sequences.First .. Last (Get (TaskPlanOptions_Map, TaskId).Options) loop
+                        TaskOpt := Get (Get (TaskPlanOptions_Map, TaskId).Options, J);
+                        if TaskId = TaskOpt.TaskID
+                          and then TaskOpt.TaskID = Get_TaskID (TaskOptionId)
+                          and then TaskOpt.OptionID = Get_OptionID (TaskOptionId)
+                        then
+                           return True;
+                        end if;
+                        pragma Loop_Invariant
+                          (for all K in TO_Sequences.First .. J =>
+                             (declare
+                              TempTaskOpt : constant TaskOption := Get (Get (TaskPlanOptions_Map, TaskId).Options, K);
+                              begin
+                              TaskId /= TempTaskOpt.TaskID
+                              or else TempTaskOpt.TaskID /= Get_TaskID (TaskOptionId)
+                              or else TempTaskOpt.OptionID /= Get_OptionID (TaskOptionId)));
+                     end loop;
+                  end loop;
+                  return False;
+               end Action_In_TaskPlanOptions_Map;
+
+               procedure Check_Actions_In_Map_Rec (Tree : not null access constant Algebra_Tree_Cell) is
                begin
                   case Tree.all.Node_Kind is
                   when Action =>
@@ -1332,13 +1207,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
                         return;
                      end if;
 
-                     if
-                       (for all TaskId of TaskPlanOptions_Map =>
-                          (for all TaskOption of Get (TaskPlanOptions_Map, TaskId).Options =>
-                               (TaskId /= TaskOption.TaskID
-                                or else TaskOption.TaskID /= Get_TaskID (Tree.TaskOptionId)
-                                or else TaskOption.OptionID /= Get_OptionID (Tree.TaskOptionId))))
-                     then
+                     if not Action_In_TaskPlanOptions_Map (Tree.TaskOptionId) then
                         Append_To_Msg (Message, "OptionId ");
                         Append_To_Msg (Message, Print_Int64 (Get_OptionID (Tree.TaskOptionId)));
                         Append_To_Msg (Message, " does not exist for TaskId ");
@@ -1470,6 +1339,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
 
       procedure Prove_Final_Value_Is_Valid is
          I : Int64_VehicleAssignmentCost_Maps.Cursor := First (Result.Vehicle_Assignments);
+         use Int64_VehicleAssignmentCost_Maps.Formal_Model;
       begin
 
          while Has_Element (Result.Vehicle_Assignments, I) loop
@@ -1546,6 +1416,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
 
       procedure Prove_Initial_Value_Is_Valid is
          I : Int64_VehicleAssignmentCost_Maps.Cursor := First (Result.Vehicle_Assignments);
+         use Int64_VehicleAssignmentCost_Maps.Formal_Model;
       begin
 
          while Has_Element (Result.Vehicle_Assignments, I) loop
@@ -1620,9 +1491,11 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       begin
          pragma Assert
            (for some TaskId of TaskPlanOptions_Map =>
-              (for some Option of Get (TaskPlanOptions_Map, TaskId).Options =>
-                 (Option = VAC.Last_TaskOption
-                    and then Is_Eligible (Automation_Request, VAC.Last_TaskOption, VehicleId))));
+              (declare
+                 Options : TaskOption_Seq renames Get (TaskPlanOptions_Map, TaskId).Options;
+               begin
+                 Contains (Options, TO_Sequences.First, Last (Options), VAC.Last_TaskOption)
+                   and then Is_Eligible (Automation_Request, VAC.Last_TaskOption, VehicleId)));
 
          if Contains (Result.Vehicle_Assignments, VehicleId) then
             Replace (Result.Vehicle_Assignments, VehicleId, VAC);
@@ -1630,7 +1503,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
             pragma Assert (Valid_Assignment (Result, TaskPlanOptions_Map, Automation_Request));
 
          else
-            pragma Assume (Length (Result.Vehicle_Assignments) < Result.Vehicle_Assignments.Capacity, "we have enough space for another vehicle");
+            pragma Assume (Length (Result.Vehicle_Assignments) < Count_Type'Last, "we have enough space for another vehicle");
             Insert (Result.Vehicle_Assignments, VehicleId, VAC);
             Prove_Final_Value_Is_Valid;
             pragma Assert (Valid_Assignment (Result, TaskPlanOptions_Map, Automation_Request));
@@ -1654,6 +1527,10 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       Message                : out Unbounded_String)
    is
 
+      package Assignment_Stack is new Bounded_Stack (Assignment_Info);
+      type Stack is new Assignment_Stack.Stack;
+      use type Stack;
+
       procedure Bubble_Sort (Arr : in out Children_Arr)
       with
         Pre  =>
@@ -1672,34 +1549,6 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
         Ghost,
         Pre  => A = B and then Valid_TaskPlanOptions (TaskPlanOptions_Map) and then Valid_Assignment (A, TaskPlanOptions_Map, Automation_Request),
         Post => Valid_Assignment (B, TaskPlanOptions_Map, Automation_Request);
-
-      procedure Pop_Wrapper (Search_Stack : in out Stack; Current_Element : out Assignment_Info) with
-        Pre  =>
-          Size (Search_Stack) > Assignment_Stack.Empty
-            and then
-          Valid_TaskPlanOptions (TaskPlanOptions_Map)
-            and then
-          (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Element (Search_Stack, K), TaskPlanOptions_Map, Automation_Request)),
-        Post =>
-          Size (Search_Stack) = Size (Search_Stack'Old) - 1
-            and then
-          Valid_Assignment (Current_Element, TaskPlanOptions_Map, Automation_Request)
-            and then
-          (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Element (Search_Stack, K), TaskPlanOptions_Map, Automation_Request));
-
-      procedure Push_Wrapper (Search_Stack : in out Stack; Current_Element : Assignment_Info) with
-        Pre  =>
-          Size (Search_Stack) < Assignment_Stack.Capacity
-            and then
-          Valid_TaskPlanOptions (TaskPlanOptions_Map)
-            and then
-          (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Element (Search_Stack, K), TaskPlanOptions_Map, Automation_Request))
-            and then
-          Valid_Assignment (Current_Element, TaskPlanOptions_Map, Automation_Request),
-        Post =>
-          Size (Search_Stack) = Size (Search_Stack'Old) + 1
-            and then
-          (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Element (Search_Stack, K), TaskPlanOptions_Map, Automation_Request));
 
       -----------------
       -- Bubble_Sort --
@@ -1737,6 +1586,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
 
       procedure Equal_Implies_Valid_Assignment (A, B : Assignment_Info) is
          I : Int64_VehicleAssignmentCost_Maps.Cursor := First (B.Vehicle_Assignments);
+         use Int64_VehicleAssignmentCost_Maps.Formal_Model;
       begin
 
          while Has_Element (B.Vehicle_Assignments, I) loop
@@ -1780,43 +1630,6 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
          end loop;
       end Equal_Implies_Valid_Assignment;
 
-      -----------------
-      -- Pop_Wrapper --
-      -----------------
-
-      procedure Pop_Wrapper (Search_Stack : in out Stack; Current_Element : out Assignment_Info) is
-         Old_Stack : constant Stack := Search_Stack with Ghost;
-      begin
-         Pop (Search_Stack, Current_Element);
-         Equal_Implies_Valid_Assignment (Element (Old_Stack, Size (Old_Stack)), Current_Element);
-         for K in 1 .. Size (Search_Stack) loop
-            Equal_Implies_Valid_Assignment (Element (Old_Stack, K), Element (Search_Stack, K));
-            pragma Loop_Invariant
-              (for all J in 1 .. K => Valid_Assignment (Element (Search_Stack, J), TaskPlanOptions_Map, Automation_Request));
-         end loop;
-      end Pop_Wrapper;
-
-      ------------------
-      -- Push_Wrapper --
-      ------------------
-
-      procedure Push_Wrapper (Search_Stack : in out Stack; Current_Element : Assignment_Info) is
-         Old_Stack : constant Stack := Search_Stack with Ghost;
-      begin
-         Push (Search_Stack, Current_Element);
-
-         for K in 1 .. Size (Search_Stack) loop
-            if K < Size (Search_Stack) then
-               Equal_Implies_Valid_Assignment (Element (Old_Stack, K), Element (Search_Stack, K));
-            else
-               Equal_Implies_Valid_Assignment (Current_Element, Element (Search_Stack, K));
-            end if;
-
-            pragma Loop_Invariant
-              (for all J in 1 .. K => Valid_Assignment (Element (Search_Stack, J), TaskPlanOptions_Map, Automation_Request));
-         end loop;
-      end Push_Wrapper;
-
       type Min_Option (Found : Boolean := False) is record
          case Found is
             when True =>
@@ -1843,10 +1656,11 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
 
          --  The first element is a null assignment
 
-         Push_Wrapper (Search_Stack,
+         pragma Assume (Size (Search_Stack) < Count_Type'Last, "we have space for another child");
+         Push (Search_Stack,
                        (Empty_TA_Seq,
                         Empty_VA_Map));
-         pragma Assert (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Element (Search_Stack, K), TaskPlanOptions_Map, Automation_Request));
+         pragma Assert (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Get (Search_Stack, K), TaskPlanOptions_Map, Automation_Request));
 
          --  If the stack is empty, all solutions have been explored
 
@@ -1857,11 +1671,11 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
            and then (if Min.Found
                      then (Nodes_Visited in 1 .. Data.Number_Nodes_Maximum - 1))
          loop
-            pragma Loop_Invariant (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Element (Search_Stack, K), TaskPlanOptions_Map, Automation_Request));
+            pragma Loop_Invariant (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Get (Search_Stack, K), TaskPlanOptions_Map, Automation_Request));
 
             --  The element at the top of the stack is popped
 
-            Pop_Wrapper (Search_Stack, Current_Element);
+            Pop (Search_Stack, Current_Element);
 
             if not Min.Found or else Cost (Current_Element, Data.Cost_Function) < Min.Cost then
                declare
@@ -1888,17 +1702,17 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
                   else
                      Bubble_Sort (Children_A);
                      for J in reverse Children_A'Range loop
-                        pragma Loop_Invariant (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Element (Search_Stack, K), TaskPlanOptions_Map, Automation_Request));
+                        pragma Loop_Invariant (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Get (Search_Stack, K), TaskPlanOptions_Map, Automation_Request));
                         declare
                            Child : Assignment_Info := Children_A (J);
                         begin
                            if not Min.Found or else Cost (Child, Data.Cost_Function) < Min.Cost then
-                              pragma Assume (Size (Search_Stack) < Assignment_Stack.Capacity, "we have space for another child");
-                              Push_Wrapper (Search_Stack, Child);
+                              pragma Assume (Size (Search_Stack) < Count_Type'Last, "we have space for another child");
+                              Push (Search_Stack, Child);
                            end if;
                         end;
                      end loop;
-                     pragma Assert (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Element (Search_Stack, K), TaskPlanOptions_Map, Automation_Request));
+                     pragma Assert (for all K in 1 .. Size (Search_Stack) => Valid_Assignment (Get (Search_Stack, K), TaskPlanOptions_Map, Automation_Request));
                   end if;
                end;
                pragma Assume (Nodes_Visited < Int64'Last, "a solution is found in less than Int64'Last steps");
@@ -1917,6 +1731,7 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
          end;
       end if;
       Free_Tree (Algebra);
+      pragma Assert (Algebra = null);
    end Run_Calculate_Assignment;
 
    ---------------------------------
@@ -1930,193 +1745,6 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       ReqId   : Int64)
    is
       Summary : TaskAssignmentSummary;
-
-      procedure Delete_AssignmentCostMatrix
-        (assignmentCostMatrixes   : in out Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
-        with
-          Pre =>
-            (for all Req of taskPlanOptions =>
-               (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
-                  and then Contains (uniqueAutomationRequests, Req)
-                  and then
-                    All_EligibleEntities_In_EntityList
-                      (Element (uniqueAutomationRequests, Req),
-                       Element (taskPlanOptions, Req))))
-               and then
-            (for all Req of assignmentCostMatrixes =>
-               Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, Req))
-                 and then Contains (uniqueAutomationRequests, Req)
-                 and then Contains (taskPlanOptions, Req)
-                 and then
-                   All_Travels_In_CostMatrix
-                     (Element (uniqueAutomationRequests, Req),
-                      Element (taskPlanOptions, Req),
-                      Element (assignmentCostMatrixes, Req)))
-               and then
-             Contains (assignmentCostMatrixes, ReqId),
-          Post =>
-            (for all Req of taskPlanOptions =>
-               (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
-                  and then Contains (uniqueAutomationRequests, Req)
-                  and then
-                    All_EligibleEntities_In_EntityList
-                     (Element (uniqueAutomationRequests, Req),
-                      Element (taskPlanOptions, Req))))
-               and then
-            (for all Req of assignmentCostMatrixes =>
-               Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, Req))
-                 and then Contains (uniqueAutomationRequests, Req)
-                 and then Contains (taskPlanOptions, Req)
-                 and then
-                   All_Travels_In_CostMatrix
-                     (Element (uniqueAutomationRequests, Req),
-                      Element (taskPlanOptions, Req),
-                      Element (assignmentCostMatrixes, Req)))
-               and then
-             not Contains (assignmentCostMatrixes, ReqId);
-
-      procedure Delete_TaskPlanOption
-        (assignmentCostMatrixes   : Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : in out Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
-        with
-          Pre =>
-            (for all Req of taskPlanOptions =>
-               (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
-                  and then Contains (uniqueAutomationRequests, Req)
-                  and then
-                    All_EligibleEntities_In_EntityList
-                      (Element (uniqueAutomationRequests, Req),
-                       Element (taskPlanOptions, Req))))
-               and then
-            (for all Req of assignmentCostMatrixes =>
-               Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, Req))
-                 and then Contains (uniqueAutomationRequests, Req)
-                 and then Contains (taskPlanOptions, Req)
-                 and then
-                   All_Travels_In_CostMatrix
-                     (Element (uniqueAutomationRequests, Req),
-                      Element (taskPlanOptions, Req),
-                      Element (assignmentCostMatrixes, Req)))
-               and then
-             not Contains (assignmentCostMatrixes, ReqId)
-               and then
-             Contains (taskPlanOptions, ReqId),
-          Post =>
-            (for all Req of taskPlanOptions =>
-               (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
-                  and then Contains (uniqueAutomationRequests, Req)
-                  and then
-                    All_EligibleEntities_In_EntityList
-                      (Element (uniqueAutomationRequests, Req),
-                       Element (taskPlanOptions, Req))))
-               and then
-            (for all Req of assignmentCostMatrixes =>
-               Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, Req))
-                 and then Contains (uniqueAutomationRequests, Req)
-                 and then Contains (taskPlanOptions, Req)
-                 and then
-                   All_Travels_In_CostMatrix
-                     (Element (uniqueAutomationRequests, Req),
-                      Element (taskPlanOptions, Req),
-                      Element (assignmentCostMatrixes, Req)))
-               and then
-             not Contains (assignmentCostMatrixes, ReqId)
-               and then
-             not Contains (taskPlanOptions, ReqId);
-
-      procedure Delete_UniqueAutomationRequest
-        (assignmentCostMatrixes   : Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : in out Int64_UniqueAutomationRequest_Map)
-        with
-          Pre =>
-            (for all Req of taskPlanOptions =>
-               (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
-                  and then Contains (uniqueAutomationRequests, Req)
-                  and then
-                    All_EligibleEntities_In_EntityList
-                      (Element (uniqueAutomationRequests, Req),
-                       Element (taskPlanOptions, Req))))
-               and then
-            (for all Req of assignmentCostMatrixes =>
-               Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, Req))
-                 and then Contains (uniqueAutomationRequests, Req)
-                 and then Contains (taskPlanOptions, Req)
-                 and then
-                   All_Travels_In_CostMatrix
-                     (Element (uniqueAutomationRequests, Req),
-                      Element (taskPlanOptions, Req),
-                      Element (assignmentCostMatrixes, Req)))
-               and then
-             not Contains (assignmentCostMatrixes, ReqId)
-               and then
-             not Contains (taskPlanOptions, ReqId)
-               and then
-             Contains (uniqueAutomationRequests, ReqId),
-          Post =>
-            (for all Req of taskPlanOptions =>
-               (Valid_TaskPlanOptions (Element (taskPlanOptions, Req))
-                  and then Contains (uniqueAutomationRequests, Req)
-                  and then
-                    All_EligibleEntities_In_EntityList
-                      (Element (uniqueAutomationRequests, Req),
-                       Element (taskPlanOptions, Req))))
-               and then
-            (for all Req of assignmentCostMatrixes =>
-               Valid_AssignmentCostMatrix (Element (assignmentCostMatrixes, Req))
-                 and then Contains (uniqueAutomationRequests, Req)
-                 and then Contains (taskPlanOptions, Req)
-                 and then
-                   All_Travels_In_CostMatrix
-                     (Element (uniqueAutomationRequests, Req),
-                      Element (taskPlanOptions, Req),
-                      Element (assignmentCostMatrixes, Req)));
-
-      ---------------------------------
-      -- Delete_AssignmentCostMatrix --
-      ---------------------------------
-
-      procedure Delete_AssignmentCostMatrix
-        (assignmentCostMatrixes   : in out Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
-      is
-         pragma SPARK_Mode (Off);
-      begin
-         Delete (assignmentCostMatrixes, ReqId);
-      end Delete_AssignmentCostMatrix;
-
-      ---------------------------
-      -- Delete_TaskPlanOption --
-      ---------------------------
-
-      procedure Delete_TaskPlanOption
-        (assignmentCostMatrixes   : Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : in out Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : Int64_UniqueAutomationRequest_Map)
-      is
-         pragma SPARK_Mode (Off);
-      begin
-         Delete (taskPlanOptions, ReqId);
-      end Delete_TaskPlanOption;
-
-      ------------------------------------
-      -- Delete_UniqueAutomationRequest --
-      ------------------------------------
-
-      procedure Delete_UniqueAutomationRequest
-        (assignmentCostMatrixes   : Int64_AssignmentCostMatrix_Map;
-         taskPlanOptions          : Int64_TaskPlanOptions_Map_Map;
-         uniqueAutomationRequests : in out Int64_UniqueAutomationRequest_Map)
-      is
-         pragma SPARK_Mode (Off);
-      begin
-         Delete (uniqueAutomationRequests, ReqId);
-      end Delete_UniqueAutomationRequest;
-
       Error   : Boolean;
       Message : Unbounded_String;
    begin
@@ -2142,9 +1770,9 @@ package body Assignment_Tree_Branch_Bound with SPARK_Mode is
       else
          sendErrorMessage (Mailbox, Message);
       end if;
-      Delete_AssignmentCostMatrix (State.m_assignmentCostMatrixes, State.m_taskPlanOptions, State.m_uniqueAutomationRequests);
-      Delete_TaskPlanOption (State.m_assignmentCostMatrixes, State.m_taskPlanOptions, State.m_uniqueAutomationRequests);
-      Delete_UniqueAutomationRequest (State.m_assignmentCostMatrixes, State.m_taskPlanOptions, State.m_uniqueAutomationRequests);
+      Delete (State.m_assignmentCostMatrixes, ReqId);
+      Delete (State.m_taskPlanOptions, ReqId);
+      Delete (State.m_uniqueAutomationRequests, ReqId);
    end Send_TaskAssignmentSummary;
 
    -------------------------

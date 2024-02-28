@@ -1,4 +1,4 @@
-with Ada.Containers.Functional_Vectors;
+with SPARK.Containers.Functional.Vectors;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Common;                use Common;
 
@@ -38,7 +38,7 @@ package LMCP_Messages with SPARK_Mode is
       PlanningHeading : Real32 := 0.0;
    end record;
 
-   package PS_Sequences is new Ada.Containers.Functional_Vectors
+   package PS_Sequences is new SPARK.Containers.Functional.Vectors
      (Index_Type   => Positive,
       Element_Type => PlanningState);
    type PlanningState_Seq is new PS_Sequences.Sequence;
@@ -75,7 +75,7 @@ package LMCP_Messages with SPARK_Mode is
       AssociatedTaskList : Int64_Seq;
    end record;
 
-   package VA_Sequences is new Ada.Containers.Functional_Vectors
+   package VA_Sequences is new SPARK.Containers.Functional.Vectors
      (Index_Type   => Positive,
       Element_Type => VehicleAction);
    type VA_Seq is new VA_Sequences.Sequence;
@@ -89,7 +89,7 @@ package LMCP_Messages with SPARK_Mode is
       Status : CommandStatusTypeEnum := Pending;
    end record;
 
-   package VAC_Sequences is new Ada.Containers.Functional_Vectors
+   package VAC_Sequences is new SPARK.Containers.Functional.Vectors
      (Index_Type   => Positive,
       Element_Type => VehicleActionCommand);
    type VehicleActionCommand_Seq is new VAC_Sequences.Sequence;
@@ -117,7 +117,7 @@ package LMCP_Messages with SPARK_Mode is
       AssociatedTasks : Int64_Seq;
    end record;
 
-   package WP_Sequences is new Ada.Containers.Functional_Vectors
+   package WP_Sequences is new SPARK.Containers.Functional.Vectors
      (Index_Type   => Positive,
       Element_Type => Waypoint);
    type WP_Seq is new WP_Sequences.Sequence;
@@ -127,7 +127,7 @@ package LMCP_Messages with SPARK_Mode is
       FirstWaypoint : Int64 := 0;
    end record;
 
-   package MC_Sequences is new Ada.Containers.Functional_Vectors
+   package MC_Sequences is new SPARK.Containers.Functional.Vectors
      (Index_Type   => Positive,
       Element_Type => MissionCommand);
    type MissionCommand_Seq is new MC_Sequences.Sequence;
@@ -139,7 +139,7 @@ package LMCP_Messages with SPARK_Mode is
       Value : Unbounded_String := To_Unbounded_String ("");
    end record;
 
-   package KVP_Sequences is new Ada.Containers.Functional_Vectors
+   package KVP_Sequences is new SPARK.Containers.Functional.Vectors
      (Index_Type   => Positive,
       Element_Type => KeyValuePair);
    type KVP_Seq is new KVP_Sequences.Sequence;
@@ -192,7 +192,7 @@ package LMCP_Messages with SPARK_Mode is
       UseEndHeading : Boolean := True;
    end record;
 
-   package RC_Sequences is new Ada.Containers.Functional_Vectors
+   package RC_Sequences is new SPARK.Containers.Functional.Vectors
      (Index_Type   => Positive,
       Element_Type => RouteConstraints);
    type RC_Seq is new RC_Sequences.Sequence;
@@ -208,7 +208,7 @@ package LMCP_Messages with SPARK_Mode is
       RouteError : KVP_Seq;
    end record;
 
-   package RP_Sequences is new Ada.Containers.Functional_Vectors
+   package RP_Sequences is new SPARK.Containers.Functional.Vectors
      (Index_Type   => Positive,
       Element_Type => RoutePlan);
    type RP_Seq is new RP_Sequences.Sequence with
@@ -252,7 +252,7 @@ package LMCP_Messages with SPARK_Mode is
       RouteResponses   : RP_Seq;
    end record;
 
-   package RPR_Sequences is new Ada.Containers.Functional_Vectors
+   package RPR_Sequences is new SPARK.Containers.Functional.Vectors
      (Index_Type   => Positive,
       Element_Type => RoutePlanResponse);
    type RPR_Seq is new RPR_Sequences.Sequence;
@@ -279,7 +279,7 @@ package LMCP_Messages with SPARK_Mode is
       TimeToGo : Int64 := 0;
    end record;
 
-   package TOC_Sequences is new Ada.Containers.Functional_Vectors
+   package TOC_Sequences is new SPARK.Containers.Functional.Vectors
      (Index_Type   => Positive,
       Element_Type => TaskOptionCost);
    type TOC_Seq is new TOC_Sequences.Sequence;
@@ -316,7 +316,7 @@ package LMCP_Messages with SPARK_Mode is
       EndHeading : Real32 := 0.0;
    end record;
 
-   package TO_Sequences is new Ada.Containers.Functional_Vectors
+   package TO_Sequences is new SPARK.Containers.Functional.Vectors
      (Index_Type   => Positive,
       Element_Type => TaskOption);
    type TaskOption_Seq is new TO_Sequences.Sequence;
@@ -345,7 +345,7 @@ package LMCP_Messages with SPARK_Mode is
       TimeTaskCompleted : Int64 := 0;
    end record;
 
-   package TaskAssignment_Sequences is new Ada.Containers.Functional_Vectors
+   package TaskAssignment_Sequences is new SPARK.Containers.Functional.Vectors
      (Index_Type   => Positive,
       Element_Type => TaskAssignment);
    type TaskAssignment_Sequence is new TaskAssignment_Sequences.Sequence;

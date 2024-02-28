@@ -14,9 +14,9 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "${SCRIPT_DIR}/infrastructure/paths.sh"
 
 # Determine if we're being sourced (BASH, KSH, and ZSH compliant):
-([[ -n $ZSH_EVAL_CONTEXT && $ZSH_EVAL_CONTEXT =~ :file$ ]] || 
+([[ -n $ZSH_EVAL_CONTEXT && $ZSH_EVAL_CONTEXT =~ :file$ ]] ||
  [[ -n $KSH_VERSION && $(cd "$(dirname -- "$0")" &&
-    printf '%s' "${PWD%/}/")$(basename -- "$0") != "${.sh.file}" ]] || 
+    printf '%s' "${PWD%/}/")$(basename -- "$0") != "${.sh.file}" ]] ||
  [[ -n $BASH_VERSION ]] && (return 0 2>/dev/null)) && sourced=1 || sourced=0
 
 ANOD_SCRIPT="from uxas.cli.anod import do_cli; exit(do_cli())"
@@ -30,8 +30,13 @@ function _anod {
     # Look ahead to see if we're building uxas-ada
     if is_first_positional_arg "$*" "build" && contains "$*" "uxas-ada"; then
         ensure_gnat
+
+    # Likewise, if we're running printenv for uxas-ada's build environment, we
+    # should try to put the alire-installed gnat on the path
+    elif is_first_positional_arg "$*" "printenv" && contains "$*" "uxas-ada" && contains "$*" "--build-env"; then
+        print_gnat_fsf_paths
     fi
-    
+
     # Look ahead to process specific commands.
     command=$( get_first_positional_arg "$*" )
     case ${command} in
@@ -56,7 +61,7 @@ function _anod {
         reset)
             debug_and_run "rm -rf \"${SBX_DIR}\""
             ;;
-        
+
         *)
             debug_and_run "python3 -c \"${ANOD_SCRIPT}\" $*"
             ;;
