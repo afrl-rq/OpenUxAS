@@ -1,0 +1,10 @@
+with PlanBuilderTest; use PlanBuilderTest;
+
+procedure Main is
+begin
+   Process_Task_Assignment_Summary_Test;
+   Process_Task_Implementation_Response_Vehicle_Exists_WPList_Empty_Test;
+   Process_Task_Implementation_Response_Vehicle_Exists_WPList_NotEmpty_Test;
+   Process_Task_Implementation_Response_Vehicle_DoesNotExists_Test;
+   Check_Next_Task_Implementation_Request_Test;
+end Main;

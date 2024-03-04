@@ -46,6 +46,8 @@ SOURCE_DIRS:=$(SOURCE_DIR)/Communications \
 		     $(SOURCE_DIR)/VisilibityLib \
 	  	     resources/AutomationDiagramDataService
 
+TEST_DIRS:=tests/ada/experiments/cpp
+
 # Compiler to be used - note the prefixed anod env here
 CXX=$(ANODENV)g++
 
@@ -88,11 +90,20 @@ INCLUDES=$(foreach source_dir, $(SOURCE_DIRS), -I$(source_dir))
 # The list of sources
 SOURCES:=$(foreach source_dir, $(SOURCE_DIRS), $(wildcard $(source_dir)/*.cpp))
 
+# The list of tests
+TESTS:=$(foreach test_dir, $(TEST_DIRS), $(wildcard $(test_dir)/*.cpp))
+
 # The list of non relocated object files
 OBJECTS_BASE:=$(patsubst %.cpp,%.o,$(SOURCES))
 
+# The list of non-relocated test object files
+TEST_OBJECTS_BASE:=$(patsubst %.cpp,%.o,$(TESTS))
+
 # The final location of all objects
 OBJECTS:=$(foreach object, $(OBJECTS_BASE),$(OBJECT_DIR)/$(object))
+
+# The final location of test objects
+TEST_OBJECTS:=$(foreach object, $(TEST_OBJECTS_BASE),$(OBJECT_DIR)/$(object))
 
 # The list of Makefile fragments containing the dependencies
 DEPS:=$(patsubst %.o,%.o.d,$(OBJECTS))
@@ -147,7 +158,9 @@ help:
 clean:
 	@echo "[Remove objects]"
 	rm -f $(OBJECTS)
+	rm -f $(TEST_OBJECTS)
 	rm -rf $(OBJECT_DIR)/uxas
+	rm -rf $(OBJECT_DIR)/test-uxas
 	@echo "[Remove makefile fragments (dependencies)]"
 	rm -f $(DEPS)
 
@@ -164,6 +177,20 @@ $(OBJECT_DIR)/uxas: $(OBJECT_DIR)/uxas.o $(OBJECTS)
 
 # Create a compilation rule for each source found
 $(foreach object, $(OBJECTS_BASE), $(eval $(call GENERATE_COMPILE_RULE,$(object),$(patsubst %.o,%.cpp, $(object)))))
+
+echos:
+	@echo "$(TESTS)"
+	@echo "$(TEST_OBJECTS)"
+	@echo "$(TEST_OBJECTS_BASE)"
+
+test: test-uxas
+	@echo "[Tests compiled]"
+
+test-uxas: $(OBJECTS) $(TEST_OBJECTS)
+	@echo "[Link test-uxas main]"
+	@$(CXX) -o test-uxas $^ $(LINKER_FLAGS) $(CXX_FLAGS)
+
+$(foreach object, $(TEST_OBJECTS_BASE), $(eval $(call GENERATE_COMPILE_RULE,$(object),$(patsubst %.o,%.cpp, $(object)))))
 
 # Include the Makefile fragments containing the dependencies
 -include $(DEPS)

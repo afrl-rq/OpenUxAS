@@ -194,10 +194,10 @@ package Plan_Builder with SPARK_Mode is
       and then not Contains (State.m_reqeustIDVsOverrides, Unique_Request_Id));
 
    procedure Add_Loiters_To_Mission_Commands
-     (State : Plan_Builder_State;
+     (State : in out Plan_Builder_State;
       Config : Plan_Builder_Configuration_Data;
-      Response : in out UniqueAutomationResponse)
-     with Pre => Length (Response.MissionCommandList) /= 0
-     and then Length (Get (Response.MissionCommandList, Last (Response.MissionCommandList)).WaypointList) /= 0;
+      Unique_Request_Id : Int64)
+     with Pre => Length (Element (State.m_inProgressResponse, Unique_Request_Id).MissionCommandList) /= 0
+     and then Length (Get (Element (State.m_inProgressResponse, Unique_Request_Id).MissionCommandList, Last (Element (State.m_inProgressResponse, Unique_Request_Id).MissionCommandList)).WaypointList) /= 0;
 
 end Plan_Builder;

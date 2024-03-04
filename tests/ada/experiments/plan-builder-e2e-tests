@@ -1,0 +1,61 @@
+#! /usr/bin/env bash
+
+# Script location
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+# Load global paths
+source "${SCRIPT_DIR}/../../../infrastructure/paths.sh"
+
+# Create the bin directory
+mkdir -p "${SCRIPT_DIR}/bin"
+
+# Build the C++ tests
+(
+    cd "${OPENUXAS_ROOT}"
+    make test -j
+    cp test-uxas "${SCRIPT_DIR}/bin"
+)
+
+# Remove the output directory
+rm -rf "${SCRIPT_DIR}/output"
+
+# Create the output directory
+mkdir -p "${SCRIPT_DIR}/output"
+
+# Run the C++ tests
+(
+    cd "${SCRIPT_DIR}/output"
+    "${SCRIPT_DIR}/bin/test-uxas"
+)
+
+
+# Build the Ada tests
+(
+    ensure_gnat
+    debug_and_run "eval \"\$( \"${OPENUXAS_ROOT}/anod\" printenv uxas-ada --build-env )\""
+    cd "${SCRIPT_DIR}/ada"
+    gprbuild -P proj.gpr
+)
+
+# Run the Ada tests
+(
+    debug_and_run "eval \"\$( \"${OPENUXAS_ROOT}/anod\" printenv uxas-ada )\""
+    cd "${SCRIPT_DIR}/output"
+    "${SCRIPT_DIR}/bin/main_ada"
+)
+
+
+# Run the comparison
+activate_venv
+
+echo "Comparing Process_Task_Assignment_Summary_Test"
+python3 "${SCRIPT_DIR}/scripts/diff.py" "${SCRIPT_DIR}/output/Cpp_Process_Task_Assignment_Summary_Test.txt" "${SCRIPT_DIR}/output/Ada_Process_Task_Assignment_Summary_Test.txt"
+
+echo "Comparing Process_Task_Implementation_Response_Vehicle_Exists_WPList_Empty_Test"
+python3 "${SCRIPT_DIR}/scripts/diff.py" "${SCRIPT_DIR}/output/Cpp_Process_Task_Implementation_Response_Vehicle_Exists_WPList_Empty_Test.txt" "${SCRIPT_DIR}/output/Ada_Process_Task_Implementation_Response_Vehicle_Exists_WPList_Empty_Test.txt"
+
+echo "Comparing Process_Task_Implementation_Response_Vehicle_Exists_WPList_NotEmpty_Test"
+python3 "${SCRIPT_DIR}/scripts/diff.py" "${SCRIPT_DIR}/output/Cpp_Process_Task_Implementation_Response_Vehicle_Exists_WPList_NotEmpty_Test.txt" "${SCRIPT_DIR}/output/Ada_Process_Task_Implementation_Response_Vehicle_Exists_WPList_NotEmpty_Test.txt"
+
+echo "Comparing Process_Task_Implementation_Response_Vehicle_DoesNotExists_Test"
+python3 "${SCRIPT_DIR}/scripts/diff.py" "${SCRIPT_DIR}/output/Cpp_Process_Task_Implementation_Response_Vehicle_DoesNotExists_Test.txt" "${SCRIPT_DIR}/output/Ada_Process_Task_Implementation_Response_Vehicle_DoesNotExists_Test.txt"

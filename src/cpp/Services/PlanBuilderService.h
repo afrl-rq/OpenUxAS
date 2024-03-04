@@ -44,6 +44,11 @@ namespace uxas
 namespace service
 {
 
+namespace test
+{
+class PlanBuilderTests;
+};
+
 /*! \class PlanBuilderService
     \brief A component that constructs plans from assignments.
 
@@ -198,6 +203,8 @@ private:
     /*! \brief  the turn type to send out in mission commands*/
     afrl::cmasi::TurnType::TurnType m_turnType = {afrl::cmasi::TurnType::TurnShort};
     bool m_overrideTurnType{false};
+
+    friend class uxas::service::test::PlanBuilderTests;
 };
 
 

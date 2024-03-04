@@ -1,0 +1,9 @@
+package PlanBuilderTest is
+
+   procedure Process_Task_Assignment_Summary_Test;
+   procedure Process_Task_Implementation_Response_Vehicle_Exists_WPList_Empty_Test;
+   procedure Process_Task_Implementation_Response_Vehicle_Exists_WPList_NotEmpty_Test;
+   procedure Process_Task_Implementation_Response_Vehicle_DoesNotExists_Test;
+   procedure Check_Next_Task_Implementation_Request_Test;
+
+end PlanBuilderTest;
