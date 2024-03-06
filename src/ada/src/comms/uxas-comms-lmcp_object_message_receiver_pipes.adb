@@ -211,8 +211,8 @@ package body UxAS.Comms.LMCP_Object_Message_Receiver_Pipes is
       pragma Unreferenced (This);
       Buffer : ByteBuffer (Payload'Length);
    begin
-      Buffer.Put_Raw_Bytes (Payload);
-      Buffer.Rewind;
+      Put_Raw_Bytes (Buffer, Payload);
+      Rewind (Buffer);
 
       AVTAS.LMCP.Factory.getObject (Buffer, Message);
    end Deserialize_Message;
