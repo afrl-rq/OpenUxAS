@@ -82,7 +82,7 @@ Note that we chose a more specific suffix for the name of part 3's packages, ref
 When invoking the script you must specify the service name, in Ada source code format. For example, for the Route Aggregator service you would specify "Route_Aggregator" as the single argument to the script. The argument must be a legal Ada name because the script uses it as-is in the generated source files. That's why the underscore is included in the argument. Although Ada is case-insensitive, we suggest that you use the casing indicated so that it will be consistent with the rest of the code generated in the files. That will enhance readability.
 
 The script is named "gen_service_files.sh".
-Therfore, you invoke the script with that name and the name of the service to be supported. For example:
+Therefore, you invoke the script with that name and the name of the service to be supported. For example:
 
      ./gen_service_files.sh My_Route_Aggregator
 
@@ -204,34 +204,28 @@ are as follows:
 1.  Within `uxas-comms-lmcp_net_client-service-<service_name>_interfacing.ads`:
     1.  Add `with` clauses for any additional packages needed in this package's
         specification to the top of the file.
-    2.  Replace all instances of `<Service_Name>_Interfacing` with your chosen name.
-    3.  Replace all instances of `<Service_Name>` with your chosen name.
-    4.  Replace the instance of `<ServiceName>` with your chosen name on the
-        line that reads
+    2.  Verify the name of the service in line that reads
         `Type_Name : constant String := "<ServiceName>Service"`.
         This is the name the Service Manager will use
         to load the service, and it is therefore the name by which you will
         refer to the service in the SPARK/Ada OpenUxAS configuration file.
-    5.  Add any additional service-specific fields to record
+    3.  Add any additional service-specific fields to record
         `<Service_Name>_Service`, which already has fields `Config`, `Mailbox`,
         and `State`. Note that additional fields may not be needed.
 2.  Within `uxas-comms-lmcp_net_client-service-<service_name>_interfacing.adb`:
     1.  Add `with` clauses for any additional packages needed only within this
-        package's body to the top of the file. This is likely to include LMCP
-        messages, e.g. from package AFRL.CMASI, and it may include other packages
-        as well.
-    2.  Replace all instances of `<Service_Name>_Interfacing` with your chosen name.
-    3.  Replace all instances of `<Service_Name>` with your chosen name.
-    4.  Declare any subprograms used locally within the package. This should
+        package's body. This is likely to include LMCP messages, e.g. from package
+        AFRL.CMASI, and it may include other packages as well.
+    2.  Declare any subprograms used locally within the package. This should
         include procedures for handling Ada LMCP messages, which by convention
         should be named `Handle_<MessageType>_Msg`. Also by convention, their
         definitions are deferred until closer to the end of the file.
-    5.  In `procedure Configure`,
+    3.  In `procedure Configure`,
         1.  Add any necessary service-specific configuration logic. This is
             likely to include logic to set service-specific configuration
             parameters read from the OpenUxAS XML configuration file.
         2.  Subscribe to any messages this service should receive.
-    6.  Define any Ada LMCP message handling procedures that were declared
+    4.  Define any Ada LMCP message handling procedures that were declared
         earlier in the package.
         -   In some cases, these may essentially be wrappers around SPARK LMCP
             message handling procedures from package `<Service_Name>`. In such
@@ -245,14 +239,14 @@ are as follows:
             there is only a handler for the analogous SPARK LMCP message, which
             is called by the `Process_Received_LMCP_Message` procedure described
             in the next step.
-    7.  Within procedure `Process_Received_LMCP_Message`:
+    5.  Within procedure `Process_Received_LMCP_Message`:
         1.  Add an `if-elsif` block to handle every type of message this service
             subscribes to. For each type of message, call either a local Ada
             LMCP message handler or a SPARK LMCP message handler from package
             `<Service_Name>`.
         2.  Add any additional processing logic that should occur every time
             after a message is received.
-    8.  Define any other local procedures that were declared earlier in the
+    6.  Define any other local procedures that were declared earlier in the
         package.
 
 
@@ -262,7 +256,15 @@ are as follows:
 
 # Adding the Service to Main
 
-<AI Pat>
+1.  Include your service in `src/ada/src/main/uxas_ada.adb` by adding
+    the following lines to the file, after analogous lines for other
+    services:
+    
+        with UxAS.Comms.LMCP_Net_Client.Service.<Service_Name>_Interfacing;
+        pragma Unreferenced (UxAS.Comms.LMCP_Net_Client.Service.<Service_Name>_Interfacing);
+
+The with-clause is necessary for the package to be part of the Ada main's executable image.
+The pragma informs the compiler that it need note generate a warning about the fact that the package is not otherwise referenced with the body of the main procedure.
 
 # Adding Proofs to CI
 
