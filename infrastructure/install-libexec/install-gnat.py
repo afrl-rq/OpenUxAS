@@ -57,15 +57,13 @@ APT_INSTALL = Command(
 )
 
 
-ALR_CONFIG_DIR = os.path.join(ALR_DIR, "config")
+ALR_SETTINGS_DIR = os.path.join(ALR_DIR, "settings")
 ALR_BIN = os.path.join("bin", "alr")
 
 
 ALR_DOWNLOAD_LINK = (
-    # This should be adjusted when there's a stable release that has the fix
-    # for non-local config directory.
-    "https://github.com/alire-project/alire/releases/download/nightly/"
-    "alr-nightly-bin-x86_64-linux.zip"
+    "https://github.com/alire-project/alire/releases/download/"
+    "v2.0.0/alr-2.0.0-bin-x86_64-linux.zip"
 )
 ALR_DOWNLOAD_FILE = "alr.zip"
 ALR_DOWNLOAD_CMD = Command(
@@ -90,8 +88,8 @@ ALR_UNZIP_CMD = Command(
 ALR_TOOLCHAIN_CMD = Command(
     cmd=[
         ALR_BIN,
-        "-c",
-        ALR_CONFIG_DIR,
+        "-s",
+        ALR_SETTINGS_DIR,
         "toolchain",
         "--select",
         "gnat_native^13",
@@ -105,8 +103,8 @@ ALR_TOOLCHAIN_CMD = Command(
 ALR_GNATPROVE_CMD = Command(
     cmd=[
         ALR_BIN,
-        "-c",
-        ALR_CONFIG_DIR,
+        "-s",
+        ALR_SETTINGS_DIR,
         "get",
         "gnatprove^13",
     ],
@@ -118,8 +116,8 @@ ALR_GNATPROVE_CMD = Command(
 ALR_GNATPROVE_DIRNAME_CMD = Command(
     cmd=[
         ALR_BIN,
-        "-c",
-        ALR_CONFIG_DIR,
+        "-s",
+        ALR_SETTINGS_DIR,
         "get",
         "--dirname",
         "gnatprove",
@@ -196,7 +194,7 @@ if __name__ == "__main__":
 
     else:
         pathlib.Path(ALR_DIR).mkdir(parents=True, exist_ok=True)
-        pathlib.Path(ALR_CONFIG_DIR).mkdir(parents=True, exist_ok=True)
+        pathlib.Path(ALR_SETTINGS_DIR).mkdir(parents=True, exist_ok=True)
 
     run_command_and_exit_on_fail(ALR_DOWNLOAD_CMD, args.dry_run)
     run_command_and_exit_on_fail(ALR_UNZIP_CMD, args.dry_run)
