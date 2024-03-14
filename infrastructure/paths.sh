@@ -34,8 +34,8 @@ fi
 
 : "${INSTALL_LIBEXEC_DIR:=${INFRASTRUCTURE_DIR}/install-libexec}"
 : "${SOFTWARE_DIR:=${INFRASTRUCTURE_DIR}/software}"
-#: "${GNAT_DIR:=${SOFTWARE_DIR}/gnat}"
 : "${ALR_DIR:=${SOFTWARE_DIR}/alr}"
+: "${ALR_SETTINGS_DIR:=${ALR_DIR}/settings}"
 
 
 : "${SPEC_DIR:=${INFRASTRUCTURE_DIR}/specs}"
@@ -97,7 +97,7 @@ function activate_venv {
     fi
 }
 
-ALR_PRINTENV_CMD="( cd \"${ALR_DIR}/gnatprove\" && \"${ALR_DIR}/bin/alr\" -c \"${ALR_DIR}/config\" printenv )"
+ALR_PRINTENV_CMD="( cd \"${ALR_DIR}/gnatprove\" && \"${ALR_DIR}/bin/alr\" -s \"${ALR_SETTINGS_DIR}\" printenv )"
 
 # Print the environment variables needed to use GNAT FSF (but don't eval them).
 function print_gnat_fsf_paths {
