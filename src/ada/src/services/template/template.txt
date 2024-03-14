@@ -1,0 +1,624 @@
+-- __TODO__
+-- Add packages needed by the SPARK portion of the service.
+--
+-- __Example__
+-- 
+-- with SPARK.Containers.Formal.Hashed_Maps;
+-- with SPARK.Containers.Formal.Vectors;
+-- with Ada.Containers;                             use all type Ada.Containers.Count_Type;
+
+with Common;                                 use Common;
+with LMCP_Messages;                          use LMCP_Messages;
+with My_Route_Aggregator_Mailboxes;               use My_Route_Aggregator_Mailboxes;
+
+package My_Route_Aggregator with SPARK_Mode is
+
+   -- __TODO__
+   -- Define SPARK-compatible types needed by the SPARK portion of the service.
+   -- Since this package is included in the context clauses of package
+   -- UxAS.Comms.LMCP_Net_Client.Service.My_Route_Aggregator_Interfacing, these types
+   -- will be available in that package as well.
+   --
+   -- __Example__
+   --
+   -- Max : constant Ada.Containers.Count_Type := 2000;
+   -- subtype Pos64 is Int64 range 1 .. Int64'Last;
+   -- subtype Nat64 is Int64 range 0 .. Int64'Last;
+   --
+   -- subtype Ext_Vector_Index is Natural range 0 .. Integer (Max);
+   -- subtype Vector_Index is Natural range 1 .. Integer (Max);
+   -- 
+   -- function Pos64_Hash (X : Pos64) return Ada.Containers.Hash_Type is
+   --   (Ada.Containers.Hash_Type'Mod (X));
+   --    
+   -- package Pos64_Nat64_Maps is new
+   --   SPARK.Containers.Formal.Hashed_Maps (Pos64, Nat64, Pos64_Hash);
+   -- use Pos64_Nat64_Maps;
+   -- subtype Pos64_Nat64_Map is
+   --   Pos64_Nat64_Maps.Map (Max, Pos64_Nat64_Maps.Default_Modulus (Max));
+   -- 
+   -- package Pos64_Vectors is new SPARK.Containers.Formal.Vectors (Positive, Pos64);
+   -- subtype Pos64_Vector is Pos64_Vectors.Vector (Max);
+   -- package Pos_Vec_M renames Pos64_Vectors.Formal_Model.M;
+   -- use Pos64_Vectors;
+   -- 
+   -- use Pos64_Nat64_Maps.Formal_Model;
+   -- use Pos64_Vectors.Formal_Model;
+ 
+   type My_Route_Aggregator_Configuration_Data is record
+      -- __TODO__
+      -- Define fields for this record. This record is intended to hold data
+      -- that tend to be invariant over the life of the service. Values for
+      -- fields are generally given default values that can be changed by
+      -- the `Service_Base` procedure `Configure` based on the contents of the
+      -- UxAS XML configuration file.
+      -- 
+      -- __Example__
+      --
+      -- LoiterRadiusDefault : Common.Real64 := 200.0;
+      -- TurnType : LMCP_Messages.TurnTypeEnum := TurnShort;
+      -- VehicleID : Common.Int64 := -1;
+   end record;
+
+   type My_Route_Aggregator_State is record
+      -- __TODO__
+      -- Define fields for this record, which is intended to hold data that tend
+      -- to vary over the life of the service. Values for fields tend to be set
+      -- when messages are received or internal logic processing occurs.
+      --
+      -- __Example__
+      --
+      -- Id_To_Next_Id : Pos64_Nat64_Map;
+      -- Path : Pos64_Vector;
+      -- Cycle_Index : Ext_Vector_Index;
+      -- Segment : Pos64_Vector;
+      -- Headed_To_First_Id : Boolean := False;
+   end record;
+
+   -- __TODO__
+   -- Define subprograms needed for the SPARK portion of the service. These
+   -- include ghost functions for specification and subprograms that implement
+   -- key parts of the service's behavior. The latter may include message
+   -- handlers for SPARK-compatible messages, which by convention are named
+   -- `Handle_<MessageType>` and are called by Ada message handlers in the Ada
+   -- portion of the service, i.e. package
+   -- `UxAS.Comms.LMCP_Net_Client.Service.My_Route_Aggregator_Interfacing`.
+   --
+   -- Subprograms can directly broadcast SPARK-compatible messages using the
+   -- mailbox and procedures from package My_Route_Aggregator_Mailboxes. Such
+   -- subprograms must be procedures because they have side-effects on the
+   -- mailbox, and they likely have side-effects on the state as well.
+   --
+   -- __Example Stubs__
+   --
+   -- procedure Handle_MissionCommand
+   --   (State : in out My_Route_Aggregator_State;
+   --    MC : MissionCommand)
+   --   with
+   --     Pre =>
+   --       ...
+   --     Post =>
+   --       ...
+   --
+   -- procedure Produce_Segment
+   --   (State : in out My_Route_Aggregator_State;
+   --    Config : My_Route_Aggregator_Configuration_Data;
+   --    Mailbox : in out My_Route_Aggregator_Mailbox)
+   --   with
+   --     Pre =>
+   --       ...
+   --     Post =>
+   --      ...
+
+end My_Route_Aggregator;
+with Ada.Containers;             use Ada.Containers;
+with AVTAS.LMCP.Types;           use AVTAS.LMCP.Types;
+with UxAS.Comms.LMCP_Net_Client; use UxAS.Comms.LMCP_Net_Client;
+with LMCP_Messages;              use LMCP_Messages;
+with Ada.Text_IO;                use Ada.Text_IO;
+
+-- __TODO__
+-- Include any other necessary packages.
+
+package body My_Route_Aggregator with SPARK_Mode is
+
+   -- __TODO__
+   -- Include any local types or use clauses you would like to have.
+   --
+   -- __Example__
+   --
+   -- use all type Pos64_Nat64_Maps.Formal_Model.M.Map;
+   -- use Pos64_Vectors.Formal_Model.M;
+
+   -- __TODO__
+   -- Declare and define bodies for any local subprograms used internally in the
+   -- body of the package. This may include helper subprograms or ghost code
+   -- (e.g. lemmas) to help with proof.
+   -- 
+   -- __Example__
+   -- 
+   -- procedure Lemma_Mod_Incr (A : Natural; B : Positive) with
+   --   Ghost,
+   --   Pre => A < Integer'Last,
+   --   Post =>
+   --     (if A mod B = B - 1 then (A + 1) mod B = 0
+   --        else (A + 1) mod B = A mod B + 1);
+   -- 
+   -- procedure Lemma_Mod_Incr (A : Natural; B : Positive) is null;
+   --
+   -- --------------------
+   -- -- Construct_Path --
+   -- --------------------
+   -- 
+   -- procedure Construct_Path (...) with
+   --   Pre => ...
+   --   Post => ...;
+   -- 
+   -- procedure Construct_Path (...)
+   -- is
+   --   ...
+   -- begin
+   --   ...
+   -- end Construct_Path;
+
+   -- __TODO__
+   -- Define bodies for any subprograms declared in the package specification.
+   -- These are likely to include procedures to handle SPARK-compatible LMCP
+   -- messages (by convention named `Handle_<MessageType>`), along with other
+   -- SPARK subprograms needed by the service. Note that procedures that send
+   -- SPARK-compatible LMCP messages directly should include the service's
+   -- mailbox as a parameter. Also, as a general tip for proof, subprograms that
+   -- have complex contracts and operate on the state should in their
+   -- implementations rely on helper subprograms that operate over *only* the
+   -- required fields of the state and have contracts that can be leveraged for
+   -- proof of the original subprogram's contract. This modularizes proof and
+   -- minimizes context for the provers, making proof more tractable.
+   -- 
+   -- __Example Stubs__
+   --
+   -- ---------------------------
+   -- -- Handle_MissionCommand --
+   -- ---------------------------
+   --
+   -- procedure Handle_MissionCommand
+   --   (State : in out My_Route_Aggregator_State;
+   --    MC : MissionCommand)
+   -- is
+   --    ...
+   -- begin
+   --    ...
+   -- end Handle_MissionCommand;
+   --
+   -- ---------------------
+   -- -- Produce_Segment --
+   -- ---------------------
+   -- 
+   -- procedure Produce_Segment
+   --   (State : in out My_Route_Aggregator_State;
+   --    Config : My_Route_Aggregator_Configuration_Data;
+   --    Mailbox : in out My_Route_Aggregator_Mailbox)
+   -- is
+   --   ...
+   -- begin
+   --   ...
+   --   Construct_Path (...);
+   --   ... 
+   -- end Produce_Segment;
+
+end My_Route_Aggregator;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Common;                use Common;
+with LMCP_Messages;         use LMCP_Messages;
+with UxAS.Comms.LMCP_Object_Message_Sender_Pipes;
+
+--  Package only concerned with message passing. It defines its own state,
+--  named Mailbox here, which is not mixed with the state of the service.
+
+package My_Route_Aggregator_Mailboxes with SPARK_Mode is
+
+   type My_Route_Aggregator_Mailbox is limited private;
+
+   procedure Initialize
+     (This         : out My_Route_Aggregator_Mailbox;
+      Source_Group : String;
+      Unique_Id    : Int64;
+      Entity_Id    : UInt32;
+      Service_Id   : UInt32);
+
+   procedure sendBroadcastMessage
+     (This : in out My_Route_Aggregator_Mailbox;
+      Msg   : Message_Root'Class);
+
+private
+   pragma SPARK_Mode (Off);
+
+   use UxAS.Comms.LMCP_Object_Message_Sender_Pipes;
+
+   type My_Route_Aggregator_Mailbox is tagged limited record
+      Message_Sender_Pipe           : LMCP_Object_Message_Sender_Pipe;
+      Source_Group                  : Unbounded_String;
+      Unique_Entity_Send_Message_Id : Int64;
+   end record;
+
+end My_Route_Aggregator_Mailboxes;
+with AVTAS.LMCP.Types;
+with LMCP_Message_Conversions; use LMCP_Message_Conversions;
+
+package body My_Route_Aggregator_Mailboxes is
+
+   ----------------
+   -- Initialize --
+   ----------------
+
+   procedure Initialize
+     (This         : out My_Route_Aggregator_Mailbox;
+      Source_Group : String;
+      Unique_Id    : Int64;
+      Entity_Id    : UInt32;
+      Service_Id   : UInt32)
+   is
+   begin
+      --  The procedure UxAS.Comms.LMCP_Net_Client.Initialize_Network_Client()
+      --  will also initialize its Message_Sender_Pipe component but will not
+      --  use it for sending:
+      --
+      --  This.Message_Sender_Pipe.Initialize_Push
+      --    (Source_Group => Value (This.Message_Source_Group),
+      --     Entity_Id    => This.Entity_Id,
+      --     Service_Id   => UInt32 (This.Network_Id));
+
+      This.Message_Sender_Pipe.Initialize_Push
+        (Source_Group => Source_Group,
+         Entity_Id    => AVTAS.LMCP.Types.UInt32 (Entity_Id),
+         Service_Id   => AVTAS.LMCP.Types.UInt32 (Service_Id));
+
+      This.Unique_Entity_Send_Message_Id := Unique_Id;
+   end Initialize;
+
+   --------------------------
+   -- sendBroadcastMessage --
+   --------------------------
+
+   --  this is sendSharedLMCPObjectBroadcastMessage(), in our code Send_Shared_LMCP_Object_Broadcast_Message
+
+   procedure sendBroadcastMessage
+     (This : in out My_Route_Aggregator_Mailbox;
+      Msg  : Message_Root'Class)
+   is
+   begin
+      This.Unique_Entity_Send_Message_Id := This.Unique_Entity_Send_Message_Id + 1;
+      --  This.Message_Sender_Pipe.Send_Shared_Broadcast_Message (Msg);
+      This.Message_Sender_Pipe.Send_Shared_Broadcast_Message (As_Object_Any (Msg));
+   end sendBroadcastMessage;
+
+end My_Route_Aggregator_Mailboxes;
+with DOM.Core;
+
+with My_Route_Aggregator;               use My_Route_Aggregator;
+with My_Route_Aggregator_Mailboxes; use My_Route_Aggregator_Mailboxes;
+
+-- __TODO__
+-- Include any additional necessary packages.
+
+with Common; use Common;
+
+package UxAS.Comms.LMCP_Net_Client.Service.My_Route_Aggregator_Interfacing is
+
+   type My_Route_Aggregator_Service is new Service_Base with private;
+
+   type My_Route_Aggregator_Service_Ref is access all My_Route_Aggregator_Service;
+
+   Type_Name : constant String := "MyRouteAggregatorService";
+   --  This is the service name as known/defined by the OpenUxAS C++ 
+   --  implementation.
+   --  __TODO__
+   --  Ensure that the name in the string literal is correct.
+
+   Directory_Name : constant String := "";
+
+   function Registry_Service_Type_Names return Service_Type_Names_List;
+
+   function Create return Any_Service;
+
+private
+
+   type My_Route_Aggregator_Service is new Service_Base with record
+      -- __TODO__
+      -- Include any additional fields needed by the service that are not part
+      -- of its state or configuration. Often there will not be any, but you
+      -- might have some for hard-coded service-specific values, e.g. for timers
+      -- as in the Waypoint_Plan_Manager or Automation_Request_Validator.
+      --
+      -- __Example__
+      -- Timer        : Common.Int64 := 0;
+      -- Time_Elapsed : Boolean := False;
+      -- Min_Time_Between_Commands_ms : Common.Int64 := 1000;
+      Config  : My_Route_Aggregator_Configuration_Data;
+      Mailbox : My_Route_Aggregator_Mailbox;
+      State   : My_Route_Aggregator_State;
+   end record;
+
+   overriding
+   procedure Configure
+     (This     : in out My_Route_Aggregator_Service;
+      XML_Node : DOM.Core.Element;
+      Result   : out Boolean);
+
+   overriding
+   procedure Initialize
+     (This   : in out My_Route_Aggregator_Service;
+      Result : out Boolean);
+
+   overriding
+   procedure Process_Received_LMCP_Message
+     (This             : in out My_Route_Aggregator_Service;
+      Received_Message : not null Any_LMCP_Message;
+      Should_Terminate : out Boolean);
+
+--  General "To do" (not part of template): TIMER CALLBACKS
+--  this function gets called when the response timer expires
+--  void OnResponseTimeout();
+--  this function gets called when the tasks involved have not reported initialization in time
+--  void OnTasksReadyTimeout();
+
+end UxAS.Comms.LMCP_Net_Client.Service.My_Route_Aggregator_Interfacing;
+with DOM.Core.Elements;
+with Ada.Text_IO;  use Ada.Text_IO;
+
+-- __TODO__
+-- Include any additional packages used by this service.
+
+with Common;                   use Common;
+with LMCP_Messages;            -- use LMCP_Messages;
+with LMCP_Message_Conversions; use LMCP_Message_Conversions;
+
+-- __TODO__
+-- Include any messages used by this service.
+--
+-- __Example__
+-- with AFRL.CMASI.AirVehicleState;       use AFRL.CMASI.AirVehicleState;
+-- with AFRL.CMASI.MissionCommand;        use AFRL.CMASI.MissionCommand;
+
+package body UxAS.Comms.LMCP_Net_Client.Service.My_Route_Aggregator_Interfacing is
+
+   -----------------------
+   -- Local subprograms --
+   -----------------------
+
+   -- __TODO__
+   -- Declare any subprograms used locally within the package. This should
+   -- include procedures to handle specific types of Ada LMCP messages and may
+   -- also include procedures to sanity-check values pulled from the OpenUxAS 
+   -- XML configuration file. By convention, subprogram definitions are deferred 
+   -- until later in the packge, and Ada LMCP message handlers are named
+   -- Handle_<MessageType>_Msg, while SPARK message handlers in package
+   -- My_Route_Aggregator are named Handle_<MessageType>.
+   --
+   -- __Example__
+   --
+   -- function TurnType_Attribute
+   --   (XML_Node : DOM.Core.Element;
+   --    Name     : String;
+   --    Default  : LMCP_Messages.TurnTypeEnum)
+   --    return LMCP_Messages.TurnTypeEnum;
+   --
+   -- procedure Handle_AirVehicleState_Msg
+   --    (This : in out My_Route_Aggregator_Service;
+   --     Msg  : Any_LMCP_Message);
+   --
+   -- procedure Handle_MissionCommand_Msg
+   --    (This : in out My_Route_Aggregator_Service;
+   --     Msg  : Any_LMCP_Message);
+
+   ---------------
+   -- Configure --
+   ---------------
+
+   overriding
+   procedure Configure
+     (This     : in out My_Route_Aggregator_Service;
+      XML_Node : DOM.Core.Element;
+      Result   : out Boolean)
+   is
+   
+   begin
+      -- __TODO__
+      -- Configure service-specific parameters, generally fields of This.Config, 
+      -- based on values from the OpenUxAS XML configuration file.
+      --
+      -- __Example__
+      -- 
+      -- This.Config.TurnType :=
+      --   TurnType_Attribute (XML_Node, "TurnType",
+      --                       Default => This.Config.TurnType);
+
+      -- __TODO__
+      -- Subscribe to messages this service needs to receive.
+      --
+      -- __Example__
+      --
+      -- This.Add_Subscription_Address (AFRL.CMASI.AirVehicleState.Subscription, Unused);
+      -- This.Add_Subscription_Address (AFRL.CMASI.MissionCommand.Subscription, Unused);
+
+      Result := True;
+   end Configure;
+
+   ------------
+   -- Create --
+   ------------
+
+   function Create return Any_Service is
+      Result : My_Route_Aggregator_Service_Ref;
+   begin
+      Result := new My_Route_Aggregator_Service;
+
+      Result.Construct_Service
+        (Service_Type        => Type_Name,
+         Work_Directory_Name => Directory_Name);
+      return Any_Service (Result);
+   end Create;
+
+   -- __TODO__
+   -- Define subprograms to handle the types of Ada LMCP messages this service
+   -- receives. By convention, these should be named `Handle_<MessageType>_Msg`.
+   -- For simple logic processing, they might simply update e.g. This.State,
+   -- This.Config, or This.<CustomField> directly without calling any SPARK
+   -- subprograms. For complex logic processing, they might call SPARK
+   -- subprograms from SPARK package `My_Route_Aggregator` to process data extracted
+   -- from the Ada LMCP message. Or they might convert the Ada LMCP message to a
+   -- SPARK LMCP message by calling function `As_<MessageType>_Message` from
+   -- package `LMCP_Message_Conversions` and passing the result to an analogous
+   -- SPARK message handler from package `My_Route_Aggregator`, conventionally named
+   -- `Handle_<MessageType>`.
+   --
+   -- __Example__
+   --
+   -- --------------------------------
+   -- -- Handle_AirVehicleState_Msg --
+   -- --------------------------------
+   --
+   -- procedure Handle_AirVehicleState_Msg
+   --   (This : in out My_Route_Aggregator_Service;
+   --    Msg  : Any_LMCP_Message)
+   -- is
+   --    AVS   : constant AirVehicleState_Any := AirVehicleState_Any (Msg.Payload);
+   --    AV_ID : constant Common.Int64 := Common.Int64 (AVS.getID);
+   --    Time  : constant Common.Int64 := Common.Int64 (AVS.getTime);
+   --    WP_ID : constant Common.Int64 := Common.Int64 (AVS.getCurrentWaypoint);
+   -- begin
+   --    if AV_ID = This.Config.VehicleID then
+   --       if This.Timer = 0 then
+   --          This.Timer := Time;
+   --      end if;
+   --      if Time - This.Timer > This.Min_Time_Between_Commands_ms then
+   --          This.Timer := Time;
+   --          This.Time_Elapsed := True;
+   --       end if;
+   --       if WP_ID = This.State.Next_First_Id then
+   --          This.State.Headed_To_First_Id := True;
+   --       end if;
+   --    end if;
+   -- end Handle_AirVehicleState_Msg;
+   -- 
+   -- --------------------------------
+   -- -- Handle_Mission_Command_Msg --
+   -- --------------------------------
+   -- 
+   -- procedure Handle_MissionCommand_Msg
+   --   (This : in out My_Route_Aggregator_Service;
+   --    Msg  : Any_LMCP_Message)
+   --  is
+   --    MC : constant MissionCommand_Acc := MissionCommand_Acc (Msg.Payload);
+   --    Vehicle_ID : Common.Int64 := Common.Int64 (MC.getVehicleID);
+   -- begin
+   --    if Vehicle_ID = This.Config.VehicleID then
+   --       Handle_MissionCommand (This.State, As_MissionCommand_Message (MC));
+   --    end if;
+   -- end Handle_MissionCommand_Msg;
+
+   ----------------
+   -- Initialize --
+   ----------------
+
+   overriding
+   procedure Initialize
+     (This   : in out My_Route_Aggregator_Service;
+      Result : out Boolean)
+   is
+   begin
+      My_Route_Aggregator_Mailboxes.Initialize
+        (This.Mailbox,
+         Source_Group => Value (This.Message_Source_Group),
+         Unique_Id    => Common.Int64 (UxAS.Comms.LMCP_Net_Client.Unique_Entity_Send_Message_Id),
+         Entity_Id    => Common.UInt32 (This.Entity_Id),
+         Service_Id   => Common.UInt32 (This.Network_Id));
+
+      Result := True;
+   end Initialize;
+
+   -----------------------------------
+   -- Process_Received_LMCP_Message --
+   -----------------------------------
+
+   overriding
+   procedure Process_Received_LMCP_Message
+     (This             : in out My_Route_Aggregator_Service;
+      Received_Message : not null Any_LMCP_Message;
+      Should_Terminate : out Boolean)
+   is
+   begin
+
+      -- __TODO__
+      -- By convention, add an if-elsif block to handle every type of message
+      -- this service subscribes to. For each type of message, call either the
+      -- local Ada message handler or the SPARK message handler from package
+      -- My_Route_Aggregator.
+      --
+      -- __Example__
+      -- 
+      -- if Received_Message.Payload.all in AirVehicleState'Class then
+      --    This.Handle_AirVehicleState_Msg (Received_Message);
+      -- elsif Received_Message.Payload.all in MissionCommand'Class then
+      --    This.Handle_MissionCommand_Msg (Received_Message);
+      -- end if;
+
+      -- __TODO__
+      -- Add any additional processing that should be performed after a message
+      -- is processed. For example, some services regularly check based on the
+      -- status of This.State whether a message should be broadcast.
+
+      Should_Terminate := False;
+
+   end Process_Received_LMCP_Message;
+
+   ---------------------------------
+   -- Registry_Service_Type_Names --
+   ---------------------------------
+
+   function Registry_Service_Type_Names return Service_Type_Names_List is
+      (Service_Type_Names_List'(1 => Instance (Service_Type_Name_Max_Length, Content => Type_Name)));
+
+   -- __TODO__
+   -- Provide definitions for local subprograms declared in the package
+   -- specification or earlier in the package body, e.g. for sanity-checking
+   -- values pulled from the OpenUxAS XML configuration file or other local
+   -- helper functions.
+   --
+   -- __Example__
+   -- 
+   -- ------------------------
+   -- -- TurnType_Attribute --
+   -- ------------------------
+   -- 
+   -- function TurnType_Attribute
+   --    (XML_Node : DOM.Core.Element;
+   --    Name     : String;
+   --    Default  : LMCP_Messages.TurnTypeEnum)
+   --    return LMCP_Messages.TurnTypeEnum
+   -- is
+   --    use DOM.Core;
+   --    Attr_Value : constant DOM_String := Elements.Get_Attribute (XML_Node, Name);
+   -- begin
+   --    if Attr_Value /= ""
+   --    then
+   --       begin
+   --          return LMCP_Messages.TurnTypeEnum'Value (Attr_Value);
+   --       exception
+   --          when others =>
+   --             Put_Line ("Could not convert " & Attr_Value &
+   --                         " to TurnTypeEnum. Using default " & Default'Image);
+   --             return Default;
+   --       end;
+   --    else
+   --       return Default;
+   --    end if;
+   -- end TurnType_Attribute;
+
+
+   -----------------------------
+   -- Package Executable Part --
+   -----------------------------
+
+begin
+   Register_Service_Creation_Function_Pointers (Registry_Service_Type_Names, Create'Access);
+end UxAS.Comms.LMCP_Net_Client.Service.My_Route_Aggregator_Interfacing;

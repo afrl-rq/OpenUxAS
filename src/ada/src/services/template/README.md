@@ -1,0 +1,295 @@
+OpenUxAS SPARK Service Template - README
+========================================
+
+# Setup
+
+Before starting to create a new OpenUxAS SPARK service, you should make sure you have a suitable development environment set up for Ada and SPARK.
+First, you should run:
+
+    OpenUxAS$ ./anod build uxas-ada
+
+This will ensure that you have GNAT on your path and will install GNAT and SPARK using Alire, if needed.
+
+Each time you open a new shell in which you want to do development, you should run:
+
+    OpenUxAS$ eval "$( ./anod printenv uxas-ada --build-env )"
+
+This will pull the Ada development environment into your shell, allowing you to run `gprbuild` and `gnatprove` as expected.
+
+Finally, you should also install VS Code and the Ada extension; this repository is configured to support Ada development using VS Code.
+
+# Instantiating the Template
+
+Conceptually, there are two parts to an OpenUxAS service:
+
+1. the part that interfaces with the rest of OpenUxAS.
+2. the part that implements the service functionality.
+
+In OpenUxAS - in both C++ and Ada - the first part inherits from ServiceBase; this is the means by which it accomplishes interfacing with the rest of OpenUxAS, via ZeroMQ and using LMCP.
+
+Ideally, the second part should have no knowledge of the first: this separation of concerns allows either the service functionality or the interfacing code to change independently of the other.
+In the C++ code, these two parts are intermixed.
+In the Ada code, we have separated them into distinct parts.
+
+We have also added a third part in the Ada code:
+
+3. the part that passes data between the interface and the functionality (parts one and two), ensuring that the data is SPARK-compatible.
+
+Each of the three parts is implemented by a distinct package.
+
+Each package requires a unique package name, and each defines a primary type that also needs a name. To date the schema for these names has been somewhat ad hoc. For example, consider the Route Aggregator Service. There are three forms of that name reflected in the package names:
+
+1. Route_Aggregation: the part that interfaces with the rest of OpenUxAS, in Ada.
+2. Route_Aggregator: the part that implements in the service functionality, in SPARK.
+3. Route_Aggregator_Mailboxes: the part that passes data between (1) and (2).
+
+The full package name for the first part is "UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation".
+In terms of files and their file names for all three parts we then have the following:
+
+Part 1:
+route_aggregator.adb
+route_aggregator.ads
+
+Part 2:
+uxas-comms-lmcp_net_client-service-route_aggregation.adb
+uxas-comms-lmcp_net_client-service-route_aggregation.ads
+
+Part 3:
+route_aggregator_communication.adb
+route_aggregator_communication.ads
+
+In GNAT, by default the file names must reflect the package (unit) names within, so you can tell that the package name for part 3 in that file is Route_Aggregator_Mailboxes. That's just the service name with "_Mailboxes" appended so parts 1 and 3 directly reflect the service name, whereas part 2 does not.
+The package for part 2 is a "child" of package UxAS.Comms.LMCP_Net_Client.Service so it already has a prefix that would allow the use of "Route_Aggregator" for the last part of the package name. However that child package also includes package "Route_Aggregator" in a context clause, which could lead to confusion, both for the reader and for the compiler. A different name is more appropriate here.
+
+Rather than come up with some variation of the service name, "Route_Aggregation" for example, we can take the same approach as was used for the name of the package for part 2. We can append something appropriate to the service name.
+
+This all may sound complex, and indeed it is. (It is the same module and class name generation issue that C++ and other languages have, but multiplied by three because we refactored the code into three units.) 
+
+Therefore, we have defined a script and an input template file that will create these six files automatically, with package and type names reflecting the service involved and the purposes of the specific packages.
+
+Within the template file, we name these packages based on just one name - i.e., the service name:
+
+1. <Service_Name>_Interfacing: the interfacing part.
+2. <Service_Name>: the functionality part.
+3. <Service_Name>_Mailboxes: the data-passing part.
+
+For part 2 packages, defining the interfacing facilities, we now simply append "_Interfacing" to the service name, rather than requiring the user to come up with some variation of the service name.
+Hence the complete file name is (for the spec):
+"uxas-comms-lmcp_net_client-service-<service_name>_interfacing.ads"
+
+Note that we chose a more specific suffix for the name of part 3's packages, reflecting the primary type they define. Hence "_Communication" is now "_Mailboxes" in those package names.
+
+When invoking the script you must specify the service name, in Ada source code format. For example, for the Route Aggregator service you would specify "Route_Aggregator" as the single argument to the script. The argument must be a legal Ada name because the script uses it as-is in the generated source files. That's why the underscore is included in the argument. Although Ada is case-insensitive, we suggest that you use the casing indicated so that it will be consistent with the rest of the code generated in the files. That will enhance readability.
+
+The script is named "gen_service_files.sh".
+Therfore, you invoke the script with that name and the name of the service to be supported. For example:
+
+     ./gen_service_files.sh My_Route_Aggregator
+
+That will generate the six Ada/SPARK source files.
+
+The script also takes as input a file containing templates for the six files. This file is not specified on the command line but is, instead, accessed internally by the script. The template file is named "template.txt" and must be located in the same directy as the invocation itself. We supply the file with the script file. Users do not make the template file themselves.
+
+The script modifies the template file so that the service name specified via the argument appears in the generated files. Therefore, you must use a fresh copy of the template file for every invocation of the script. Users are responsible for ensuring this requirement is met.
+
+The last step in the script calls the GNAT tool "gnatchop." That tool takes an arbitrary text file as input (template.txt in our case) and generates the corresponding packages with files names matching the internal package names. That's why template.txt must be modified.
+
+As a result, assuming the invocation illustrated above, the script will generate these files:
+
+my_route_aggregator.adb
+my_route_aggregator.ads
+my_route_aggregator_mailboxes.adb
+my_route_aggregator_mailboxes.ads
+uxas-comms-lmcp_net_client-service-my_route_aggregator_interfacing.adb
+uxas-comms-lmcp_net_client-service-my_route_aggregator_interfacing.ads
+
+The new files will be located in the directory in which the invocation occurred.
+
+There is one final name to discuss. 
+
+* ServiceName: the name of the service as expected in the rest of OpenUxAS (in C++) and as it appears in the OpenUxAS XML configuration file. The name appears in the generated code as a string literal in the interfacing package, specifically as the value of the `Type_Name` constant.
+
+The script generates the value for the constant, automatically. In particular, the script first removes all the underscores in the name passed as the script argument, and then appends "Service" to the result.
+
+For example, with the following invocation:
+
+    ./gen_service_files.sh My_Route_Aggregator
+
+the generated service name literal would be "MyRouteAggregatorService":
+
+   Type_Name : constant String := "MyRouteAggregatorService";
+
+One of the "TODO" entries in the generated source files is to verify that the string literal exactly matches the value expected by the rest of OpenUxAS.
+
+As templates, the six generated files are incomplete. Users must fill in the missing parts by editing the files. The "TODO" entries facilitate this effort.
+
+Because the files are incomplete, they are not immediately compilable. As a result, when the script invokes gnatchop you will see warning messages. You may ignore these warnings.
+
+In the sections that follow, we describe how to modify the generated files and make other changes necessary to include them in the Ada executable. We will refer to the names of the files, and the names of the packages within those files, using the <Service_Name> placeholder. For example, we will refer to the package that provides the service functionality (part 2) as "package <Service_Name>", and corresponding files as "<service_name>.ads" and "<service_name>.adb" for the spec and body respectively. Likewise, we will refer to "package <Service_Name>_Mailboxes" and "package <Service_Name>_Interfacing" (although the actual, full package name would be "UxAS.Comms.LMCP_Net_Client.Service.<Service_Name>_Interfacing").
+
+## Add Messages
+
+If you need SPARK-compatible LMCP messages that have not previously been used in any existing SPARK/Ada UxAS service, you will need to manually add support for them. To do this, you must:
+
+1.  Add a type definition for the message to the SPARK package `LMCP_Messages` in
+    `/src/services/spark/lmcp_messages.ads`. Note that you will need to
+    recursively add type definitions for any field of the message whose type
+    is a also message (or message array) that is currently undefined.
+
+2.  Add a function to convert the corresponding Ada LMCP message to the newly
+    defined SPARK-compatible one to the specification and body of package
+    `LMCP_Message_Conversions` in
+    `/src/services/spark/lmcp_message_conversions.{ads,adb}`. Note that you
+    will need to recursively add functions for any fields of the message for
+    which such conversion functions are not currently defined. By convention,
+    the name of such functions should be `As_<MessageType>_Message`. See
+    existing functions in this package for examples.
+
+You can publish SPARK-compatible LMCP messages directly from SPARK portions of a service implemented in SPARK package `<Service_Name>` using the `sendBroadcastMessage` procedure from that same package.
+This procedure relies on the `As_Object_Any` function from package `LMCP_Message_Conversions`, which in turn relies on manually defined functions for converting SPARK-compatible LMCP messages back to Ada LMCP messages.
+If you want to be able to broadcast SPARK-compatible LMCP messages directly from SPARK portions of your service, you will therefore need to:
+
+1.  Add a function to the body of package `LMCP_Message_Conversions` to
+    convert the SPARK-compatible LMCP message type back to an access type or
+    classwide access type for the original Ada LMCP message type.
+    -   By convention, such functions are named `As_<MessageType>_Any` or
+        `As_<MessageType>_Acc` depending on whether they return a classwide
+        access type or simply an access type.
+    -   Unless it is needed external to the package (which is unlikely), you
+        should put the function declaration in the package body, not the
+        package specification. See package `LMCP_Message_Conversions` for
+        examples.
+    -   You will need to recursively add functions for any fields whose types
+        are messages for which such conversion functions are not currently
+        defined.
+
+2.  Using the previous function, add a case for the message type to
+    `function As_Object_Any` in the body of `LMCP_Message_Conversions`.
+    Recursively add cases for any fields whose types are messages that
+    are not currently handled in this function.
+
+## Modify Template Files
+
+The following instructions walk through how to modify the contents of each of the generated service template files. Note that each instruction has a corresponding `__TODO__` comment in the template file itself, along with examples in a corresponding `__Example__` comment.
+
+### Communication
+
+Package `<Service_Name>_Mailboxes` declares a "mailbox" type for the service and associated procedures for using it, including a procedure `sendBroadcastMessage` for sending Ada LMCP messages over ZeroMQ.
+The content is boilerplate, apart from occurrences of the service name, so the two generated source files are complete and ready for use.
+
+### Ada
+
+Package `UxAS.Comms.LMCP_Net_Client.Service.<Service_Name>_Interfacing`
+implements the Ada portion of the service. This portion of the service does
+the following:
+
+-   Declares and initializes the service's main tagged type
+    `<Service_Name>_Service`, which inherits from `Service_Base` and includes
+    the service's mailbox, along with SPARK-compatible state and configuration
+    data.
+-   Declares and initializes the service's mailbox, state, and configuration.
+    The mailbox is initialized through the `Initialize` procedure, and the
+    state and configuration is initialized mainly through default initial
+    values and the `Configure` procedure.
+-   Declares and defines the name by which the service is referred to in the
+    OpenUxAS configuration file (via the constant `Type_Name`).
+-   Declares and defines the service's main LMCP message processing loop,
+    making use of a mix of local Ada message handlers and local helper
+    subprograms, along with SPARK message handlers and SPARK helper subprograms
+    from package `<Service_Name>`.
+
+The steps to implement this portion of the service from the template files
+are as follows:
+
+1.  Within `uxas-comms-lmcp_net_client-service-<service_name>_interfacing.ads`:
+    1.  Add `with` clauses for any additional packages needed in this package's
+        specification to the top of the file.
+    2.  Replace all instances of `<Service_Name>_Interfacing` with your chosen name.
+    3.  Replace all instances of `<Service_Name>` with your chosen name.
+    4.  Replace the instance of `<ServiceName>` with your chosen name on the
+        line that reads
+        `Type_Name : constant String := "<ServiceName>Service"`.
+        This is the name the Service Manager will use
+        to load the service, and it is therefore the name by which you will
+        refer to the service in the SPARK/Ada OpenUxAS configuration file.
+    5.  Add any additional service-specific fields to record
+        `<Service_Name>_Service`, which already has fields `Config`, `Mailbox`,
+        and `State`. Note that additional fields may not be needed.
+2.  Within `uxas-comms-lmcp_net_client-service-<service_name>_interfacing.adb`:
+    1.  Add `with` clauses for any additional packages needed only within this
+        package's body to the top of the file. This is likely to include LMCP
+        messages, e.g. from package AFRL.CMASI, and it may include other packages
+        as well.
+    2.  Replace all instances of `<Service_Name>_Interfacing` with your chosen name.
+    3.  Replace all instances of `<Service_Name>` with your chosen name.
+    4.  Declare any subprograms used locally within the package. This should
+        include procedures for handling Ada LMCP messages, which by convention
+        should be named `Handle_<MessageType>_Msg`. Also by convention, their
+        definitions are deferred until closer to the end of the file.
+    5.  In `procedure Configure`,
+        1.  Add any necessary service-specific configuration logic. This is
+            likely to include logic to set service-specific configuration
+            parameters read from the OpenUxAS XML configuration file.
+        2.  Subscribe to any messages this service should receive.
+    6.  Define any Ada LMCP message handling procedures that were declared
+        earlier in the package.
+        -   In some cases, these may essentially be wrappers around SPARK LMCP
+            message handling procedures from package `<Service_Name>`. In such
+            cases, the Ada LMCP message handler should use the
+            `As_<MessageType>_Message` function from package
+            `LMCP_Message_Conversions` to convert the Ada LMCP message to a
+            SPARK-compatible LMCP message before calling the SPARK LMCP message
+            handler, which by convention should be named `Handle_<MessageType>`.
+        -   In some cases, there may be no Ada LMCP message handler for a
+            particular type of message that the service subscribes to. Instead,
+            there is only a handler for the analogous SPARK LMCP message, which
+            is called by the `Process_Received_LMCP_Message` procedure described
+            in the next step.
+    7.  Within procedure `Process_Received_LMCP_Message`:
+        1.  Add an `if-elsif` block to handle every type of message this service
+            subscribes to. For each type of message, call either a local Ada
+            LMCP message handler or a SPARK LMCP message handler from package
+            `<Service_Name>`.
+        2.  Add any additional processing logic that should occur every time
+            after a message is received.
+    8.  Define any other local procedures that were declared earlier in the
+        package.
+
+
+### SPARK
+
+<AI Pat | Tony>
+
+# Adding the Service to Main
+
+<AI Pat>
+
+# Adding Proofs to CI
+
+Once you've completed the development of your SPARK service and have proved all of your properties, you can add your new proofs so that they will be run by `run-proofs`.
+This will also ensure that your proofs are run as part of continuous integration.
+
+Create a new directory under `tests/proof/proofs/`, like this:
+
+    OpenUxAS$ mkdir tests/proof/proofs/service_name
+
+Then create two files: `test.yaml` and `test.out`.
+
+In `test.yaml`, you will:
+
+* name the spec files associated with the SPARK part of your service,
+* indicate the proof level
+* indicate a timeout, if any
+
+Like this:
+
+    filenames: ["service_name.ads"]
+    level: 2
+
+The options you pick should match those you used when you completed the proofs.
+See the existing entries under `tests/proof/proofs/` for other examples.
+
+In the `test.out`, you may list expected proof failures.
+See the existing entries under `tests/proof/proofs/` for examples.
+
+Now, when you run `run-proofs`, you will see the report of the proofs of your service.
