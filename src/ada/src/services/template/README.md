@@ -252,7 +252,57 @@ are as follows:
 
 ### SPARK
 
-<AI Pat | Tony>
+SPARK package `<Service_Name>` contains SPARK subprograms and associated data
+structures used to implement key behaviors of the service that can be
+formally verified. Public subprograms that update the service's state tend to
+be called by the Ada portion of the service in package
+`UxAS.Comms.LMCP_Net_Client.Service.<Service_Name>_Interfacing` when a new
+message is received or other events occur, e.g. a timer within the service
+triggers. The `<Service_Name>` SPARK package likely includes a significant
+amount of ghost code for specification and to help guide proof, and it may
+also include helper subprograms that decompose the processing and make proof
+more tractable. The steps to implement this portion of the service from the
+template files are as follows:
+
+1.  Within `<service_name>.ads`:
+    1.  Add `with` clauses for any additional packages needed in this package's
+        specification to the top of the file.
+    2.  Define the types needed for this SPARK package.
+    3.  Declare the fields of record `<Service_Name>_Configuration_Data`, which
+        holds configuration information for the service. This configuration
+        information is generally from the OpenUxAS XML configuration file and
+        is initialized by the Ada portion of the service using the `Configure`
+        procedure.
+    4.  Declare and optionally provide default values for the fields of record
+        `<Service_Name>_State`, which holds state information for the
+        service. This information tends to change as messages are processed and
+        computations are performed.
+    5.  Declare public subprograms needed in this package. These tend to
+        include (a) procedures to handle SPARK-compatible LMCP messages; (b)
+        subprograms that implement major behaviors of the service that need to
+        be accessible by Ada portions of the service; and (c) ghost code for
+        specification, especially for pre- and postconditions of subprograms
+        for (a) and (b).
+2.  Within `<service_name>.adb`:
+    1.  Add `with` clauses for any additional packages needed in this package's
+        body to the top of the file.
+    2.  Add any local types or `use` clauses you would like to have.
+    3.  Declare and define bodes for any local subprograms that are only used
+        within the body of this package. This may include helper subprograms or
+        ghost code (e.g. lemmas) to help with proof.
+    4.  Define bodies for any subprograms that were declared in the package
+        specification. These are likely to include procedures to handle
+        SPARK-compatible LMCP messages (by convention named
+        `Handle_<MessageType>`), along with other SPARK subprograms needed by
+        the service.
+        -   Note that procedures that send SPARK-compatible LMCP messages
+            directly should include the service's mailbox as a parameter.
+        -   Also, as a general tip for proof, subprograms that have complex
+            contracts and operate on the state should in their implementations
+            rely on helper subprograms that operate over **only** the required
+            fields of the state and have contracts that can be leveraged for
+            proof of the original subprogram's contract. This modularizes proof
+            and minimizes context for the provers, making proof more tractable.
 
 # Adding the Service to Main
 
