@@ -44,25 +44,25 @@ There are three forms of that name reflected in the package names:
 
 1. Route_Aggregation: the part that interfaces with the rest of OpenUxAS, in Ada.
 2. Route_Aggregator: the part that implements in the service functionality, in SPARK.
-3. Route_Aggregator_Mailboxes: the part that passes data between (1) and (2).
+3. Route_Aggregator_Communication: the part that passes data between (1) and (2).
 
 The full package name for the first part is "UxAS.Comms.LMCP_Net_Client.Service.Route_Aggregation".
 In terms of files and their file names for all three parts we then have the following:
 
 Part 1:
-route_aggregator.adb
-route_aggregator.ads
+    route_aggregator.adb
+    route_aggregator.ads
 
 Part 2:
-uxas-comms-lmcp_net_client-service-route_aggregation.adb
-uxas-comms-lmcp_net_client-service-route_aggregation.ads
+    uxas-comms-lmcp_net_client-service-route_aggregation.adb
+    uxas-comms-lmcp_net_client-service-route_aggregation.ads
 
 Part 3:
-route_aggregator_communication.adb
-route_aggregator_communication.ads
+    route_aggregator_communication.adb
+    route_aggregator_communication.ads
 
-In GNAT, by default the file names must reflect the package (unit) names within, so you can tell that the package name for part 3 in that file is Route_Aggregator_Mailboxes.
-That's just the service name with "_Mailboxes" appended so parts 1 and 3 directly reflect the service name, whereas part 2 does not.
+In GNAT, by default the file names must reflect the package (unit) names within, so you can tell that the package name for part 3 in that file is Route_Aggregator_Communication.
+That's just the service name with "_Communication" appended so parts 1 and 3 directly reflect the service name, whereas part 2 does not.
 The package for part 2 is a "child" of package UxAS.Comms.LMCP_Net_Client.Service so it already has a prefix that would allow the use of "Route_Aggregator" for the last part of the package name.
 However that child package also includes package "Route_Aggregator" in a context clause, which could lead to confusion, both for the reader and for the compiler.
 A different name is more appropriate here.
@@ -77,9 +77,9 @@ Therefore, we have defined a script and an input template file that will create 
 
 Within the template file, we name these packages based on just one name - i.e., the service name:
 
-1. <Service_Name>_Interfacing: the interfacing part.
-2. <Service_Name>: the functionality part.
-3. <Service_Name>_Mailboxes: the data-passing part.
+1. <Service_Name>_Interfacing for the interfacing part.
+2. <Service_Name> for the functionality part.
+3. <Service_Name>_Mailboxes for the data-passing part.
 
 For part 2 packages, defining the interfacing facilities, we now simply append "_Interfacing" to the service name, rather than requiring the user to come up with some variation of the service name.
 Hence the complete file name is (for the spec):
@@ -103,7 +103,7 @@ For example:
 That will generate the six Ada/SPARK source files.
 
 The script uses the file `template.txt`, contained in this directory, to guide the generation.
-Updating this file will change the template behavior.
+Updating this file will change the template behavior, although the need to do so is not expected.
 
 As a result, assuming the invocation illustrated above, the script will generate these files in a new subdirectory `my_route_aggregator` under `OpenUxAS/src/ada/src/services`:
 
