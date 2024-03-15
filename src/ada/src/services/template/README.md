@@ -37,7 +37,10 @@ We have also added a third part in the Ada code:
 
 Each of the three parts is implemented by a distinct package.
 
-Each package requires a unique package name, and each defines a primary type that also needs a name. To date the schema for these names has been somewhat ad hoc. For example, consider the Route Aggregator Service. There are three forms of that name reflected in the package names:
+Each package requires a unique package name, and each defines a primary type that also needs a name.
+To date the schema for these names has been somewhat ad hoc.
+For example, consider the Route Aggregator Service.
+There are three forms of that name reflected in the package names:
 
 1. Route_Aggregation: the part that interfaces with the rest of OpenUxAS, in Ada.
 2. Route_Aggregator: the part that implements in the service functionality, in SPARK.
@@ -58,12 +61,17 @@ Part 3:
 route_aggregator_communication.adb
 route_aggregator_communication.ads
 
-In GNAT, by default the file names must reflect the package (unit) names within, so you can tell that the package name for part 3 in that file is Route_Aggregator_Mailboxes. That's just the service name with "_Mailboxes" appended so parts 1 and 3 directly reflect the service name, whereas part 2 does not.
-The package for part 2 is a "child" of package UxAS.Comms.LMCP_Net_Client.Service so it already has a prefix that would allow the use of "Route_Aggregator" for the last part of the package name. However that child package also includes package "Route_Aggregator" in a context clause, which could lead to confusion, both for the reader and for the compiler. A different name is more appropriate here.
+In GNAT, by default the file names must reflect the package (unit) names within, so you can tell that the package name for part 3 in that file is Route_Aggregator_Mailboxes.
+That's just the service name with "_Mailboxes" appended so parts 1 and 3 directly reflect the service name, whereas part 2 does not.
+The package for part 2 is a "child" of package UxAS.Comms.LMCP_Net_Client.Service so it already has a prefix that would allow the use of "Route_Aggregator" for the last part of the package name.
+However that child package also includes package "Route_Aggregator" in a context clause, which could lead to confusion, both for the reader and for the compiler.
+A different name is more appropriate here.
 
-Rather than come up with some variation of the service name, "Route_Aggregation" for example, we can take the same approach as was used for the name of the package for part 2. We can append something appropriate to the service name.
+Rather than come up with some variation of the service name, "Route_Aggregation" for example, we can take the same approach as was used for the name of the package for part 2.
+We can append something appropriate to the service name.
 
-This all may sound complex, and indeed it is. (It is the same module and class name generation issue that C++ and other languages have, but multiplied by three because we refactored the code into three units.) 
+This all may sound complex, and indeed it is.
+(It is the same module and class name generation issue that C++ and other languages have, but multiplied by three because we refactored the code into three units.)
 
 Therefore, we have defined a script and an input template file that will create these six files automatically, with package and type names reflecting the service involved and the purposes of the specific packages.
 
@@ -79,41 +87,43 @@ Hence the complete file name is (for the spec):
 
 Note that we chose a more specific suffix for the name of part 3's packages, reflecting the primary type they define. Hence "_Communication" is now "_Mailboxes" in those package names.
 
-When invoking the script you must specify the service name, in Ada source code format. For example, for the Route Aggregator service you would specify "Route_Aggregator" as the single argument to the script. The argument must be a legal Ada name because the script uses it as-is in the generated source files. That's why the underscore is included in the argument. Although Ada is case-insensitive, we suggest that you use the casing indicated so that it will be consistent with the rest of the code generated in the files. That will enhance readability.
+When invoking the script you must specify the service name, in Ada source code format.
+For example, for the Route Aggregator service you would specify "Route_Aggregator" as the single argument to the script.
+The argument must be a legal Ada name because the script uses it as-is in the generated source files.
+That's why the underscore is included in the argument.
+Although Ada is case-insensitive, we suggest that you use the casing indicated so that it will be consistent with the rest of the code generated in the files.
+That will enhance readability.
 
-The script is named "gen_service_files.sh".
-Therefore, you invoke the script with that name and the name of the service to be supported. For example:
+The script is named `instantiate`.
+You invoke the script with the name of the service to be supported.
+For example:
 
-     ./gen_service_files.sh My_Route_Aggregator
+    OpenUxAS/src/ada/src/services$ template/instantiate My_Route_Aggregator
 
 That will generate the six Ada/SPARK source files.
 
-The script also takes as input a file containing templates for the six files. This file is not specified on the command line but is, instead, accessed internally by the script. The template file is named "template.txt" and must be located in the same directy as the invocation itself. We supply the file with the script file. Users do not make the template file themselves.
+The script uses the file `template.txt`, contained in this directory, to guide the generation.
+Updating this file will change the template behavior.
 
-The script modifies the template file so that the service name specified via the argument appears in the generated files. Therefore, you must use a fresh copy of the template file for every invocation of the script. Users are responsible for ensuring this requirement is met.
+As a result, assuming the invocation illustrated above, the script will generate these files in a new subdirectory `my_route_aggregator` under `OpenUxAS/src/ada/src/services`:
 
-The last step in the script calls the GNAT tool "gnatchop." That tool takes an arbitrary text file as input (template.txt in our case) and generates the corresponding packages with files names matching the internal package names. That's why template.txt must be modified.
+    my_route_aggregator.adb
+    my_route_aggregator.ads
+    my_route_aggregator_mailboxes.adb
+    my_route_aggregator_mailboxes.ads
+    uxas-comms-lmcp_net_client-service-my_route_aggregator_interfacing.adb
+    uxas-comms-lmcp_net_client-service-my_route_aggregator_interfacing.ads
 
-As a result, assuming the invocation illustrated above, the script will generate these files:
-
-my_route_aggregator.adb
-my_route_aggregator.ads
-my_route_aggregator_mailboxes.adb
-my_route_aggregator_mailboxes.ads
-uxas-comms-lmcp_net_client-service-my_route_aggregator_interfacing.adb
-uxas-comms-lmcp_net_client-service-my_route_aggregator_interfacing.ads
-
-The new files will be located in the directory in which the invocation occurred.
-
-There is one final name to discuss. 
+There is one final name to discuss.
 
 * ServiceName: the name of the service as expected in the rest of OpenUxAS (in C++) and as it appears in the OpenUxAS XML configuration file. The name appears in the generated code as a string literal in the interfacing package, specifically as the value of the `Type_Name` constant.
 
-The script generates the value for the constant, automatically. In particular, the script first removes all the underscores in the name passed as the script argument, and then appends "Service" to the result.
+The script generates the value for the constant, automatically.
+In particular, the script first removes all the underscores in the name passed as the script argument, and then appends "Service" to the result.
 
 For example, with the following invocation:
 
-    ./gen_service_files.sh My_Route_Aggregator
+    OpenUxAS/src/ada/src/services$ template/instantiate My_Route_Aggregator
 
 the generated service name literal would be "MyRouteAggregatorService":
 
@@ -121,11 +131,14 @@ the generated service name literal would be "MyRouteAggregatorService":
 
 One of the "TODO" entries in the generated source files is to verify that the string literal exactly matches the value expected by the rest of OpenUxAS.
 
-As templates, the six generated files are incomplete. Users must fill in the missing parts by editing the files. The "TODO" entries facilitate this effort.
+As templates, the six generated files are incomplete.
+Users must fill in the missing parts by editing the files. The "TODO" entries facilitate this effort.
+Because the files are incomplete, they are not immediately compilable.
 
-Because the files are incomplete, they are not immediately compilable. As a result, when the script invokes gnatchop you will see warning messages. You may ignore these warnings.
-
-In the sections that follow, we describe how to modify the generated files and make other changes necessary to include them in the Ada executable. We will refer to the names of the files, and the names of the packages within those files, using the <Service_Name> placeholder. For example, we will refer to the package that provides the service functionality (part 2) as "package <Service_Name>", and corresponding files as "<service_name>.ads" and "<service_name>.adb" for the spec and body respectively. Likewise, we will refer to "package <Service_Name>_Mailboxes" and "package <Service_Name>_Interfacing" (although the actual, full package name would be "UxAS.Comms.LMCP_Net_Client.Service.<Service_Name>_Interfacing").
+In the sections that follow, we describe how to modify the generated files and make other changes necessary to include them in the Ada executable.
+We will refer to the names of the files, and the names of the packages within those files, using the <Service_Name> placeholder.
+For example, we will refer to the package that provides the service functionality (part 2) as "package <Service_Name>", and corresponding files as "<service_name>.ads" and "<service_name>.adb" for the spec and body respectively.
+Likewise, we will refer to "package <Service_Name>_Mailboxes" and "package <Service_Name>_Interfacing" (although the actual, full package name would be "UxAS.Comms.LMCP_Net_Client.Service.<Service_Name>_Interfacing").
 
 ## Add Messages
 
@@ -309,12 +322,31 @@ template files are as follows:
 1.  Include your service in `src/ada/src/main/uxas_ada.adb` by adding
     the following lines to the file, after analogous lines for other
     services:
-    
+
         with UxAS.Comms.LMCP_Net_Client.Service.<Service_Name>_Interfacing;
         pragma Unreferenced (UxAS.Comms.LMCP_Net_Client.Service.<Service_Name>_Interfacing);
 
 The with-clause is necessary for the package to be part of the Ada main's executable image.
 The pragma informs the compiler that it need note generate a warning about the fact that the package is not otherwise referenced with the body of the main procedure.
+
+# Build and Run SPARK/Ada OpenUxAS
+
+1.  Once you're ready to start using your code in conjunction with other
+    anod-managed code, change to the main OpenUxAS directory, and build it with
+    command: `./anod build uxas-ada`
+
+2.  You can demonstrate your code with OpenAMASE by setting up an example in
+    the `examples` directory that can be run from the main OpenUxAS directory
+    using the command: `./run-example`
+    -   See `examples/02a_Ada_WaterwaySearch` for an example that uses SPARK/Ada
+        OpenUxAS alongside C++ OpenUxAS and OpenAMASE to do a line search. Files
+        that affect running of the example include the configuration files for
+        both the SPARK/Ada and C++ versions of OpenUxAS (`cfg_ada.xml`,
+        `cfg_cpp.xml`), the configuration file for OpenAMASE
+        (`Scenario_WaterwaySearch.xml`), the configuration file for `run-example`
+        (`config.yaml`), and messages in the `MessagesToSend` directory, which
+        are injected based on the configuration of the `SendMessagesService` in
+        the OpenUxAS configuration file(s).
 
 # Adding Proofs to CI
 
