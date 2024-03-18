@@ -1,0 +1,58 @@
+#! /usr/bin/env bash
+#
+# instantiate - instantiate a new service from the template
+#
+# This script should be run from the `services` directory. It will create a new
+# directory for the service and copy the template into it, replacing the
+# placeholders with the service name.
+
+# Script location
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+# Template filename
+TEMPLATE_FILE="template.txt"
+
+# The source for the template
+TEMPLATE_SRC="${SCRIPT_DIR}/${TEMPLATE_FILE}"
+
+# We are looking for a single argument:
+if [[ $# -ne 1 ]]; then
+    echo "$0: The desired service unit name is required, eg Route_Aggregator"
+    exit 4
+fi
+
+service_unit_name=$1
+
+# The Service Directory Name will be the unit name, but lower case
+service_dir_name=$(echo $service_unit_name | tr '[:upper:]' '[:lower:]')
+
+# We want to put the service in a directory matching its name - make sure
+# it does not already exist:
+if [[ -d $service_dir_name ]]; then
+    echo "$0: The directory $service_dir_name already exists"
+    exit 5
+fi
+
+# Create the directory
+mkdir $service_dir_name
+
+# Switch to that directory
+cd $service_dir_name
+
+# Copy the template into the new directory
+cp $TEMPLATE_SRC .
+
+# Replace the placeholder with the service unit name
+sed -i 's/<Service_Name>/'$service_unit_name'/g' $TEMPLATE_FILE
+
+# Generate the "ServiceName" version of the service unit name
+servicenameString=$(echo $1 | awk '{ gsub("_","",$0); print $0 }')
+
+# Replace the placeholder with the service name
+sed -i 's/<ServiceName>/'$servicenameString'/' $TEMPLATE_FILE
+
+# Break the template into its constituent files
+gnatchop -q $TEMPLATE_FILE > /dev/null 2>&1
+
+# Remove the instantiated template
+rm $TEMPLATE_FILE
