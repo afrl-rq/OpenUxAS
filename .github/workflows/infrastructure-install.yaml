@@ -7,8 +7,10 @@ on:
             - 'infrastructure/install-libexec/**'
     workflow_dispatch:
     schedule:
+        # We wish we knew what this meant
         - cron : '40 3 * * 4'
 
+# Here's our main work
 name: Check Infrastructure Install
 jobs:
     test:
@@ -18,7 +20,9 @@ jobs:
                 env: [
                     {os: ubuntu-20.04, python: '3.8'},
                     {os: ubuntu-22.04, python: '3.10'}
+                    # Add latest when drops
                 ]
+        # An OS!
         runs-on: ${{ matrix.env.os }}
         steps:
             - uses: actions/checkout@v2
