@@ -4,6 +4,7 @@ on:
             - 'infrastructure/uxas/**'
             - 'infrastructure/paths.sh'
             - 'infrastructure/specs/**'
+            - 'infrastructure/install-libexec/**'
             - 'anod'
             - 'src/ada/**'
             - 'tests/proof/**'
@@ -11,6 +12,8 @@ on:
         paths:
             - 'infrastructure/uxas/**'
             - 'infrastructure/paths.sh'
+            - 'infrastructure/specs/**'
+            - 'infrastructure/install-libexec/**'
             - 'anod'
             - 'src/ada/**'
             - 'tests/proof/**'
@@ -32,19 +35,20 @@ jobs:
                 qualifier: [scenario=release]
         runs-on: ${{ matrix.env.os }}
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v4
               with:
                   path: OpenUxAS
 
             - name: Set up python ${{ matrix.env.python }}
-              uses: actions/setup-python@v2
+              uses: actions/setup-python@v5
               with:
                   python-version: ${{ matrix.env.python }}
 
             - name: Set up java
-              uses: actions/setup-java@v1
+              uses: actions/setup-java@v4
               with:
                   java-version: '11'
+                  distribution: 'adopt'
 
             - name: Install infrastructure
               run: |
