@@ -51,7 +51,6 @@ APT_INSTALL = Command(
         "install",
         "-y",
         "unzip",
-        "libsodium-dev",  # TBD if we want this here
     ],
     description="Installing dependencies",
 )
@@ -63,7 +62,7 @@ ALR_BIN = os.path.join("bin", "alr")
 
 ALR_DOWNLOAD_LINK = (
     "https://github.com/alire-project/alire/releases/download/"
-    "v2.0.0/alr-2.0.0-bin-x86_64-linux.zip"
+    "v2.0.1/alr-2.0.1-bin-x86_64-linux.zip"
 )
 ALR_DOWNLOAD_FILE = "alr.zip"
 ALR_DOWNLOAD_CMD = Command(
