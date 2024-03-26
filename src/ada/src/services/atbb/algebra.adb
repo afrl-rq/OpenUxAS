@@ -3,6 +3,8 @@ with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Strings;       use Ada.Strings;
 with Ada.Text_IO;       use Ada.Text_IO;
 with Int64_Parsing;     use Int64_Parsing;
+with Common;
+use Common.Count_Type_To_Big_Integer_Conversions;
 
 package body Algebra with SPARK_Mode is
 
@@ -184,7 +186,7 @@ package body Algebra with SPARK_Mode is
                   if not Encounter_Executed_Out then
                      for J in 1 .. Num_Children loop
                         for TaskOptionId of Children_Results (J) loop
-                           pragma Assume (Length (ResultThis) < Count_Type'Last);
+                           pragma Assume (Length (ResultThis) < To_Big_Integer (Count_Type'Last));
                            ResultThis := Add (ResultThis, TaskOptionId);
                         end loop;
                      end loop;
@@ -200,7 +202,7 @@ package body Algebra with SPARK_Mode is
 
                      --  All actions are candidate in a parallel assignment
                      for TaskOptionId of Children_Results (J) loop
-                        pragma Assume (Length (ResultThis) < Count_Type'Last);
+                        pragma Assume (Length (ResultThis) < To_Big_Integer (Count_Type'Last));
                         ResultThis := Add (ResultThis, TaskOptionId);
                      end loop;
 

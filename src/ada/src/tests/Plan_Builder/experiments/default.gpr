@@ -1,0 +1,38 @@
+project Default is
+
+   for Languages use ("Ada", "c");
+
+   for Main use ("main.adb");
+
+   for Source_Dirs use (".");
+   for Object_Dir  use "obj";
+   for Exec_Dir    use "bin";
+
+
+   package Builder is
+      for Executable ("main.adb") use "main_ada";
+
+      for Executable ("ada_function.c") use "main_c";
+
+    --   for Default_Switches ("Ada")
+    --     use ("-m");
+   end Builder;
+
+   package Compiler is
+      for Default_Switches ("Ada")
+        use ("-fstack-check", --  Generate stack checking code (part of Ada)
+             "-gnata",        --  Enable assertions            (part of Ada)
+             "-gnato13",      --  Overflow checking            (part of Ada)
+             "-gnatf",                      --  Full, verbose error messages
+             "-gnatwa",                     --  All optional warnings
+             "-gnatVa",                     --  All validity checks
+             "-gnaty3abcdefhiklmnoOprstux", --  Style checks
+             "-gnatwe",                     --  Treat warnings as errors
+             "-gnat2012",                   --  Use Ada 2012
+             "-Wall",                       --  All GCC warnings
+             "-O2");                        --  Optimise (level 2/3)
+
+      for Default_Switches ("C") use ("-pedantic", "-g");
+   end Compiler;
+
+end Default;

@@ -53,8 +53,7 @@ package Route_Aggregator with SPARK_Mode is
    package Int_Set_E renames Int64_Formal_Sets.Formal_Model.E;
    package Int_Set_M renames Int64_Formal_Sets.Formal_Model.M;
 
-   subtype Int64_Formal_Set is Int64_Formal_Sets.Set
-     (Int64_Formal_Sets.Default_Modulus (200));
+   subtype Int64_Formal_Set is Int64_Formal_Sets.Set;
 
    --  Use ordered maps so that we can modify the container during iteration
 
@@ -95,7 +94,6 @@ package Route_Aggregator with SPARK_Mode is
    package RR_Maps_M renames Int64_RouteResponse_Maps.Formal_Model.M;
 
    subtype Int64_RouteResponse_Map is Int64_RouteResponse_Maps.Map
-     (Int64_RouteResponse_Maps.Default_Modulus (200))
    with Predicate =>
          (for all K of Int64_RouteResponse_Map =>
             Element (Int64_RouteResponse_Map, K).ResponseID = K);
@@ -114,7 +112,6 @@ package Route_Aggregator with SPARK_Mode is
    use Int64_IdPlanPair_Maps.Formal_Model;
 
    subtype Int64_IdPlanPair_Map is Int64_IdPlanPair_Maps.Map
-     (Int64_IdPlanPair_Maps.Default_Modulus (200))
    with Predicate =>
          (for all K of Int64_IdPlanPair_Map =>
             Element (Int64_IdPlanPair_Map, K).Plan.RouteID = K);
@@ -152,7 +149,7 @@ package Route_Aggregator with SPARK_Mode is
       Hash => Int64_Hash);
    use Int64_TaskOptionPair_Maps;
 
-   subtype Int64_TaskOptionPair_Map is Int64_TaskOptionPair_Maps.Map (Int64_TaskOptionPair_Maps.Default_Modulus (200));
+   subtype Int64_TaskOptionPair_Map is Int64_TaskOptionPair_Maps.Map;
 
    package Int64_TaskPlanOptions_Maps is new SPARK.Containers.Formal.Unbounded_Hashed_Maps
      (Key_Type        => Int64,
@@ -160,7 +157,7 @@ package Route_Aggregator with SPARK_Mode is
       Hash            => Int64_Hash);
    use Int64_TaskPlanOptions_Maps;
 
-   subtype Int64_TaskPlanOptions_Map is Int64_TaskPlanOptions_Maps.Map (Int64_TaskOptionPair_Maps.Default_Modulus (200));
+   subtype Int64_TaskPlanOptions_Map is Int64_TaskPlanOptions_Maps.Map;
 
    package RPReq_Sequences is new SPARK.Containers.Functional.Vectors
         (Index_Type   => Positive,

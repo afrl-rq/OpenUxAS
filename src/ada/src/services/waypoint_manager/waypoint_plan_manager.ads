@@ -1,3 +1,4 @@
+with SPARK.Big_Integers;                         use SPARK.Big_Integers;
 with SPARK.Containers.Formal.Hashed_Maps;
 with SPARK.Containers.Formal.Vectors;
 with Ada.Containers;                             use all type Ada.Containers.Count_Type;
@@ -61,7 +62,7 @@ package Waypoint_Plan_Manager with SPARK_Mode is
      (State : in out Waypoint_Plan_Manager_State;
       MC : MissionCommand)
      with Pre =>
-       Length (MC.WaypointList) <= Max and then
+       Length (MC.WaypointList) <= Common.Count_Type_To_Big_Integer_Conversions.To_Big_Integer (Max) and then
        MC.FirstWaypoint > 0;
 
    procedure Produce_Segment
