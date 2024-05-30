@@ -53,7 +53,7 @@ APT_INSTALL = Command(
         "uuid-dev",
         "libyaml-dev",
         "python3-dev",
-        "python3-distutils",
+        "python3-setuptools",
         "python3-venv",
         "python3-pip",
         # For a system-wide boost, we need these packages. Commented out until

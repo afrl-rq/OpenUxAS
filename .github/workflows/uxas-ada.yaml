@@ -28,8 +28,8 @@ jobs:
             fail-fast: false
             matrix:
                 env: [
-                    {os: ubuntu-20.04, python: '3.8'},
-                    {os: ubuntu-22.04, python: '3.10'}
+                    {os: ubuntu-22.04, python: '3.10'},
+                    {os: ubuntu-24.04, python: '3.12'}
                 ]
                 component: [uxas-ada]
                 qualifier: [scenario=release]
