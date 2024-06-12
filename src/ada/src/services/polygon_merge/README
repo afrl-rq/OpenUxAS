@@ -1,0 +1,9 @@
+All VCs should discharge for this directory when using the following command:
+  gnatprove -P%PP -j0 %X --output=oneline --ide-progress-bar --level=4 --prover=cvc5,z3,altergo,colibri,cvc4
+and when using the following version of gnatprove:
+SPARK Pro 24.0w (20230509)
+Why3 for gnatprove version 1.6.0+git
+/opt/gnatstudio/libexec/spark/bin/alt-ergo: Alt-Ergo version 2.4.0
+/opt/gnatstudio/libexec/spark/bin/colibri: Colibri 2020.9
+/opt/gnatstudio/libexec/spark/bin/cvc5: This is CVC5 version 1.0.5
+/opt/gnatstudio/libexec/spark/bin/z3: Z3 version 4.11.2 - 64 bit
