@@ -1,0 +1,69 @@
+lemmas: THEORY
+BEGIN
+
+  IMPORTING reals@sq;
+  IMPORTING line_segments@segments_2d;
+
+  % Unused and unproved
+  value_between_two_values_has_sq_betwen: LEMMA
+    FORALL(a, b: real, r: {x: real | 0 <= x AND x <= 1}):
+      (sq(a) <= sq(a + r * b) AND sq(a + r * b) <= sq(a + b)) OR
+      (sq(a + b) <= sq(a + r * b) AND sq(a + r * b) <= sq(a));
+
+  % Adapted from dist_to_pt_on_seg_le_dist_to_endpt in theory
+  % merge_pre_condition.
+  point_between_valid_seg_endpts_valid: LEMMA
+    FORALL(a, b, p, v: point_2d):
+      a /= b AND point_on_segment?(v, (# p1 := a, p2 := b #))
+        IMPLIES sqv(p - v) <= max(sqv(p - a), sqv(p - b));
+
+  vector_2d_constraint(x, y: real, last: posreal): boolean =
+    x * x + y * y <= last;
+
+  % Written in terms of x,y and not structures due to
+  % how SPARK Ada treats the x,y components
+  point_between_valid_pts_valid: LEMMA
+    FORALL(x0, y0, x1, y1, x2, y2: real,
+           r: {v: real | 0 <= v and v <= 1},
+	   last: posreal):
+      vector_2d_constraint(x0 - x1, y0 - y1, last) AND
+      vector_2d_constraint(x0 - x2, y0 - y2, last) IMPLIES % AND
+%      vector_2d_constraint(x1 - x2, y1 - y2, last) IMPLIES
+        vector_2d_constraint(x0 - ((1-r)*x1 + r*x2),
+	                     y0 - ((1-r)*y1 + r*y2), last);
+
+  % Inspired by code from polygon_merge.pvs:
+  %  first_vertex_merge(A, B: simple_polygon_2d): point_2d =
+  %      LET start_with_A: bool =
+  %        IF leftmost_vertex_val(A) = leftmost_vertex_val(B) THEN
+  %           topleft_vertex_val(A) >= topleft_vertex_val(B)
+  %        ELSE
+  %           leftmost_vertex_val(A) < leftmost_vertex_val(B)
+  %        ENDIF IN
+  %      IF start_with_A THEN
+  %         A`vertices(topleft_vertex_idx(A))
+  %      ELSE
+  %         B`vertices(topleft_vertex_idx(B))
+  %      ENDIF
+  % We want a simpler version of the LET code for implementation
+  % purposes. If we rename "leftmost_vertex_val(A)" as int_1,
+  % "leftmost_vertex_val(B)" as int_2, "topleft_vertex_val(A)" as
+  % real_1, and "topleft_vertex_val(B)" as real_2, the LET
+  % statement becomes:
+  %      LET start_with_A: bool =
+  %        IF int_1 = int_2 THEN
+  %           real_1 >= real_2
+  %        ELSE
+  %           int_1 < int_2
+  %        ENDIF
+  let_start_with_A_alt: LEMMA
+    FORALL(int_1, int_2: integer, real_1, real_2: real):
+      (IF int_1 = int_2 THEN
+         real_1 >= real_2
+       ELSE
+         int_1 < int_2
+       ENDIF) =
+      ((int_1 = int_2 AND real_1 >= real_2) OR int_1 < int_2);
+  
+
+END lemmas
