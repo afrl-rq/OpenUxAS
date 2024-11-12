@@ -81,7 +81,7 @@ class GnatproveTestsuite(Testsuite):
             dest="timeout",
             type=int,
             metavar="N",
-            default=300,
+            default=2500,
             help="Modify the timeout of processes running gnatprove (not related to gnatprove's --timeout option)"
         )
         self.main.argument_parser.add_argument(
