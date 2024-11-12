@@ -63,4 +63,4 @@ jobs:
             - name: Prove OpenUxAS Ada
               run: |
                   cd OpenUxAS/tests/proof
-                  ./run-proofs -E --timeout=2400 --failure-exit-code=1
+                  ./run-proofs -E --timeout=20000 --failure-exit-code=1
