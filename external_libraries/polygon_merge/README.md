@@ -1,7 +1,7 @@
 # Polygon Merge #
 
 ## PVS ##
-The PVS files that this SPARK Ada code is based on can be found in the NASA PVS libraries at `https://github.com/nasa/pvslib`. The directories containing the source code are primarily:
+The PVS files that this SPARK Ada code is based on can be found in the NASA PVS libraries at `https://github.com/nasa/pvslib`. The directories containing the PVS theories corresponding to the SPARK Ada code are primarily:
 * `line_segments`
 * `polygons`
 * `polygon_merge`
