@@ -1253,10 +1253,10 @@ bool DAIDALUS_Processing::processReceivedLmcpMessage(std::unique_ptr<uxas::commu
     }
     else if (afrl::cmasi::isAirVehicleState(receivedLmcpMessage->m_object))
     {
-        static bool bFirst = true; // flag for first message received
+        //static bool bFirst = true; // flag for first message received
         
         // Form DAIDLUS_Configuration on reception of the first message
-        if (bFirst)
+        if (m_bFirst)
         {
             std::shared_ptr<larcfm::DAIDALUS::DAIDALUSConfiguration> DetectionConfiguration = std::make_shared<larcfm::DAIDALUS::DAIDALUSConfiguration>();
             DetectionConfiguration->setEntityId(m_VehicleID);
@@ -1322,7 +1322,7 @@ bool DAIDALUS_Processing::processReceivedLmcpMessage(std::unique_ptr<uxas::commu
             m_isReadyToActConfiguration = true;  //boolean indicating if a threshold time is set from reading a DAIDALUS configuration parameter.
 
             sendSharedLmcpObjectBroadcastMessage(DetectionConfiguration);
-            bFirst = false; //turn off flag for first message
+            m_bFirst = false; //turn off flag for first message
         }
         
         // handle message

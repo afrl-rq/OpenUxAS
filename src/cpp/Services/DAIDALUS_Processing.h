@@ -193,6 +193,7 @@ private:
 
 private: //following are member variables associated with detection
     int64_t m_VehicleID;
+    bool m_bFirst = true;
     //DAIDALUS parameters   
     double m_lookahead_time_s = {180};   // seconds--Time horizon of all DAIDALUS functions (time)
     double m_left_trk_deg = {n_Const::c_Convert::toDegrees(n_Const::c_Convert::dPi())}; // degrees--relative maximum horizontal direction maneuver to the left of the current ownship direction (angle)
