@@ -1,0 +1,446 @@
+(lemmas
+ (value_between_two_values_has_sq_betwen 0
+  (value_between_two_values_has_sq_betwen-1 nil 3901375539
+   ("" (postpone) nil nil) nil shostak))
+ (point_between_valid_seg_endpts_valid_TCC1 0
+  (point_between_valid_seg_endpts_valid_TCC1-1 nil 3907918866
+   ("" (subtype-tcc) nil nil) nil nil
+   (point_between_valid_seg_endpts_valid subtype "lemmas.b"
+    "{p: vectors_cross_2d.point_2d | p /= lemmas.a}")))
+ (point_between_valid_seg_endpts_valid 0
+  (point_between_valid_seg_endpts_valid-1 nil 3907961729
+   ("" (skeep)
+    ((""
+      (case "forall (u, w: point_2d): u /= w &
+         point_on_segment?(v, (# p1 := u, p2 := w #)) & sqv(u-p) <= sqv(w-p)
+          implies sqv(p-v) <= sqv(w-p)")
+      (("1" (expand "max")
+        (("1" (lift-if)
+          (("1" (rewrite "sqv_sym" +)
+            (("1" (equate "sqv(p-b)" "sqv(b-p)" (rewrite "sqv_sym"))
+              (("1" (ground)
+                (("1" (inst?) (("1" (ground) nil nil)) nil)
+                 ("2" (rewrite "point_on_reverse_segment" :dir rl)
+                  (("2" (expand "reverse_segment")
+                    (("2" (inst - "b" "a") (("2" (ground) nil nil))
+                      nil))
+                    nil))
+                  nil))
+                nil))
+              nil))
+            nil))
+          nil))
+        nil)
+       ("2" (hide-all-but 1)
+        (("2" (skeep)
+          (("2" (rewrite "point_on_segment_has_offset")
+            (("2" (skeep)
+              (("2" (name "pp" "perp_pt(p, u, w - u)")
+                (("1" (case "pp <= d")
+                  (("1" (lemma "perp_comps")
+                    (("1" (inst-cp - "u" "p" "w - u" "d" "pp")
+                      (("1" (inst - "u" "p" "w - u" "1" "pp")
+                        (("1" (assert)
+                          (("1"
+                            (equate "u + (w - u)" "w"
+                             (then (hide-all-but 1) (grind-with-ext)))
+                            (("1" (rewrite* "sq_norm")
+                              (("1"
+                                (replace -5 :dir rl)
+                                (("1"
+                                  (rewrite "sqv_sym" +)
+                                  (("1"
+                                    (replace -1 :hide? t)
+                                    (("1"
+                                      (replace -1 :hide? t)
+                                      (("1"
+                                        (cancel-add 2)
+                                        (("1"
+                                          (rewrite* "sqv_scal")
+                                          (("1"
+                                            (cancel-by 2 "sqv(w - u)")
+                                            (("1"
+                                              (hide-all-but (-2 -5 3))
+                                              (("1"
+                                                (rewrite "sq_le")
+                                                nil
+                                                nil))
+                                              nil))
+                                            nil))
+                                          nil))
+                                        nil))
+                                      nil))
+                                    nil))
+                                  nil))
+                                nil))
+                              nil))
+                            nil))
+                          nil))
+                        nil))
+                      nil))
+                    nil)
+                   ("2" (case "pp <= 1/2")
+                    (("1" (lemma "perp_comps")
+                      (("1" (inst-cp - "u" "p" "w - u" "d" "pp")
+                        (("1" (inst - "u" "p" "w - u" "1" "pp")
+                          (("1" (assert)
+                            (("1"
+                              (equate "u + (w - u)" "w"
+                               (then
+                                (hide-all-but 1)
+                                (grind-with-ext)))
+                              (("1"
+                                (replace -5 :dir rl)
+                                (("1"
+                                  (rewrite "sqv_sym" +)
+                                  (("1"
+                                    (rewrite* "sq_norm")
+                                    (("1"
+                                      (replace -1 :hide? t)
+                                      (("1"
+                                        (replace -1 :hide? t)
+                                        (("1"
+                                          (cancel-add 3)
+                                          (("1"
+                                            (rewrite* "sqv_scal")
+                                            (("1"
+                                              (cancel-by
+                                               3
+                                               "sqv(w - u)")
+                                              (("1"
+                                                (hide-all-but
+                                                 (-2 -5 2 4))
+                                                (("1"
+                                                  (grind)
+                                                  (("1"
+                                                    (cancel-add 2)
+                                                    (("1"
+                                                      (assert)
+                                                      (("1"
+                                                        (factor 2 l)
+                                                        (("1"
+                                                          (mult-cases
+                                                           2)
+                                                          nil
+                                                          nil))
+                                                        nil))
+                                                      nil))
+                                                    nil))
+                                                  nil))
+                                                nil))
+                                              nil))
+                                            nil))
+                                          nil))
+                                        nil))
+                                      nil))
+                                    nil))
+                                  nil))
+                                nil))
+                              nil))
+                            nil))
+                          nil))
+                        nil))
+                      nil)
+                     ("2" (lemma "perp_comps")
+                      (("2" (inst-cp - "u" "p" "w - u" "0" "pp")
+                        (("2" (inst - "u" "p" "w - u" "1" "pp")
+                          (("2" (assert)
+                            (("2"
+                              (equate "u + (w - u)" "w"
+                               (then
+                                (hide-all-but 1)
+                                (grind-with-ext)))
+                              (("2"
+                                (rewrite* "sq_norm")
+                                (("2"
+                                  (replace -1 -6 :hide? t)
+                                  (("2"
+                                    (replace -1 -5 :hide? t)
+                                    (("2"
+                                      (cancel-add -4)
+                                      (("2"
+                                        (rewrite* "sqv_scal")
+                                        (("2"
+                                          (case "sqv(w-u) > 0")
+                                          (("1"
+                                            (cancel-by -5 "sqv(w-u)")
+                                            (("1"
+                                              (expand "sq" -1)
+                                              (("1"
+                                                (real-props)
+                                                nil
+                                                nil))
+                                              nil))
+                                            nil)
+                                           ("2"
+                                            (use "sqv_eq_0")
+                                            (("2" (assert) nil nil))
+                                            nil))
+                                          nil))
+                                        nil))
+                                      nil))
+                                    nil))
+                                  nil))
+                                nil))
+                              nil))
+                            nil))
+                          nil))
+                        nil))
+                      nil))
+                    nil))
+                  nil)
+                 ("2" (assert) nil nil))
+                nil))
+              nil))
+            nil))
+          nil))
+        nil)
+       ("3" (hide-all-but 1) (("3" (grind) nil nil)) nil))
+      nil))
+    nil)
+   ((- const-decl "Vector" vectors_2D vectors)
+    (sqv const-decl "nnreal" vectors_2D vectors)
+    (nnreal type-eq-decl nil real_types nil)
+    (>= const-decl "bool" reals nil)
+    (Vector type-eq-decl nil vectors_2D vectors)
+    (<= const-decl "bool" reals nil)
+    (real_pred const-decl "[number_field -> boolean]" reals nil)
+    (number_field nonempty-type-from-decl nil number_fields nil)
+    (number_field_pred const-decl "[number -> boolean]" number_fields
+     nil)
+    (number nonempty-type-decl nil numbers nil)
+    (point_on_segment? const-decl "bool" segments_2d line_segments)
+    (segment_2d type-eq-decl nil segments_2d line_segments)
+    (/= const-decl "boolean" notequal nil)
+    (AND const-decl "[bool, bool -> bool]" booleans nil)
+    (IMPLIES const-decl "[bool, bool -> bool]" booleans nil)
+    (bool nonempty-type-eq-decl nil booleans nil)
+    (boolean nonempty-type-decl nil booleans nil)
+    (point_2d type-eq-decl nil vectors_cross_2d line_segments)
+    (real nonempty-type-from-decl nil reals nil)
+    (= const-decl "[T, T -> boolean]" equalities nil)
+    (point_on_reverse_segment formula-decl nil segments_2d
+     line_segments)
+    (reverse_segment const-decl "segment_2d" segments_2d line_segments)
+    (real_le_is_total_order name-judgement "(total_order?[real])"
+     real_props nil)
+    (real_lt_is_strict_total_order name-judgement
+     "(strict_total_order?[real])" real_props nil)
+    (sqv_sym formula-decl nil vectors_2D vectors)
+    (max const-decl "{p: real | p >= m AND p >= n}" real_defs nil)
+    (nonneg_real nonempty-type-eq-decl nil real_types nil)
+    (real_minus_real_is_real application-judgement "real" reals nil)
+    (scal_1 formula-decl nil vectors_2D vectors)
+    (sq_norm formula-decl nil vectors_2D vectors)
+    (* const-decl "Vector" vectors_2D vectors)
+    (numfield nonempty-type-eq-decl nil number_fields nil)
+    (- const-decl "[numfield, numfield -> numfield]" number_fields nil)
+    (TRUE const-decl "bool" booleans nil)
+    (nnreal_times_nnreal_is_nnreal application-judgement "nnreal"
+     real_types nil)
+    (sqv_scal formula-decl nil vectors_2D vectors)
+    (sq_le formula-decl nil sq reals)
+    (real_times_real_is_real application-judgement "real" reals nil)
+    (pos_div_gt formula-decl nil real_props nil)
+    (div_mult_pos_ge1 formula-decl nil real_props nil)
+    (zero_times1 formula-decl nil real_props nil)
+    (nzreal_div_nzreal_is_nzreal application-judgement "nzreal"
+     real_types nil)
+    (both_sides_times_pos_le1 formula-decl nil real_props nil)
+    (posreal nonempty-type-eq-decl nil real_types nil)
+    (* const-decl "[numfield, numfield -> numfield]" number_fields nil)
+    (sq const-decl "nonneg_real" sq reals)
+    (/ const-decl "[numfield, nznum -> numfield]" number_fields nil)
+    (nznum nonempty-type-eq-decl nil number_fields nil)
+    (div_8 skolem-const-decl "nnreal" lemmas nil)
+    (real_ge_is_total_order name-judgement "(total_order?[real])"
+     real_props nil)
+    (real_gt_is_strict_total_order name-judgement
+     "(strict_total_order?[real])" real_props nil)
+    (> const-decl "bool" reals nil)
+    (id const-decl "(bijective?[T, T])" identity nil)
+    (bijective? const-decl "bool" functions nil)
+    (IFF const-decl "[bool, bool -> bool]" booleans nil)
+    (+ const-decl "[numfield, numfield -> numfield]" number_fields nil)
+    (nnreal_plus_nnreal_is_nnreal application-judgement "nnreal"
+     real_types nil)
+    (real_plus_real_is_real application-judgement "real" reals nil)
+    (+ const-decl "Vector" vectors_2D vectors)
+    (perp_comps formula-decl nil perpendicular_2D vectors)
+    (- const-decl "[numfield -> numfield]" number_fields nil)
+    (neg_times_neg formula-decl nil real_props nil)
+    (neg_one_times formula-decl nil extra_tegies nil)
+    (minus_real_is_real application-judgement "real" reals nil)
+    (both_sides_times_pos_le1_imp formula-decl nil extra_real_props
+     nil)
+    (div_11 skolem-const-decl "nnreal" lemmas nil)
+    (sub_eq_zero formula-decl nil vectors_2D vectors)
+    (sqv_eq_0 formula-decl nil vectors_2D vectors)
+    (add_zero_right formula-decl nil vectors_2D vectors)
+    (scal_0 formula-decl nil vectors_2D vectors)
+    (div_9 skolem-const-decl "nnreal" lemmas nil)
+    (le_times_le_any1 formula-decl nil extra_real_props nil)
+    (posrat_div_posrat_is_posrat application-judgement "posrat"
+     rationals nil)
+    (NOT const-decl "[bool -> bool]" booleans nil)
+    (perp_pt const-decl "real" perpendicular_2D vectors)
+    (Nz_vect2 type-eq-decl nil vectors_2D vectors)
+    (zero const-decl "Vector" vectors_2D vectors)
+    (Vect2 type-eq-decl nil vectors_2D_def vectors)
+    (point_on_segment_has_offset formula-decl nil segments_2d
+     line_segments))
+   nil))
+ (point_between_valid_pts_valid 0
+  (point_between_valid_pts_valid-2 nil 3907879079
+   ("" (skeep)
+    ((""
+      (case-replace "vector_2d_constraint =
+                              lambda (x, y: real, last: posreal): sq(x) + sq(y) <= last")
+      (("1" (assert)
+        (("1" (hide -1)
+          (("1" (lemma "point_between_valid_seg_endpts_valid")
+            (("1"
+              (inst - "(x1,y1)" "(x2,y2)" "(x0,y0)"
+               "((1-r)*x1 + r*x2, (1-r)*y1 + r*y2)")
+              (("1" (ground)
+                (("1"
+                  (equate "sq(x0 - x1) + sq(y0 - y1)"
+                   "sqv((# x := x0, y := y0 #) - (# x := x1, y := y1 #))")
+                  (("1"
+                    (equate "sq(x0 - x2) + sq(y0 - y2)"
+                     "sqv((# x := x0, y := y0 #) - (# x := x2, y := y2 #))")
+                    (("1"
+                      (equate "sq(-1 * (r * x2) - x1 + r * x1 + x0) +
+                           sq(-1 * (r * y2) - y1 + r * y1 + y0)"
+                       "sqv((# x := x0, y := y0 #) -
+                               (# x := r * x2 - r * x1 + x1, y := r * y2 - r * y1 + y1 #))")
+                      (("1" (expand "max")
+                        (("1" (lift-if) (("1" (ground) nil nil)) nil))
+                        nil)
+                       ("2" (hide-all-but 1) (("2" (grind) nil nil))
+                        nil))
+                      nil)
+                     ("2" (hide-all-but 1) (("2" (grind) nil nil))
+                      nil))
+                    nil)
+                   ("2" (hide-all-but 1) (("2" (grind) nil nil)) nil))
+                  nil)
+                 ("2" (flatten) (("2" (assert) nil nil)) nil)
+                 ("3" (expand "point_on_segment?")
+                  (("3" (inst + "r")
+                    (("3" (assert)
+                      (("3" (hide-all-but 1)
+                        (("3" (grind-with-ext) nil nil)) nil))
+                      nil))
+                    nil))
+                  nil))
+                nil))
+              nil))
+            nil))
+          nil))
+        nil)
+       ("2" (hide-all-but 1) (("2" (grind-with-ext) nil nil)) nil))
+      nil))
+    nil)
+   ((nnreal_plus_nnreal_is_nnreal application-judgement "nnreal"
+     real_types nil)
+    (number nonempty-type-decl nil numbers nil)
+    (boolean nonempty-type-decl nil booleans nil)
+    (number_field_pred const-decl "[number -> boolean]" number_fields
+     nil)
+    (number_field nonempty-type-from-decl nil number_fields nil)
+    (real_pred const-decl "[number_field -> boolean]" reals nil)
+    (real nonempty-type-from-decl nil reals nil)
+    (bool nonempty-type-eq-decl nil booleans nil)
+    (>= const-decl "bool" reals nil)
+    (nonneg_real nonempty-type-eq-decl nil real_types nil)
+    (> const-decl "bool" reals nil)
+    (posreal nonempty-type-eq-decl nil real_types nil)
+    (= const-decl "[T, T -> boolean]" equalities nil)
+    (vector_2d_constraint const-decl "boolean" lemmas nil)
+    (<= const-decl "bool" reals nil)
+    (numfield nonempty-type-eq-decl nil number_fields nil)
+    (+ const-decl "[numfield, numfield -> numfield]" number_fields nil)
+    (sq const-decl "nonneg_real" sq reals)
+    (AND const-decl "[bool, bool -> bool]" booleans nil)
+    (- const-decl "[numfield, numfield -> numfield]" number_fields nil)
+    (* const-decl "[numfield, numfield -> numfield]" number_fields nil)
+    (point_2d type-eq-decl nil vectors_cross_2d line_segments)
+    (point_on_segment? const-decl "bool" segments_2d line_segments)
+    (* const-decl "Vector" vectors_2D vectors)
+    (+ const-decl "Vector" vectors_2D vectors)
+    (- const-decl "Vector" vectors_2D vectors)
+    (sqv const-decl "nnreal" vectors_2D vectors)
+    (nnreal type-eq-decl nil real_types nil)
+    (Vector type-eq-decl nil vectors_2D vectors)
+    (- const-decl "[numfield -> numfield]" number_fields nil)
+    (real_lt_is_strict_total_order name-judgement
+     "(strict_total_order?[real])" real_props nil)
+    (max const-decl "{p: real | p >= m AND p >= n}" real_defs nil)
+    (* const-decl "real" vectors_2D vectors)
+    (nonneg_real_max application-judgement
+     "{z: nonneg_real | z >= x AND z >= y}" real_defs nil)
+    (point_between_valid_seg_endpts_valid formula-decl nil lemmas nil)
+    (real_minus_real_is_real application-judgement "real" reals nil)
+    (real_le_is_total_order name-judgement "(total_order?[real])"
+     real_props nil)
+    (real_plus_real_is_real application-judgement "real" reals nil)
+    (real_times_real_is_real application-judgement "real" reals nil))
+   nil)
+  (point_between_valid_pts_valid-1 nil 3863256516
+   ("" (skeep 1 t)
+    (("" (case "sq(x1 + r * x2) + sq(y1 + r * y2) <= last")
+      (("1" (assert) nil nil)
+       ("2" (case "sq(x1 + x2) + sq(y1 + y2) <= last")
+        (("1" (case "sq(x1) + sq(y1) <= last")
+          (("1" (hide -11 -12 2)
+            (("1"
+              (case "(sq(x1) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1 + x2)) OR (sq(x1 + x2) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1))")
+              (("1"
+                (case "(sq(y1) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1 + y2)) OR (sq(y1 + y2) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1))")
+                (("1" (split)
+                  (("1" (split)
+                    (("1" (flatten) (("1" (field) nil nil)) nil)
+                     ("2" (flatten) (("2" (postpone) nil nil)) nil))
+                    nil)
+                   ("2" (split)
+                    (("1" (flatten) (("1" (postpone) nil nil)) nil)
+                     ("2" (flatten) (("2" (field) nil nil)) nil))
+                    nil))
+                  nil)
+                 ("2" (flatten)
+                  (("2" (hide-all-but (-2 -3 -8 -9 1 2))
+                    (("2"
+                      (lemma "value_between_two_values_has_sq_betwen"
+                       ("a" "y1" "b" "y2" "r" "r"))
+                      (("2" (split)
+                        (("1" (propax) nil nil) ("2" (propax) nil nil))
+                        nil))
+                      nil))
+                    nil))
+                  nil))
+                nil)
+               ("2" (flatten)
+                (("2" (hide-all-but (-1 -2 -7 -8 1 2))
+                  (("2"
+                    (lemma "value_between_two_values_has_sq_betwen"
+                     ("a" "x1" "b" "x2" "r" "r"))
+                    (("2" (split)
+                      (("1" (propax) nil nil) ("2" (propax) nil nil))
+                      nil))
+                    nil))
+                  nil))
+                nil))
+              nil))
+            nil)
+           ("2" (assert) nil nil))
+          nil)
+         ("2" (assert) nil nil))
+        nil))
+      nil))
+    nil)
+   nil shostak))
+ (let_start_with_A_alt 0
+  (let_start_with_A_alt-1 nil 3888067498 ("" (grind) nil nil) nil
+   shostak)))
+
