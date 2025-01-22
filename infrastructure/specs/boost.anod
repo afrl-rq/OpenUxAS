@@ -18,7 +18,7 @@ class Boost(spec('common')):
     """Boost provides free peer-reviewed portable C++ source libraries."""
 
     NAME = "boost_1_74_0.tar.bz2"
-    URL = f"https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/{NAME}"
+    URL = f"https://archives.boost.io/release/1.74.0/source/{NAME}"
 
     @property
     def build_deps(self):
