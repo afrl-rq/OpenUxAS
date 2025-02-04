@@ -1,0 +1,799 @@
+International Allegro CL Enterprise Edition
+10.1 [64-bit Linux (x86-64)] (Oct 20, 2020 1:23)
+Copyright (C) 1985-2017, Franz Inc., Oakland, CA, USA.  All Rights Reserved.
+
+This dynamic runtime copy of Allegro CL was built by:
+   [TC21720] SRI International
+
+;; Optimization settings: safety 1, space 1, speed 3, debug 1.
+;; For a complete description of all compiler switches given the
+;; current optimization settings evaluate (explain-compiler-settings).
+;;---
+;; Current reader case mode: :case-sensitive-lower
+
+sklisp exists as a strategy.
+Redefining sklisp. 
+extra-evalexprs exists as a defined rule.
+Redefining extra-evalexprs. 
+extra-evalexprs$ exists as a strategy.
+Redefining extra-evalexprs$. 
+printf exists as a strategy.
+Redefining printf. 
+commentf exists as a strategy.
+Redefining commentf. 
+now exists as a strategy.
+Redefining now. 
+unlabel* exists as a defined rule.
+Redefining unlabel*. 
+unlabel*$ exists as a strategy.
+Redefining unlabel*$. 
+delabel exists as a defined rule.
+Redefining delabel. 
+delabel$ exists as a strategy.
+Redefining delabel$. 
+relabel__ exists as a defined rule.
+Redefining relabel__. 
+relabel__$ exists as a strategy.
+Redefining relabel__$. 
+relabel exists as a defined rule.
+Redefining relabel. 
+relabel$ exists as a strategy.
+Redefining relabel$. 
+name-label exists as a defined rule.
+Redefining name-label. 
+name-label$ exists as a strategy.
+Redefining name-label$. 
+name-label* exists as a defined rule.
+Redefining name-label*. 
+name-label*$ exists as a strategy.
+Redefining name-label*$. 
+name-replace* exists as a defined rule.
+Redefining name-replace*. 
+name-replace*$ exists as a strategy.
+Redefining name-replace*$. 
+discriminate exists as a defined rule.
+Redefining discriminate. 
+discriminate$ exists as a strategy.
+Redefining discriminate$. 
+mapstep exists as a strategy.
+Redefining mapstep. 
+mapstep@ exists as a strategy.
+Redefining mapstep@. 
+with-fresh-labels-tccs__ exists as a defined rule.
+Redefining with-fresh-labels-tccs__. 
+with-fresh-labels-tccs__$ exists as a strategy.
+Redefining with-fresh-labels-tccs__$. 
+with-fresh-labels__ exists as a defined rule.
+Redefining with-fresh-labels__. 
+with-fresh-labels__$ exists as a strategy.
+Redefining with-fresh-labels__$. 
+with-fresh-labels exists as a strategy.
+Redefining with-fresh-labels. 
+with-fresh-labels@ exists as a strategy.
+Redefining with-fresh-labels@. 
+with-fresh-names-expand__ exists as a defined rule.
+Redefining with-fresh-names-expand__. 
+with-fresh-names-expand__$ exists as a strategy.
+Redefining with-fresh-names-expand__$. 
+with-fresh-names__ exists as a defined rule.
+Redefining with-fresh-names__. 
+with-fresh-names__$ exists as a strategy.
+Redefining with-fresh-names__$. 
+with-fresh-names exists as a strategy.
+Redefining with-fresh-names. 
+with-fresh-names@ exists as a strategy.
+Redefining with-fresh-names@. 
+copy__ exists as a defined rule.
+Redefining copy__. 
+copy__$ exists as a strategy.
+Redefining copy__$. 
+copy* exists as a defined rule.
+Redefining copy*. 
+copy*$ exists as a strategy.
+Redefining copy*$. 
+protect exists as a defined rule.
+Redefining protect. 
+protect$ exists as a strategy.
+Redefining protect$. 
+with-focus-on__ exists as a defined rule.
+Redefining with-focus-on__. 
+with-focus-on__$ exists as a strategy.
+Redefining with-focus-on__$. 
+with-focus-on exists as a strategy.
+Redefining with-focus-on. 
+with-focus-on@ exists as a strategy.
+Redefining with-focus-on@. 
+localtactic__ exists as a defined rule.
+Redefining localtactic__. 
+localtactic__$ exists as a strategy.
+Redefining localtactic__$. 
+deftactic exists as a defined rule.
+Redefining deftactic. 
+Changed rule trust!
+trust-branch! exists as a strategy.
+Redefining trust-branch!. 
+extra-tcc-step exists as a strategy.
+Redefining extra-tcc-step. 
+relabel-hide__ exists as a defined rule.
+Redefining relabel-hide__. 
+relabel-hide__$ exists as a strategy.
+Redefining relabel-hide__$. 
+tccs-expression exists as a defined rule.
+Redefining tccs-expression. 
+tccs-formula__ exists as a defined rule.
+Redefining tccs-formula__. 
+tccs-formula__$ exists as a strategy.
+Redefining tccs-formula__$. 
+tccs-formula*__ exists as a defined rule.
+Redefining tccs-formula*__. 
+tccs-formula*__$ exists as a strategy.
+Redefining tccs-formula*__$. 
+tccs-formula* exists as a defined rule.
+Redefining tccs-formula*. 
+tccs-formula exists as a defined rule.
+Redefining tccs-formula. 
+tccs-formula$ exists as a strategy.
+Redefining tccs-formula$. 
+tccs-step exists as a defined rule.
+Redefining tccs-step. 
+if-tcc-sequent exists as a strategy.
+Redefining if-tcc-sequent. 
+with-tccs exists as a defined rule.
+Redefining with-tccs. 
+with-tccs$ exists as a strategy.
+Redefining with-tccs$. 
+try@ exists as a strategy.
+Redefining try@. 
+try-then__ exists as a defined rule.
+Redefining try-then__. 
+try-then__$ exists as a strategy.
+Redefining try-then__$. 
+try-then exists as a strategy.
+Redefining try-then. 
+try-then@ exists as a strategy.
+Redefining try-then@. 
+finalize__ exists as a defined rule.
+Redefining finalize__. 
+finalize__$ exists as a strategy.
+Redefining finalize__$. 
+finalize exists as a strategy.
+Redefining finalize. 
+finalize* exists as a strategy.
+Redefining finalize*. 
+touch exists as a defined rule.
+Redefining touch. 
+touch$ exists as a strategy.
+Redefining touch$. 
+when exists as a strategy.
+Redefining when. 
+when@ exists as a strategy.
+Redefining when@. 
+unless exists as a strategy.
+Redefining unless. 
+unless@ exists as a strategy.
+Redefining unless@. 
+when-label__ exists as a defined rule.
+Redefining when-label__. 
+when-label__$ exists as a strategy.
+Redefining when-label__$. 
+when-label exists as a strategy.
+Redefining when-label. 
+when-label@ exists as a strategy.
+Redefining when-label@. 
+unless-label__ exists as a defined rule.
+Redefining unless-label__. 
+unless-label__$ exists as a strategy.
+Redefining unless-label__$. 
+unless-label exists as a strategy.
+Redefining unless-label. 
+unless-label@ exists as a strategy.
+Redefining unless-label@. 
+if-label exists as a strategy.
+Redefining if-label. 
+for__ exists as a defined rule.
+Redefining for__. 
+for__$ exists as a strategy.
+Redefining for__$. 
+for exists as a defined rule.
+Redefining for. 
+for$ exists as a strategy.
+Redefining for$. 
+for@__ exists as a defined rule.
+Redefining for@__. 
+for@__$ exists as a strategy.
+Redefining for@__$. 
+for@ exists as a defined rule.
+Redefining for@. 
+for@$ exists as a strategy.
+Redefining for@$. 
+skeep exists as a defined rule.
+Redefining skeep. 
+skeep$ exists as a strategy.
+Redefining skeep$. 
+skeep* exists as a defined rule.
+Redefining skeep*. 
+skeep*$ exists as a strategy.
+Redefining skeep*$. 
+insteep exists as a defined rule.
+Redefining insteep. 
+insteep$ exists as a strategy.
+Redefining insteep$. 
+insteep* exists as a defined rule.
+Redefining insteep*. 
+insteep*$ exists as a strategy.
+Redefining insteep*$. 
+unroll-inst__ exists as a defined rule.
+Redefining unroll-inst__. 
+unroll-inst__$ exists as a strategy.
+Redefining unroll-inst__$. 
+unroll-skl__ exists as a defined rule.
+Redefining unroll-skl__. 
+unroll-skl__$ exists as a strategy.
+Redefining unroll-skl__$. 
+unroll exists as a defined rule.
+Redefining unroll. 
+unroll$ exists as a strategy.
+Redefining unroll$. 
+skoletin__ exists as a defined rule.
+Redefining skoletin__. 
+skoletin__$ exists as a strategy.
+Redefining skoletin__$. 
+skoletin exists as a defined rule.
+Redefining skoletin. 
+skoletin$ exists as a strategy.
+Redefining skoletin$. 
+skoletin* exists as a defined rule.
+Redefining skoletin*. 
+skoletin*$ exists as a strategy.
+Redefining skoletin*$. 
+redlet__ exists as a defined rule.
+Redefining redlet__. 
+redlet__$ exists as a strategy.
+Redefining redlet__$. 
+redlet exists as a defined rule.
+Redefining redlet. 
+redlet$ exists as a strategy.
+Redefining redlet$. 
+redlet* exists as a defined rule.
+Redefining redlet*. 
+redlet*$ exists as a strategy.
+Redefining redlet*$. 
+skodef__ exists as a defined rule.
+Redefining skodef__. 
+skodef__$ exists as a strategy.
+Redefining skodef__$. 
+skodef exists as a defined rule.
+Redefining skodef. 
+skodef$ exists as a strategy.
+Redefining skodef$. 
+skodef* exists as a defined rule.
+Redefining skodef*. 
+skodef*$ exists as a strategy.
+Redefining skodef*$. 
+cut exists as a defined rule.
+Redefining cut. 
+cut$ exists as a strategy.
+Redefining cut$. 
+splash__ exists as a defined rule.
+Redefining splash__. 
+splash__$ exists as a strategy.
+Redefining splash__$. 
+splash exists as a defined rule.
+Redefining splash. 
+splash$ exists as a strategy.
+Redefining splash$. 
+replaces exists as a defined rule.
+Redefining replaces. 
+replaces$ exists as a strategy.
+Redefining replaces$. 
+rewrites exists as a defined rule.
+Redefining rewrites. 
+rewrites$ exists as a strategy.
+Redefining rewrites$. 
+rewrite* exists as a defined rule.
+Redefining rewrite*. 
+rewrite*$ exists as a strategy.
+Redefining rewrite*$. 
+suffices exists as a defined rule.
+Redefining suffices. 
+suffices$ exists as a strategy.
+Redefining suffices$. 
+extrategies-about exists as a strategy.
+Redefining extrategies-about. 
+eval-expr exists as a defined rule.
+Redefining eval-expr. 
+eval-formula exists as a defined rule.
+Redefining eval-formula. 
+eval exists as a defined rule.
+Redefining eval. 
+eval-formula* exists as a defined rule.
+Redefining eval-formula*. 
+eval-formula*$ exists as a strategy.
+Redefining eval-formula*$. 
+skip-steps exists as a defined rule.
+Redefining skip-steps. 
+skip-steps$ exists as a strategy.
+Redefining skip-steps$. 
+show-debug-mode exists as a strategy.
+Redefining show-debug-mode. 
+toggle-debug-mode exists as a strategy.
+Redefining toggle-debug-mode. 
+Warning: (method typecheck* (subtype-judgement t t t)), :operator was
+         defined in
+         /home/dependable/tools/pvs-7.1.0/pvs-patches/patch-20210707.lisp
+         and is now being defined in
+         /home/dependable/tools/nasalib-fork/pvs-patches/patch-20210707-trivial-judgements.lisp
+
+Defining metit. 
+*** 
+*** Processing lemmas (10:5:55 6/23/2023)
+*** Generated by proveit 7.1.0 (Nov 05, 2020)
+*** Trusted Oracles
+***   metit: Try (help metit)
+*** 
+Context changed to /home/dependable/Contracts/ASTRA/Documents/Produced/poly_merge/SPARK/PVS/
+Restored theory from /home/dependable/tools/nasalib/reals/pvsbin/sq.bin in 0.13s (load part took 0.02s)
+Restored theory from /home/dependable/Contracts/ASTRA/Documents/Produced/poly_merge/SPARK/PVS/pvsbin/lemmas.bin in 0.07s (load part took 0.02s)
+Installing inlined proof scripts into theory lemmas.
+Defining sqrt-rew. 
+Defining sqrt-rew$. 
+Defining sqrt-rew-off. 
+Defining sqrt-rew-off$. 
+Proving theory lemmas
+value_between_two_values_has_sq_betwen has no proof
+Rerunning proof of lemmas.point_between_valid_pts_valid
+Installing rewrite rule sets.singleton_rew (all instances)
+Installing rewrite rule reals@sq.sq_abs_neg
+Installing rewrite rule reals@sq.sq_abs
+Installing rewrite rule reals@sq.sq_1
+Installing rewrite rule reals@sq.sq_0
+point_between_valid_pts_valid :  
+
+  |-------
+{1}   FORALL (x1, y1, x2, y2: real, r: {v: real | 0 <= v AND v <= 1},
+              last: posreal):
+        (sq(x1) <= last - sq(y1)) AND
+         (sq(x2) <= last - sq(y2)) AND (sq(x1 + x2) <= last - sq(y1 + y2))
+         IMPLIES (sq(x1 + r * x2) <= last - sq(y1 + r * y2))
+
+Rerunning step: (skeep 1 t)
+Skolemizing and keeping names of the universal formula in 1,
+this simplifies to: 
+point_between_valid_pts_valid :  
+
+{-1}  real_pred(x1)
+{-2}  real_pred(y1)
+{-3}  real_pred(x2)
+{-4}  real_pred(y2)
+{-5}  0 <= r
+{-6}  r <= 1
+{-7}  last >= 0
+{-8}  last > 0
+{-9}  (sq(x1) <= last - sq(y1))
+{-10} (sq(x2) <= last - sq(y2))
+{-11} (sq(x1 + x2) <= last - sq(y1 + y2))
+  |-------
+{1}   (sq(x1 + r * x2) <= last - sq(y1 + r * y2))
+
+Rerunning step: (case "sq(x1 + r * x2) + sq(y1 + r * y2) <= last")
+Case splitting on 
+   sq(x1 + r * x2) + sq(y1 + r * y2) <= last, 
+this yields  2 subgoals: 
+point_between_valid_pts_valid.1 :  
+
+{-1}  sq(x1 + r * x2) + sq(y1 + r * y2) <= last
+[-2]  real_pred(x1)
+[-3]  real_pred(y1)
+[-4]  real_pred(x2)
+[-5]  real_pred(y2)
+[-6]  0 <= r
+[-7]  r <= 1
+[-8]  last >= 0
+[-9]  last > 0
+[-10] (sq(x1) <= last - sq(y1))
+[-11] (sq(x2) <= last - sq(y2))
+[-12] (sq(x1 + x2) <= last - sq(y1 + y2))
+  |-------
+[1]   (sq(x1 + r * x2) <= last - sq(y1 + r * y2))
+
+Rerunning step: (assert)
+Simplifying, rewriting, and recording with decision procedures,
+
+This completes the proof of point_between_valid_pts_valid.1.
+
+point_between_valid_pts_valid.2 :  
+
+[-1]  real_pred(x1)
+[-2]  real_pred(y1)
+[-3]  real_pred(x2)
+[-4]  real_pred(y2)
+[-5]  0 <= r
+[-6]  r <= 1
+[-7]  last >= 0
+[-8]  last > 0
+[-9]  (sq(x1) <= last - sq(y1))
+[-10] (sq(x2) <= last - sq(y2))
+[-11] (sq(x1 + x2) <= last - sq(y1 + y2))
+  |-------
+{1}   sq(x1 + r * x2) + sq(y1 + r * y2) <= last
+[2]   (sq(x1 + r * x2) <= last - sq(y1 + r * y2))
+
+Rerunning step: (case "sq(x1 + x2) + sq(y1 + y2) <= last")
+Case splitting on 
+   sq(x1 + x2) + sq(y1 + y2) <= last, 
+this yields  2 subgoals: 
+point_between_valid_pts_valid.2.1 :  
+
+{-1}  sq(x1 + x2) + sq(y1 + y2) <= last
+[-2]  real_pred(x1)
+[-3]  real_pred(y1)
+[-4]  real_pred(x2)
+[-5]  real_pred(y2)
+[-6]  0 <= r
+[-7]  r <= 1
+[-8]  last >= 0
+[-9]  last > 0
+[-10] (sq(x1) <= last - sq(y1))
+[-11] (sq(x2) <= last - sq(y2))
+[-12] (sq(x1 + x2) <= last - sq(y1 + y2))
+  |-------
+[1]   sq(x1 + r * x2) + sq(y1 + r * y2) <= last
+[2]   (sq(x1 + r * x2) <= last - sq(y1 + r * y2))
+
+Rerunning step: (case "sq(x1) + sq(y1) <= last")
+Case splitting on 
+   sq(x1) + sq(y1) <= last, 
+this yields  2 subgoals: 
+point_between_valid_pts_valid.2.1.1 :  
+
+{-1}  sq(x1) + sq(y1) <= last
+[-2]  sq(x1 + x2) + sq(y1 + y2) <= last
+[-3]  real_pred(x1)
+[-4]  real_pred(y1)
+[-5]  real_pred(x2)
+[-6]  real_pred(y2)
+[-7]  0 <= r
+[-8]  r <= 1
+[-9]  last >= 0
+[-10] last > 0
+[-11] (sq(x1) <= last - sq(y1))
+[-12] (sq(x2) <= last - sq(y2))
+[-13] (sq(x1 + x2) <= last - sq(y1 + y2))
+  |-------
+[1]   sq(x1 + r * x2) + sq(y1 + r * y2) <= last
+[2]   (sq(x1 + r * x2) <= last - sq(y1 + r * y2))
+
+Rerunning step: (hide -11 -12 2)
+Hiding formulas:  -11, -12, 2,
+this simplifies to: 
+point_between_valid_pts_valid.2.1.1 :  
+
+[-1]  sq(x1) + sq(y1) <= last
+[-2]  sq(x1 + x2) + sq(y1 + y2) <= last
+[-3]  real_pred(x1)
+[-4]  real_pred(y1)
+[-5]  real_pred(x2)
+[-6]  real_pred(y2)
+[-7]  0 <= r
+[-8]  r <= 1
+[-9]  last >= 0
+[-10] last > 0
+[-11] (sq(x1 + x2) <= last - sq(y1 + y2))
+  |-------
+[1]   sq(x1 + r * x2) + sq(y1 + r * y2) <= last
+
+Rerunning step: (case "(sq(x1) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1 + x2)) OR (sq(x1 + x2) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1))")
+Case splitting on 
+   (sq(x1) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1 + x2)) OR
+    (sq(x1 + x2) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1)), 
+this yields  2 subgoals: 
+point_between_valid_pts_valid.2.1.1.1 :  
+
+{-1}  (sq(x1) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1 + x2)) OR
+       (sq(x1 + x2) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1))
+[-2]  sq(x1) + sq(y1) <= last
+[-3]  sq(x1 + x2) + sq(y1 + y2) <= last
+[-4]  real_pred(x1)
+[-5]  real_pred(y1)
+[-6]  real_pred(x2)
+[-7]  real_pred(y2)
+[-8]  0 <= r
+[-9]  r <= 1
+[-10] last >= 0
+[-11] last > 0
+[-12] (sq(x1 + x2) <= last - sq(y1 + y2))
+  |-------
+[1]   sq(x1 + r * x2) + sq(y1 + r * y2) <= last
+
+Rerunning step: (case "(sq(y1) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1 + y2)) OR (sq(y1 + y2) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1))")
+Case splitting on 
+   (sq(y1) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1 + y2)) OR
+    (sq(y1 + y2) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1)), 
+this yields  2 subgoals: 
+point_between_valid_pts_valid.2.1.1.1.1 :  
+
+{-1}  (sq(y1) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1 + y2)) OR
+       (sq(y1 + y2) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1))
+[-2]  (sq(x1) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1 + x2)) OR
+       (sq(x1 + x2) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1))
+[-3]  sq(x1) + sq(y1) <= last
+[-4]  sq(x1 + x2) + sq(y1 + y2) <= last
+[-5]  real_pred(x1)
+[-6]  real_pred(y1)
+[-7]  real_pred(x2)
+[-8]  real_pred(y2)
+[-9]  0 <= r
+[-10] r <= 1
+[-11] last >= 0
+[-12] last > 0
+[-13] (sq(x1 + x2) <= last - sq(y1 + y2))
+  |-------
+[1]   sq(x1 + r * x2) + sq(y1 + r * y2) <= last
+
+Rerunning step: (postpone)
+Postponing point_between_valid_pts_valid.2.1.1.1.1.
+
+point_between_valid_pts_valid.2.1.1.1.2 :  
+
+[-1]  (sq(x1) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1 + x2)) OR
+       (sq(x1 + x2) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1))
+[-2]  sq(x1) + sq(y1) <= last
+[-3]  sq(x1 + x2) + sq(y1 + y2) <= last
+[-4]  real_pred(x1)
+[-5]  real_pred(y1)
+[-6]  real_pred(x2)
+[-7]  real_pred(y2)
+[-8]  0 <= r
+[-9]  r <= 1
+[-10] last >= 0
+[-11] last > 0
+[-12] (sq(x1 + x2) <= last - sq(y1 + y2))
+  |-------
+{1}   (sq(y1) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1 + y2)) OR
+       (sq(y1 + y2) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1))
+[2]   sq(x1 + r * x2) + sq(y1 + r * y2) <= last
+
+Rerunning step: (flatten)
+Applying disjunctive simplification to flatten sequent,
+this simplifies to: 
+point_between_valid_pts_valid.2.1.1.1.2 :  
+
+[-1]  (sq(x1) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1 + x2)) OR
+       (sq(x1 + x2) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1))
+[-2]  sq(x1) + sq(y1) <= last
+[-3]  sq(x1 + x2) + sq(y1 + y2) <= last
+[-4]  real_pred(x1)
+[-5]  real_pred(y1)
+[-6]  real_pred(x2)
+[-7]  real_pred(y2)
+[-8]  0 <= r
+[-9]  r <= 1
+[-10] last >= 0
+[-11] last > 0
+[-12] (sq(x1 + x2) <= last - sq(y1 + y2))
+  |-------
+{1}   (sq(y1) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1 + y2))
+{2}   (sq(y1 + y2) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1))
+[3]   sq(x1 + r * x2) + sq(y1 + r * y2) <= last
+
+Rerunning step: (hide-all-but (-2 -3 -8 -9 1 2))
+Keeping (-2 -3 -8 -9 1 2) and hiding *,
+this simplifies to: 
+point_between_valid_pts_valid.2.1.1.1.2 :  
+
+[-1]  sq(x1) + sq(y1) <= last
+[-2]  sq(x1 + x2) + sq(y1 + y2) <= last
+[-3]  0 <= r
+[-4]  r <= 1
+  |-------
+[1]   (sq(y1) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1 + y2))
+[2]   (sq(y1 + y2) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1))
+
+Rerunning step: (postpone)
+Postponing point_between_valid_pts_valid.2.1.1.1.2.
+
+point_between_valid_pts_valid.2.1.1.2 :  
+
+[-1]  sq(x1) + sq(y1) <= last
+[-2]  sq(x1 + x2) + sq(y1 + y2) <= last
+[-3]  real_pred(x1)
+[-4]  real_pred(y1)
+[-5]  real_pred(x2)
+[-6]  real_pred(y2)
+[-7]  0 <= r
+[-8]  r <= 1
+[-9]  last >= 0
+[-10] last > 0
+[-11] (sq(x1 + x2) <= last - sq(y1 + y2))
+  |-------
+{1}   (sq(x1) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1 + x2)) OR
+       (sq(x1 + x2) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1))
+[2]   sq(x1 + r * x2) + sq(y1 + r * y2) <= last
+
+Rerunning step: (flatten)
+Applying disjunctive simplification to flatten sequent,
+this simplifies to: 
+point_between_valid_pts_valid.2.1.1.2 :  
+
+[-1]  sq(x1) + sq(y1) <= last
+[-2]  sq(x1 + x2) + sq(y1 + y2) <= last
+[-3]  real_pred(x1)
+[-4]  real_pred(y1)
+[-5]  real_pred(x2)
+[-6]  real_pred(y2)
+[-7]  0 <= r
+[-8]  r <= 1
+[-9]  last >= 0
+[-10] last > 0
+[-11] (sq(x1 + x2) <= last - sq(y1 + y2))
+  |-------
+{1}   (sq(x1) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1 + x2))
+{2}   (sq(x1 + x2) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1))
+[3]   sq(x1 + r * x2) + sq(y1 + r * y2) <= last
+
+Rerunning step: (hide-all-but (-1 -2 -7 -8 1 2))
+Keeping (-1 -2 -7 -8 1 2) and hiding *,
+this simplifies to: 
+point_between_valid_pts_valid.2.1.1.2 :  
+
+[-1]  sq(x1) + sq(y1) <= last
+[-2]  sq(x1 + x2) + sq(y1 + y2) <= last
+[-3]  0 <= r
+[-4]  r <= 1
+  |-------
+[1]   (sq(x1) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1 + x2))
+[2]   (sq(x1 + x2) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1))
+
+Rerunning step: (postpone)
+Postponing point_between_valid_pts_valid.2.1.1.2.
+
+point_between_valid_pts_valid.2.1.2 :  
+
+[-1]  sq(x1 + x2) + sq(y1 + y2) <= last
+[-2]  real_pred(x1)
+[-3]  real_pred(y1)
+[-4]  real_pred(x2)
+[-5]  real_pred(y2)
+[-6]  0 <= r
+[-7]  r <= 1
+[-8]  last >= 0
+[-9]  last > 0
+[-10] (sq(x1) <= last - sq(y1))
+[-11] (sq(x2) <= last - sq(y2))
+[-12] (sq(x1 + x2) <= last - sq(y1 + y2))
+  |-------
+{1}   sq(x1) + sq(y1) <= last
+[2]   sq(x1 + r * x2) + sq(y1 + r * y2) <= last
+[3]   (sq(x1 + r * x2) <= last - sq(y1 + r * y2))
+
+Rerunning step: (assert)
+Simplifying, rewriting, and recording with decision procedures,
+
+This completes the proof of point_between_valid_pts_valid.2.1.2.
+
+point_between_valid_pts_valid.2.2 :  
+
+[-1]  real_pred(x1)
+[-2]  real_pred(y1)
+[-3]  real_pred(x2)
+[-4]  real_pred(y2)
+[-5]  0 <= r
+[-6]  r <= 1
+[-7]  last >= 0
+[-8]  last > 0
+[-9]  (sq(x1) <= last - sq(y1))
+[-10] (sq(x2) <= last - sq(y2))
+[-11] (sq(x1 + x2) <= last - sq(y1 + y2))
+  |-------
+{1}   sq(x1 + x2) + sq(y1 + y2) <= last
+[2]   sq(x1 + r * x2) + sq(y1 + r * y2) <= last
+[3]   (sq(x1 + r * x2) <= last - sq(y1 + r * y2))
+
+Rerunning step: (assert)
+Simplifying, rewriting, and recording with decision procedures,
+
+This completes the proof of point_between_valid_pts_valid.2.2.
+
+point_between_valid_pts_valid.2.1.1.1.1 :  
+
+{-1}  (sq(y1) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1 + y2)) OR
+       (sq(y1 + y2) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1))
+[-2]  (sq(x1) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1 + x2)) OR
+       (sq(x1 + x2) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1))
+[-3]  sq(x1) + sq(y1) <= last
+[-4]  sq(x1 + x2) + sq(y1 + y2) <= last
+[-5]  real_pred(x1)
+[-6]  real_pred(y1)
+[-7]  real_pred(x2)
+[-8]  real_pred(y2)
+[-9]  0 <= r
+[-10] r <= 1
+[-11] last >= 0
+[-12] last > 0
+[-13] (sq(x1 + x2) <= last - sq(y1 + y2))
+  |-------
+[1]   sq(x1 + r * x2) + sq(y1 + r * y2) <= last
+
+Postponing point_between_valid_pts_valid.2.1.1.1.1.
+
+point_between_valid_pts_valid.2.1.1.1.2 :  
+
+[-1]  sq(x1) + sq(y1) <= last
+[-2]  sq(x1 + x2) + sq(y1 + y2) <= last
+[-3]  0 <= r
+[-4]  r <= 1
+  |-------
+[1]   (sq(y1) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1 + y2))
+[2]   (sq(y1 + y2) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1))
+
+Postponing point_between_valid_pts_valid.2.1.1.1.2.
+
+point_between_valid_pts_valid.2.1.1.2 :  
+
+[-1]  sq(x1) + sq(y1) <= last
+[-2]  sq(x1 + x2) + sq(y1 + y2) <= last
+[-3]  0 <= r
+[-4]  r <= 1
+  |-------
+[1]   (sq(x1) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1 + x2))
+[2]   (sq(x1 + x2) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1))
+
+Postponing point_between_valid_pts_valid.2.1.1.2.
+
+point_between_valid_pts_valid.2.1.1.1.1 :  
+
+{-1}  (sq(y1) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1 + y2)) OR
+       (sq(y1 + y2) <= sq(y1 + r * y2) AND sq(y1 + r * y2) <= sq(y1))
+[-2]  (sq(x1) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1 + x2)) OR
+       (sq(x1 + x2) <= sq(x1 + r * x2) AND sq(x1 + r * x2) <= sq(x1))
+[-3]  sq(x1) + sq(y1) <= last
+[-4]  sq(x1 + x2) + sq(y1 + y2) <= last
+[-5]  real_pred(x1)
+[-6]  real_pred(y1)
+[-7]  real_pred(x2)
+[-8]  real_pred(y2)
+[-9]  0 <= r
+[-10] r <= 1
+[-11] last >= 0
+[-12] last > 0
+[-13] (sq(x1 + x2) <= last - sq(y1 + y2))
+  |-------
+[1]   sq(x1 + r * x2) + sq(y1 + r * y2) <= last
+
+
+Run time  = 0.21 secs.
+Real time = 0.26 secs.
+
+lemmas.point_between_valid_pts_valid unproved in 0.21 real, 0.21 cpu seconds
+Rerunning proof of lemmas.let_start_with_A_alt
+Installing rewrite rule sets.singleton_rew (all instances)
+Installing rewrite rule reals@sq.sq_abs_neg
+Installing rewrite rule reals@sq.sq_abs
+Installing rewrite rule reals@sq.sq_1
+Installing rewrite rule reals@sq.sq_0
+let_start_with_A_alt :  
+
+  |-------
+{1}   FORALL (int_1, int_2: integer, real_1, real_2: real):
+        (IF int_1 = int_2 THEN real_1 >= real_2 ELSE int_1 < int_2 ENDIF) =
+         ((int_1 = int_2 AND real_1 >= real_2) OR int_1 < int_2)
+
+Rerunning step: (grind)
+Trying repeated skolemization, instantiation, and if-lifting,
+Q.E.D.
+
+
+Run time  = 0.02 secs.
+Real time = 0.02 secs.
+
+lemmas.let_start_with_A_alt proved in 0.02 real, 0.02 cpu seconds
+
+
+ Proof summary for theory lemmas
+    value_between_two_values_has_sq_betwen...untried             [Untried]( n/a s)
+    point_between_valid_pts_valid.........unfinished          [shostak](0.21 s)
+    let_start_with_A_alt..................proved - complete   [shostak](0.02 s)
+    Theory totals: 3 formulas, 2 attempted, 1 succeeded (0.23 s)
+
+Grand Totals: 3 proofs, 2 attempted, 1 succeeded (0.23 s)
+*** Warning: Missed 2 formulas.
