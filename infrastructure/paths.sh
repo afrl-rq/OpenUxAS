@@ -99,12 +99,21 @@ function activate_venv {
 
 ALR_PRINTENV_CMD="( cd \"${ALR_DIR}/gnatprove\" && \"${ALR_DIR}/bin/alr\" -s \"${ALR_SETTINGS_DIR}\" printenv )"
 
-# Print the environment variables needed to use GNAT FSF (but don't eval them).
+# Print the environment variables needed to use GNAT FSF.
 function print_gnat_fsf_paths {
     which gnat >/dev/null 2>&1
 
     if [[ $? -ne 0 && -d "${ALR_DIR}/gnatprove" ]]; then
+        # First, we print the Alire environment variables. This will make them
+        # available for eval in the calling shell. (This matters for
+        # Alire-relevant variables that anod doesn't extend.)
         debug_and_run "${ALR_PRINTENV_CMD}"
+
+        # Then, we eval them. This ensures that anod will see them when it
+        # exports its environment - otherwise, the environment variables will be
+        # lost (since anod generates full assignments, rather than
+        # appending/prepending to the environment).
+        debug_and_run "eval \"\$${ALR_PRINTENV_CMD}\""
     fi
 }
 
