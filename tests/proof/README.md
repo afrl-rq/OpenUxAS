@@ -98,36 +98,41 @@ necessary to go back to the source code and assess the changes.
 
 ## Adding a new test
 
+Note: when adding a new test, we recommend you start from a clean repository state.
+This will make it as easy as possible to review the files to be added to the commit after generating session files.
+
 The steps to add a new test are detailed below:
 -   create a new folder under `proofs/` whose name will be the name of
 the test
 -   create the file `test.yaml` in the test folder, with the following
 syntax:
-   filenames: ["file_1.ads", "file_2.ads"] # The files given in entry
-                                           # to GNATprove
+      ```
+       filenames: ["file_1.ads", "file_2.ads"] # The files given in entry
+                                               # to GNATprove
+    
+       level: N                                # optional: if different
+                                               # from 0, this is the level
+                                               # option given to GNATprove
+                                               # to prove the files
+    
+       timeout: N                              # optional: if an additional
+                                               # timeout was given to
+                                               # GNATprove to prove the
+                                               # files, it should be
+                                               # specified here.
+    ```
 
-   level: N                                # optional: if different
-                                           # from 0, this is the level
-                                           # option given to GNATprove
-                                           # to prove the files
-
-   timeout: N                              # optional: if an additional
-                                           # timeout was given to
-                                           # GNATprove to prove the
-                                           # files, it should be
-                                           # specified here.
-
-The `test.yaml` files of existing tests can be taken as templates to
+    The `test.yaml` files of existing tests can be taken as templates to
 create a new test.
 
 -   run the testsuite to generate the session files, using
-   $ ./run-tests test_name --no-replay
+   `$ ./run-tests test_name --no-replay`
 If they exist, GNATprove will be called with the level and timeout
 specified in the `test.yaml` file.
 -   commit the newly generated session files (in
-`OpenUxAS/src/ada/proof) and the files in the new test folder.
+`OpenUxAS/src/ada/proof)` and the files in the new test folder.
 -   check that the proof passes in replay mode using the command
-   $ ./run-tests test_name
+   `$ ./run-tests test_name`
 
 Additionally, it is necessary to check that the new files do not
 impact proof on existing tests. For this procedure, you can refer to
