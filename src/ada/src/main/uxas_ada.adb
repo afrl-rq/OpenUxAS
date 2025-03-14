@@ -26,6 +26,10 @@ with UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Manager_Interfacing;
 pragma Unreferenced (UxAS.Comms.LMCP_Net_Client.Service.Waypoint_Plan_Manager_Interfacing);
 --  need package in closure for inclusion in executable
 
+with UxAS.Comms.LMCP_Net_Client.Service.Daidalus_Response_Interfacing;
+pragma Unreferenced (UxAS.Comms.LMCP_Net_Client.Service.Daidalus_Response_Interfacing);
+-- need package in closure for inclusion in executable
+
 with Ada.Strings.Unbounded;  use Ada.Strings.Unbounded;
 with UxAS.Common.String_Constant.Lmcp_Network_Socket_Address;
 
