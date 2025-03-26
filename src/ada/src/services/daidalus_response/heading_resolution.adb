@@ -890,6 +890,15 @@ is
                      then
                         local_acceptable_action_flag := False;
                         --                    Divert_State := Current_State;
+                        pragma Assert (vector_constraints (Recovery_Heading_Bands,
+                                       Heading_Max_deg, Heading_Min_deg,
+                                       Heading_Interval_Buffer_deg));
+                        pragma Assume (Recovery_Bands_Nature
+                                       (Recovery_Heading_Bands => Recovery_Heading_Bands,
+                                        Current_State => Current_State));
+                        pragma Assert (vector_constraints (Recovery_Heading_Bands,
+                                       Heading_Max_deg, Heading_Min_deg,
+                                       Heading_Interval_Buffer_deg));
                         Recovery_Right
                          (Recovery_Heading_Bands      => Recovery_Heading_Bands,
                           Current_State               => Current_State,
@@ -908,13 +917,16 @@ is
                         --recovery is not empty
 
                         --if not in recovery right, must be in recovery left
-                        pragma Assume (Recovery_Bands_Nature
-                                      (Recovery_Heading_Bands      =>
-                                         Recovery_Heading_Bands,
-                                       Current_State               =>
-                                         Current_State));
+                        --  pragma Assume (Recovery_Bands_Nature
+                        --                (Recovery_Heading_Bands      =>
+                        --                   Recovery_Heading_Bands,
+                        --                 Current_State               =>
+                        --                   Current_State));
                         pragma Assert (scalar_constraints (Heading_Max_deg,
                                        Heading_Min_deg,
+                                       Heading_Interval_Buffer_deg));
+                        pragma Assert (vector_constraints (Recovery_Heading_Bands,
+                                       Heading_Max_deg, Heading_Min_deg,
                                        Heading_Interval_Buffer_deg));
                         if not is_Recovery_Found then
                            Recovery_Left
