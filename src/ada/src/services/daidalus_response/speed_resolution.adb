@@ -466,14 +466,14 @@ with SPARK_Mode => On is
             pragma Assert (MyVectorOfIntervals.Element
                           (Recovery_GroundSpeed_bands, I).UpperBound <=
                             GroundSpeed_Max_mps);
-            Divert_State.groundSpeed_mps := MyVectorOfIntervals.Element 
-              (Recovery_GroundSpeed_bands, I).LowerBound +
-              GroundSpeed_Interval_Buffer_mps / 2.0;
             pragma Assert (MyVectorOfIntervals.Element
                           (Recovery_GroundSpeed_bands, I).UpperBound -
                             MyVectorOfIntervals.Element
                               (Recovery_GroundSpeed_bands, I).LowerBound >=
                             2.0 * GroundSpeed_Interval_Buffer_mps);
+            Divert_State.groundSpeed_mps := MyVectorOfIntervals.Element 
+              (Recovery_GroundSpeed_bands, I).LowerBound +
+              GroundSpeed_Interval_Buffer_mps / 2.0;
             pragma Assert (Divert_State.groundSpeed_mps > MyVectorOfIntervals.
                             Element (Recovery_GroundSpeed_bands, I).LowerBound 
                           and then Divert_State.groundSpeed_mps < 
