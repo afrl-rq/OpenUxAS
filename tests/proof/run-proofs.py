@@ -78,4 +78,5 @@ class GnatproveTestsuite(Testsuite):
 
 
 if __name__ == "__main__":
+    sys.argv += ["-j1"]
     sys.exit(GnatproveTestsuite().testsuite_main())
