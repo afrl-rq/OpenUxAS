@@ -4,6 +4,7 @@ import sys
 import os
 from e3.testsuite import Testsuite
 from e3.testsuite.driver.diff import DiffTestDriver
+from uxas.paths import ADA_DIR
 
 
 class GnatproveDriver(DiffTestDriver):
@@ -15,40 +16,6 @@ class GnatproveDriver(DiffTestDriver):
         gnatprove_timeout = self.test_env.get ("timeout")
 
         if filenames != None:
-            with open(self.working_dir("test.gpr"), 'w') as f_prj:
-                f_prj.write('with "xmlada";\n')
-                f_prj.write('with "zmq.gpr";\n')
-                f_prj.write('with "lmcp_generated_messages.gpr";\n')
-                f_prj.write('with "sparklib";')
-                f_prj.write('project Test is\n')
-                f_prj.write('   for Main use ("uxas_ada.adb");\n')
-                f_prj.write('   package Naming is\n')
-                f_prj.write('      for Specification ("Ctrl_C_Handler") use "ctrl_c_handler.ads";\n')
-                f_prj.write('      for Implementation ("Ctrl_C_Handler") use "ctrl_c_handler__dummy.adb";\n')
-                f_prj.write('   end Naming;\n')
-                f_prj.write('   for Excluded_Source_Files use')
-                f_prj.write('      ("ctrl_c_handler__gcov.adb");')
-                f_prj.write('  for Source_Dirs\n')
-                f_prj.write('     use ("'+self.test_env["test_dir"]+'/../../../../src/ada/src/**");\n')
-                f_prj.write('   package Compiler is\n')
-                f_prj.write('      for Default_Switches ("ada") use ("-O2", "-gnatn", "-gnatp", "-fdata-sections","-ffunction-sections", "-gnat2022");\n')
-                f_prj.write('   end Compiler;\n')
-                f_prj.write('   package Prove is\n')
-                f_prj.write('      for Proof_Switches ("Ada") use ("--counterexamples=off", "-q", "-u", "--output=brief");\n')
-                f_prj.write('      for Proof_Dir use "../../..'+self.test_env["test_dir"]+'/../../../../src/ada/proof";\n')
-                f_prj.write('   end Prove;\n')
-                f_prj.write('end Test;\n')
-
-            with open(self.working_dir("sparklib.gpr"), "w") as f_prj:
-                f_prj.write('project SPARKlib extends "sparklib_external" is\n')
-                f_prj.write('   for Object_Dir use "sparklib_obj";\n')
-                f_prj.write("   for Source_Dirs use SPARKlib_External'Source_Dirs;\n")
-                f_prj.write(
-                    "   for Excluded_Source_Files use "
-                    + "SPARKlib_External'Excluded_Source_Files;\n"
-                )
-                f_prj.write("end SPARKlib;\n")
-
             if self.env.options.no_replay:
                 proof_switches = []
                 if gnatprove_level != None:
@@ -58,7 +25,9 @@ class GnatproveDriver(DiffTestDriver):
             else:
                 proof_switches=["--replay"]
 
-            self.shell(["gnatprove", "-P", self.working_dir("test.gpr"), "-j"+str(self.env.options.gnatprove_jobs)] + filenames + proof_switches,timeout=self.env.options.timeout)
+            gpr_file = os.path.join (ADA_DIR, "afrl_ada_dev.gpr")
+
+            self.shell(["gnatprove", "-q", "-P", gpr_file, "-j"+str(self.env.options.gnatprove_jobs)] + filenames + proof_switches,timeout=self.env.options.timeout)
 
 
 class GnatproveTestsuite(Testsuite):
@@ -109,4 +78,5 @@ class GnatproveTestsuite(Testsuite):
 
 
 if __name__ == "__main__":
+    sys.argv += ["-j1"]
     sys.exit(GnatproveTestsuite().testsuite_main())
