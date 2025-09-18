@@ -2,6 +2,7 @@
 
 import sys
 import os
+import shutil
 from e3.testsuite import Testsuite
 from e3.testsuite.driver.diff import DiffTestDriver
 
@@ -50,6 +51,12 @@ class GnatproveDriver(DiffTestDriver):
                 f_prj.write("end SPARKlib;\n")
 
             if self.env.options.no_replay:
+
+                # Clean all object and session files to enable a clean run of GNATprove
+                shutil.rmtree(os.path.join(ADA_DIR, "proof", "sessions"), ignore_errors=True)
+                shutil.rmtree(os.path.join(ADA_DIR, "gnatprove"), ignore_errors=True)
+                shutil.rmtree(os.path.join(ADA_DIR, "objs"), ignore_errors=True)
+
                 proof_switches = []
                 if gnatprove_level != None:
                     proof_switches+= ["--level="+str(gnatprove_level)]
@@ -71,6 +78,7 @@ class GnatproveTestsuite(Testsuite):
 
     # Add a command-line flag to the testsuite script to allow users to
     # trigger baseline rewriting.
+
     def add_options(self, ArgumentParser):
         self.main.argument_parser.add_argument(
             "--rewrite", action="store_true",
