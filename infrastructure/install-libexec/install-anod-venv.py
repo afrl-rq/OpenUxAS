@@ -119,9 +119,7 @@ if __name__ == "__main__":
             else:
                 shutil.rmtree(VPYTHON_DIR)
         else:
-            logging.warning(
-                log_wrap(
-                    """\
+            logging.warning(log_wrap("""\
                 The anod virtual environment already exists; skipping this
                 step. Remove it manually or use `--force` if you wish to
                 reinstall the virtual environment.\
