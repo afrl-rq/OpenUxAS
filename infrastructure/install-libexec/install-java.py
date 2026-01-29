@@ -28,7 +28,6 @@ from support.arguments import (
 from support.commands import Command, run_command_and_exit_on_fail
 from support.log import configure_logging
 
-
 APT_UPDATE = Command(
     cmd=["sudo", "apt", "update"],
     description="Updating apt",
