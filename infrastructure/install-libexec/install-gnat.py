@@ -159,9 +159,7 @@ if __name__ == "__main__":
             else:
                 shutil.rmtree(ALR_DIR)
         else:
-            logging.warning(
-                log_wrap(
-                    """\
+            logging.warning(log_wrap("""\
                 GNAT FSF appears to have already been installed; skipping this
                 step. Remove it manually or use `--force` if you wish to
                 reinstall GNAT FSF and gnatprove FSF.\
