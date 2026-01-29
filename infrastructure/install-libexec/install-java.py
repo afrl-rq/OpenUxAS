@@ -74,7 +74,7 @@ if __name__ == "__main__":
     add_apt_group(argument_parser)
     add_logging_group(argument_parser)
 
-    (args, _) = argument_parser.parse_known_args()
+    args, _ = argument_parser.parse_known_args()
 
     configure_logging(args)
 
