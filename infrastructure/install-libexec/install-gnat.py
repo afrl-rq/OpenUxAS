@@ -38,7 +38,6 @@ from support.commands import (
 from support.log import configure_logging, log_wrap
 from support.paths import ALR_DIR, OPENUXAS_ROOT
 
-
 APT_UPDATE = Command(
     cmd=["sudo", "apt", "update"],
     description="Updating apt",
@@ -147,7 +146,7 @@ if __name__ == "__main__":
     add_apt_group(argument_parser)
     add_logging_group(argument_parser)
 
-    (args, _) = argument_parser.parse_known_args()
+    args, _ = argument_parser.parse_known_args()
 
     configure_logging(args)
 
@@ -160,15 +159,11 @@ if __name__ == "__main__":
             else:
                 shutil.rmtree(ALR_DIR)
         else:
-            logging.warning(
-                log_wrap(
-                    """\
+            logging.warning(log_wrap("""\
                 GNAT FSF appears to have already been installed; skipping this
                 step. Remove it manually or use `--force` if you wish to
                 reinstall GNAT FSF and gnatprove FSF.\
-                """
-                )
-            )
+                """))
             skip_install_gnat = True
 
     if skip_install_gnat:
