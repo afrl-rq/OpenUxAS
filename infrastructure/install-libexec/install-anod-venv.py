@@ -35,7 +35,6 @@ from support.commands import Command, run_command_and_exit_on_fail
 from support.log import configure_logging, log_wrap
 from support.paths import INFRASTRUCTURE_UXAS, VPYTHON_DIR
 
-
 APT_UPDATE = Command(
     cmd=["sudo", "apt", "update"],
     description="Updating apt",
@@ -107,7 +106,7 @@ if __name__ == "__main__":
 
     add_logging_group(argument_parser)
 
-    (args, _) = argument_parser.parse_known_args()
+    args, _ = argument_parser.parse_known_args()
 
     configure_logging(args)
 
@@ -120,15 +119,11 @@ if __name__ == "__main__":
             else:
                 shutil.rmtree(VPYTHON_DIR)
         else:
-            logging.warning(
-                log_wrap(
-                    """\
+            logging.warning(log_wrap("""\
                 The anod virtual environment already exists; skipping this
                 step. Remove it manually or use `--force` if you wish to
                 reinstall the virtual environment.\
-                """
-                )
-            )
+                """))
             skip_install_venv = True
 
     if skip_install_venv:

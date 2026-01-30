@@ -28,7 +28,6 @@ from support.arguments import (
 from support.commands import Command, run_command_and_exit_on_fail
 from support.log import configure_logging
 
-
 APT_UPDATE = Command(
     cmd=["sudo", "apt", "update"],
     description="Updating apt",
@@ -75,7 +74,7 @@ if __name__ == "__main__":
     add_apt_group(argument_parser)
     add_logging_group(argument_parser)
 
-    (args, _) = argument_parser.parse_known_args()
+    args, _ = argument_parser.parse_known_args()
 
     configure_logging(args)
 
