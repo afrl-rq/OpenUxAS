@@ -30,7 +30,6 @@ from support.commands import Command, run_command_and_exit_on_fail
 from support.log import configure_logging
 from support.paths import INSTALL_LIBEXEC_DIR
 
-
 GNAT_INSTALL = Command(
     cmd=[sys.executable, os.path.join(INSTALL_LIBEXEC_DIR, "install-gnat.py")],
     description="Install GNAT FSF",
@@ -139,7 +138,7 @@ if __name__ == "__main__":
 
     add_logging_group(argument_parser)
 
-    (args, _) = argument_parser.parse_known_args()
+    args, _ = argument_parser.parse_known_args()
 
     configure_logging(args)
 
