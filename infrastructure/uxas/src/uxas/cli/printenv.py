@@ -13,7 +13,6 @@ from e3.env import BaseEnv
 import logging
 import os
 
-
 # Help users who forget to use eval.
 BANNER = """
 # ----------------------------------------------------------------------------
