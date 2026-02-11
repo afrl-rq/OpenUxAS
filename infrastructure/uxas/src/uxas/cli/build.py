@@ -12,7 +12,6 @@ from e3.anod.status import ReturnValue
 from e3.env import BaseEnv
 from e3.main import Main
 
-
 # Define what we mean by a successful build.
 BUILD_SUCCESS = [
     ReturnValue.success,

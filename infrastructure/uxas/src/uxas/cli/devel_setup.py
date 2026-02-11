@@ -15,7 +15,6 @@ import subprocess
 import sys
 import yaml
 
-
 SPEC_DIR_NAME = "specs"
 
 CONFIG_DIR_NAME = "config"
