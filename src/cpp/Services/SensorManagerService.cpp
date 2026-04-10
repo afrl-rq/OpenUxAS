@@ -34,6 +34,7 @@
 #include <fstream>     // std::ifstream
 #include <cstdint>
 #include <memory>      //int64_t
+#include <cmath>       //std::abs
 
 
 #define STRING_COMPONENT_NAME "SensorManager"
@@ -305,9 +306,9 @@ void SensorManagerService::FindSensorFootPrint(const std::shared_ptr<afrl::cmasi
                                             double horizantalFov_rad = horizantalFov_deg * n_Const::c_Convert::dDegreesToRadians();
                                             double alpha_rad = (videoStreamResolutionMin <= 0.0) ? (n_Const::c_Convert::dPiO2() /*ERROR:: make it worst case*/) : (horizantalFov_rad / videoStreamResolutionMin);
                                             double gsd_m = dSlantRangeMin_m * sin(alpha_rad);
-                                            double gsdDeltaDesired_m = abs(desiredGsd_m - gsd_m);
+                                            double gsdDeltaDesired_m = std::abs(desiredGsd_m - gsd_m);
                                             // if the new GSD is closer to the desired than the last one
-                                            if (!firstGsdInitialized || abs(desiredGsd_m - sensorFootprint->getAchievedGSD()) > gsdDeltaDesired_m)
+                                            if (!firstGsdInitialized || std::abs(desiredGsd_m - sensorFootprint->getAchievedGSD()) > gsdDeltaDesired_m)
                                             {
                                                 firstGsdInitialized = true;
 
