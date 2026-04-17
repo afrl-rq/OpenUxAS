@@ -293,7 +293,14 @@ namespace n_FrameworkLib
 
         //based on order of polygons:
         //    check each of the extra edges, generated earlier to make sure they don't intersect other polygons
-        if (vplygnGetPolygons().size() > 1)
+        if (!vplygnGetPolygons().empty())
+        {
+            for (V_POLYGON_IT_t itPolygons1 = vplygnGetPolygons().begin(); itPolygons1 != vplygnGetPolygons().end(); itPolygons1++)
+            {
+                itPolygons1->errAddExtraVisibleEdges(vposGetVerticiesBase(), veGetEdgesVisibleBase());
+            }
+        }
+ /*       if (vplygnGetPolygons().size() > 1)
         {
             V_POLYGON_IT_t itPolygons1 = vplygnGetPolygons().begin();
             for (; itPolygons1 != (vplygnGetPolygons().end() - 1); itPolygons1++)
@@ -316,7 +323,7 @@ namespace n_FrameworkLib
         else if (!vplygnGetPolygons().empty()) //if(vplygnGetPolygons().size() > 1)
         {
             vplygnGetPolygons().begin()->errAddExtraVisibleEdges(vposGetVerticiesBase(), vplygnGetPolygons().begin(), veGetEdgesVisibleBase());
-        }
+        } */
         PRINT_DEBUG("*DEBUG*")
         return (errReturn);
     }

@@ -623,7 +623,7 @@ public:    //methods/functions
     enError errCheckForConcavity(V_POSITION_t& vposVerticies);
     enError errFindSelfVisibleEdges(V_POSITION_t& vposVertexContainer);
     enError errFindVisibleEdges(V_POSITION_t& vposVertexContainer,const V_POLYGON_CONST_IT_t& itPolygonThat,V_EDGE_t& veEdgesVisible);
-    enError errAddExtraVisibleEdges(V_POSITION_t& vposVertexContainer,const V_POLYGON_CONST_IT_t& itPolygonThat,V_EDGE_t& veEdgesVisible);
+    enError errAddExtraVisibleEdges(V_POSITION_t& vposVertexContainer,V_EDGE_t& veEdgesVisible);
 
 
 
