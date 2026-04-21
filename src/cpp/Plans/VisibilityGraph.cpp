@@ -300,30 +300,6 @@ namespace n_FrameworkLib
                 itPolygons1->errAddExtraVisibleEdges(vposGetVerticiesBase(), veGetEdgesVisibleBase());
             }
         }
- /*       if (vplygnGetPolygons().size() > 1)
-        {
-            V_POLYGON_IT_t itPolygons1 = vplygnGetPolygons().begin();
-            for (; itPolygons1 != (vplygnGetPolygons().end() - 1); itPolygons1++)
-            {
-                for (V_POLYGON_IT_t itPolygons2 = (itPolygons1 + 1); itPolygons2 != vplygnGetPolygons().end(); itPolygons2++)
-                {
-                    if (itPolygons2 != itPolygons1)
-                    {
-                        itPolygons1->errAddExtraVisibleEdges(vposGetVerticiesBase(), itPolygons2, veGetEdgesVisibleBase());
-                    }
-                }
-            }
-            //need to check the last polygon
-            itPolygons1 = vplygnGetPolygons().end() - 1;
-            for (V_POLYGON_IT_t itPolygons2 = vplygnGetPolygons().begin(); itPolygons2 != (vplygnGetPolygons().end() - 1); itPolygons2++)
-            {
-                itPolygons1->errAddExtraVisibleEdges(vposGetVerticiesBase(), itPolygons2, veGetEdgesVisibleBase());
-            }
-        }
-        else if (!vplygnGetPolygons().empty()) //if(vplygnGetPolygons().size() > 1)
-        {
-            vplygnGetPolygons().begin()->errAddExtraVisibleEdges(vposGetVerticiesBase(), vplygnGetPolygons().begin(), veGetEdgesVisibleBase());
-        } */
         PRINT_DEBUG("*DEBUG*")
         return (errReturn);
     }
