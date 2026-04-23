@@ -425,7 +425,7 @@ CPolygon::enError CPolygon::errFindVisibleEdges(V_POSITION_t& vposVertexContaine
         return(errReturn);
     };
 
-CPolygon::enError CPolygon::errAddExtraVisibleEdges(V_POSITION_t& vposVertexContainer,const V_POLYGON_CONST_IT_t& itPolygonThat,V_EDGE_t& veEdgesVisible)
+CPolygon::enError CPolygon::errAddExtraVisibleEdges(V_POSITION_t& vposVertexContainer,V_EDGE_t& veEdgesVisible)
     {
         enError errReturn(errNoError);
 
