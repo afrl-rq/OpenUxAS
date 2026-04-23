@@ -293,29 +293,12 @@ namespace n_FrameworkLib
 
         //based on order of polygons:
         //    check each of the extra edges, generated earlier to make sure they don't intersect other polygons
-        if (vplygnGetPolygons().size() > 1)
+        if (!vplygnGetPolygons().empty())
         {
-            V_POLYGON_IT_t itPolygons1 = vplygnGetPolygons().begin();
-            for (; itPolygons1 != (vplygnGetPolygons().end() - 1); itPolygons1++)
+            for (V_POLYGON_IT_t itPolygons1 = vplygnGetPolygons().begin(); itPolygons1 != vplygnGetPolygons().end(); itPolygons1++)
             {
-                for (V_POLYGON_IT_t itPolygons2 = (itPolygons1 + 1); itPolygons2 != vplygnGetPolygons().end(); itPolygons2++)
-                {
-                    if (itPolygons2 != itPolygons1)
-                    {
-                        itPolygons1->errAddExtraVisibleEdges(vposGetVerticiesBase(), itPolygons2, veGetEdgesVisibleBase());
-                    }
-                }
+                itPolygons1->errAddExtraVisibleEdges(vposGetVerticiesBase(), veGetEdgesVisibleBase());
             }
-            //need to check the last polygon
-            itPolygons1 = vplygnGetPolygons().end() - 1;
-            for (V_POLYGON_IT_t itPolygons2 = vplygnGetPolygons().begin(); itPolygons2 != (vplygnGetPolygons().end() - 1); itPolygons2++)
-            {
-                itPolygons1->errAddExtraVisibleEdges(vposGetVerticiesBase(), itPolygons2, veGetEdgesVisibleBase());
-            }
-        }
-        else if (!vplygnGetPolygons().empty()) //if(vplygnGetPolygons().size() > 1)
-        {
-            vplygnGetPolygons().begin()->errAddExtraVisibleEdges(vposGetVerticiesBase(), vplygnGetPolygons().begin(), veGetEdgesVisibleBase());
         }
         PRINT_DEBUG("*DEBUG*")
         return (errReturn);
