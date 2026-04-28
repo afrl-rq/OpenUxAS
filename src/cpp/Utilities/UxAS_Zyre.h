@@ -1,3 +1,4 @@
+#include <cstdint>
 /* 
  * File:   UxAS_Zyre.h
  * Author: steve
