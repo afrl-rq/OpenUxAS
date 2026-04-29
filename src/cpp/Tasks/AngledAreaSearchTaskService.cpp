@@ -1,4 +1,3 @@
-#include <cstdint>
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
@@ -35,6 +34,7 @@
 
 #include <sstream>      //std::stringstream
 #include <iomanip>  //setfill
+#include <cstdint>
 
 #define STRING_XML_LANE_SPACING_MIN "SearchLaneWidthMin_m"
 #define STRING_XML_LANE_SPACING_MAX "SearchLaneWidthMax_m"

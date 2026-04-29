@@ -1,4 +1,3 @@
-#include <cstdint>
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
@@ -10,6 +9,7 @@
 
 #include "ZmqSocketBase.h"
 #include "UxAS_Log.h"
+#include <cstdint>
 
 namespace uxas {
 namespace communications {

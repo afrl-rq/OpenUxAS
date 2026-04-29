@@ -1,4 +1,3 @@
-#include <cstdint>
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
@@ -29,6 +28,7 @@
 
 #include <sstream>  //stringstream
 #include <chrono>       // time functions
+#include <cstdint>
 
 //TODO:: read in a open street map and calculate it's visibility graph
 

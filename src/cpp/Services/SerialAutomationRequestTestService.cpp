@@ -1,4 +1,3 @@
-#include <cstdint>
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
@@ -27,6 +26,8 @@
 #define STRING_XML_COMPONENT "Component"
 #define STRING_XML_TYPE "Type"
 #define STRING_XML_MAX_RESPONSE_TIME_MS "MaxResponseTime_ms"
+
+#include <cstdint>
 
 namespace uxas
 {

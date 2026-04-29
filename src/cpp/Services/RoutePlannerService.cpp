@@ -1,4 +1,3 @@
-#include <cstdint>
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
@@ -28,6 +27,7 @@
 #include "pugixml.hpp"
 
 #include <algorithm>
+#include <cstdint>
 
 #define STRING_COMPONENT_NAME "RoutePlanner"
 #define STRING_XML_COMPONENT_TYPE STRING_COMPONENT_NAME

@@ -1,4 +1,3 @@
-#include <cstdint>
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
@@ -19,6 +18,7 @@
 #define    UXAS_TYPEDEFS_NUMBERS_H
 
 #include <vector>
+#include <cstdint>
 
 namespace n_Typedefs
 {

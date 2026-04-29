@@ -1,4 +1,3 @@
-#include <cstdint>
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
@@ -39,6 +38,7 @@
 #include "PlanningParameters.h"     //polygon expansion
 
 #include <pugixml.hpp>
+#include <cstdint>
 
 using namespace std;
 

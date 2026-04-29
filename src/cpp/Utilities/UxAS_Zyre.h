@@ -1,4 +1,3 @@
-#include <cstdint>
 /* 
  * File:   UxAS_Zyre.h
  * Author: steve
@@ -15,6 +14,7 @@
 
 #include <cstring>
 #include <string>
+#include <cstdint>
 
 namespace n_ZMQ
 {

@@ -1,4 +1,3 @@
-#include <cstdint>
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
@@ -14,6 +13,8 @@
 
 
 #include "ServiceBase.h"
+
+#include <cstdint>
 
 namespace uxas
 {

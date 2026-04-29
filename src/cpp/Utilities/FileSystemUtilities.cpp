@@ -1,4 +1,3 @@
-#include <cstdint>
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
@@ -28,6 +27,7 @@
 #include "boost/regex.hpp"
 
 #include <fstream>      //std::ofstream
+#include <cstdint>
 
 
 namespace uxas

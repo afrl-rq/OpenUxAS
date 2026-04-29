@@ -1,4 +1,3 @@
-#include <cstdint>
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
@@ -61,6 +60,7 @@
 #include <map>
 #include <vector>
 #include <sstream>
+#include <cstdint>
 
 #if (defined(__APPLE__) && defined(__MACH__))
 #define OSX

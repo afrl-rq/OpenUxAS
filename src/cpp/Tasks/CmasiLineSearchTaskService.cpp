@@ -1,4 +1,3 @@
-#include <cstdint>
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
@@ -38,6 +37,7 @@
 #include <sstream>      //std::stringstream
 #include <iostream>     // std::cout, cerr, etc
 #include <iomanip>  //setfill
+#include <cstdint>
 
 #define STRING_XML_LINE_SEARCH_ONE_DIRECTION "LineSearchOneDirection"
 

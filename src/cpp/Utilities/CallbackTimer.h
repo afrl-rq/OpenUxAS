@@ -1,4 +1,3 @@
-#include <cstdint>
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
@@ -24,6 +23,7 @@
 #include <thread>
 #include <mutex>
 #include <functional>
+#include <cstdint>
 
 namespace uxas
 {

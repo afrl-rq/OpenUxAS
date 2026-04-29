@@ -1,4 +1,3 @@
-#include <cstdint>
 // ===============================================================================
 // Authors: AFRL/RQQA
 // Organization: Air Force Research Laboratory, Aerospace Systems Directorate, Power and Control Division
@@ -17,8 +16,9 @@
 
 #include "UxAS_DatabaseLogger.h"
 #include "UxAS_FileLogger.h"
-
 //#include "UxAS_TypeDefs_String.h"
+
+#include <cstdint>
 
 namespace uxas
 {
