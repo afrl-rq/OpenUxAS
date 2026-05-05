@@ -10,7 +10,7 @@ class Boost(spec('common')):
 
     # Prebuilt minimal Boost
     MINIMAL_NAME = "boost-1.74-ubuntu24.04-x86_64.zip"
-    MINIMAL_URL = "https://raw.githubusercontent.com/DocEast/MiniBoost/main/boost-1.74-ubuntu24.04-x86_64.zip"
+    MINIMAL_LOCAL_PATH = os.path.join(self.env.root_dir, "external_libraries", MINIMAL_NAME)
 
     # Full source Boost
     FULL_NAME = "boost_1_74_0.tar.bz2"
@@ -52,9 +52,9 @@ class Boost(spec('common')):
     def source_pkg_build(self):
         if self.use_minimal:
             return [
-                self.HTTPSSourceBuilder(
+                self.LocalFileSourceBuilder(
                     name=self.MINIMAL_NAME,
-                    url=self.MINIMAL_URL
+                    url=self.MINIMAL_LOCAL_PATH
                 )
             ]
         return [
