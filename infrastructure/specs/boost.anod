@@ -1,4 +1,5 @@
 import os
+import re
 from e3.fs import sync_tree
 from e3.os.fs import unixpath
 from e3.anod.loader import spec
@@ -6,43 +7,34 @@ from e3.anod.spec import Anod
 
 
 class Boost(spec('common')):
-    """Boost: uses prebuilt minimal Boost on Ubuntu 24.04 x86_64, otherwise builds from source."""
-
-    # Prebuilt minimal Boost
-    MINIMAL_NAME = "boost-1.74-ubuntu24.04-x86_64.tar.gz"
-
+    """Boost: uses prebuilt minimal Boost on Ubuntu 24.04 or 26.04 x86_64, otherwise builds from source."""
+    
     # Full source Boost
     FULL_NAME = "boost_1_74_0.tar.bz2"
     FULL_URL = f"https://archives.boost.io/release/1.74.0/source/{FULL_NAME}"
-
-    @property
-    def repo_root(self):
-        #Extract repo root from self.spec_dir to find external_libraries
-        return os.path.abspath(os.path.join(self.spec_dir, "..", ".."))
 
     @property
     def use_minimal(self):
         osname = self.env.build.os.name
         version = self.env.build.os.version
         arch = self.env.build.cpu
+
         # Extract the leading integer from the version string
-        # Examples:
-        #   "26.04"        → 26
-        #   "ubuntu26.04"  → 26
-        #   "ubuntu26"     → 26
-        #   "24"           → 24
-        import re
-        m = re.search(r'(\d+)', version)
-        if not m:
+        try:
+            m = re.search(r'(\d+)', version)
+            if not m:
+                return False
+
+            major = int(m.group(1))
+        except Exception:
             return False
-        major = int(m.group(1))
 
         return (
             osname == "linux"
             and major >= 24
             and ("x86_64" in str(arch.name))
         )
-	    
+
     @property
     def build_deps(self):
         if self.use_minimal:
@@ -52,20 +44,15 @@ class Boost(spec('common')):
     @property
     def build_source_list(self):
         if self.use_minimal:
-            return [Anod.Source(name=self.MINIMAL_NAME, publish=True)]
+            return []
         return [Anod.Source(name=self.FULL_NAME, publish=True)]
 
     @property
-    def minimal_local_path(self):
-        return os.path.join(self.repo_root, "external_libraries", self.MINIMAL_NAME)
-
-    @property
     def source_pkg_build(self):
-        print("DEBUG minimal_local_path =", self.minimal_local_path)
         if self.use_minimal:
             return [
                 self.LocalSourceBuilder(
-                    self.minimal_local_path
+                    self.env.MINIBOOST_DIR
                 )
             ]
         return [
