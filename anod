@@ -128,7 +128,7 @@ function _anod {
 	    if is_ubuntu_2604 || is_ubuntu_2404; then
 		echo "Using precompiled minimal boost..."
 		ensure_minimal_boost
-		export MINIBOOST_DIR="$BOOST_MINIMAL_DIR"
+		export ANOD_MINIBOOST_DIR="$BOOST_MINIMAL_DIR"
 	    fi
             # Are we building? if so, we should set the SHELL variable to bash;
             # zsh will not work correctly with boost.

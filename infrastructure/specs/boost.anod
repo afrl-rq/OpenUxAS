@@ -52,7 +52,7 @@ class Boost(spec('common')):
         if self.use_minimal:
             return [
                 self.LocalSourceBuilder(
-                    self.env.MINIBOOST_DIR
+                    self.env.ANOD_MINIBOOST_DIR
                 )
             ]
         return [
