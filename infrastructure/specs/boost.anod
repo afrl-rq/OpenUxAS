@@ -1,12 +1,3 @@
-# Boost anod spec
-#
-# Updating this spec:
-# 1. Check for new versions at boost.org
-# 2. Update the NAME and URL properties - make sure to update the release number
-#    in the URL
-# 3. run `anod reset` and `anod build boost` to make sure the spec still works
-# 4. run `anod build uxas` and test the result by running examples
-
 import os
 from e3.fs import sync_tree
 from e3.os.fs import unixpath
@@ -15,41 +6,111 @@ from e3.anod.spec import Anod
 
 
 class Boost(spec('common')):
-    """Boost provides free peer-reviewed portable C++ source libraries."""
+    """Boost: uses prebuilt minimal Boost on Ubuntu 24.04 x86_64, otherwise builds from source."""
 
-    NAME = "boost_1_74_0.tar.bz2"
-    URL = f"https://archives.boost.io/release/1.74.0/source/{NAME}"
+    # Prebuilt minimal Boost
+    MINIMAL_NAME = "boost-1.74-ubuntu24.04-x86_64.zip"
+    MINIMAL_URL = "https://raw.githubusercontent.com/DocEast/MiniBoost/main/boost-1.74-ubuntu24.04-x86_64.zip"
+
+    # Full source Boost
+    FULL_NAME = "boost_1_74_0.tar.bz2"
+    FULL_URL = f"https://archives.boost.io/release/1.74.0/source/{FULL_NAME}"
+
+    @property
+    def use_minimal(self):
+        osname = self.env.build.os.name
+        version = self.env.build.os.version
+        arch = self.env.build.cpu
+
+        # Extract major.minor (e.g. "24.04", "26.04")
+        try:
+            major, minor = version.split(".")
+            major = int(major)
+            minor =      int(minor)
+        except Exception:
+            return False
+
+        return (
+            osname == "linux"
+            and major >= 24
+            and ("x86_64" in str(arch.name))
+        )
 
     @property
     def build_deps(self):
+        if self.use_minimal:
+            return []
         return [Anod.Dependency('compiler')]
 
     @property
     def build_source_list(self):
-        return [Anod.Source(name=Boost.NAME,
-                            publish=True)]
+        if self.use_minimal:
+            return [Anod.Source(name=self.MINIMAL_NAME, publish=True)]
+        return [Anod.Source(name=self.FULL_NAME, publish=True)]
 
     @property
     def source_pkg_build(self):
+        if self.use_minimal:
+            return [
+                self.HTTPSSourceBuilder(
+                    name=self.MINIMAL_NAME,
+                    url=self.MINIMAL_URL
+                )
+            ]
         return [
             self.HTTPSSourceBuilder(
-                name=Boost.NAME,
-                url=Boost.URL)]
+                name=self.FULL_NAME,
+                url=self.FULL_URL
+            )
+        ]
 
     @Anod.primitive()
     def build(self):
-        bootstrap_args = [os.environ.get('SHELL', '/bin/bash'), './bootstrap.sh',
-                          '--prefix=%s' % unixpath(self['INSTALL_DIR']),
-                          '--without-icu',
-                          '--with-libraries=filesystem,system,regex,date_time']
-        self.shell(*bootstrap_args, cwd=self['SRC_DIR'])
-        if self.env.build.os.name == 'darwin':
-            toolset = 'darwin'
+        src = self['SRC_DIR']
+
+        if self.use_minimal:
+            # Prebuilt minimal Boost
+            include_src = os.path.join(src, "include")
+            lib_src = os.path.join(src, "lib")
+
+            if not os.path.isdir(include_src):
+                raise RuntimeError(f"Missing include directory: {include_src}")
+            if not os.path.isdir(lib_src):
+                raise RuntimeError(f"Missing lib directory: {lib_src}")
+
+            include_dst = os.path.join(self['INSTALL_DIR'], "include")
+            lib_dst = os.path.join(self['INSTALL_DIR'], "lib")
+
+            sync_tree(include_src, include_dst, delete=True)
+            sync_tree(lib_src, lib_dst, delete=True)
+
+            # Provide lib64 for consumers expecting it
+            sync_tree(lib_dst, os.path.join(self['INSTALL_DIR'], "lib64"), delete=True)
+
         else:
-            toolset = 'gcc'
-        self.shell(os.path.join(self['SRC_DIR'], 'b2'),
-                   'link=static',
-                   'toolset=%s' % toolset, 'cxxstd=11',
-                   'install', cwd=self['SRC_DIR'])
-        sync_tree(os.path.join(self['INSTALL_DIR'], 'lib'),
-                  os.path.join(self['INSTALL_DIR'], 'lib64'), delete=True)
+            # Full Boost build from source
+            bootstrap_args = [
+                os.environ.get('SHELL', '/bin/bash'),
+                './bootstrap.sh',
+                '--prefix=%s' % unixpath(self['INSTALL_DIR']),
+                '--without-icu',
+                '--with-libraries=filesystem,system,regex,date_time'
+            ]
+            self.shell(*bootstrap_args, cwd=src)
+
+            toolset = 'darwin' if self.env.build.os.name == 'darwin' else 'gcc'
+
+            self.shell(
+                os.path.join(src, 'b2'),
+                'link=static',
+                f'toolset={toolset}',
+                'cxxstd=11',
+                'install',
+                cwd=src
+            )
+
+            sync_tree(
+                os.path.join(self['INSTALL_DIR'], 'lib'),
+                os.path.join(self['INSTALL_DIR'], 'lib64'),
+                delete=True
+            )
