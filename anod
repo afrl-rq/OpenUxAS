@@ -19,8 +19,29 @@ CMAKE_LEGACY_URL="https://github.com/Kitware/CMake/releases/download/v${CMAKE_LE
 CMAKE_LEGACY_DIR="${SBX_DIR}/tools/cmake-${CMAKE_LEGACY_VERSION}"
 CMAKE_LEGACY_BIN="${CMAKE_LEGACY_DIR}/bin/cmake"
 
+# ---- Boost setup modifications
+BOOST_MINIMAL_TARBALL="${SCRIPT_DIR}/external_libraries/boost-1.74-ubuntu24.04-x86_64.tar.gz"
+BOOST_MINIMAL_DIR="${SBX_DIR}/tools/boost-minimal"
 
-#Helper functions to update for ubuntu 26.04
+function ensure_minimal_boost() {
+    if [[ -d "$BOOST_MINIMAL_DIR/include" ]]; then
+        return
+    fi
+
+    echo "Installing minimal Boost into sandbox..."
+
+    mkdir -p "$BOOST_MINIMAL_DIR"
+    cp "$BOOST_MINIMAL_TARBALL" "$SBX_DIR"
+    tar -xzf "$SBX_DIR/$(basename "$BOOST_MINIMAL_TARBALL")" -C "$BOOST_MINIMAL_DIR"
+}
+
+#Helper functions for cmake/boost
+function is_ubuntu_2404() {
+    [[ -f /etc/os-release ]] &&
+        grep -q "Ubuntu" /etc/os-release &&
+	grep -q "24.04" /etc/os-release
+}
+
 function is_ubuntu_2604() {
     [[ -f /etc/os-release ]] &&
         grep -q "Ubuntu" /etc/os-release &&
@@ -103,7 +124,12 @@ function _anod {
             if is_ubuntu_2604 || cmake_too_new; then
 		echo "Using legacy CMake for compatibility..."
 		ensure_legacy_cmake
-            fi	        
+            fi
+	    if is_ubuntu_2604 || is_ubuntu_2404; then
+		echo "Using precompiled minimal boost..."
+		ensure_minimal_boost
+		export MINIBOOST_DIR="$BOOST_MINIMAL_DIR"
+	    fi
             # Are we building? if so, we should set the SHELL variable to bash;
             # zsh will not work correctly with boost.
             debug_and_run "SHELL=$( which bash ) python3 -c \"${ANOD_SCRIPT}\" $*"
