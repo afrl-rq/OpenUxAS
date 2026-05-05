@@ -21,7 +21,8 @@ CMAKE_LEGACY_BIN="${CMAKE_LEGACY_DIR}/bin/cmake"
 
 # ---- Boost setup modifications
 BOOST_MINIMAL_TARBALL="${SCRIPT_DIR}/external_libraries/boost-1.74-ubuntu24.04-x86_64.tar.gz"
-BOOST_MINIMAL_DIR="${SBX_DIR}/tools/boost-minimal"
+BOOST_MINIMAL_DIR="${SBX_DIR}/tools/boost"
+
 
 function ensure_minimal_boost() {
     if [[ -d "$BOOST_MINIMAL_DIR/include" ]]; then
@@ -32,7 +33,7 @@ function ensure_minimal_boost() {
 
     mkdir -p "$BOOST_MINIMAL_DIR"
     cp "$BOOST_MINIMAL_TARBALL" "$SBX_DIR"
-    tar -xzf "$SBX_DIR/$(basename "$BOOST_MINIMAL_TARBALL")" -C "$BOOST_MINIMAL_DIR"
+    tar -xzf "$SBX_DIR/$(basename "$BOOST_MINIMAL_TARBALL")" -C "$BOOST_MINIMAL_DIR" --strip-components=1
 }
 
 #Helper functions for cmake/boost
@@ -128,7 +129,6 @@ function _anod {
 	    if is_ubuntu_2604 || is_ubuntu_2404; then
 		echo "Using precompiled minimal boost..."
 		ensure_minimal_boost
-		export ANOD_MINIBOOST_DIR="$BOOST_MINIMAL_DIR"
 	    fi
             # Are we building? if so, we should set the SHELL variable to bash;
             # zsh will not work correctly with boost.
