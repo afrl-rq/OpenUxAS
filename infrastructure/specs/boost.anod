@@ -50,24 +50,8 @@ class Boost(spec('common')):
     @property
     def source_pkg_build(self):
         if self.use_minimal:
-	#MiniBoost is already staged by the wrapper script; no sources for
-	#  anod to manage
-            #Compute repo root from the spec location:
-            #  self.spec_dir == <repo>/infrastructure/specs
-#            repo_root = os.path.dirname(os.path.dirname(self.spec_dir))
-#
-#            minimal_dir = os.path.join(
-#                repo_root,
-#                "infrastructure",
-#                "sbx",
-#                "tools",
-#                "boost",
-#            )
-            return [
-#                self.LocalSourceBuilder(
-#                    minimal_dir
-#                )
-            ]
+	    # MiniBoost is already staged by the wrapper script
+            return []
         return [
             self.HTTPSSourceBuilder(
                 name=self.FULL_NAME,
@@ -80,31 +64,27 @@ class Boost(spec('common')):
         src = self['SRC_DIR']
 
         if self.use_minimal:
-            # Prebuilt minimal Boost
-#            include_src = os.path.join(src, "include")
-#            lib_src = os.path.join(src, "lib")
-#
-#            if not os.path.isdir(include_src):
-#                raise RuntimeError(f"Missing include directory: {include_src}")
-#            if not os.path.isdir(lib_src):
-#                raise RuntimeError(f"Missing lib directory: {lib_src}")
-#
-#            include_dst = os.path.join(self['INSTALL_DIR'], "include")
-#            lib_dst = os.path.join(self['INSTALL_DIR'], "lib")
-#
-#            sync_tree(include_src, include_dst, delete=True)
-#            sync_tree(lib_src, lib_dst, delete=True)
-#
-#            # Provide lib64 for consumers expecting it
-#            sync_tree(lib_dst, os.path.join(self['INSTALL_DIR'], "lib64"), delete=True)
-
-            #MiniBoost is staged by the wrapper into:
-            #<repo>/infrastructure/sbx/tools/boost
+            #  MiniBoost is staged by the wrapper into:
+            #  <repo>/infrastructure/sbx/tools/boost
             repo_root = os.path.dirname(os.path.dirname(self.spec_dir))
-            src = os.path.join(repo_root, "infrastructure", "sbx", "tools", "boost")
-
+            src = os.path.join(repo_root, "infrastructure", "sbx",
+                               "tools", "boost")
             include_src = os.path.join(src, "include")
             lib_src = os.path.join(src, "lib")
+
+            if not os.path.isdir(include_src):
+                raise RuntimeError(f"Missing include directory: {include_src}")
+            if not os.path.isdir(lib_src):
+                raise RuntimeError(f"Missing lib directory: {lib_src}")
+
+            include_dst = os.path.join(self['INSTALL_DIR'], "include")
+            lib_dst = os.path.join(self['INSTALL_DIR'], "lib")
+
+            sync_tree(include_src, include_dst, delete=True)
+            sync_tree(lib_src, lib_dst, delete=True)
+
+            # Provide lib64 for consumers expecting it
+            sync_tree(lib_dst, os.path.join(self['INSTALL_DIR'], "lib64"), delete=True)
         else:
             # Full Boost build from source
             bootstrap_args = [
