@@ -1,0 +1,25 @@
+amase:
+  config: daidalus
+  scenario: MessagesToSend/collision_mkii.xml
+
+uxases:
+  - config: cfgCollision_1000.xml
+    rundir: UAV_1000
+    
+  - config: cfgCollision_1000_ada.xml
+    rundir: UAV_1000_ada
+    bin: uxas-ada
+
+  - config: cfgCollision_2000.xml
+    rundir: UAV_2000
+    
+  - config: cfgCollision_2000_ada.xml
+    rundir: UAV_2000_ada
+    bin: uxas-ada
+    
+  - config: cfgCollision_4208.xml
+    rundir: UAV_4208
+    
+  - config: cfgCollision_4208_ada.xml
+    rundir: UAV_4208_ada
+    bin: uxas-ada

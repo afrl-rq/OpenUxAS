@@ -1,6 +1,7 @@
 with SPARK.Containers.Functional.Vectors;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Common;                use Common;
+with definitions;           use definitions;
 
 package LMCP_Messages with SPARK_Mode is
 
@@ -27,6 +28,7 @@ package LMCP_Messages with SPARK_Mode is
       Id : Int64 := 0;
       Location : Location3D;
       Heading : Real32 := 0.0;
+      CurrentWaypoint : Int64 := 0;
    end record;
 
    type PlanningState is record
@@ -75,10 +77,25 @@ package LMCP_Messages with SPARK_Mode is
       AssociatedTaskList : Int64_Seq;
    end record;
 
+   type VehicleAction_Descendant_FlightDirectorAction is record
+      AssociatedTaskList : Int64_Seq;
+      Speed_mps : Real32 := 0.0;
+      SpeedType : SpeedTypeEnum := Airspeed;
+      Heading_deg : Real32 := 0.0;
+      Altitude_m : Real32 := 0.0;
+      AltitudeType : AltitudeTypeEnum := MSL;
+      ClimbRate_mps : Real32 := 0.0;
+   end record;
+
    package VA_Sequences is new SPARK.Containers.Functional.Vectors
      (Index_Type   => Positive,
       Element_Type => VehicleAction);
    type VA_Seq is new VA_Sequences.Sequence;
+
+   package VA_as_FDA_Sequences is new SPARK.Containers.Functional.Vectors
+     (Index_Type => Positive,
+      Element_Type => VehicleAction_Descendant_FlightDirectorAction);
+   type VA_FDR_Seq is new VA_as_FDA_Sequences.Sequence;
 
    type CommandStatusTypeEnum is (Pending, Approved, InProcess, Executed, Cancelled);
 
@@ -86,6 +103,14 @@ package LMCP_Messages with SPARK_Mode is
       CommandId : Int64 := 0;
       VehicleId : Int64 := 0;
       VehicleActionList : VA_Seq;
+      Status : CommandStatusTypeEnum := Pending;
+   end record;
+
+   type VehicleActionCommand_w_FlightDirectorAction is new Message_Root
+     with record
+      CommandId : Int64 := 0;
+      VehicleId : Int64 := 0;
+      VehicleActionList : VA_FDR_Seq;
       Status : CommandStatusTypeEnum := Pending;
    end record;
 
@@ -357,6 +382,217 @@ package LMCP_Messages with SPARK_Mode is
       OperatingRegion : Int64 := 0;
       -- Ordered list of tasks to be completed
       TaskList : TaskAssignment_Sequence;
+   end record;
+
+   --  subtype SafeReal64 is Real64 range -7_000_000.00 .. 7_000_000.00;
+
+   type DAIDALUSConfiguration is new Message_Root with record
+      --Entity ID that generated this message
+      EntityID : VehicleID_type := 0;
+      --Time horizon of all DAIDALUS functions
+      LookAheadTime : ttlowc_sec := 0.0;
+      --Relative maximum horizontal direction maneuver to the left of current
+      --ownship direction
+      LeftTrack : Heading_Type_deg := 0.0;
+      --Relative maximum horizontal direction maneuver to the right of current
+      --ownship direction
+      RightTrack : Heading_Type_deg := 0.0;
+      --Absolute maximum horizontal speed manuever
+      MaxGroundSpeed : GroundSpeed_Type_mps := 0.0;
+      --Absolute minimum horizontal speed maneuver
+      MinGroundSpeed : GroundSpeed_Type_mps := 0.0;
+      --Absolute maximum vertical speed maneuver
+      MaxVerticalSpeed : VerticalSpeed_Type_mps := 0.0;
+      --Absolute minimum vertical speed maneuver
+      MinVerticalSpeed : VerticalSpeed_Type_mps := 0.0;
+      --Absolute maximum altitude maneuver
+      MaxAltitude : Altitude_Type_m := 0.0;
+      --Absolute minimum altitude maneuver
+      MinAltitude : Altitude_Type_m := 0.0;
+      --Granularity of horizontal direction maneuvers
+      TrackStep : Heading_Buffer_Type_deg := 0.0;
+      --Granularity of horizontal speed maneuvers
+      GroundSpeedStep : GroundSpeed_Buffer_Type_mps := 0.0;
+      --Granularity of vertical speed maneuvers
+      VerticalSpeedStep : VerticalSpeed_Buffer_Type_mps := 0.0;
+      --Granularity of altitude maneuvers
+      AltitudeStep : Altitude_Buffer_Type_m := 0.0;
+      --Horizontal acceleration used in the computation of horizontal speed
+      --maneuvers
+      HorizontalAcceleration : SafeReal64 := 0.0;
+      --Vertical acceleration used in the computation of vertical speed
+      --maneuvers
+      VerticalAcceleration : SafeReal64 := 0.0;
+      --Turn rate used in the computation of horizontal direction maneuvers
+      TurnRate : SafeReal64 := 0.0;
+      --Bank angle used in the computation of horizontal direction maneuvers
+      BankAngle : Heading_Type_deg := 0.0;
+      --Vertical rate used in the computation of altitude maneuvers
+      VerticalRate : VerticalSpeed_Type_mps := 0.0;
+      --Time delat to stabilize recovery maneuvers
+      RecoveryStabilityTime : SafeReal64 := 0.0;
+      --Enable computation of horizontal direction recovery maneuvers
+      isRecoveryTrackBands : Boolean;
+      --Enable computation of horizontal speed recovery maneuvers
+      isRecoveryGroundSpeedBands : Boolean;
+      --Enable computation of vertical speed recovery maneuvers
+      isRecoveryVerticalSpeedBands : Boolean;
+      --Enable computation of altitude recovery maneuvers
+      isRecoveryAltitudeBands : Boolean;
+      --Enable computation of collision avoidance manuevers
+      isCollisionAvoidanceBands : Boolean;
+      --Factor to reduce minimum horizontal/vertical recovery separation when
+      --computing avoidance maneuvers
+      CollisionAvoidanceBandsFactor : Boolean;
+      --Horizontal NMAC
+      HorizontalNMAC : SafeReal64 := 0.0;
+      --Minimum horizontal separation used in the computation of recovery
+      --maneuvers
+      MinHorizontalRecovery : SafeReal64 := 0.0;
+      --Vertical NMAC
+      VerticalNMAC : SafeReal64 := 0.0;
+      --Minimum vertical separation used in the computation of recovery
+      --maneuvers
+      MinVerticalRecovery : SafeReal64 := 0.0;
+      --Threshold relative to ownship horizontal direction for the computation
+      --of horizontal contours
+      HorizontalContourThreshold : SafeReal64 := 0.0;
+      --Threshold for the horzontal distance component of well-clear volume
+      DTHR : SafeReal64 := 0.0;
+      --Threshold for the vertical distance component of well-clear volume
+      ZTHR : SafeReal64 := 0.0;
+      --Threshold for time component of well-clear volume.
+      TTHR : SafeReal64 := 0.0;
+      --Number of RTCA alert levels desired for reporting
+      RTCAAlertLevels : UInt32 := 0;
+      --Alert time for preventative alert
+      AlertTime1 : ttlowc_sec := 0.0;
+      --Early alert time for the prevenative alert
+      EarlyAlertTime1 : ttlowc_sec := 0.0;
+      --Alert time for the corrective alert
+      AlertTime2 : ttlowc_sec := 0.0;
+      --Early alert time for the corrective alert
+      EarlyAlertTime2 : ttlowc_sec := 0.0;
+      --Alert time for the warning alert
+      AlertTime3 : ttlowc_sec := 0.0;
+      --Early alert time for the warning alert
+      EarlyAlertTime3 : ttlowc_sec := 0.0;
+      --Horizontal detection type
+      HorizontalDetectionType : Unbounded_String;
+   end record;
+
+   type BandsRegionEnum is (NEAR, MID, FAR);
+
+   type Real64_Array is array (1 .. 2) of SafeReal64;
+
+   type Real32_Array is array (1 .. 2) of SafeReal32;
+
+   package Generic_Real64_Sequences is new SPARK.Containers.Functional.Vectors
+     (Index_Type                     => Positive,
+      Element_Type                   => Real64_Array);
+
+   package Generic_Real32_Sequences is new SPARK.Containers.Functional.Vectors
+     (Index_Type                     => Positive,
+      Element_Type                   => Real32_Array);
+
+   subtype Altitude_Sequence is  Generic_Real32_Sequences.Sequence;
+
+   type AltitudeInterval is new Message_Root with record
+      Altitude : Altitude_Sequence;
+   end record;
+
+   subtype Recovery_Altitude_Sequence is Generic_Real32_Sequences.Sequence;
+
+   type AltitudeRecoveryInterval is new Message_Root with record
+      RecoveryAltitude : Recovery_Altitude_Sequence;
+   end record;
+
+   subtype GroundHeading_Sequence is Generic_Real64_Sequences.Sequence;
+
+   type GroundHeadingInterval is new Message_Root with record
+      GroundHeadings : GroundHeading_Sequence;
+   end record;
+
+   subtype Recovery_GroundHeading_Sequence is Generic_Real64_Sequences.Sequence;
+
+   type GroundHeadingRecoveryInterval is new Message_Root with record
+      RecoveryGroundHeadings : Recovery_GroundHeading_Sequence;
+   end record;
+
+   subtype GroundSpeed_Sequence is Generic_Real64_Sequences.Sequence;
+
+   type GroundSpeedInterval is new Message_Root with record
+      GroundSpeeds : GroundSpeed_Sequence;
+   end record;
+
+   type GroundSpeedRecoveryInterval is new Message_Root with record
+      RecoveryGroundSpeeds : GroundSpeed_Sequence;
+   end record;
+
+   subtype VerticalSpeed_Sequence is Generic_Real64_Sequences.Sequence;
+
+   type VerticalSpeedInterval is new Message_Root with record
+      VerticalSpeeds : VerticalSpeed_Sequence;
+   end record;
+
+   type VerticalSpeedRecoveryInterval is new Message_Root with record
+      RecoveryVerticalSpeed : VerticalSpeed_Sequence;
+   end record;
+
+   package Real64_sequences is new SPARK.Containers.Functional.Vectors
+     (Index_Type                     => Positive,
+      Element_Type                   => SafeReal64);
+
+   subtype Real64_Seq is Real64_sequences.Sequence;
+
+   package Real32_sequences is new SPARK.Containers.Functional.Vectors
+     (Index_Type => Positive,
+      Element_Type => Real32);
+
+   subtype Real32_Seq is Real32_sequences.Sequence;
+
+   package BandsRegion_sequences is new SPARK.Containers.Functional.Vectors
+     (Index_Type => Positive,
+      Element_Type => BandsRegionEnum);
+
+   subtype BandsRegion_seq is BandsRegion_sequences.Sequence;
+
+   package IDType_sequences is new SPARK.Containers.Functional.Vectors
+     (Index_Type => Positive,
+      Element_Type => definitions.VehicleID_type);
+
+   subtype IDType_seq is IDType_sequences.Sequence;
+
+   package ttlowc_sequences is new Spark.Containers.Functional.Vectors
+     (Index_Type                     => Positive,
+      Element_Type                   => definitions.ttlowc_sec);
+
+   subtype ttlowc_seq is ttlowc_sequences.Sequence;
+
+   type WellClearViolationIntervals is new Message_Root with record
+      EntityList : IDType_seq;
+      TimeToViolationList : ttlowc_seq;
+      AlertLevelList : Real64_Seq;
+      EntityID : VehicleID_type;
+      CurrentHeading : Heading_Type_deg;
+      CurrentGroundSpeed : GroundSpeed_Type_mps;
+      CurrentVerticalSpeed : VerticalSpeed_Type_mps;
+      CurrentAltitude : Altitude_Type_m;
+      CurrentLatitude : latitude_type_deg;
+      CurrentLongitude : longitude_type_deg;
+      CurrentTime : ttlowc_sec;
+      WCVGroundHeadingIntervals : GroundHeadingInterval;
+      WCVGroundHeadingRegions : BandsRegion_seq;
+      WCVGroundSpeedIntervals : GroundSpeedInterval;
+      WCVGroundSpeedRegions : BandsRegion_seq;
+      WCVVerticalSpeedIntervals : VerticalSpeedInterval;
+      WCVVerticalSpeedRegions : BandsRegion_seq;
+      WCVAltitudeIntervals : AltitudeInterval;
+      WCVAltitudeRegions : BandsRegion_seq;
+      RecoveryGroundHeadingIntervals : GroundHeadingRecoveryInterval;
+      RecoveryGroundSpeedIntervals : GroundSpeedRecoveryInterval;
+      RecovertyVerticalSpeedIntervals : VerticalSpeedRecoveryInterval;
+      RecoveryAltitudeIntervals : AltitudeRecoveryInterval;
    end record;
 
 end LMCP_Messages;

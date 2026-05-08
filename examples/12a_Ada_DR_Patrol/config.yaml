@@ -1,0 +1,26 @@
+amase:
+  config: daidalus
+  scenario: MessagesToSend/Patrol.xml
+
+uxases:
+  - config: cfgPatrol_1000.xml
+    rundir: UAV_1000
+    
+  - config: cfgPatrol_1000_ada.xml
+    rundir: UAV_1000_ada
+    bin: uxas-ada
+
+  - config: cfgPatrol_2000.xml
+    rundir: UAV_2000
+    
+  - config: cfgPatrol_2000_ada.xml
+    rundir: UAV_2000_ada
+    bin: uxas-ada
+
+  - config: cfgPatrol_4208.xml
+    rundir: UAV_4208
+    
+  - config: cfgPatrol_4208_ada.xml
+    rundir: UAV_4208_ada
+    bin: uxas-ada
+    

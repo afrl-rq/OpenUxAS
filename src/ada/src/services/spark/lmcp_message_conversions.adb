@@ -3,6 +3,7 @@ with AFRL.CMASI.Enumerations;
 with AFRL.CMASI.MissionCommand;                     use AFRL.CMASI.MissionCommand;
 with AFRL.CMASI.ServiceStatus;                      use AFRL.CMASI.ServiceStatus;
 with AFRL.CMASI.VehicleActionCommand;               use AFRL.CMASI.VehicleActionCommand;
+with AFRL.CMASI.FlightDirectorAction;               use AFRL.CMASI.FlightDirectorAction;
 with AFRL.Impact.ImpactAutomationResponse;          use AFRL.Impact.ImpactAutomationResponse;
 with AVTAS.LMCP.Types;
 with Common;
@@ -12,6 +13,8 @@ with UxAS.Messages.lmcptask.TaskAssignmentSummary;  use UxAS.Messages.lmcptask.T
 with UxAS.Messages.lmcptask.TaskAutomationResponse; use UxAS.Messages.lmcptask.TaskAutomationResponse;
 with UxAS.Messages.lmcptask.TaskOptionCost;         use UxAS.Messages.lmcptask.TaskOptionCost;
 with UxAS.Messages.Route.RouteResponse;             use UxAS.Messages.Route.RouteResponse;
+with larcfm.DAIDALUS.Enumerations;
+with definitions;
 
 package body LMCP_Message_Conversions is
 
@@ -99,6 +102,10 @@ package body LMCP_Message_Conversions is
      (Msg : LMCP_Messages.VehicleActionCommand)
       return VehicleActionCommand_Any;
 
+   function As_VehicleActionCommand_Acc
+     (Msg : LMCP_Messages.VehicleActionCommand_w_FlightDirectorAction)
+     return VehicleActionCommand_Acc;
+
    function As_VehicleActionCommand_Message
      (Msg : VehicleActionCommand_Any)
       return LMCP_Messages.VehicleActionCommand;
@@ -111,6 +118,17 @@ package body LMCP_Message_Conversions is
      (Msg : LMCP_Messages.Waypoint)
       return Waypoint_Acc;
 
+   function As_FlightDirectorAction_Acc
+     (Msg : LMCP_Messages.VehicleAction_Descendant_FlightDirectorAction)
+      return FlightDirectorAction_Acc;
+
+   --  function As_GroundHeadingInterval_Acc
+   --    (Msg : LMCP_Messages.GroundHeadingInterval'Class)
+   --     return GroundHeadingInterval_Acc;
+   --
+   --  function As_Vect_GroundHeadingInterval_Acc_Acc
+   --    (Msg : Vect_GroundHeadingInterval_Acc_Acc'Class)
+   --    return
    ---------------------------------
    -- As_AssignmentCostMatrix_Acc --
    ---------------------------------
@@ -232,6 +250,7 @@ package body LMCP_Message_Conversions is
       Result.Id := Int64 (Msg.getID);
       Result.Location := As_Location3D_Message (Msg.getLocation);
       Result.Heading := Real32 (Msg.getHeading);
+      Result.CurrentWaypoint := Int64 (Msg.getCurrentWaypoint);
 
       return Result;
    end As_EntityState_Message;
@@ -501,6 +520,12 @@ package body LMCP_Message_Conversions is
 
       elsif Msg in LMCP_Messages.MissionCommand'Class then
          Result := AVTAS.LMCP.Object.Object_Any (As_MissionCommand_Acc (LMCP_Messages.MissionCommand (Msg)));
+
+      elsif Msg in LMCP_Messages.VehicleActionCommand_w_FlightDirectorAction'Class
+      then
+         Result := AVTAS.LMCP.Object.Object_Any
+           (As_VehicleActionCommand_Acc
+              (LMCP_Messages.VehicleActionCommand_w_FlightDirectorAction (Msg)));
 
       else
          raise Program_Error with "unexpected message kind in Route_Aggregator_Message_Conversions.As_Object_Any";
@@ -1144,6 +1169,42 @@ package body LMCP_Message_Conversions is
       return Result;
    end As_VehicleActionCommand_Any;
 
+   ---------------------------------
+   -- As_VehicleActionCommand_Acc --
+   ---------------------------------
+
+   function As_VehicleActionCommand_Acc
+     (Msg : LMCP_Messages.VehicleActionCommand_w_FlightDirectorAction)
+      return VehicleActionCommand_Acc
+   is
+      Result : constant VehicleActionCommand_Acc := new VehicleActionCommand;
+      use AVTAS.LMCP.Types;
+   begin
+      Result.setCommandID (Int64 (Msg.CommandId));
+      Result.setVehicleID (Int64 (Msg.VehicleId));
+
+      for VehicleAction of Msg.VehicleActionList loop
+         Result.getVehicleActionList.Append (VehicleAction_Any
+                                             (As_FlightDirectorAction_Acc
+                                                (VehicleAction)));
+      end loop;
+
+      case Msg.Status is
+         when LMCP_Messages.Pending => Result.setStatus (AFRL.CMASI.Enumerations
+                                                         .Pending);
+         when LMCP_Messages.Approved => Result.setStatus
+              (AFRL.CMASI.Enumerations.Approved);
+         when LMCP_Messages.InProcess => Result.setStatus
+              (AFRL.CMASI.Enumerations.InProcess);
+         when LMCP_Messages.Executed => Result.setStatus
+              (AFRL.CMASI.Enumerations.Executed);
+         when LMCP_Messages.Cancelled => Result.setStatus
+              (AFRL.CMASI.Enumerations.Cancelled);
+      end case;
+
+      return Result;
+   end As_VehicleActionCommand_Acc;
+
    -------------------------------------
    -- As_VehicleActionCommand_Message --
    -------------------------------------
@@ -1191,6 +1252,38 @@ package body LMCP_Message_Conversions is
       end loop;
       return Result;
    end As_VehicleAction_Acc;
+
+   ---------------------------------
+   -- As_FlightDirectorAction_Acc --
+   ---------------------------------
+
+   function As_FlightDirectorAction_Acc
+     (Msg : LMCP_Messages.VehicleAction_Descendant_FlightDirectorAction)
+      return FlightDirectorAction_Acc
+   is
+      use LMCP_Messages;
+      Result : constant FlightDirectorAction_Acc := new FlightDirectorAction;
+   begin
+
+      for Id : Common.Int64 of Msg.AssociatedTaskList loop
+         Result.getAssociatedTaskList.Append (AVTAS.LMCP.Types.Int64 (Id));
+      end loop;
+      Result.setSpeed (AVTAS.LMCP.Types.Real32 (Msg.Speed_mps));
+      Result.setHeading (AVTAS.LMCP.Types.Real32 (Msg.Heading_deg));
+      Result.setAltitude (AVTAS.LMCP.Types.Real32 (Msg.Altitude_m));
+      Result.setClimbRate (AVTAS.LMCP.Types.Real32 (Msg.ClimbRate_mps));
+      case Msg.AltitudeType is
+         when AGL => Result.setAltitudeType (AFRL.CMASI.Enumerations.AGL);
+         when MSL => Result.setAltitudeType (AFRL.CMASI.Enumerations.MSL);
+      end case;
+      case Msg.SpeedType is
+         when Airspeed => Result.setSpeedType
+              (AFRL.CMASI.Enumerations.Airspeed);
+         when Groundspeed => Result.setSpeedType
+              (AFRL.CMASI.Enumerations.Groundspeed);
+      end case;
+      return Result;
+   end As_FlightDirectorAction_Acc;
 
    ------------------------------
    -- As_VehicleAction_Message --
@@ -1303,4 +1396,374 @@ package body LMCP_Message_Conversions is
 
       return Result;
    end As_Waypoint_Message;
+
+   --------------------------------------
+   -- As_DAIDALUSConfiguration_Message --
+   --------------------------------------
+
+   function As_DAIDALUSConfiguration_Message
+     (Msg : not null DAIDALUSConfiguration_Any)
+      return LMCP_Messages.DAIDALUSConfiguration
+   is
+      Result : LMCP_Messages.DAIDALUSConfiguration;
+   begin
+      Result.EntityID := definitions.VehicleID_type (Msg.all.getEntityId);
+      Result.LookAheadTime := definitions.ttlowc_sec (Msg.all.getLookAheadTime);
+      Result.LeftTrack := definitions.Heading_Type_deg (Msg.all.getLeftTrack);
+      Result.RightTrack := definitions.Heading_Type_deg (Msg.all.getRightTrack);
+      Result.MaxGroundSpeed := definitions.GroundSpeed_Type_mps (Msg.all.getMaxGroundSpeed);
+      Result.MinGroundSpeed := definitions.GroundSpeed_Type_mps (Msg.all.getMinGroundSpeed);
+      Result.MaxVerticalSpeed := definitions.VerticalSpeed_Type_mps (Msg.all.getMaxVerticalSpeed);
+      Result.MinVerticalSpeed := definitions.VerticalSpeed_Type_mps (Msg.all.getMinVerticalSpeed);
+      Result.MaxAltitude := definitions.Altitude_Type_m (Msg.all.getMaxAltitude);
+      Result.MinAltitude := definitions.Altitude_Type_m (Msg.all.getMinAltitude);
+      Result.TrackStep := definitions.Heading_Buffer_Type_deg (Msg.all.getTrackStep);
+      Result.GroundSpeedStep := definitions.GroundSpeed_Buffer_Type_mps (Msg.all.getGroundSpeedStep);
+      Result.VerticalSpeedStep := definitions.VerticalSpeed_Buffer_Type_mps (Msg.all.getVerticalSpeedStep);
+      Result.AltitudeStep := definitions.Altitude_Buffer_Type_m (Msg.all.getAltitudeStep);
+      Result.HorizontalAcceleration := definitions.SafeReal64
+        (Msg.all.getHorizontalAcceleration);
+      Result.VerticalAcceleration := definitions.SafeReal64
+        (Msg.all.getVerticalAcceleration);
+      Result.TurnRate := definitions.SafeReal64 (Msg.all.getTurnRate);
+      Result.BankAngle := definitions.Heading_Type_deg (Msg.all.getBankAngle);
+      Result.VerticalRate := definitions.VerticalSpeed_Type_mps (Msg.all.getVerticalRate);
+      Result.RecoveryStabilityTime := definitions.SafeReal64
+        (Msg.all.getRecoveryStabilityTime);
+      Result.isRecoveryTrackBands := Msg.all.getisRecoveryTrackBands;
+      Result.isRecoveryGroundSpeedBands := Msg.all.getisRecoveryGroundSpeedBands;
+      Result.isRecoveryVerticalSpeedBands :=
+        Msg.all.getisRecoveryVerticalSpeedBands;
+      Result.isRecoveryAltitudeBands := Msg.all.getisRecoveryAltitudeBands;
+      Result.isCollisionAvoidanceBands := Msg.all.getisCollisionAvoidanceBands;
+      Result.CollisionAvoidanceBandsFactor :=
+        Msg.all.getCollisionAvoidanceBandsFactor;
+      Result.HorizontalNMAC := definitions.SafeReal64 (Msg.all.getHorizontalNMAC);
+      Result.MinHorizontalRecovery := definitions.SafeReal64
+        (Msg.all.getMinHorizontalRecovery);
+      Result.VerticalNMAC := definitions.SafeReal64 (Msg.all.getVerticalNMAC);
+      Result.MinVerticalRecovery := definitions.SafeReal64 (Msg.all.getMinVerticalRecovery);
+      Result.HorizontalContourThreshold := definitions.SafeReal64
+        (Msg.all.getHorizontalContourThreshold);
+      Result.DTHR := definitions.SafeReal64 (Msg.all.getDTHR);
+      Result.ZTHR := definitions.SafeReal64 (Msg.all.getZTHR);
+      Result.TTHR := definitions.SafeReal64 (Msg.all.getTTHR);
+      Result.RTCAAlertLevels := Common.UInt32 (Msg.all.getRTCAAlertLevels);
+      Result.AlertTime1 := definitions.ttlowc_sec (Msg.all.getAlertTime1);
+      Result.EarlyAlertTime1 := definitions.ttlowc_sec (Msg.all.getEarlyAlertTime1);
+      Result.AlertTime2 := definitions.ttlowc_sec (Msg.all.getAlertTime2);
+      Result.EarlyAlertTime2 := definitions.ttlowc_sec (Msg.all.getEarlyAlertTime2);
+      Result.AlertTime3 := definitions.ttlowc_sec (Msg.all.getAlertTime3);
+      Result.EarlyAlertTime3 := definitions.ttlowc_sec (Msg.all.getEarlyAlertTime3);
+      Result.HorizontalDetectionType := Msg.all.getHorizontalDetectionType;
+
+      return Result;
+   end As_DAIDALUSConfiguration_Message;
+
+   --------------------------------------
+   -- As_GroundHeadingInterval_Message --
+   --------------------------------------
+
+   function As_GroundHeadingInterval_Message
+     (Msg : not null GroundHeadingInterval_Acc) return
+     LMCP_Messages.Real64_Array
+   is
+      Result : LMCP_Messages.Real64_Array;
+      use LMCP_Messages; use Common;
+      GHInterval : constant larcfm.DAIDALUS.GroundHeadingInterval.Real64_2D
+      := Msg.all.getGroundHeadings.all;
+   begin
+      Result := (Real64 (GHInterval (1)), Real64 (GHInterval (2)));
+      return Result;
+   end As_GroundHeadingInterval_Message;
+
+   ------------------------------------
+   -- As_GroundSpeedInterval_Message --
+   ------------------------------------
+
+   function As_GroundSpeedInterval_Message
+     (Msg : not null GroundSpeedInterval_Acc) return
+     LMCP_Messages.Real64_Array
+   is
+      Result : LMCP_Messages.Real64_Array;
+      GSInterval : constant larcfm.DAIDALUS.GroundSpeedInterval.Real64_2D :=
+        Msg.all.getGroundSpeeds.all;
+      use LMCP_Messages; use Common;
+   begin
+      Result := (Real64 (GSInterval (1)), Real64 (GSInterval (2)));
+      return Result;
+   end As_GroundSpeedInterval_Message;
+
+   -------------------------------------
+   --As_VerticalSpeedInterval_Message --
+   -------------------------------------
+
+   function As_VerticalSpeedInterval_Message
+     (Msg : not null VerticalSpeedInterval_Acc) return
+     LMCP_Messages.Real64_Array
+   is
+      Result : LMCP_Messages.Real64_Array;
+      VSInterval : constant larcfm.DAIDALUS.VerticalSpeedInterval.Real64_2D :=
+        Msg.all.getVerticalSpeeds.all;
+      use LMCP_Messages; use Common;
+   begin
+      Result := (Real64 (VSInterval (1)), Real64 (VSInterval (2)));
+      return Result;
+   end As_VerticalSpeedInterval_Message;
+
+   ---------------------------------
+   -- As_AltitudeInterval_Message --
+   ---------------------------------
+
+   function As_AltitudeInterval_Message
+     (Msg : not null AltitudeInterval_Acc) return
+     LMCP_Messages.Real32_Array
+   is
+      Result : LMCP_Messages.Real32_Array;
+      AltInterval : constant larcfm.DAIDALUS.AltitudeInterval.Real64_2D :=
+        Msg.all.getAltitude.all;
+      use LMCP_Messages; use Common;
+   begin
+      Result := (Real32 (AltInterval (1)), Real32 (AltInterval (2)));
+      return Result;
+   end As_AltitudeInterval_Message;
+
+   ----------------------------------------------
+   -- As_GroundHeadingRecoveryInterval_Message --
+   ----------------------------------------------
+
+   function As_GroundHeadingRecoveryInterval_Message
+     (Msg : not null GroundHeadingRecoveryInterval_Acc) return
+     LMCP_Messages.Real64_Array
+   is
+      Result : LMCP_Messages.Real64_Array;
+      GHRInterval : constant larcfm.DAIDALUS.GroundHeadingRecoveryInterval.
+        Real64_2D := Msg.all.getRecoveryGroundHeadings.all;
+      use LMCP_Messages; use Common;
+   begin
+      Result := (Real64 (GHRInterval (1)), Real64 (GHRInterval (2)));
+      return Result;
+   end As_GroundHeadingRecoveryInterval_Message;
+
+   --------------------------------------------
+   -- As_GroundSpeedRecoveryInterval_Message --
+   --------------------------------------------
+
+   function As_GroundSpeedRecoveryInterval_Message
+     (Msg : not null GroundSpeedRecoveryInterval_Acc) return
+     LMCP_Messages.Real64_Array
+   is
+      Result : LMCP_Messages.Real64_Array;
+      GSRInterval : constant larcfm.DAIDALUS.GroundSpeedRecoveryInterval.
+        Real64_2D := Msg.all.getRecoveryGroundSpeeds.all;
+      use LMCP_Messages; use Common;
+   begin
+      Result := (Real64 (GSRInterval (1)), Real64 (GSRInterval (2)));
+      return Result;
+   end As_GroundSpeedRecoveryInterval_Message;
+
+   ---------------------------------------------
+   -- As VerticalSpeedRecoveryInterval_Message--
+   ---------------------------------------------
+
+   function As_VerticalSpeedRecoveryInterval_Message
+     (Msg : not null VerticalSpeedRecoveryInterval_Acc) return
+     LMCP_Messages.Real64_Array
+   is
+      Result : LMCP_Messages.Real64_Array;
+      VSRInterval : constant larcfm.DAIDALUS.VerticalSpeedRecoveryInterval.
+        Real64_2D := Msg.all.getRecoveryVerticalSpeed.all;
+      use LMCP_Messages; use Common;
+   begin
+      Result := (Real64 (VSRInterval (1)), Real64 (VSRInterval (2)));
+      return Result;
+   end As_VerticalSpeedRecoveryInterval_Message;
+
+   -----------------------------------------
+   -- As_AltitudeRecoveryInterval_Message --
+   -----------------------------------------
+
+   function As_AltitudeRecoveryInterval_Message
+     (Msg : not null AltitudeRecoveryInterval_Acc) return
+     LMCP_Messages.Real32_Array
+   is
+      Result : LMCP_Messages.Real32_Array;
+      ARInterval : constant larcfm.DAIDALUS.AltitudeRecoveryInterval.Real64_2D
+        := Msg.all.getRecoveryAltitude.all;
+      use LMCP_Messages; use Common;
+   begin
+      Result := (Real32 (ARInterval (1)), Real32 (ARInterval (2)));
+      return Result;
+   end As_AltitudeRecoveryInterval_Message;
+
+   ---------------------------------------------
+   -- As_WellClearViolationsIntervals_Message --
+   ---------------------------------------------
+   function As_WellClearViolationsIntervals_Message
+     (Msg : not null WellClearViolationIntervals_Any)
+      return LMCP_Messages.WellClearViolationIntervals
+   is
+      Result : LMCP_Messages.WellClearViolationIntervals;
+      Temp : LMCP_Messages.Real64_Array;
+      Test : LMCP_Messages.GroundHeading_Sequence;
+      use Common;
+   begin
+      for Entity of Msg.all.getEntityList.all loop
+         Result.EntityList := LMCP_Messages.IDType_sequences.Add
+           (Result.EntityList, definitions.ID_Type (Entity));
+      end loop;
+      for ViolationTime of Msg.all.getTimeToViolationList.all loop
+         Result.TimeToViolationList := LMCP_Messages.ttlowc_sequences.Add
+           (Result.TimeToViolationList, definitions.ttlowc_sec (ViolationTime));
+      end loop;
+      for AlertLevel of Msg.all.getAlertLevelList.all loop
+         Result.AlertLevelList := LMCP_Messages.Real64_sequences.Add (Result.AlertLevelList,
+                                       Real64 (AlertLevel));
+      end loop;
+      Result.EntityID := definitions.ID_Type (Msg.all.getEntityId);
+      Result.CurrentHeading := definitions.Heading_Type_deg
+        (Msg.all.getCurrentHeading);
+      Result.CurrentGroundSpeed := definitions.GroundSpeed_Type_mps
+        (Msg.all.getCurrentGoundSpeed);
+      Result.CurrentVerticalSpeed := definitions.VerticalSpeed_Type_mps
+        (Msg.all.getCurrentVerticalSpeed);
+      Result.CurrentAltitude := definitions.Altitude_Type_m
+        (Msg.all.getCurrentAltitude);
+      Result.CurrentLatitude := definitions.latitude_type_deg
+        (Msg.all.getCurrentLatitude);
+      Result.CurrentLongitude := definitions.longitude_type_deg
+        (Msg.all.getCurrentLongitude);
+      Result.CurrentTime := definitions.ttlowc_sec (Msg.all.getCurrentTime);
+      for GroundHeadingInterval_Vector of Msg.getWCVGroundHeadingIntervals.
+      all loop
+         Temp := As_GroundHeadingInterval_Message
+           (GroundHeadingInterval_Vector);
+         Result.WCVGroundHeadingIntervals.GroundHeadings := LMCP_Messages.
+           Generic_Real64_Sequences.Add
+             (Result.WCVGroundHeadingIntervals.GroundHeadings,
+                                       Temp);
+      end loop;
+      for GroundHeadingBandsRegion_vector of Msg.all.getWCVGroundHeadingRegions.
+      all loop
+         case GroundHeadingBandsRegion_vector is
+            when larcfm.DAIDALUS.Enumerations.NEAR =>
+               Result.WCVGroundHeadingRegions := LMCP_Messages.
+                 BandsRegion_sequences.Add (Result.WCVGroundHeadingRegions,
+                                            LMCP_Messages.NEAR);
+            when larcfm.DAIDALUS.Enumerations.MID =>
+               Result.WCVGroundHeadingRegions := LMCP_Messages.
+                 BandsRegion_sequences.Add
+                 (Result.WCVGroundHeadingRegions, LMCP_Messages.MID);
+            when larcfm.DAIDALUS.Enumerations.FAR =>
+               Result.WCVGroundHeadingRegions := LMCP_Messages.
+                 BandsRegion_sequences.Add
+                 (Result.WCVGroundHeadingRegions, LMCP_Messages.FAR);
+         end case;
+      end loop;
+      for GroundSpeedInterval_Vector of Msg.all.getWCVGroundSpeedIntervals.all
+      loop
+         Result.WCVGroundSpeedIntervals.GroundSpeeds := LMCP_Messages.
+           Generic_Real64_Sequences.Add
+           (Result.WCVGroundSpeedIntervals.GroundSpeeds,
+            As_GroundSpeedInterval_Message (GroundSpeedInterval_Vector));
+      end loop;
+      for GroundSpeedBandsRegion_Vector of Msg.all.getWCVGroundSpeedRegions.all
+      loop
+         case GroundSpeedBandsRegion_Vector is
+            when larcfm.DAIDALUS.Enumerations.NEAR =>
+               Result.WCVGroundSpeedRegions := LMCP_Messages.
+                 BandsRegion_sequences.Add
+                 (Result.WCVGroundSpeedRegions, LMCP_Messages.NEAR);
+            when larcfm.DAIDALUS.Enumerations.MID =>
+               Result.WCVGroundSpeedRegions := LMCP_Messages.
+                 BandsRegion_sequences.Add
+                 (Result.WCVGroundSpeedRegions, LMCP_Messages.MID);
+            when larcfm.DAIDALUS.Enumerations.FAR =>
+               Result.WCVGroundSpeedRegions := LMCP_Messages.
+                 BandsRegion_sequences.Add
+                 (Result.WCVGroundSpeedRegions, LMCP_Messages.FAR);
+         end case;
+      end loop;
+      for VerticalSpeedInterval_Vector of Msg.all.getWCVVerticalSpeedIntervals.
+      all loop
+         Result.WCVVerticalSpeedIntervals.VerticalSpeeds := LMCP_Messages.
+           Generic_Real64_Sequences.Add
+           (Result.WCVVerticalSpeedIntervals.VerticalSpeeds,
+            As_VerticalSpeedInterval_Message (VerticalSpeedInterval_Vector));
+      end loop;
+      for VerticalSpeedBandsRegion_Vector of Msg.all.getWCVVerticalSpeedRegions.
+      all loop
+         case VerticalSpeedBandsRegion_Vector is
+            when larcfm.DAIDALUS.Enumerations.NEAR =>
+               Result.WCVVerticalSpeedRegions := LMCP_Messages.
+                 BandsRegion_sequences.Add
+                 (Result.WCVVerticalSpeedRegions, LMCP_Messages.NEAR);
+            when larcfm.DAIDALUS.Enumerations.MID =>
+               Result.WCVVerticalSpeedRegions := LMCP_Messages.
+                 BandsRegion_sequences.Add
+                 (Result.WCVVerticalSpeedRegions, LMCP_Messages.MID);
+            when larcfm.DAIDALUS.Enumerations.FAR =>
+               Result.WCVVerticalSpeedRegions := LMCP_Messages.
+                 BandsRegion_sequences.Add
+                 (Result.WCVVerticalSpeedRegions, LMCP_Messages.FAR);
+         end case;
+      end loop;
+      for AltitudeInterval_Vector of Msg.all.getWCVAlitudeIntervals.all loop
+         Result.WCVAltitudeIntervals.Altitude := LMCP_Messages.
+           Generic_Real32_Sequences.Add
+           (Result.WCVAltitudeIntervals.Altitude,
+            As_AltitudeInterval_Message (AltitudeInterval_Vector));
+      end loop;
+      for AltitudeBandsRegion_Vector of Msg.all.getWCVAltitudeRegions.all loop
+         case AltitudeBandsRegion_Vector is
+            when larcfm.DAIDALUS.Enumerations.NEAR =>
+               Result.WCVAltitudeRegions := LMCP_Messages.
+                 BandsRegion_sequences.Add
+                 (Result.WCVAltitudeRegions, LMCP_Messages.NEAR);
+            when larcfm.DAIDALUS.Enumerations.MID =>
+               Result.WCVAltitudeRegions := LMCP_Messages.
+                 BandsRegion_sequences.Add
+                 (Result.WCVAltitudeRegions, LMCP_Messages.MID);
+            when larcfm.DAIDALUS.Enumerations.FAR =>
+               Result.WCVAltitudeRegions := LMCP_Messages.
+                 BandsRegion_sequences.Add
+                 (Result.WCVAltitudeRegions, LMCP_Messages.FAR);
+         end case;
+      end loop;
+      for RecoveryGroundHeadingInterval_Vector of Msg.all.
+        getRecoveryGroundHeadingIntervals.all loop
+         Result.RecoveryGroundHeadingIntervals.RecoveryGroundHeadings :=
+           LMCP_Messages.Generic_Real64_Sequences.Add
+             (Result.RecoveryGroundHeadingIntervals.RecoveryGroundHeadings,
+                              As_GroundHeadingRecoveryInterval_Message
+                                (RecoveryGroundHeadingInterval_Vector));
+      end loop;
+      for RecoveryGroundSpeedInterval_Vector of Msg.all.
+        getRecoveryGroundSpeedIntervals.all loop
+         Result.RecoveryGroundSpeedIntervals.RecoveryGroundSpeeds :=
+           LMCP_Messages.Generic_Real64_Sequences.Add
+             (Result.RecoveryGroundSpeedIntervals.RecoveryGroundSpeeds,
+                              As_GroundSpeedRecoveryInterval_Message
+                                (RecoveryGroundSpeedInterval_Vector));
+      end loop;
+      for RecoveryVerticalSpeedInterval_Vector of Msg.all.
+        getRecoveryVerticalSpeedIntervals.all loop
+         Result.RecovertyVerticalSpeedIntervals.RecoveryVerticalSpeed :=
+           LMCP_Messages.Generic_Real64_Sequences.Add
+             (Result.RecovertyVerticalSpeedIntervals.RecoveryVerticalSpeed,
+                              As_VerticalSpeedRecoveryInterval_Message
+                                (RecoveryVerticalSpeedInterval_Vector));
+      end loop;
+      for RecoveryAltitudeInterval_Vector of Msg.all.
+        getRecoveryAltitudeIntervals.all loop
+         Result.RecoveryAltitudeIntervals.RecoveryAltitude := LMCP_Messages.
+           Generic_Real32_Sequences.Add
+           (Result.RecoveryAltitudeIntervals.RecoveryAltitude,
+            As_AltitudeRecoveryInterval_Message
+              (RecoveryAltitudeInterval_Vector));
+      end loop;
+
+      return Result;
+   end As_WellClearViolationsIntervals_Message;
+
 end LMCP_Message_Conversions;
