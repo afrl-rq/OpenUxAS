@@ -14,6 +14,7 @@
 
 #include <cstring>
 #include <string>
+#include <cstdint>
 
 namespace n_ZMQ
 {

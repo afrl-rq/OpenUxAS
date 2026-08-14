@@ -13,6 +13,85 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # Load global paths
 source "${SCRIPT_DIR}/infrastructure/paths.sh"
 
+# ---- Legacy CMake configuration (for Ubuntu 26.04 / CMake >= 4) ----
+CMAKE_LEGACY_VERSION="3.28.3"
+CMAKE_LEGACY_URL="https://github.com/Kitware/CMake/releases/download/v${CMAKE_LEGACY_VERSION}/cmake-${CMAKE_LEGACY_VERSION}-linux-x86_64.tar.gz"
+CMAKE_LEGACY_DIR="${SBX_DIR}/tools/cmake-${CMAKE_LEGACY_VERSION}"
+CMAKE_LEGACY_BIN="${CMAKE_LEGACY_DIR}/bin/cmake"
+
+# ---- Boost setup modifications
+BOOST_MINIMAL_TARBALL="${SCRIPT_DIR}/external_libraries/boost-1.74-ubuntu24.04-x86_64.tar.gz"
+BOOST_MINIMAL_DIR="${SBX_DIR}/tools/boost"
+
+
+function ensure_minimal_boost() {
+    if [[ -d "$BOOST_MINIMAL_DIR/include" ]]; then
+        return
+    fi
+
+    echo "Installing minimal Boost into sandbox..."
+
+    mkdir -p "$BOOST_MINIMAL_DIR"
+    cp "$BOOST_MINIMAL_TARBALL" "$SBX_DIR"
+    tar -xzf "$SBX_DIR/$(basename "$BOOST_MINIMAL_TARBALL")" -C "$BOOST_MINIMAL_DIR" --strip-components=1
+}
+
+#Helper functions for cmake/boost
+function is_ubuntu_2404() {
+    [[ -f /etc/os-release ]] &&
+        grep -q "Ubuntu" /etc/os-release &&
+	grep -q "24.04" /etc/os-release
+}
+
+function is_ubuntu_2604() {
+    [[ -f /etc/os-release ]] &&
+        grep -q "Ubuntu" /etc/os-release &&
+	grep -q "26.04" /etc/os-release
+}
+
+function cmake_too_new() {
+    if ! command -v cmake >/dev/null 2>&1; then
+        return 0
+    fi
+    local ver major
+    ver=$(cmake --version | head -n1 | awk '{print $3}')
+    major=${ver%%.*}
+    [[ $major -ge 4 ]]
+}
+
+function ensure_legacy_cmake() {
+    if [[ -x "$CMAKE_LEGACY_BIN" ]]; then
+        export PATH="${CMAKE_LEGACY_DIR}/bin:$PATH"
+        return
+    fi
+
+    echo "Installing legacy CMake (${CMAKE_LEGACY_VERSION}) into sandbox..."
+
+    mkdir -p "$CMAKE_LEGACY_DIR"
+    pushd "$CMAKE_LEGACY_DIR" >/dev/null
+
+    wget -O cmake.tar.gz "$CMAKE_LEGACY_URL"
+    tar -xzf cmake.tar.gz --strip-components=1
+    rm cmake.tar.gz
+
+    popd >/dev/null
+
+    export PATH="${CMAKE_LEGACY_DIR}/bin:$PATH"
+}
+
+
+# Ensure SBX_DIR is defined and writable
+if [[ -z "$SBX_DIR" ]]; then
+    SBX_DIR="${SCRIPT_DIR}/sandbox"
+fi
+
+# Normalize SBX_DIR to an absolute path
+SBX_DIR="$(realpath "$SBX_DIR")"
+
+# Ensure the sandbox root exists
+mkdir -p "$SBX_DIR"
+mkdir -p "$SBX_DIR/tools"
+
 # Determine if we're being sourced (BASH, KSH, and ZSH compliant):
 ([[ -n $ZSH_EVAL_CONTEXT && $ZSH_EVAL_CONTEXT =~ :file$ ]] ||
  [[ -n $KSH_VERSION && $(cd "$(dirname -- "$0")" &&
@@ -41,6 +120,16 @@ function _anod {
     command=$( get_first_positional_arg "$*" )
     case ${command} in
         build)
+	    
+	    # If host CMake is too new, install a sandbox-local legacy version
+            if is_ubuntu_2604 || cmake_too_new; then
+		echo "Using legacy CMake for compatibility..."
+		ensure_legacy_cmake
+            fi
+	    if is_ubuntu_2604 || is_ubuntu_2404; then
+		echo "Using precompiled minimal boost..."
+		ensure_minimal_boost
+	    fi
             # Are we building? if so, we should set the SHELL variable to bash;
             # zsh will not work correctly with boost.
             debug_and_run "SHELL=$( which bash ) python3 -c \"${ANOD_SCRIPT}\" $*"

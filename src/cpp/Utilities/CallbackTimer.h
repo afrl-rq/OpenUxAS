@@ -23,6 +23,7 @@
 #include <thread>
 #include <mutex>
 #include <functional>
+#include <cstdint>
 
 namespace uxas
 {

@@ -34,6 +34,7 @@
 #include <string>
 #include <thread>
 #include <locale>
+#include <cstdint>
 
 #ifdef GCOV_MODE
 #include <csignal>

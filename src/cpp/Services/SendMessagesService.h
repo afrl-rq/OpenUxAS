@@ -14,6 +14,8 @@
 
 #include "ServiceBase.h"
 
+#include <cstdint>
+
 namespace uxas
 {
 namespace service

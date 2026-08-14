@@ -18,6 +18,7 @@
 #define    UXAS_TYPEDEFS_NUMBERS_H
 
 #include <vector>
+#include <cstdint>
 
 namespace n_Typedefs
 {

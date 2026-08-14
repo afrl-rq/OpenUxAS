@@ -22,6 +22,7 @@
 
 #include <iostream>     // std::cout, cerr, etc
 #include <chrono>       // time functions
+#include <cstdint>
 
 #define COUT_FILE_LINE_MSG(MESSAGE) std::cout << "c_CallbackTimer:: " << __FILE__ << ":" << __LINE__ << ":" << MESSAGE << std::endl;std::cout.flush();
 #define CERR_FILE_LINE_MSG(MESSAGE) std::cerr << "c_CallbackTimer:: " << __FILE__ << ":" << __LINE__ << ":" << MESSAGE << std::endl;std::cerr.flush();

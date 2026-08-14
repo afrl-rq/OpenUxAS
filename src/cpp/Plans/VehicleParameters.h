@@ -38,6 +38,7 @@
 #include "afrl/cmasi/WavelengthBand.h"
 
 #include <iostream>
+#include <cstdint>
 
 namespace n_FrameworkLib
 {

@@ -16,8 +16,9 @@
 
 #include "UxAS_DatabaseLogger.h"
 #include "UxAS_FileLogger.h"
-
 //#include "UxAS_TypeDefs_String.h"
+
+#include <cstdint>
 
 namespace uxas
 {

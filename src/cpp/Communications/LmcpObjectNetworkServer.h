@@ -17,6 +17,7 @@
 #include <atomic>
 #include <memory>
 #include <thread>
+#include <cstdint>
 
 namespace uxas
 {

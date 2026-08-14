@@ -25,6 +25,7 @@
 
 #include <fstream>
 #include <stdexcept>
+#include <cstdint>
 
 namespace uxas
 {

@@ -26,6 +26,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <set>
+#include <cstdint>
 
 #if (defined(__APPLE__) && defined(__MACH__))
 #define OSX

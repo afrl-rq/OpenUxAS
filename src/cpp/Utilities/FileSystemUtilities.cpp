@@ -27,6 +27,7 @@
 #include "boost/regex.hpp"
 
 #include <fstream>      //std::ofstream
+#include <cstdint>
 
 
 namespace uxas

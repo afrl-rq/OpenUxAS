@@ -60,6 +60,7 @@
 #include <map>
 #include <vector>
 #include <sstream>
+#include <cstdint>
 
 #if (defined(__APPLE__) && defined(__MACH__))
 #define OSX

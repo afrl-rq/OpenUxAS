@@ -28,6 +28,7 @@
 #include <map>
 #include <numeric>
 #include <uxas/messages/task/TaskPlanOptions.h>
+#include <cstdint>
 
 #define STRING_COMPONENT_NAME "BatchSummary"
 #define STRING_XML_COMPONENT_TYPE STRING_COMPONENT_NAME

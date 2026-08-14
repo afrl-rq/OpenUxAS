@@ -24,6 +24,7 @@
 
 #include <mutex>
 #include <unordered_set>
+#include <cstdint>
 
 namespace uxas
 {

@@ -14,6 +14,8 @@
 
 #include "UxAS_Log.h"
 
+#include <cstdint>
+
 namespace uxas
 {
 namespace service

@@ -16,6 +16,7 @@
 #include "afrl/cmasi/ServiceStatus.h"
 
 #include <sstream>
+#include <cstdint>
 
 namespace uxas
 {

@@ -38,6 +38,7 @@
 #include "PlanningParameters.h"     //polygon expansion
 
 #include <pugixml.hpp>
+#include <cstdint>
 
 using namespace std;
 

@@ -17,6 +17,7 @@
 #include "UxAS_ZeroMQ.h"
 
 #include <memory>
+#include <cstdint>
 
 namespace uxas
 {

@@ -17,6 +17,7 @@
 #include <iostream>
 #include <sstream>
 #include <queue>
+#include <cstdint>
 
 namespace uxas
 {

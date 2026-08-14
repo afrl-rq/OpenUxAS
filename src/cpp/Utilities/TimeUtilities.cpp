@@ -16,6 +16,7 @@
 
 #include "TimeUtilities.h"
 #include <mutex>
+#include <cstdint>
 
 
 namespace uxas

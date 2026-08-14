@@ -34,6 +34,7 @@
 
 #include <sstream>      //std::stringstream
 #include <iomanip>  //setfill
+#include <cstdint>
 
 #define STRING_XML_LANE_SPACING_MIN "SearchLaneWidthMin_m"
 #define STRING_XML_LANE_SPACING_MAX "SearchLaneWidthMax_m"

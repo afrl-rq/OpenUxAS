@@ -71,10 +71,28 @@ ifeq ($(ENABLE_COVERAGE),true)
     CXX_FLAGS+=-fprofile-arcs -ftest-coverage -DGCOV_MODE=1
 endif
 
+# Detect OS, version, and architecture
+DETECTED_OS := $(shell uname -s | tr A-Z a-z)
+DETECTED_VERSION := $(shell lsb_release -rs 2>/dev/null)
+DETECTED_ARCH := $(shell uname -m)
+
+# Default: normal (non-static) Boost linking
+BOOST_LINK_FLAGS := -lboost_filesystem -lboost_regex -lboost_date_time -lboost_system
+
+# Ubuntu 24.04 or 26.04 on x86_64 → use static Boost
+ifeq ($(DETECTED_OS),linux)
+  ifneq (,$(filter 24.04 26.04,$(DETECTED_VERSION)))
+    ifneq (,$(findstring x86_64,$(DETECTED_ARCH)))
+      BOOST_LINK_FLAGS := -Wl,-Bstatic -lboost_filesystem -lboost_regex -lboost_date_time -lboost_system -Wl,-Bdynamic
+    endif
+  endif
+endif
+
+
 # Linker flags
 ifeq ($(PLATFORM),linux)
-    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
--lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
+    ANODENV_BOOST_LIB := $(current_dir)/infrastructure/sbx/x86_64-linux/boost/install/lib
+    LINKER_FLAGS:=-std=c++11 -L$(ANODENV_BOOST_LIB) -llmcp -lzyre -lpugixml $(BOOST_LINK_FLAGS) -lSQLiteCpp -lsqlite3 \
 -lczmq -luuid -lserial -lzmq -ldl -lpthread -static-libstdc++ -static-libgcc
 else
     LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \

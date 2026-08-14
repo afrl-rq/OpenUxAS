@@ -18,6 +18,7 @@
 #include <mutex>
 #include <unordered_map>
 #include <vector>
+#include <cstdint>
 
 namespace uxas
 {

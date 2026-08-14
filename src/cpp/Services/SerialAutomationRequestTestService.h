@@ -26,6 +26,7 @@
 
 #include <memory>
 #include <deque>
+#include <cstdint>
 
 namespace uxas
 {

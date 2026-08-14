@@ -14,6 +14,8 @@
 #include "stdUniquePtr.h"
 #include "UxAS_XmlUtil.h"
 
+#include <cstdint>
+
 namespace uxas
 {
 namespace common

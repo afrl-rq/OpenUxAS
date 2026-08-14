@@ -16,6 +16,8 @@
 #include "avtas/lmcp/ByteBuffer.h"
 #include "avtas/lmcp/Factory.h"
 
+#include <cstdint>
+
 
 namespace uxas
 {

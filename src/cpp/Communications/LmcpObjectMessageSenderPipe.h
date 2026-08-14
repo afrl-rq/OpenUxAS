@@ -17,6 +17,8 @@
 #include <memory>
 #include <string>
 
+#include <cstdint>
+
 namespace uxas
 {
 namespace communications

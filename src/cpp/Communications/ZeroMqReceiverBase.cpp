@@ -14,6 +14,7 @@
 
 #include <chrono>
 #include <thread>
+#include <cstdint>
 
 namespace uxas
 {

@@ -37,6 +37,7 @@
 #include <sstream>      //std::stringstream
 #include <iostream>     // std::cout, cerr, etc
 #include <iomanip>  //setfill
+#include <cstdint>
 
 #define STRING_XML_LINE_SEARCH_ONE_DIRECTION "LineSearchOneDirection"
 

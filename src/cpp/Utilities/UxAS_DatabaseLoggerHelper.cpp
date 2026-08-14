@@ -15,6 +15,7 @@
 #include "stdUniquePtr.h"
 
 #include <iostream>
+#include <cstdint>
 
 namespace uxas
 {

@@ -31,6 +31,7 @@
 #include "pugixml.hpp"
 
 #include <iostream>
+#include <cstdint>
 
 #define STRING_COMPONENT_NAME "WaypointPlanManager"
 

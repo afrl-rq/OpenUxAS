@@ -27,6 +27,8 @@
 #define STRING_XML_TYPE "Type"
 #define STRING_XML_MAX_RESPONSE_TIME_MS "MaxResponseTime_ms"
 
+#include <cstdint>
+
 namespace uxas
 {
 namespace service

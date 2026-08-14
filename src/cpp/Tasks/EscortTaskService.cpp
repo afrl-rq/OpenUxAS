@@ -38,6 +38,7 @@
 
 #include <sstream>      //std::stringstream
 #include <iostream>     // std::cout, cerr, etc
+#include <cstdint>
 
 namespace uxas
 {

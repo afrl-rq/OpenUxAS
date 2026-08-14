@@ -36,6 +36,7 @@
 
 #include <sstream>  //stringstream
 #include <chrono>       // time functions
+#include <cstdint>
 
 //TODO:: read in a open street map and calculate it's visibility graph
 #define STRING_COMPONENT_NAME "RoutePlannerVisibility"

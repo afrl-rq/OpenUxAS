@@ -23,6 +23,7 @@
 #include "pugixml.hpp"
 
 #include <map>
+#include <cstdint>
 
 #define STRING_COMPONENT_NAME "RouteAggregator"
 #define STRING_XML_COMPONENT_TYPE STRING_COMPONENT_NAME

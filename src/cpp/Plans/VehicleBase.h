@@ -25,6 +25,8 @@
 
 #include "afrl/cmasi/AirVehicleConfiguration.h"
 
+#include <cstdint>
+
 namespace n_FrameworkLib
 {
 
