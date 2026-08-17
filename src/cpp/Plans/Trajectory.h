@@ -96,7 +96,7 @@ protected: //member functions
 
     void CalculateTaskHeading(CTrajectoryParameters& cTrajectoryParameters);
     double dLengthenPath(CTrajectoryParameters& cTrajectoryParameters,
-                            double dMinTimeToLengthen_s,CAssignment& assignMinimum);
+                            double dMinimumPathLength_m,CAssignment& assignMinimum);
 
     std::vector<std::vector<double>> FindLimitTurn(double* Waypoint1,double* Waypoint2,double alpha,double minStep);
     std::vector<std::vector<double>> FindPathBetweenTurns(std::vector<std::vector<double>> Turn1,std::vector<std::vector<double>> Turn2,double LengthFirstSegment,double RegularStep, 

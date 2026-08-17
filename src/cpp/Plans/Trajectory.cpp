@@ -236,12 +236,11 @@ double CTrajectory::dMinimumDistanceDubins(CTrajectoryParameters& cTrajectoryPar
         ////////////////////////////////////////////////////////////////////////////////////////
         if(cTrajectoryParameters.bGetLengthenPath())
         {
-            //TODO:: this needs to be in terms of time
-            double dMinTimeToLengthen_s = cTrajectoryParameters.dGetMinimumTime_s() - 
-                                                    (dDistanceTotalMinimum_m*cTrajectoryParameters.dGetSpeed_mps());
-            if(dMinTimeToLengthen_s > 0.0)
+            double dMinimumPathLength_m = cTrajectoryParameters.dGetMinimumTime_s() *
+                                                    cTrajectoryParameters.dGetSpeed_mps();
+            if(dDistanceTotalMinimum_m < dMinimumPathLength_m)
             {
-                dDistanceTotalMinimum_m = dLengthenPath(cTrajectoryParameters,dMinTimeToLengthen_s,assignMinimum);
+                dDistanceTotalMinimum_m = dLengthenPath(cTrajectoryParameters,dMinimumPathLength_m,assignMinimum);
             }
         }
         cTrajectoryParameters.vGetWaypoints() = assignMinimum.vwayGetWaypoints();
@@ -382,7 +381,7 @@ CTrajectory::CalculateTaskHeading(CTrajectoryParameters& cTrajectoryParameters)
 
 
 double CTrajectory::dLengthenPath(CTrajectoryParameters& cTrajectoryParameters,
-                                    double dMinTimeToLengthen_s,CAssignment& assignMinimum)
+                                    double dMinimumPathLength_m,CAssignment& assignMinimum)
 {
     // ASSUMES::
     // "assignMinimum" contains the following waypoints:
@@ -508,7 +507,7 @@ double CTrajectory::dLengthenPath(CTrajectoryParameters& cTrajectoryParameters,
     }
 
 
-    double dDistanceLoiter = dMinTimeToLengthen_s - (dDistanceInitialLeg_m + dDistanceFinalLeg_m);
+    double dDistanceLoiter = dMinimumPathLength_m - (dDistanceInitialLeg_m + dDistanceFinalLeg_m);
     dDistanceLoiter = (dDistanceLoiter>0.0)?(dDistanceLoiter):(0.0);
 
     double dAngleLoiter(0.0);
