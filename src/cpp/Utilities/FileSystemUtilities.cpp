@@ -63,7 +63,7 @@ namespace utilities
                 sstrNewFileName << ".xml";
 #else
                 sstrNewFileName 
-                        << "_" << strFileNameBase << "_" << std::setprecision(5) << uxas::common::utilities::c_TimeUtilities::strGetTimeNow();
+                        << "_" << std::setprecision(5) << uxas::common::utilities::c_TimeUtilities::strGetTimeNow();
 #endif
             }
             strPathFileName = strPath + "/" + sstrNewFileName.str();
