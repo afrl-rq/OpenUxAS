@@ -13,13 +13,14 @@
 #include "afrl/cmasi/AirVehicleConfiguration.h"
 #include "afrl/cmasi/AirVehicleState.h"
 #include "afrl/cmasi/AbstractZone.h"
-#include "uxas/messages/ImminentZoneViolation.h"
-#include "uxas/messages/ProcessedZone.h"
+#include "dcllc/zonealert/ImminentZoneViolation.h"
+#include "dcllc/zonealert/ProcessedZone.h"
 
 
 using namespace n_FrameworkLib;
-using namespace uxas::messages;
+// using namespace uxas::messages;
 using namespace afrl::cmasi;
+using namespace dcllc::zonealert;
 
 namespace zoneAlert {
 
@@ -107,7 +108,7 @@ public:
      *           SR-7-3-2-6, SR-7-3-2-7, SR-10
      * 
      */
-    virtual vector<shared_ptr<ZoneViolation>> * computeZoneViolations(
+    virtual vector<shared_ptr<dcllc::zonealert::ZoneViolation>> * computeZoneViolations(
         shared_ptr<AirVehicleState> vehicleState, 
         stringstream &sstrErrorMessage) = 0;
 

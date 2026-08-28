@@ -15,6 +15,7 @@
 using namespace n_FrameworkLib;
 using namespace uxas::messages;
 using namespace afrl::cmasi;
+using namespace dcllc::zonealert;
 
 namespace zoneAlert {
 

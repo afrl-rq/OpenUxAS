@@ -33,6 +33,13 @@
 #include "ServiceBase.h"
 
 
+// forward class declaration of friend class
+// such that the friend class can reuse route geometry computation code of this service without
+// exposing the code as public/generally applicable
+namespace zoneAlert {
+    class SimpleZoneAlertComputer;
+}
+
 namespace uxas
 {
 namespace service
@@ -114,6 +121,22 @@ public:
     virtual
     ~RoutePlannerVisibilityService();
 
+    // declare a friend class of RoutePlannerVisibilityService
+    // @RATIONALE: RoutePlannerVisibilityService computes geometry of keep-in and keep-out zones
+    //      and uses this geometry to compute zone-observant routes. The ZoneAlertService
+    //      is intended to alert when vehicles are about to violate zone geometry. As zone
+    //      geometry is converted from abstract shapes (circle, polygon, etc.) with latitutde
+    //      and longitude coordinates into a planar region on the Earth, it is important for that
+    //      service to utilize the exact same geometry as routing, so as to avoid conflicts of 
+    //      truth resulting from differeing computation.
+    //      Ideally, zone geometry computation would be factored out of services and placed in planning
+    //      Allowing all services to utilize the same geometric code. However, to minimize invasive 
+    //      refactoring, ZoneAlert merely accesses the non-public geometric computations of the 
+    //      RoutePlannerVisibilityService by being a friend of that class.
+    //  @TODO: Refactor geometric computations to be available to any services that need to have the 
+    //    same worldview of zones.
+    friend class zoneAlert::SimpleZoneAlertComputer;
+
 private:
 
     static
@@ -159,7 +182,7 @@ protected:
     bool bProcessRouteRequest(const std::shared_ptr<uxas::messages::route::RouteRequest>& routeRequest);
     bool bProcessRoutePlanRequest(const std::shared_ptr<uxas::messages::route::RoutePlanRequest>& routePlanRequest,
             std::shared_ptr<uxas::messages::route::RoutePlanResponse>& routePlanResponse);
-    bool bFindPointsForAbstractGeometry(afrl::cmasi::AbstractGeometry* pAbstractGeometry, n_FrameworkLib::V_POSITION_t& vposBoundaryPoints);
+    static bool bFindPointsForAbstractGeometry(afrl::cmasi::AbstractGeometry* pAbstractGeometry, n_FrameworkLib::V_POSITION_t& vposBoundaryPoints);
     bool isCalculateWaypoints(const n_FrameworkLib::PTR_VISIBILITYGRAPH_t& visibilityGraph,
             const std::shared_ptr<n_FrameworkLib::CPathInformation>& pathInformation,
             const int64_t& vehicleId, const double& startHeading_deg, const double& endHeading_deg,

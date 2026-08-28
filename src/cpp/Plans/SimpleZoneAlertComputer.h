@@ -11,8 +11,8 @@
 #include <map>
 
 #include "afrl/cmasi/AirVehicleConfiguration.h"
-#include "uxas/messages/ActiveZoneViolation.h"
-#include "uxas/messages/ImminentZoneViolation.h"
+#include "dcllc/zonealert/ActiveZoneViolation.h"
+#include "dcllc/zonealert/ImminentZoneViolation.h"
 #include "dcllc/zonealert/ZoneViolation.h"
 #include "dcllc/zonealert/ZoneVertex.h"
 #include "dcllc/zonealert/ProcessedZone.h"
